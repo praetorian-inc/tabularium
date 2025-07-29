@@ -1,0 +1,240 @@
+package model
+
+import (
+	"maps"
+	"reflect"
+	"slices"
+	"strings"
+	"time"
+
+	"github.com/praetorian-inc/tabularium/pkg/registry"
+)
+
+type BaseAsset struct {
+	registry.BaseModel
+	Username string `neo4j:"username" json:"username" desc:"The username associated with this asset." example:"user@example.com"`
+	Key      string `neo4j:"key" json:"key" desc:"Unique key identifying the asset." example:"#asset#dns#name"`
+	// Attributes
+	Source     string  `neo4j:"source" json:"source" desc:"Source that added this to the system (one of self, account, seed)" example:"seed"`
+	Status     string  `neo4j:"status" json:"status" desc:"Current status of the asset." example:"A"`
+	Created    string  `neo4j:"created" json:"created" desc:"Timestamp when the asset was first created (RFC3339)." example:"2023-10-27T10:00:00Z"`
+	Visited    string  `neo4j:"visited" json:"visited" desc:"Timestamp when the asset was last visited (RFC3339)." example:"2023-10-27T11:00:00Z"`
+	TTL        int64   `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the asset record (in hours)." example:"168"`
+	Secret     *string `neo4j:"secret" json:"secret,omitempty" desc:"Key of the secret to be used with this asset." example:"#asset#amazon#0123456789012"`
+	Comment    string  `neo4j:"-" json:"comment,omitempty" desc:"User-provided comment about the asset." example:"Initial asset discovery"`
+	Identifier string  `neo4j:"identifier" json:"identifier" desc:"Unique identifier for the asset." example:"name"`
+	Group      string  `neo4j:"group" json:"group" desc:"Group of the asset." example:"dns"`
+	Class      string  `neo4j:"class" json:"class" desc:"Classification of the asset type." example:"repository"`
+	History
+	MLProperties
+	Metadata
+}
+
+func init() {
+	registry.Registry.MustRegisterModel(&Metadata{})
+}
+
+func (a *BaseAsset) GetKey() string {
+	return a.Key
+}
+
+func (a *BaseAsset) GetBase() *BaseAsset {
+	return a
+}
+
+func (a *BaseAsset) SetStatus(status string) {
+	a.Status = status
+}
+
+func (a *BaseAsset) GetMetadata() *Metadata {
+	return &a.Metadata
+}
+
+func (a *BaseAsset) IsStatus(value string) bool {
+	return strings.HasPrefix(a.Status, value)
+}
+
+func (a *BaseAsset) IsClass(value string) bool {
+	return strings.HasPrefix(a.Class, value)
+}
+
+func (a *BaseAsset) IsPrivate() bool {
+	return false
+}
+
+func (a *BaseAsset) Merge(u Assetlike) {
+	update := u.GetBase()
+	if a.History.Update(a.Status, update.Status, update.Source, update.Comment, update.History) {
+		a.Status = update.Status
+	}
+	if update.Created != "" {
+		a.Created = update.Created
+	}
+	if !a.IsStatus(Active) {
+		a.TTL = 0
+	}
+}
+
+func (a *BaseAsset) Visit(o Assetlike) {
+	other := o.GetBase()
+	a.Visited = other.Visited
+	if a.Source == SelfSource && a.IsStatus(Pending) && other.IsStatus(Active) {
+		a.Status = other.Status
+	}
+	if a.IsStatus(Active) && a.TTL != 0 {
+		a.TTL = other.TTL
+	}
+
+	a.Secret = other.Secret
+	a.Metadata.Visit(other.Metadata)
+}
+
+func (a *BaseAsset) System() bool {
+	return a.Source != SeedSource && a.Source != AccountSource
+}
+
+func (a *BaseAsset) State() string {
+	return string(a.Status[0])
+}
+
+func (a *BaseAsset) Substate() string {
+	if len(a.Status) > 1 {
+		return a.Status[1:]
+	}
+	return ""
+}
+
+func (a *BaseAsset) GetStatus() string {
+	return a.Status
+}
+
+func (a *BaseAsset) SetStatusFromLastSeen(lastSeenStr string, layout string) {
+	a.Status = Pending
+	if lastSeen, err := time.Parse(layout, lastSeenStr); err == nil {
+		if time.Since(lastSeen) < 24*time.Hour {
+			a.Status = Active
+		}
+	}
+}
+
+func (a *BaseAsset) SetUsername(username string) {
+	a.Username = username
+}
+
+func (a *BaseAsset) GetAgent() string {
+	return a.MLProperties.Agent
+}
+
+// GetSecret returns the secret reference for this asset
+func (a *BaseAsset) GetSecret() string {
+	if a.Secret != nil {
+		return *a.Secret
+	}
+	return ""
+}
+
+func (a *BaseAsset) SetSource(source string) {
+	// a seed or account source should always win over other sources
+	if a.Source == SeedSource || a.Source == AccountSource {
+		return
+	}
+	a.Source = source
+}
+
+func (a *BaseAsset) Seed() Seed {
+	return Seed{}
+}
+
+func (a *BaseAsset) Defaulted() {
+	a.Status = Active
+	a.Source = SelfSource
+	a.Created = Now()
+	a.Visited = Now()
+	a.TTL = Future(14 * 24)
+}
+
+func NewBaseAsset(identifier, group string) BaseAsset {
+	a := BaseAsset{Identifier: identifier, Group: group}
+	// don't call Defaulted or CallHooks here; leave that to the parent/caller
+	return a
+}
+
+// Metadata is a collection of 1:1 fields that can be present on an asset, as well as 1:many
+// fields where relationships and string searching (enums, essentially) are not relevant.
+// This is partially an experiment. I'd like to see how this grows/changes over time.
+// The goal is to replace all 1:1 relationships and enums currently represented by attributes with a property
+// of the asset itself.
+type Metadata struct {
+	registry.BaseModel
+	ASNumber string `neo4j:"asnumber,omitempty" json:"asnumber,omitempty" desc:"Autonomous System number." example:"AS15169"`
+	ASName   string `neo4j:"asname,omitempty" json:"asname,omitempty" desc:"Autonomous System name." example:"GOOGLE"`
+	ASRange  string `neo4j:"asrange,omitempty" json:"asrange,omitempty" desc:"Autonomous System IP range." example:"172.217.0.0/16"`
+
+	Country  string `neo4j:"country,omitempty" json:"country,omitempty" desc:"Country associated with the asset." example:"US"`
+	Province string `neo4j:"province,omitempty" json:"province,omitempty" desc:"Province or state associated with the asset." example:"California"`
+	City     string `neo4j:"city,omitempty" json:"city,omitempty" desc:"City associated with the asset." example:"Mountain View"`
+
+	Purchased  string `neo4j:"purchased,omitempty" json:"purchased,omitempty" desc:"Date the asset (e.g., domain) was purchased (RFC3339)." example:"2002-09-15T00:00:00Z"`
+	Updated    string `neo4j:"updated,omitempty" json:"updated,omitempty" desc:"Date the asset registration was last updated (RFC3339)." example:"2023-09-15T10:00:00Z"`
+	Expiration string `neo4j:"expiration,omitempty" json:"expiration,omitempty" desc:"Date the asset registration expires (RFC3339)." example:"2024-09-15T00:00:00Z"`
+
+	Registrant string `neo4j:"registrant,omitempty" json:"registrant,omitempty" desc:"Registered owner of the asset (e.g., domain)." example:"Google LLC"`
+	Registrar  string `neo4j:"registrar,omitempty" json:"registrar,omitempty" desc:"Registrar managing the asset (e.g., domain)." example:"MarkMonitor Inc."`
+
+	// deprecated
+	Surface []string `neo4j:"surface,omitempty" json:"surface,omitempty" desc:"List of attack surface identifiers related to the asset." example:"[\"web\", \"dns\"]"`
+
+	Capability    []string `neo4j:"capability,omitempty" json:"capability,omitempty" desc:"List of all capabilities that have discovered this asset." example:"[\"amazon\", \"portscan\"]"`
+	AttackSurface []string `neo4j:"attackSurface,omitempty" json:"attackSurface,omitempty" desc:"List of attack surface identifiers related to the asset." example:"[\"internal\", \"external\"]"`
+
+	CloudService string `neo4j:"cloudService,omitempty" json:"cloudService,omitempty" desc:"Name of the cloud service provider (e.g., AWS, GCP, Azure)." example:"GCP"`
+	CloudId      string `neo4j:"cloudId,omitempty" json:"cloudId,omitempty" desc:"Unique identifier within the cloud provider." example:"project-id-12345"`
+	CloudRoot    string `neo4j:"cloudRoot,omitempty" json:"cloudRoot,omitempty" desc:"Root identifier for the cloud environment (e.g., organization ID)." example:"organizations/1234567890"`
+	CloudAccount string `neo4j:"cloudAccount,omitempty" json:"cloudAccount,omitempty" desc:"Specific account identifier within the cloud provider." example:"billing-account-id"`
+}
+
+// Visit will copy over any non-empty fields from the other metadata into this metadata.
+// Uses reflection here to maintain type-safety elsewhere in the codebase
+func (m *Metadata) Visit(other Metadata) {
+	v := reflect.ValueOf(m).Elem()
+	otherV := reflect.ValueOf(other)
+
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		otherField := otherV.Field(i)
+
+		if field.Kind() == reflect.String && otherField.String() != "" {
+			field.SetString(otherField.String())
+		}
+	}
+
+	// Handle slices - maintain unique values
+	// If we end up with more of these fields - switch to more generic logic like above
+	seen := make(map[string]bool)
+	for _, s := range append(m.Surface, other.Surface...) {
+		seen[s] = true
+	}
+	m.Surface = slices.Collect(maps.Keys(seen))
+
+	seen = make(map[string]bool)
+	for _, s := range append(m.AttackSurface, other.AttackSurface...) {
+		seen[s] = true
+	}
+	m.AttackSurface = slices.Collect(maps.Keys(seen))
+
+	seen = make(map[string]bool)
+	for _, s := range append(m.Capability, other.Capability...) {
+		seen[s] = true
+	}
+	m.Capability = slices.Collect(maps.Keys(seen))
+}
+
+// GetDescription returns a description for the Metadata model.
+func (m *Metadata) GetDescription() string {
+	return "Contains metadata about an asset, including discovery information, relationships, and attributes."
+}
+
+// GetDescription returns a description for the Asset model.
+func (a *BaseAsset) GetDescription() string {
+	return "Base logic for an asset."
+}

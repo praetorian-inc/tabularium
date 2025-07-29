@@ -1,0 +1,192 @@
+package model
+
+import (
+	"fmt"
+	"net"
+	"regexp"
+	"strings"
+
+	"github.com/praetorian-inc/tabularium/pkg/registry"
+	"golang.org/x/net/publicsuffix"
+)
+
+type Asset struct {
+	BaseAsset
+	// Attributes
+	DNS     string `neo4j:"dns" json:"dns" desc:"The DNS name, or group identifier associated with this asset." example:"example.com"`
+	Name    string `neo4j:"name" json:"name" desc:"Name of the asset, or the same value as DNS if this asset represents the group." example:"169.254.169.254"`
+	Private bool   `neo4j:"private" json:"private" desc:"Flag indicating if the asset is considered private (e.g., internal IP)." example:"false"`
+}
+
+func init() {
+	registry.Registry.MustRegisterModel(&Asset{})
+}
+
+var (
+	aws      = regexp.MustCompile(`^arn:aws:`)
+	s3       = regexp.MustCompile(`^(s3://)([^/]+)/?$`)
+	domain   = regexp.MustCompile(`^(https?://)?((xn--[a-zA-Z0-9-]+|[a-zA-Z0-9-]+)\.)+([a-zA-Z]{2,})$`)
+	assetKey = regexp.MustCompile(`^#asset(#[^#]+){2,}$`)
+)
+
+const AssetLabel = "Asset"
+
+func (a *Asset) GetLabels() []string {
+	labels := []string{AssetLabel, TTLLabel}
+	return labels
+}
+
+func (a *Asset) GetClass() string {
+	name := []func(string) (string, bool){
+		func(s string) (string, bool) {
+			return "aws", aws.MatchString(s)
+		},
+		func(s string) (string, bool) {
+			return "s3", s3.FindStringSubmatch(s) != nil
+		},
+		func(s string) (string, bool) {
+			ip := net.ParseIP(s)
+			if ip == nil {
+				return "", false
+			}
+			if ip4 := ip.To4(); ip4 != nil {
+				return "ipv4", true
+			}
+			return "ipv6", true
+		},
+	}
+
+	dns := []func(string) (string, bool){
+		func(s string) (string, bool) {
+			_, _, err := net.ParseCIDR(s)
+			return "cidr", err == nil
+		},
+		func(s string) (string, bool) {
+			tld, icann := publicsuffix.PublicSuffix(s)
+			parts := strings.Split(strings.TrimSuffix(s, tld), ".")
+			return "tld", len(parts) == 2 && icann && !strings.Contains(s, "/")
+		},
+		func(s string) (string, bool) {
+			return "domain", domain.MatchString(s)
+		},
+	}
+
+	if a.Source == AccountSource {
+		return a.DNS
+	}
+
+	for _, class := range name {
+		if c, ok := class(a.Name); ok {
+			return c
+		}
+	}
+
+	for _, class := range dns {
+		if c, ok := class(a.DNS); ok {
+			return c
+		}
+	}
+
+	return ""
+}
+
+func (a *Asset) IsPrivate() bool {
+	if a.IsClass("ipv") {
+		return net.ParseIP(a.Name).IsPrivate()
+	}
+
+	if a.IsClass("cidr") {
+		_, cidr, err := net.ParseCIDR(a.Name)
+		if err != nil {
+			return false
+		}
+		return cidr.IP.IsPrivate()
+	}
+	return false
+}
+
+func (a *Asset) Valid() bool {
+	return assetKey.MatchString(a.Key)
+}
+
+func (a *Asset) Visit(o Assetlike) {
+	other, ok := o.(*Asset)
+	if !ok {
+		return
+	}
+
+	a.BaseAsset.Visit(other)
+	// allow asset enrichments to control asset privateness
+	a.Private = other.Private
+}
+
+func (a *Asset) Spawn(dns, name string) Asset {
+	asset := NewAsset(dns, name)
+	asset.Status = a.Status
+	return asset
+}
+
+func (a *Asset) Seed() Seed {
+	if a.DNS != a.Name {
+		return Seed{}
+	}
+	s := NewSeed(a.DNS)
+	s.SetStatus(a.Status)
+	return s
+}
+
+func (a *Asset) WithStatus(status string) Target {
+	ret := *a
+	ret.Status = status
+	return &ret
+}
+
+func (a *Asset) Group() string {
+	return a.DNS
+}
+
+func (a *Asset) Identifier() string {
+	return a.Name
+}
+
+func (a *Asset) SetSource(source string) {
+	a.BaseAsset.SetSource(source)
+	a.Class = a.GetClass()
+}
+
+func (a *Asset) Attribute(name, value string) Attribute {
+	attr := NewAttribute(name, value, a)
+	return attr
+}
+
+func (a *Asset) GetHooks() []registry.Hook {
+	return []registry.Hook{
+		useGroupAndIdentifier(a, &a.DNS, &a.Name),
+		{
+			Call: func() error {
+				a.Key = strings.ToLower(fmt.Sprintf("#asset#%s#%s", a.DNS, a.Name))
+				a.Class = a.GetClass()
+				a.Private = a.IsPrivate()
+				return nil
+			},
+		},
+		setGroupAndIdentifier(a, &a.DNS, &a.Name),
+	}
+}
+
+func NewAsset(dns, name string) Asset {
+	a := Asset{
+		DNS:  dns,
+		Name: name,
+	}
+
+	a.Defaulted()
+	registry.CallHooks(&a)
+
+	return a
+}
+
+// GetDescription returns a description for the Asset model.
+func (a *Asset) GetDescription() string {
+	return "Represents a discoverable entity within an infrastructure, such as a host, service, or application."
+}

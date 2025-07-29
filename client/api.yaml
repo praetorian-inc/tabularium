@@ -1,0 +1,2078 @@
+components:
+  schemas:
+    access:
+      description: Represents a record of access to chariot
+      properties:
+        BaseModel:
+          type: object
+        email:
+          type: string
+        key:
+          description: Unique key for the access record.
+          example: '#access#type#value#id'
+          type: string
+        name:
+          type: string
+        sub:
+          description: The Cognito sub of this user
+          type: string
+        type:
+          type: string
+        updated:
+          type: string
+        username:
+          description: Chariot username associated with the account.
+          example: user@example.com
+          type: string
+        value:
+          type: string
+      required:
+      - BaseModel
+      - key
+      - sub
+      - type
+      - updated
+      - username
+      type: object
+    account:
+      description: Represents a Chariot account, linking a user/system (member) to
+        a specific cloud account or service instance (value).
+      properties:
+        BaseModel:
+          type: object
+        config:
+          description: Secret configuration map associated with the account.
+          example: '{"service_principal_token": "103713408v0871v"}'
+          type: object
+        key:
+          description: Unique key for the account record.
+          example: '#account#name#member#value'
+          type: string
+        member:
+          description: The user or system granted access to this account.
+          example: amazon
+          type: string
+        name:
+          description: The owner of the account.
+          example: chariot.customer@example.com
+          type: string
+        settings:
+          description: Raw JSON message containing specific settings.
+          example: '{"notifications": true}'
+          items:
+            type: integer
+          type: array
+        ttl:
+          description: Time-to-live for the account record (Unix timestamp).
+          example: "1706353200"
+          format: int64
+          type: integer
+        updated:
+          description: Timestamp when the account info was last updated (RFC3339).
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        username:
+          description: Chariot username associated with the account.
+          example: user@example.com
+          type: string
+        value:
+          description: The identifier for this account within the context of member.
+          example: "01234567890"
+          type: string
+      required:
+      - BaseModel
+      - key
+      - member
+      - name
+      - ttl
+      - updated
+      - username
+      - value
+      type: object
+    addomain:
+      description: Represents an Active Directory domain, including its name, status,
+        and creation/modification timestamps.
+      properties:
+        BaseAsset:
+          type: object
+        name:
+          description: NetBIOS of the domain.
+          example: example.internal
+          type: string
+      required:
+      - BaseAsset
+      - name
+      type: object
+    agoracapability:
+      description: Describes a single capability registered with Agora and how to
+        execute it.
+      properties:
+        BaseModel:
+          type: object
+        async:
+          description: Indicates if this is an asynchronous capability
+          example: "false"
+          type: boolean
+        description:
+          description: A description of the capability suitable for human or LLM use
+          example: Identifies open ports on a target host
+          type: string
+        executor:
+          description: The task executor that can execute this capability
+          example: JanusPlugin
+          type: string
+        integration:
+          description: Whether or not this capability is an integration with an external
+            service
+          example: "true"
+          type: boolean
+        name:
+          description: The name of the capability
+          example: portscan
+          type: string
+        parameters:
+          description: The parameters/options of the capability
+          example: '{"input": {"ip": "1.2.3.4"}, "tcp": true, "udp": false}'
+          items:
+            type: object
+          type: array
+        surface:
+          description: The attack surface of the capability
+          example: internal
+          type: string
+        target:
+          description: The target of the capability
+          example: asset
+          type: string
+        title:
+          description: The pretty name of the capability
+          example: AWS
+          type: string
+        version:
+          description: The version of the capability (major.minor.patch)
+          example: 1.0.0
+          type: string
+      required:
+      - BaseModel
+      - async
+      - description
+      - executor
+      - integration
+      - name
+      - surface
+      - target
+      - title
+      - version
+      type: object
+    agoraparameter:
+      description: Describes a single parameter for an Agora capability.
+      properties:
+        BaseModel:
+          type: object
+        default:
+          description: A string representation of the default value of the parameter
+          example: 1.2.3.4
+          type: string
+        description:
+          description: A description of the parameter suitable for human or LLM use
+          example: The rate limit for the capability
+          type: string
+        name:
+          description: The name of the parameter
+          example: rate_limit
+          type: string
+        required:
+          description: Whether the parameter is required
+          example: "true"
+          type: boolean
+        type:
+          description: The type of the parameter
+          example: string
+          type: string
+      required:
+      - BaseModel
+      - description
+      - name
+      - required
+      - type
+      type: object
+    asset:
+      description: Represents a discoverable entity within an infrastructure, such
+        as a host, service, or application.
+      properties:
+        BaseAsset:
+          type: object
+        dns:
+          description: The DNS name, or group identifier associated with this asset.
+          example: example.com
+          type: string
+        name:
+          description: Name of the asset, or the same value as DNS if this asset represents
+            the group.
+          example: 169.254.169.254
+          type: string
+        private:
+          description: Flag indicating if the asset is considered private (e.g., internal
+            IP).
+          example: "false"
+          type: boolean
+      required:
+      - BaseAsset
+      - dns
+      - name
+      - private
+      type: object
+    attribute:
+      description: Represents a key-value pair attribute associated with an entity,
+        often used for tagging or additional properties.
+      properties:
+        BaseModel:
+          type: object
+        capability:
+          description: Capability that discovered this attribute.
+          example: portscan
+          type: string
+        created:
+          description: Timestamp when the attribute was created (RFC3339).
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        key:
+          description: Unique key identifying the attribute.
+          example: '#attribute#open_port#80#asset#example.com#example.com'
+          type: string
+        metadata:
+          description: Additional metadata associated with the attribute.
+          example: '{"tool": "masscan"}'
+          type: object
+        name:
+          description: Name of the attribute.
+          example: https
+          type: string
+        parent:
+          description: Attribute parent.
+          type: object
+        source:
+          description: Key of the parent model this attribute belongs to.
+          example: '#asset#example.com#example.com'
+          type: string
+        status:
+          description: Status of the attribute.
+          example: A
+          type: string
+        ttl:
+          description: Time-to-live for the attribute record (Unix timestamp).
+          example: "1706353200"
+          format: int64
+          type: integer
+        username:
+          description: Chariot username associated with the attribute.
+          example: user@example.com
+          type: string
+        value:
+          description: Value of the attribute.
+          example: "443"
+          type: string
+        visited:
+          description: Timestamp when the attribute was last visited or confirmed
+            (RFC3339).
+          example: "2023-10-27T11:00:00Z"
+          type: string
+      required:
+      - BaseModel
+      - created
+      - key
+      - name
+      - parent
+      - source
+      - status
+      - ttl
+      - username
+      - value
+      - visited
+      type: object
+    awsresource:
+      description: ' ()'
+      properties:
+        CloudResource:
+          type: object
+      required:
+      - CloudResource
+      type: object
+    azureresource:
+      description: ' ()'
+      properties:
+        CloudResource:
+          type: object
+        resourceGroup:
+          type: string
+      required:
+      - CloudResource
+      - resourceGroup
+      type: object
+    baserelationship:
+      description: Represents the base structure for all graph relationships, containing
+        source, target, and metadata.
+      properties:
+        BaseModel:
+          type: object
+        attachment:
+          type: object
+        attachmentPath:
+          type: string
+        capability:
+          description: The capability or tool that discovered/created this relationship.
+          example: portscan
+          type: string
+        created:
+          description: Timestamp when the relationship was created (RFC3339).
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        key:
+          description: Unique key identifying the relationship.
+          example: <source_key>#DISCOVERED#<target_key>
+          type: string
+        visited:
+          description: Timestamp when the relationship was last visited or confirmed
+            (RFC3339).
+          example: "2023-10-27T11:00:00Z"
+          type: string
+      required:
+      - BaseModel
+      - attachment
+      - attachmentPath
+      - capability
+      - created
+      - key
+      - visited
+      type: object
+    cloudresource:
+      description: ' ()'
+      properties:
+        BaseModel:
+          type: object
+        History:
+          type: object
+        accountRef:
+          type: string
+        created:
+          type: string
+        displayName:
+          type: string
+        key:
+          type: string
+        labels:
+          items:
+            type: string
+          type: array
+        name:
+          type: string
+        properties:
+          type: object
+        provider:
+          type: string
+        region:
+          type: string
+        resourceType:
+          type: string
+        secret:
+          type: string
+        status:
+          type: string
+        ttl:
+          format: int64
+          type: integer
+        username:
+          type: string
+        visited:
+          type: string
+      required:
+      - BaseModel
+      - History
+      - accountRef
+      - created
+      - displayName
+      - key
+      - labels
+      - name
+      - properties
+      - provider
+      - region
+      - resourceType
+      - secret
+      - status
+      - ttl
+      - username
+      - visited
+      type: object
+    condition:
+      description: Represents a specific condition or finding observed on an asset,
+        often related to vulnerabilities or misconfigurations.
+      properties:
+        BaseModel:
+          type: object
+        key:
+          description: Unique key for the condition.
+          example: '#condition#exposure-open_port-80'
+          type: string
+        name:
+          description: Name of the condition or attribute.
+          example: https
+          type: string
+        source:
+          description: Source of the condition information.
+          example: system
+          type: string
+        updated:
+          description: Timestamp when the condition was last updated (RFC3339).
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        username:
+          description: Chariot username associated with the condition.
+          example: system
+          type: string
+        value:
+          description: Value associated with the condition.
+          example: "443"
+          type: string
+      required:
+      - BaseModel
+      - key
+      - name
+      - source
+      - updated
+      - username
+      - value
+      type: object
+    configuration:
+      description: Represents a praetorian-only configuration setting within chariot.
+      properties:
+        BaseModel:
+          type: object
+        key:
+          description: Unique key for the setting.
+          example: '#setting#notification_email'
+          type: string
+        last_modified:
+          description: Timestamp when the setting was last modified.
+          example: "2023-01-01T00:00:00Z"
+          format: date-time
+          type: object
+        name:
+          description: Name of the setting.
+          example: notification_email
+          type: string
+        username:
+          description: Chariot username associated with the setting (if user-specific).
+          example: user@example.com
+          type: string
+        value:
+          description: Value of the setting.
+          example: admin@example.com
+          type: object
+      required:
+      - BaseModel
+      - key
+      - name
+      - username
+      - value
+      type: object
+    cpe:
+      description: Represents a Common Platform Enumeration (CPE) identifier, used
+        for naming hardware, software, and operating systems.
+      properties:
+        BaseModel:
+          type: object
+        edition:
+          description: Edition information.
+          example: professional
+          type: string
+        language:
+          description: Language tag.
+          example: en-us
+          type: string
+        other:
+          description: Other relevant information.
+          example: oem
+          type: string
+        part:
+          description: CPE part (h=hardware, o=os, a=application).
+          example: a
+          type: string
+        product:
+          description: Product name.
+          example: windows_10
+          type: string
+        swEdition:
+          description: Software edition.
+          example: home
+          type: string
+        targetHw:
+          description: Target hardware environment.
+          example: x64
+          type: string
+        targetSw:
+          description: Target software environment.
+          example: windows
+          type: string
+        update:
+          description: Update or service pack.
+          example: sp1
+          type: string
+        vendor:
+          description: Vendor name.
+          example: microsoft
+          type: string
+        version:
+          description: Version identifier.
+          example: 10.0.19042
+          type: string
+      required:
+      - BaseModel
+      - edition
+      - language
+      - other
+      - part
+      - product
+      - swEdition
+      - targetHw
+      - targetSw
+      - update
+      - vendor
+      - version
+      type: object
+    credential:
+      description: Credential model for storing client credentials in the graph database
+      properties:
+        BaseModel:
+          type: object
+        accountKey:
+          description: Key of the associated account
+          type: string
+        category:
+          description: Category of the credential
+          type: string
+        created:
+          description: Timestamp when the credential was created
+          type: string
+        credentialId:
+          description: UUID for the credential
+          type: string
+        key:
+          description: Key of the credential (#credential#category#type#credentialId)
+          type: string
+        type:
+          description: Type of credential
+          type: string
+        updated:
+          description: Timestamp when the credential was last updated
+          type: string
+        username:
+          description: Username associated with the credential
+          type: string
+      required:
+      - BaseModel
+      - accountKey
+      - category
+      - created
+      - credentialId
+      - key
+      - type
+      - updated
+      - username
+      type: object
+    cvssmetrics:
+      description: Represents Common Vulnerability Scoring System (CVSS) metrics for
+        a vulnerability.
+      properties:
+        BaseModel:
+          type: object
+        base_score:
+          description: CVSS base score.
+          example: "9.8"
+          type: number
+        base_severity:
+          description: CVSS base severity rating.
+          example: Critical
+          type: string
+        base_vector:
+          description: CVSS base vector string.
+          example: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+          type: string
+        exploit_maturity:
+          description: Exploit maturity level.
+          example: Proof-of-Concept
+          type: string
+        exploitability_score:
+          description: CVSS exploitability subscore.
+          example: "3.9"
+          type: number
+        impact_score:
+          description: CVSS impact subscore.
+          example: "5.9"
+          type: number
+        metric_group:
+          description: Metric group (Base, Temporal, Threat).
+          example: Base
+          type: string
+        temporal_score:
+          description: CVSS temporal score.
+          example: "8.1"
+          type: number
+        temporal_vector:
+          description: CVSS temporal vector string.
+          example: E:P/RL:O/RC:C
+          type: string
+        threat_score:
+          description: CVSS threat score (v4.0+).
+          example: "9.1"
+          type: number
+        threat_severity:
+          description: CVSS threat severity (v4.0+).
+          example: High
+          type: string
+        type:
+          description: Type of CVSS metric (Primary or Secondary).
+          example: Primary
+          type: string
+        version:
+          description: CVSS version (e.g., v2, v3.0, v3.1, v4.0).
+          example: v3.1
+          type: string
+      required:
+      - BaseModel
+      - metric_group
+      - type
+      - version
+      type: object
+    data:
+      description: Represents the data points associated with a statistic, often counts
+        or values.
+      properties:
+        BaseModel:
+          type: object
+        count:
+          description: A singular count value.
+          example: "150"
+          type: integer
+        counts:
+          description: A map of named counts.
+          example: '{"active": 100, "pending": 50}'
+          type: object
+        values:
+          description: A map of named float values.
+          example: '{"average_score": 8.5}'
+          type: object
+      required:
+      - BaseModel
+      type: object
+    discovered:
+      description: Represents a discovery relationship between two entities (e.g.,
+        a host discovered a service).
+      properties:
+        BaseRelationship:
+          type: object
+      required:
+      - BaseRelationship
+      type: object
+    enrichment:
+      description: Represents enrichment data for a vulnerability.
+      properties:
+        BaseModel:
+          type: object
+        cvss:
+          description: List of associated CVSS metrics.
+          items:
+            type: object
+          type: array
+        description:
+          description: Detailed description of the vulnerability or enrichment context.
+          example: A remote code execution vulnerability exists...
+          type: string
+        epss:
+          description: Associated EPSS score and percentile.
+          type: object
+        exploits:
+          description: Exploit counts and timeline information.
+          type: object
+        id:
+          description: Unique identifier for the enrichment data (often CVE ID).
+          example: CVE-2023-12345
+          type: string
+        is_kev:
+          description: Indicates if the vulnerability is listed in the CISA KEV catalog.
+          example: "true"
+          type: boolean
+        mitre_techniques:
+          description: List of associated MITRE ATT&CK techniques.
+          items:
+            type: object
+          type: array
+        modified:
+          description: Date the vulnerability or enrichment data was last modified
+            (RFC3339).
+          example: "2023-11-10T12:00:00Z"
+          type: string
+        name:
+          description: Common name or title (e.g., from KEV).
+          example: Microsoft Exchange Server Remote Code Execution Vulnerability
+          type: string
+        published:
+          description: Date the vulnerability or enrichment data was published (RFC3339).
+          example: "2023-11-01T00:00:00Z"
+          type: string
+        ssvc:
+          description: List of associated SSVC assessments.
+          items:
+            type: object
+          type: array
+        threat_actors:
+          description: List of associated threat actors.
+          items:
+            type: object
+          type: array
+        weaknesses:
+          description: List of associated weaknesses (e.g., CWEs).
+          items:
+            type: object
+          type: array
+      required:
+      - BaseModel
+      - description
+      - id
+      - is_kev
+      - modified
+      - name
+      - published
+      type: object
+    epss:
+      description: Represents EPSS score and percentile for a vulnerability.
+      properties:
+        BaseModel:
+          type: object
+        percentile:
+          description: EPSS percentile rank.
+          example: "0.99"
+          type: number
+        score:
+          description: EPSS score (probability of exploitation).
+          example: "0.95"
+          type: number
+      required:
+      - BaseModel
+      type: object
+    exploitcounts:
+      description: Represents counts of various exploit-related indicators for a vulnerability.
+      properties:
+        BaseModel:
+          type: object
+        botnets:
+          description: Number of botnets associated with exploits.
+          example: "1"
+          type: integer
+        exploits:
+          description: Total number of known exploits.
+          example: "5"
+          type: integer
+        ransomware_families:
+          description: Number of ransomware families associated with exploits.
+          example: "2"
+          type: integer
+        threat_actors:
+          description: Number of threat actors associated with exploits.
+          example: "3"
+          type: integer
+      required:
+      - BaseModel
+      - botnets
+      - exploits
+      - ransomware_families
+      - threat_actors
+      type: object
+    exploits:
+      description: Represents exploit counts and timeline information for a vulnerability.
+      properties:
+        BaseModel:
+          type: object
+        counts:
+          description: Counts of various exploit-related indicators.
+          type: object
+        timeline:
+          description: Timeline of exploit-related events.
+          type: object
+      required:
+      - BaseModel
+      type: object
+    exploittimeline:
+      description: Represents timeline information for exploit-related events for
+        a vulnerability.
+      properties:
+        BaseModel:
+          type: object
+        cisa_kev_date_added:
+          description: Date added to CISA KEV catalog (RFC3339).
+          example: "2023-01-10T00:00:00Z"
+          type: string
+        cisa_kev_date_due:
+          description: Due date for patching according to CISA KEV (RFC3339).
+          example: "2023-01-31T00:00:00Z"
+          type: string
+        first_exploit_published:
+          description: Date the first exploit was published (RFC3339).
+          example: "2022-12-01T00:00:00Z"
+          type: string
+        first_exploit_published_weaponized_or_higher:
+          description: Date the first weaponized (or higher) exploit was published
+            (RFC3339).
+          example: "2022-12-15T00:00:00Z"
+          type: string
+        first_reported_botnet:
+          description: Date the first associated botnet was reported (RFC3339).
+          example: "2023-02-01T00:00:00Z"
+          type: string
+        first_reported_ransomware:
+          description: Date the first associated ransomware was reported (RFC3339).
+          example: "2023-01-20T00:00:00Z"
+          type: string
+        first_reported_threat_actor:
+          description: Date the first associated threat actor was reported (RFC3339).
+          example: "2023-01-05T00:00:00Z"
+          type: string
+        most_recent_exploit_published:
+          description: Date the most recent exploit was published (RFC3339).
+          example: "2023-03-01T00:00:00Z"
+          type: string
+        most_recent_reported_botnet:
+          description: Date the most recent associated botnet was reported (RFC3339).
+          example: "2023-03-10T00:00:00Z"
+          type: string
+        most_recent_reported_ransomware:
+          description: Date the most recent associated ransomware was reported (RFC3339).
+          example: "2023-02-20T00:00:00Z"
+          type: string
+        most_recent_reported_threat_actor:
+          description: Date the most recent associated threat actor was reported (RFC3339).
+          example: "2023-02-15T00:00:00Z"
+          type: string
+        nvd_last_modified:
+          description: NVD last modified date (RFC3339).
+          example: "2023-04-01T10:00:00Z"
+          type: string
+        nvd_published:
+          description: NVD published date (RFC3339).
+          example: "2022-11-01T00:00:00Z"
+          type: string
+        vulncheck_kev_date_added:
+          description: Date added to VulnCheck KEV (RFC3339).
+          example: "2023-01-11T00:00:00Z"
+          type: string
+        vulncheck_kev_date_due:
+          description: Due date for patching according to VulnCheck KEV (RFC3339).
+          example: "2023-02-01T00:00:00Z"
+          type: string
+      required:
+      - BaseModel
+      type: object
+    file:
+      description: Represents a file system entity, including its path and potential
+        content hash.
+      properties:
+        BaseModel:
+          type: object
+        bytes:
+          description: File content. Must be a JSON-compatible string. Can be encoded
+            with base64 if it begins with the prefix 'base64:'
+          example: base64:dGVzdA==
+          items:
+            type: integer
+          type: array
+        key:
+          description: Unique key for the file record.
+          example: '#file#proofs/scan.txt'
+          type: string
+        name:
+          description: Name or path of the file.
+          example: proofs/scan.txt
+          type: string
+        updated:
+          description: Timestamp when the file record was last updated (RFC3339).
+          example: "2023-10-27T11:00:00Z"
+          type: string
+        username:
+          description: Chariot username associated with the file.
+          example: user@example.com
+          type: string
+      required:
+      - BaseModel
+      - bytes
+      - key
+      - name
+      - updated
+      - username
+      type: object
+    flag:
+      description: Represents a flag or notable marker on an asset or finding, often
+        indicating proof of compromise or significance.
+      properties:
+        BaseModel:
+          type: object
+        key:
+          description: Unique key for the flag.
+          example: '#flag#feature-x'
+          type: string
+        name:
+          description: Name of the feature flag.
+          example: feature-x
+          type: string
+        username:
+          description: Chariot username associated with the flag.
+          example: user@example.com
+          type: string
+      required:
+      - BaseModel
+      - key
+      - name
+      - username
+      type: object
+    gcpresource:
+      description: ' ()'
+      properties:
+        CloudResource:
+          type: object
+      required:
+      - CloudResource
+      type: object
+    hasattribute:
+      description: Represents the relationship indicating an entity has a specific
+        attribute.
+      properties:
+        BaseRelationship:
+          type: object
+      required:
+      - BaseRelationship
+      type: object
+    hascredential:
+      description: Represents the relationship indicating an entity has a specific
+        credential.
+      properties:
+        BaseRelationship:
+          type: object
+      required:
+      - BaseRelationship
+      type: object
+    hastechnology:
+      description: Represents the relationship indicating an asset uses or runs a
+        specific technology.
+      properties:
+        BaseRelationship:
+          type: object
+      required:
+      - BaseRelationship
+      type: object
+    hasvulnerability:
+      description: Represents the relationship indicating an asset has a specific
+        vulnerability.
+      properties:
+        BaseRelationship:
+          type: object
+      required:
+      - BaseRelationship
+      type: object
+    history:
+      description: Represents a container for a list of historical event records.
+      properties:
+        BaseModel:
+          type: object
+        history:
+          description: List of history records detailing changes.
+          items:
+            type: object
+          type: array
+        remove:
+          description: Index of the history record to remove (used for updates, not
+            stored).
+          example: "0"
+          type: integer
+      required:
+      - BaseModel
+      type: object
+    historyrecord:
+      description: Represents a single event or change in the history of an entity.
+      properties:
+        BaseModel:
+          type: object
+        affiliationVerdict:
+          description: Affiliation verdict from an ML model, if applicable.
+          example: Affiliated
+          type: string
+        base:
+          description: Identifier of the ML model used for the prediction, if applicable.
+          example: affiliation-model-v1.2
+          type: string
+        by:
+          description: Identifier of the user or system that made the change.
+          example: user@example.com
+          type: string
+        comment:
+          description: Comment associated with the history event.
+          example: Asset confirmed via scan.
+          type: string
+        filePath:
+          description: Path to a related file, if applicable.
+          example: proofs/evidence.png
+          type: string
+        from:
+          description: The previous state or value.
+          example: TL
+          type: string
+        logit:
+          description: Logit value from an ML model prediction, if applicable.
+          example: "0.85"
+          type: number
+        to:
+          description: The new state or value.
+          example: OL
+          type: string
+        updated:
+          description: Timestamp of the history event (RFC3339).
+          example: "2023-10-27T11:05:00Z"
+          type: string
+      required:
+      - BaseModel
+      type: object
+    instanceof:
+      description: Represents an 'instance of' relationship (e.g., a process is an
+        instance of a software package).
+      properties:
+        BaseRelationship:
+          type: object
+      required:
+      - BaseRelationship
+      type: object
+    integration:
+      description: Base logic for an asset.
+      properties:
+        BaseAsset:
+          type: object
+        name:
+          description: Name of the integration.
+          example: github
+          type: string
+        value:
+          description: Value of the integration.
+          example: "1234567890"
+          type: string
+      required:
+      - BaseAsset
+      - name
+      - value
+      type: object
+    job:
+      description: Represents an asynchronous job or task, including its status, specification,
+        and results.
+      properties:
+        BaseModel:
+          type: object
+        Queue:
+          description: Target queue for the job.
+          example: standard
+          type: string
+        capabilities:
+          description: List of specific capabilities to run for this job.
+          example: '["portscan", "nuclei"]'
+          items:
+            type: string
+          type: array
+        comment:
+          description: Optional comment about the job.
+          example: Scanning standard web ports
+          type: string
+        config:
+          description: Configuration parameters for the job capability.
+          example: '{"test": "cve-1111-2222"}'
+          type: object
+        created:
+          description: Timestamp when the job was created (RFC3339).
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        dns:
+          description: Primary DNS associated with the job's target.
+          example: example.com
+          type: string
+        full:
+          description: Indicates if this is a full scan job.
+          example: "false"
+          type: boolean
+        key:
+          description: Unique key for the job.
+          example: '#job#example.com#asset#portscan'
+          type: string
+        name:
+          description: The IP address this job was executed from
+          example: 1.2.3.4
+          type: string
+        parent:
+          description: Optional parent target from which this job was spawned.
+          type: object
+        source:
+          description: The source or capability that generated this job.
+          example: portscan
+          type: string
+        status:
+          description: Current status of the job (e.g., JQ#portscan).
+          example: JQ#portscan
+          type: string
+        target:
+          description: The primary target of the job.
+          type: object
+        ttl:
+          description: Time-to-live for the job record (Unix timestamp).
+          example: "1706353200"
+          format: int64
+          type: integer
+        updated:
+          description: Timestamp when the job was last updated (RFC3339).
+          example: "2023-10-27T10:05:00Z"
+          type: string
+        username:
+          description: Username who initiated or owns the job.
+          example: user@example.com
+          type: string
+      required:
+      - BaseModel
+      - Queue
+      - config
+      - created
+      - dns
+      - key
+      - source
+      - status
+      - target
+      - ttl
+      - updated
+      - username
+      type: object
+    key:
+      description: An API key for the Chariot platform
+      properties:
+        BaseModel:
+          type: object
+        created:
+          type: string
+        creator:
+          type: string
+        deleted:
+          type: string
+        deleter:
+          type: string
+        expires:
+          description: Optional expiration timestamp in RFC3339 format
+          example: "2024-12-31T23:59:59Z"
+          type: string
+        id:
+          description: ID of this key
+          example: 550e8400-e29b-41d4-a716-446655440000
+          type: string
+        key:
+          description: Unique key for the key record.
+          example: '#key#550e8400-e29b-41d4-a716-446655440000'
+          type: string
+        name:
+          description: Name of this key
+          example: user
+          type: string
+        secret:
+          type: string
+        status:
+          type: string
+        username:
+          description: Chariot username associated with the account.
+          example: user@example.com
+          type: string
+        visited:
+          type: string
+      required:
+      - BaseModel
+      - created
+      - creator
+      - deleted
+      - deleter
+      - expires
+      - id
+      - key
+      - name
+      - secret
+      - status
+      - username
+      - visited
+      type: object
+    metadata:
+      description: Contains metadata about an asset, including discovery information,
+        relationships, and attributes.
+      properties:
+        BaseModel:
+          type: object
+        asname:
+          description: Autonomous System name.
+          example: GOOGLE
+          type: string
+        asnumber:
+          description: Autonomous System number.
+          example: AS15169
+          type: string
+        asrange:
+          description: Autonomous System IP range.
+          example: 172.217.0.0/16
+          type: string
+        attackSurface:
+          description: List of attack surface identifiers related to the asset.
+          example: '["internal", "external"]'
+          items:
+            type: string
+          type: array
+        capability:
+          description: List of all capabilities that have discovered this asset.
+          example: '["amazon", "portscan"]'
+          items:
+            type: string
+          type: array
+        city:
+          description: City associated with the asset.
+          example: Mountain View
+          type: string
+        cloudAccount:
+          description: Specific account identifier within the cloud provider.
+          example: billing-account-id
+          type: string
+        cloudId:
+          description: Unique identifier within the cloud provider.
+          example: project-id-12345
+          type: string
+        cloudRoot:
+          description: Root identifier for the cloud environment (e.g., organization
+            ID).
+          example: organizations/1234567890
+          type: string
+        cloudService:
+          description: Name of the cloud service provider (e.g., AWS, GCP, Azure).
+          example: GCP
+          type: string
+        country:
+          description: Country associated with the asset.
+          example: US
+          type: string
+        expiration:
+          description: Date the asset registration expires (RFC3339).
+          example: "2024-09-15T00:00:00Z"
+          type: string
+        province:
+          description: Province or state associated with the asset.
+          example: California
+          type: string
+        purchased:
+          description: Date the asset (e.g., domain) was purchased (RFC3339).
+          example: "2002-09-15T00:00:00Z"
+          type: string
+        registrant:
+          description: Registered owner of the asset (e.g., domain).
+          example: Google LLC
+          type: string
+        registrar:
+          description: Registrar managing the asset (e.g., domain).
+          example: MarkMonitor Inc.
+          type: string
+        surface:
+          description: List of attack surface identifiers related to the asset.
+          example: '["web", "dns"]'
+          items:
+            type: string
+          type: array
+        updated:
+          description: Date the asset registration was last updated (RFC3339).
+          example: "2023-09-15T10:00:00Z"
+          type: string
+      required:
+      - BaseModel
+      type: object
+    mitretechnique:
+      description: Represents a MITRE ATT&CK technique for a vulnerability.
+      properties:
+        BaseModel:
+          type: object
+        domain:
+          description: MITRE ATT&CK domain.
+          example: enterprise-attack
+          type: string
+        id:
+          description: MITRE ATT&CK technique ID.
+          example: T1566
+          type: string
+        name:
+          description: MITRE ATT&CK technique name.
+          example: Phishing
+          type: string
+        subtechnique:
+          description: Indicates if this is a sub-technique.
+          example: "false"
+          type: boolean
+        tactics:
+          description: List of MITRE ATT&CK tactics associated with the technique.
+          example: '["initial-access"]'
+          type: array
+        url:
+          description: URL for more information about the technique.
+          example: https://attack.mitre.org/techniques/T1566/
+          type: string
+      required:
+      - BaseModel
+      type: object
+    mlproperties:
+      description: Contains properties relevant to machine learning models, such as
+        prediction scores and features.
+      properties:
+        BaseModel:
+          type: object
+        agent:
+          description: Name of the agent that provided the ML properties.
+          example: autotriage
+          type: string
+        logit:
+          description: Logit value from an ML model prediction.
+          example: "0.75"
+          type: number
+        proofSufficient:
+          description: Indicates if ML model considers proof sufficient for auto-triage.
+          example: "true"
+          type: boolean
+      required:
+      - BaseModel
+      type: object
+    preseed:
+      description: Represents pre-seeded information about an asset or entity, often
+        used to bootstrap discovery.
+      properties:
+        BaseModel:
+          type: object
+        capability:
+          description: Capability associated with processing this preseed record.
+          example: whois-lookup
+          type: string
+        created:
+          description: Timestamp when the preseed record was created (RFC3339).
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        display:
+          description: Hint for UI display type (e.g., text, image, base64).
+          example: text
+          type: string
+        key:
+          description: Unique key identifying the preseed record.
+          example: '#preseed#whois#registrant_email#test@example.com'
+          type: string
+        status:
+          description: Status of the preseed record.
+          example: A
+          type: string
+        title:
+          description: Title or category within the preseed type.
+          example: registrant_email
+          type: string
+        ttl:
+          description: Time-to-live for the preseed record (Unix timestamp).
+          example: "1706353200"
+          format: int64
+          type: integer
+        type:
+          description: Type of the preseed data.
+          example: whois
+          type: string
+        username:
+          description: Chariot username associated with the preseed record.
+          example: user@example.com
+          type: string
+        value:
+          description: The actual preseed value.
+          example: test@example.com
+          type: string
+        visited:
+          description: Timestamp when the preseed record was last visited or processed
+            (RFC3339).
+          example: "2023-10-27T11:00:00Z"
+          type: string
+      required:
+      - BaseModel
+      - created
+      - display
+      - key
+      - status
+      - title
+      - ttl
+      - type
+      - username
+      - value
+      - visited
+      type: object
+    repository:
+      description: Base logic for an asset.
+      properties:
+        BaseAsset:
+          type: object
+        name:
+          description: Repository name.
+          example: praetorian-inc/tabularium
+          type: string
+        org:
+          description: Organization name.
+          example: praetorian-inc
+          type: string
+        url:
+          description: Repository URL.
+          example: https://github.com/praetorian-inc/tabularium
+          type: string
+      required:
+      - BaseAsset
+      type: object
+    result:
+      description: Represents the result of a job, encapsulating the job details and
+        the resulting item(s).
+      properties:
+        BaseModel:
+          type: object
+        context:
+          description: The context associated with this result.
+          type: object
+        items:
+          description: The actual result items.
+          items:
+            type: object
+          type: array
+      required:
+      - BaseModel
+      - context
+      - items
+      type: object
+    risk:
+      description: Represents a security risk, typically linking an asset to a condition
+        or vulnerability, including its status, severity, and associated metadata.
+      properties:
+        BaseModel:
+          type: object
+        History:
+          type: object
+        MLProperties:
+          type: object
+        comment:
+          description: User-provided comment about the risk.
+          example: Confirmed by manual check
+          type: string
+        created:
+          description: Timestamp when the risk was first created (RFC3339).
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        dns:
+          description: Primary DNS or group associated with the risk.
+          example: example.com
+          type: string
+        key:
+          description: Unique key identifying the risk.
+          example: '#risk#example.com#CVE-2023-12345'
+          type: string
+        name:
+          description: Name of the risk or vulnerability.
+          example: CVE-2023-12345
+          type: string
+        priority:
+          description: Calculated priority score based on severity.
+          example: "10"
+          type: integer
+        source:
+          description: Source that identified the risk.
+          example: nessus
+          type: string
+        status:
+          description: Current status of the risk (e.g., TH, OC, RM).
+          example: TH
+          type: string
+        ttl:
+          description: Time-to-live for the risk record (Unix timestamp).
+          example: "1706353200"
+          format: int64
+          type: integer
+        updated:
+          description: Timestamp when the risk was last updated (RFC3339).
+          example: "2023-10-27T11:00:00Z"
+          type: string
+        username:
+          description: Chariot username associated with the risk.
+          example: user@example.com
+          type: string
+        visited:
+          description: Timestamp when the risk was last visited or confirmed (RFC3339).
+          example: "2023-10-27T11:00:00Z"
+          type: string
+      required:
+      - BaseModel
+      - History
+      - MLProperties
+      - created
+      - dns
+      - key
+      - name
+      - priority
+      - source
+      - status
+      - ttl
+      - updated
+      - username
+      - visited
+      type: object
+    riskdefinition:
+      description: Defines the static properties of a risk type, such as its name,
+        description, and severity mappings.
+      properties:
+        BaseModel:
+          type: object
+        Description:
+          description: Description of the risk or vulnerability.
+          example: This vulnerability allows...
+          type: string
+        Impact:
+          description: Potential impact if the risk is exploited.
+          example: Remote code execution.
+          type: string
+        Recommendation:
+          description: Recommended actions to mitigate the risk.
+          example: Apply vendor patch XYZ.
+          type: string
+        References:
+          description: Supporting references or links.
+          example: |-
+            https://nvd.nist.gov/vuln/detail/CVE-2023-12345
+            https://vendor.com/security/advisory
+          type: string
+      required:
+      - BaseModel
+      - Description
+      - Impact
+      - Recommendation
+      - References
+      type: object
+    seed:
+      description: Represents a seed input for discovery, such as a domain, IP range,
+        or ASN.
+      properties:
+        BaseModel:
+          type: object
+        History:
+          type: object
+        class:
+          description: Classification of the seed type (e.g., domain, tld, ip, cidr).
+          example: domain
+          type: string
+        comment:
+          description: User-provided comment about the seed.
+          example: Initial customer seed
+          type: string
+        created:
+          description: Timestamp when the seed was created (RFC3339).
+          example: "2023-10-27T09:00:00Z"
+          type: string
+        dns:
+          description: The DNS name or IP address of the seed.
+          example: example.com
+          type: string
+        email:
+          description: Optional contact email associated with the seed.
+          example: contact@example.com
+          type: string
+        key:
+          description: Unique key identifying the seed.
+          example: '#seed#domain#example.com'
+          type: string
+        location:
+          description: Optional location associated with the seed.
+          example: Headquarters
+          type: string
+        name:
+          description: Optional name associated with the seed (e.g., company name).
+          example: Example Corp
+          type: string
+        registrar:
+          description: Optional registrar information for the seed (if domain).
+          example: MarkMonitor Inc.
+          type: string
+        source:
+          description: Source from which the seed was obtained.
+          example: ns1
+          type: string
+        status:
+          description: Composite of the current status of the seed and the seed type.
+          example: domain#P
+          type: string
+        type:
+          description: Broader type category (e.g., domain, ip).
+          example: domain
+          type: string
+        username:
+          description: Chariot username associated with the seed.
+          example: user@example.com
+          type: string
+        visited:
+          description: Timestamp when the seed was last processed or visited (RFC3339).
+          example: "2023-10-27T09:30:00Z"
+          type: string
+      required:
+      - BaseModel
+      - History
+      - class
+      - created
+      - dns
+      - key
+      - status
+      - type
+      - username
+      - visited
+      type: object
+    setting:
+      description: Represents a configuration setting within chariot.
+      properties:
+        BaseModel:
+          type: object
+        key:
+          description: Unique key for the setting.
+          example: '#setting#notification_email'
+          type: string
+        last_modified:
+          description: Timestamp when the setting was last modified.
+          example: "2023-01-01T00:00:00Z"
+          format: date-time
+          type: object
+        name:
+          description: Name of the setting.
+          example: notification_email
+          type: string
+        username:
+          description: Chariot username associated with the setting (if user-specific).
+          example: user@example.com
+          type: string
+        value:
+          description: Value of the setting.
+          example: admin@example.com
+          type: object
+      required:
+      - BaseModel
+      - key
+      - name
+      - username
+      - value
+      type: object
+    ssvc:
+      description: Represents SSVC assessment information for a vulnerability.
+      properties:
+        BaseModel:
+          type: object
+        automatable:
+          description: SSVC automatable status.
+          example: "yes"
+          type: string
+        exploitation:
+          description: SSVC exploitation status.
+          example: active
+          type: string
+        source:
+          description: Source of the SSVC assessment.
+          example: CISA
+          type: string
+        technical_impact:
+          description: SSVC technical impact level.
+          example: total
+          type: string
+      required:
+      - BaseModel
+      type: object
+    statistic:
+      description: Represents a statistic or metric collected by the system, including
+        its associated data points.
+      properties:
+        BaseModel:
+          type: object
+        created:
+          description: Timestamp when the statistic was generated (RFC3339 or 'now').
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        data:
+          description: The actual statistical data.
+          example: '{"count": 150}'
+          type: object
+        key:
+          description: Unique key for the statistic record.
+          example: '#statistic#asset_count#global#2023-10-27T00:00:00Z#all'
+          type: string
+        name:
+          description: The specific name or scope of the statistic.
+          example: global
+          type: string
+        store:
+          description: Flag indicating if this statistic should be stored long-term.
+          example: "true"
+          type: boolean
+        ttl:
+          description: Time-to-live for the statistic record (Unix timestamp).
+          example: "1706353200"
+          format: int64
+          type: integer
+        type:
+          description: The type or category of the statistic.
+          example: asset_count
+          type: string
+        username:
+          description: Chariot username associated with the statistic.
+          example: user@example.com
+          type: string
+        value:
+          description: A specific value or sub-category for the statistic.
+          example: all
+          type: string
+      required:
+      - BaseModel
+      - created
+      - data
+      - key
+      - name
+      - store
+      - ttl
+      - type
+      - username
+      - value
+      type: object
+    technology:
+      description: Represents a specific technology (e.g., software, library, framework)
+        identified on an asset.
+      properties:
+        AliasCPE:
+          type: object
+        BaseModel:
+          type: object
+        History:
+          type: object
+        comment:
+          description: User-provided comment about the technology record.
+          example: Found on main web server
+          type: string
+        cpe:
+          description: The full CPE string representation.
+          example: cpe:2.3:a:apache:http_server:2.4.50:*:*:*:*:*:*:*
+          type: string
+        created:
+          description: Timestamp when the technology record was created (RFC3339).
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        key:
+          description: Unique key identifying the technology (based on CPE string).
+          example: '#technology#cpe:2.3:a:apache:http_server:2.4.50:*:*:*:*:*:*:*'
+          type: string
+        name:
+          description: Optional common name for the technology.
+          example: Apache httpd
+          type: string
+        source:
+          description: Source that identified this technology.
+          example: wappalyzer
+          type: string
+        ttl:
+          description: Time-to-live for the technology record (Unix timestamp).
+          example: "1706353200"
+          format: int64
+          type: integer
+        username:
+          description: Chariot username associated with the technology record.
+          example: user@example.com
+          type: string
+        visited:
+          description: Timestamp when the technology was last visited or confirmed
+            (RFC3339).
+          example: "2023-10-27T11:00:00Z"
+          type: string
+      required:
+      - AliasCPE
+      - BaseModel
+      - History
+      - cpe
+      - created
+      - key
+      - ttl
+      - username
+      - visited
+      type: object
+    threat:
+      description: Represents a known threat, such as a malware family or campaign.
+      properties:
+        BaseModel:
+          type: object
+        created:
+          description: Timestamp associated with the threat data creation (often includes
+            feed name).
+          example: '#threat#vulncheck#2023-11-01T00:00:00Z'
+          type: string
+        data:
+          description: The actual threat intelligence data.
+          example: '{"cvss": 9.8, "exploits": ["metasploit"]}'
+          type: object
+        feed:
+          description: The feed this threat was found in
+          type: string
+        key:
+          description: Unique key identifying the threat record.
+          example: '#threat#vulncheck#CVE-2023-12345'
+          type: string
+        source:
+          description: Identifier for the source of the threat data (e.g., CVE ID).
+          example: CVE-2023-12345
+          type: string
+        updated:
+          description: Timestamp when the threat record was last updated (RFC3339).
+          example: "2023-11-10T12:00:00Z"
+          type: string
+        username:
+          description: Chariot username associated with the threat data.
+          example: system
+          type: string
+      required:
+      - BaseModel
+      - created
+      - data
+      - feed
+      - key
+      - source
+      - updated
+      - username
+      type: object
+    threatactor:
+      description: Represents a threat actor group for a vulnerability.
+      properties:
+        BaseModel:
+          type: object
+        aliases:
+          description: Known aliases for the threat actor.
+          example: '["Fancy Bear", "Sofacy Group"]'
+          items:
+            type: string
+          type: array
+        categories:
+          description: Categories the threat actor falls into.
+          example: '["State-Sponsored", "Espionage"]'
+          items:
+            type: string
+          type: array
+        country:
+          description: Country associated with the threat actor.
+          example: RU
+          type: string
+        name:
+          description: Name of the threat actor group.
+          example: APT28
+          type: string
+      required:
+      - BaseModel
+      - aliases
+      - categories
+      - name
+      type: object
+    vulnerability:
+      description: Represents a specific vulnerability identified in the system (e.g.,
+        a CVE).
+      properties:
+        BaseModel:
+          type: object
+        cvss:
+          description: Highest CVSS base score associated with the vulnerability.
+          example: "9.8"
+          type: number
+        epss:
+          description: EPSS score (probability of exploitation).
+          example: "0.95"
+          type: number
+        exploit:
+          description: Indicates if there is known public exploit code available.
+          example: "true"
+          type: boolean
+        id:
+          description: Identifier for the vulnerability (e.g., CVE ID).
+          example: CVE-2023-12345
+          type: string
+        kev:
+          description: Indicates if the vulnerability is listed in the CISA KEV catalog.
+          example: "true"
+          type: boolean
+        key:
+          description: Unique key identifying the vulnerability.
+          example: '#vulnerability#CVE-2023-12345'
+          type: string
+        title:
+          description: Title associated with the vulnerability.
+          example: Title
+          type: string
+        username:
+          description: Chariot username associated with the vulnerability record (usually
+            global).
+          example: global
+          type: string
+        writeupId:
+          description: PlexTrac writeup ID associated with the vulnerability.
+          example: "12345"
+          type: integer
+      required:
+      - BaseModel
+      - exploit
+      - id
+      - kev
+      - key
+      - username
+      type: object
+    vulnerabilitydefinition:
+      description: Represents the detailed definition of a vulnerability, including
+        its description, impact, and recommendations.
+      properties:
+        BaseModel:
+          type: object
+        description:
+          description: Description of the vulnerability.
+          example: A buffer overflow vulnerability in XYZ software.
+          type: string
+        impact:
+          description: Impact of the vulnerability.
+          example: Remote code execution leading to system compromise.
+          type: string
+        recommendation:
+          description: Recommended actions to mitigate the vulnerability.
+          example: Apply the latest security patch.
+          type: string
+        references:
+          description: References of the vulnerability.
+          example: https://nvd.nist.gov/vuln/detail/CVE-2023-12345
+          type: string
+      required:
+      - BaseModel
+      - description
+      - impact
+      - recommendation
+      - references
+      type: object
+    weakness:
+      description: Represents weakness information for a vulnerability.
+      properties:
+        BaseModel:
+          type: object
+        name:
+          description: Name of the weakness.
+          example: Improper Neutralization of Input During Web Page Generation ('Cross-site
+            Scripting')
+          type: string
+        source:
+          description: Source of the weakness information (e.g., NVD).
+          example: NVD
+          type: string
+        type:
+          description: Type of weakness classification (Primary or Secondary).
+          example: Primary
+          type: string
+        url:
+          description: URL for more information about the weakness.
+          example: https://cwe.mitre.org/data/definitions/79.html
+          type: string
+        value:
+          description: Weakness identifier (e.g., CWE ID).
+          example: CWE-79
+          type: string
+      required:
+      - BaseModel
+      type: object
+    webpage:
+      description: Represents a webpage, including its URL, status, and metadata.
+      properties:
+        BaseModel:
+          type: object
+        History:
+          type: object
+        WebpageDetails:
+          type: object
+        created:
+          description: Timestamp when the webpage was first discovered (RFC3339).
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        details_filepath:
+          description: The path to the details file for the webpage.
+          example: webpage/1234567890/details-1234567890.json
+          type: string
+        key:
+          description: Unique key identifying the webpage.
+          example: '#webpage#https://example.com#parentKey'
+          type: string
+        metadata:
+          description: Additional metadata associated with the webpage.
+          example: '{"title": "Example Domain"}'
+          type: object
+        parent:
+          description: The parent entity from which this webpage was discovered. Only
+            used for creating a relationship
+          type: object
+        private:
+          description: Whether the webpage is on a public web server.
+          example: "false"
+          type: boolean
+        source:
+          description: Sources that identified this webpage (e.g., seed, crawl)
+          example: '["crawl", "login"]'
+          items:
+            type: string
+          type: array
+        state:
+          description: Current analysis state of the webpage (e.g., Unanalyzed, Interesting,
+            Uninteresting).
+          example: Unanalyzed
+          type: string
+        status:
+          description: Current status of the webpage (e.g., Active, Inactive).
+          example: Active
+          type: string
+        ttl:
+          description: Timestamp when the webpage will be deleted from the database
+            in Unix seconds.
+          example: "1747636791"
+          format: int64
+          type: integer
+        url:
+          description: The basic URL of the webpage.
+          example: https://example.com/path
+          type: string
+        username:
+          description: The username associated with this webpage, if authenticated.
+          example: user@example.com
+          type: string
+        visited:
+          description: Timestamp when the webpage was last visited (RFC3339).
+          example: "2023-10-27T11:00:00Z"
+          type: string
+      required:
+      - BaseModel
+      - History
+      - WebpageDetails
+      - created
+      - details_filepath
+      - key
+      - metadata
+      - parent
+      - private
+      - source
+      - state
+      - status
+      - ttl
+      - url
+      - username
+      - visited
+      type: object
+info:
+  description: Unified Data Model for Chariot
+  title: Chariot Unified Data Model
+  version: 0.1.1
+openapi: 3.1.0
+paths: null
