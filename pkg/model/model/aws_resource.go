@@ -69,8 +69,8 @@ func (a *AWSResource) GetIPs() []string {
 	return ips
 }
 
-func (a *AWSResource) GetURLs() []string {
-	return []string{}
+func (a *AWSResource) GetURL() string {
+	return ""
 }
 
 func (a *AWSResource) GetDNS() string {
@@ -124,63 +124,49 @@ func (a *AWSResource) Visit(otherModel any) error {
 }
 
 // Return an Asset that matches the legacy integration
-func (a *AWSResource) NewAsset() []Asset {
-	assets := make([]Asset, 0)
+func (a *AWSResource) NewAsset() Asset {
 	dns := a.GetDNS()
-	ips := a.GetIPs()
-	urls := a.GetURLs()
-
-	// Extract service name from ARN (same logic as Amazon capability)
-	service := a.extractService()
-
-	// Create assets from URLs - NewAsset(url, arn)
-	for _, url := range urls {
-		asset := NewAsset(url, a.Name)
-		asset.CloudId = a.Name
-		asset.CloudService = service
-		asset.CloudAccount = a.AccountRef
-		assets = append(assets, asset)
+	var ip string
+	if ips := a.GetIPs(); len(ips) > 0 {
+		ip = ips[0] // Use first IP for legacy Asset compatibility
 	}
 
-	// Create assets from IPs
-	for _, ip := range ips {
-		var asset Asset
-		if dns != "" {
-			// NewAsset(dns, dns) when both DNS and IP exist - DNS takes precedence as identifier
-			asset = NewAsset(dns, dns)
-		} else {
-			// NewAsset(ip, ip) when only IP exists
-			asset = NewAsset(ip, ip)
-		}
-		asset.CloudId = a.Name
-		asset.CloudService = service
-		asset.CloudAccount = a.AccountRef
-		assets = append(assets, asset)
+	// Determine the identifier for the Asset
+	// Priority: DNS > IP > ARN (fallback for resources without DNS/IP)
+	identifier := ""
+	if dns != "" {
+		identifier = dns
+	} else if ip != "" {
+		identifier = ip
+	} else {
+		// Fallback to ARN for resources without DNS/IP (S3, Lambda, etc.)
+		identifier = a.Name
 	}
 
-	// If no URLs or IPs, create a fallback asset using the ARN
-	if len(assets) == 0 {
-		identifier := a.Name // Use ARN as fallback
-		if dns != "" {
-			identifier = dns
-		}
-		asset := NewAsset(identifier, identifier)
-		asset.CloudId = a.Name
-		asset.CloudService = service
-		asset.CloudAccount = a.AccountRef
-		assets = append(assets, asset)
-	}
+	// Correctly extract AWS service from ARN
+	// ARN format: arn:partition:service:region:account:resource
+	service := "Unknown Service"
 
-	return assets
-}
-
-// extractService extracts the service name from the ARN (same logic as Amazon capability)
-func (a *AWSResource) extractService() string {
 	parts := strings.Split(a.Name, ":")
 	if len(parts) > 2 {
-		return parts[2]
+		service = parts[2] // Index 2 is the service (e.g., "lambda", "s3", "ec2")
 	}
-	return "Unknown Service"
+
+	// Create Asset with proper DNS and Name to ensure valid key
+	// When DNS is empty, use identifier for both to avoid "#asset##name" pattern
+	assetDNS := dns
+	assetName := identifier
+	if dns == "" {
+		// Use identifier for DNS as well to create valid key "#asset#identifier#identifier"
+		assetDNS = identifier
+	}
+
+	asset := NewAsset(assetDNS, assetName)
+	asset.CloudId = a.Name
+	asset.CloudService = service
+	asset.CloudAccount = a.AccountRef
+
+	return asset
 }
 
 // IsPrivate determines if this AWS resource is private based on its IP/URL
@@ -198,7 +184,7 @@ func (a *AWSResource) IsPrivate() bool {
 	}
 
 	// Check if resource has a public URL/endpoint
-	if urls := a.GetURLs(); len(urls) > 0 {
+	if url := a.GetURL(); url != "" {
 		return false // Has public URL = not private
 	}
 

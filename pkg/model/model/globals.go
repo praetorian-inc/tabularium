@@ -47,7 +47,7 @@ type HasIP interface {
 // HasURL is an interface that can be used to get the URL of the resource
 // If the resource does not have a URL, it will return an empty string
 type HasURL interface {
-	GetURLs() []string
+	GetURL() string
 }
 
 // HasSecret is an interface that can be used to get the secret reference of the resource

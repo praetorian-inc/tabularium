@@ -17,25 +17,14 @@ const (
 	AWSRole           CloudResourceType = "AWS::IAM::Role"
 	AWSUser           CloudResourceType = "AWS::IAM::User"
 	AWSGateway        CloudResourceType = "AWS::ApiGateway::RestApi"
-	AWSSNSTopic       CloudResourceType = "AWS::SNS::Topic"
-	AWSSQSQueue       CloudResourceType = "AWS::SQS::Queue"
-	AWSRDSInstance    CloudResourceType = "AWS::RDS::DBInstance"
 
 	// Azure
 	AzureVM           CloudResourceType = "Microsoft.Compute/virtualMachines"
 	AzureSubscription CloudResourceType = "Microsoft.Resources/subscriptions"
 
 	// GCP
-	GCPResourceBucket               CloudResourceType = "storage.googleapis.com/Bucket"
-	GCPResourceInstance             CloudResourceType = "compute.googleapis.com/Instance"
-	GCPResourceSQLInstance          CloudResourceType = "sqladmin.googleapis.com/Instance"
-	GCPResourceFunction             CloudResourceType = "cloudfunctions.googleapis.com/Function"      // v1 and v2 functions
-	GCPResourceFunctionV1           CloudResourceType = "cloudfunctions.googleapis.com/CloudFunction" // v1 functions - differences wrt reachability and triggers
-	GCPResourceCloudRunJob          CloudResourceType = "run.googleapis.com/Job"
-	GCPResourceCloudRunService      CloudResourceType = "run.googleapis.com/Service"
-	GCPResourceAppEngineApplication CloudResourceType = "appengine.googleapis.com/Application"
-	GCPResourceAppEngineService     CloudResourceType = "appengine.googleapis.com/Service"
-	// GCP IAM Resources
+	GCPResourceBucket                CloudResourceType = "storage.googleapis.com/Bucket"
+	GCPResourceInstance              CloudResourceType = "compute.googleapis.com/Instance"
 	GCPResourceServiceAccount        CloudResourceType = "iam.googleapis.com/ServiceAccount"
 	GCPResourceRole                  CloudResourceType = "iam.googleapis.com/Role"
 	GCPResourcePolicy                CloudResourceType = "iam.googleapis.com/Policy"
@@ -50,13 +39,7 @@ const (
 	GCPResourceOrganization          CloudResourceType = "cloudresourcemanager.googleapis.com/Organization"
 	GCPResourceOrganizationIamPolicy CloudResourceType = "cloudresourcemanager.googleapis.com/OrganizationIamPolicy"
 	GCPResourceOrganizationPolicy    CloudResourceType = "cloudresourcemanager.googleapis.com/OrganizationPolicy"
-	// Asset-only types (these produce assets, not likely to be used as resource types)
-	GCPResourceForwardingRule       CloudResourceType = "compute.googleapis.com/ForwardingRule"
-	GCPResourceGlobalForwardingRule CloudResourceType = "compute.googleapis.com/GlobalForwardingRule"
-	GCPResourceDNSManagedZone       CloudResourceType = "dns.googleapis.com/ManagedZone"
-	GCPResourceAddress              CloudResourceType = "compute.googleapis.com/Address" // used for both global and regional
 
-	// Unknown - Catch all
 	ResourceTypeUnknown CloudResourceType = "Unknown"
 )
 

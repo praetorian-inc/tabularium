@@ -3,16 +3,13 @@ package model
 import (
 	"encoding/gob"
 	"fmt"
-	"regexp"
 	"slices"
 	"strings"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
-const CloudLabel = "Cloud"
-
-var neo4jNegateLabelRegex = regexp.MustCompile(`[^a-zA-Z0-9\-_]`) // to conform with label validator
+const CloudResourceLabel = "CloudResource"
 
 type CloudResource struct {
 	registry.BaseModel
@@ -54,7 +51,7 @@ func (a *CloudResource) GetHooks() []registry.Hook {
 			Call: func() error {
 				labels := append(a.Labels, resourceLabels[a.ResourceType]...)
 				labels = append(labels, a.ResourceType.String())
-				labels = append(labels, CloudLabel, TTLLabel)
+				labels = append(labels, TTLLabel)
 				slices.Sort(labels)
 				a.Labels = slices.Compact(labels)
 
@@ -75,11 +72,7 @@ func (c *CloudResource) GetKey() string {
 }
 
 func (c *CloudResource) GetLabels() []string {
-	labels := make([]string, len(c.Labels))
-	for i, label := range c.Labels {
-		labels[i] = neo4jNegateLabelRegex.ReplaceAllString(label, "_")
-	}
-	return labels
+	return c.Labels
 }
 
 func (c *CloudResource) GetStatus() string {
@@ -118,6 +111,4 @@ func init() {
 
 	// register the type for properties
 	gob.Register(map[string]any{})
-	gob.Register(map[string]string{})
-	gob.Register(map[string][]string{})
 }
