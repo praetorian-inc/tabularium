@@ -23,10 +23,14 @@ jobs:
           CURRENT_BRANCH="${{ github.ref_name }}"
           echo "Current branch: $CURRENT_BRANCH"
           
-          # Function to get latest v1.0.X tag from a branch
+          # Sanitize branch name for tag usage (replace invalid characters)
+          SANITIZED_BRANCH=$(echo "$CURRENT_BRANCH" | sed 's/[^a-zA-Z0-9._-]/-/g')
+          echo "Sanitized branch name: $SANITIZED_BRANCH"
+          
+          # Function to get latest v1.0.X-* tag from a branch
           get_latest_tag() {
             local branch=$1
-            git tag -l "v1.0.*" --merged "$branch" --sort=-version:refname | head -n1
+            git tag -l "v1.0.*-*" --merged "$branch" --sort=-version:refname | head -n1
           }
           
           # Try to get latest tag from current branch first
@@ -34,20 +38,20 @@ jobs:
           
           # If no tag found on current branch, try main branch
           if [ -z "$LATEST_TAG" ]; then
-            echo "No v1.0.X tag found on current branch, checking main branch..."
+            echo "No v1.0.X-* tag found on current branch, checking main branch..."
             LATEST_TAG=$(get_latest_tag "origin/main")
           fi
           
           # If still no tag found, start with v1.0.0
           if [ -z "$LATEST_TAG" ]; then
-            echo "No v1.0.X tag found anywhere, starting with v1.0.0"
-            NEW_VERSION="v1.0.1"
+            echo "No v1.0.X-* tag found anywhere, starting with v1.0.0"
+            NEW_VERSION="v1.0.1-$SANITIZED_BRANCH"
           else
             echo "Latest tag found: $LATEST_TAG"
             # Extract the patch version number and increment it
-            PATCH_VERSION=$(echo "$LATEST_TAG" | sed 's/v1\.0\.//')
+            PATCH_VERSION=$(echo "$LATEST_TAG" | sed 's/v1\.0\.\([0-9]*\)-.*/\1/')
             NEW_PATCH=$((PATCH_VERSION + 1))
-            NEW_VERSION="v1.0.$NEW_PATCH"
+            NEW_VERSION="v1.0.$NEW_PATCH-$SANITIZED_BRANCH"
           fi
           
           echo "New version will be: $NEW_VERSION"
