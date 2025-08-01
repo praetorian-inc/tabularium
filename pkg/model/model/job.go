@@ -20,6 +20,7 @@ type Job struct {
 	Comment      string            `dynamodbav:"comment" json:"comment,omitempty" desc:"Optional comment about the job." example:"Scanning standard web ports"`
 	Created      string            `dynamodbav:"created" json:"created" desc:"Timestamp when the job was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
 	Updated      string            `dynamodbav:"updated" json:"updated" desc:"Timestamp when the job was last updated (RFC3339)." example:"2023-10-27T10:05:00Z"`
+	Delayed      string            `dynamodbav:"delayed,omitempty" json:"delayed,omitempty" desc:"Timestamp that this job should be delayed until" example:"2023-10-27T10:00:00Z"`
 	Status       string            `dynamodbav:"status" json:"status" desc:"Current status of the job (e.g., JQ#portscan)." example:"JQ#portscan"`
 	TTL          int64             `dynamodbav:"ttl" json:"ttl" desc:"Time-to-live for the job record (Unix timestamp)." example:"1706353200"`
 	Name         string            `dynamodbav:"name,omitempty" json:"name,omitempty" desc:"The IP address this job was executed from" example:"1.2.3.4"`
@@ -69,10 +70,7 @@ func (job *Job) Update(status string) {
 	job.SetStatus(status)
 	job.Updated = Now()
 
-	job.TTL = Future(24)
-	if job.Async {
-		job.TTL = Future(24 * 7)
-	}
+	job.TTL = Future(7 * 24)
 }
 
 func (job *Job) SetStatus(status string) {
@@ -103,7 +101,7 @@ func (job *Job) Defaulted() {
 	job.Config = make(map[string]string)
 	job.Created = Now()
 	job.Updated = Now()
-	job.TTL = Future(12)
+	job.TTL = Future(7 * 24)
 	job.Queue = Standard
 	job.Async = false
 }
@@ -133,6 +131,10 @@ func (job *Job) Send(items ...registry.Model) {
 
 func (job *Job) Stream() <-chan []registry.Model {
 	return job.stream
+}
+
+func (job *Job) IsDelayed() bool {
+	return job.Delayed != ""
 }
 
 // Ensures the job's stream is open. Necessary when Unmarshaling a job from JSON.
