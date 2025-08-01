@@ -27,31 +27,49 @@ jobs:
           SANITIZED_BRANCH=$(echo "$CURRENT_BRANCH" | sed 's/[^a-zA-Z0-9._-]/-/g')
           echo "Sanitized branch name: $SANITIZED_BRANCH"
           
-          # Function to get latest v1.0.X-* tag from a branch
-          get_latest_tag() {
-            local branch=$1
-            git tag -l "v1.0.*-*" --merged "$branch" --sort=-version:refname | head -n1
-          }
-          
-          # Try to get latest tag from current branch first
-          LATEST_TAG=$(get_latest_tag "origin/$CURRENT_BRANCH")
-          
-          # If no tag found on current branch, try main branch
-          if [ -z "$LATEST_TAG" ]; then
-            echo "No v1.0.X-* tag found on current branch, checking main branch..."
-            LATEST_TAG=$(get_latest_tag "origin/main")
-          fi
-          
-          # If still no tag found, start with v1.0.0
-          if [ -z "$LATEST_TAG" ]; then
-            echo "No v1.0.X-* tag found anywhere, starting with v1.0.0"
-            NEW_VERSION="v1.0.1-$SANITIZED_BRANCH"
+          # Determine tag format based on branch
+          if [ "$CURRENT_BRANCH" = "main" ]; then
+            echo "On main branch - using v1.0.X format"
+            # Get latest v1.0.X tag (without suffix)
+            LATEST_TAG=$(git tag -l "v1.0.*" --merged "origin/main" --sort=-version:refname | grep -E '^v1\.0\.[0-9]+$' | head -n1)
+            
+            if [ -z "$LATEST_TAG" ]; then
+              echo "No v1.0.X tag found on main, starting with v1.0.1"
+              NEW_VERSION="v1.0.1"
+            else
+              echo "Latest tag found: $LATEST_TAG"
+              # Extract the patch version number and increment it
+              PATCH_VERSION=$(echo "$LATEST_TAG" | sed 's/v1\.0\.\([0-9]*\)/\1/')
+              NEW_PATCH=$((PATCH_VERSION + 1))
+              NEW_VERSION="v1.0.$NEW_PATCH"
+            fi
           else
-            echo "Latest tag found: $LATEST_TAG"
-            # Extract the patch version number and increment it
-            PATCH_VERSION=$(echo "$LATEST_TAG" | sed 's/v1\.0\.\([0-9]*\)-.*/\1/')
-            NEW_PATCH=$((PATCH_VERSION + 1))
-            NEW_VERSION="v1.0.$NEW_PATCH-$SANITIZED_BRANCH"
+            echo "On non-main branch - using v1.0.X-pre-$SANITIZED_BRANCH format"
+            # Get latest v1.0.X tag from main branch as base
+            LATEST_MAIN_TAG=$(git tag -l "v1.0.*" --merged "origin/main" --sort=-version:refname | grep -E '^v1\.0\.[0-9]+$' | head -n1)
+            
+            # Get latest pre-release tag for this branch
+            LATEST_PRE_TAG=$(git tag -l "v1.0.*-pre-$SANITIZED_BRANCH" --merged "origin/$CURRENT_BRANCH" --sort=-version:refname | head -n1)
+            
+            if [ -z "$LATEST_MAIN_TAG" ]; then
+              echo "No v1.0.X tag found on main, using base version 1.0.0"
+              BASE_PATCH=0
+            else
+              echo "Latest main tag found: $LATEST_MAIN_TAG"
+              BASE_PATCH=$(echo "$LATEST_MAIN_TAG" | sed 's/v1\.0\.\([0-9]*\)/\1/')
+            fi
+            
+            if [ -z "$LATEST_PRE_TAG" ]; then
+              echo "No pre-release tag found for this branch, starting with incremented base"
+              NEW_PATCH=$((BASE_PATCH + 1))
+              NEW_VERSION="v1.0.$NEW_PATCH-pre-$SANITIZED_BRANCH"
+            else
+              echo "Latest pre-release tag found: $LATEST_PRE_TAG"
+              # Extract the patch version from pre-release tag and increment it
+              PRE_PATCH=$(echo "$LATEST_PRE_TAG" | sed 's/v1\.0\.\([0-9]*\)-pre-.*/\1/')
+              NEW_PATCH=$((PRE_PATCH + 1))
+              NEW_VERSION="v1.0.$NEW_PATCH-pre-$SANITIZED_BRANCH"
+            fi
           fi
           
           echo "New version will be: $NEW_VERSION"
