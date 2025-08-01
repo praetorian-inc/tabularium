@@ -1,0 +1,32 @@
+name: Go
+
+on:
+  push:
+    branches:
+      - main
+      - UAT
+      - staging
+  pull_request:
+    branches:
+      - main
+      - UAT
+      - staging
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/workflows/go-setup
+      - name: Run tests
+        run: go test ./...
+
+  vet:
+    name: vet
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/workflows/go-setup
+      - name: Vet
+        run: go vet ./...

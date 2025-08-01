@@ -1,0 +1,22 @@
+name: 'Go Setup'
+description: 'Sets up Go environment with caching'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Cache Go dependencies
+      id: cache-go
+      uses: actions/cache@v4
+      with:
+        path: /home/runner/.cache/go-build
+        key: go-cache-${{ runner.os }}-${{ github.run_id }}
+        restore-keys: go-cache-${{ runner.os }}
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.x'
+
+    - name: Install dependencies
+      shell: bash
+      run: go mod tidy

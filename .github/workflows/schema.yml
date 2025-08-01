@@ -1,0 +1,68 @@
+name: Schema and Client Generation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24' # Specify your Go version
+
+      - name: Configure Git for PAT and Private Modules
+        env:
+          WORKFLOW_PAT: ${{ secrets.WORKFLOW_PAT }}
+        run: |
+          git config --global url."https://${WORKFLOW_PAT}@github.com/".insteadOf "https://github.com/"
+          echo "GOPRIVATE=github.com/praetorian-inc" >> $GITHUB_ENV
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11' # Specify Python version compatible with datamodel-codegen
+
+      - name: Install datamodel-codegen
+        run: pip install datamodel-code-generator
+
+      - name: Tidy Go modules
+        run: go mod tidy
+
+      - name: Generate OpenAPI Schema
+        run: go run ./cmd/schemagen -output client/api.yaml
+        id: schemagen
+
+      - name: Generate Python Client
+        run: go run ./cmd/codegen -input client/api.yaml -gen py:client/python/tabularium
+        id: codegen_py
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit changes
+        run: |
+          git add client/api.yaml client/python/tabularium/models.py
+          # Check if there are staged changes
+          if ! git diff --staged --quiet; then
+            git commit -m "chore(codegen): regenerate schema and clients"
+          else
+            echo "No changes to commit."
+          fi
+
+      - name: Push changes (PR context)
+        if: github.event_name == 'pull_request'
+        run: git push --force-with-lease origin HEAD:${{ github.head_ref }}
+
+      - name: Push changes (Push context)
+        if: github.event_name == 'push'
+        run: git push --force-with-lease origin HEAD:${{ github.ref_name }}
