@@ -1,0 +1,70 @@
+name: Auto Tag
+
+on:
+  push:
+    branches:
+      - '**'  # Run on all branches
+
+jobs:
+  auto-tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for all branches and tags
+
+      - name: Get latest tag and increment version
+        id: version
+        run: |
+          # Get current branch name
+          CURRENT_BRANCH="${{ github.ref_name }}"
+          echo "Current branch: $CURRENT_BRANCH"
+          
+          # Function to get latest v1.0.X tag from a branch
+          get_latest_tag() {
+            local branch=$1
+            git tag -l "v1.0.*" --merged "$branch" --sort=-version:refname | head -n1
+          }
+          
+          # Try to get latest tag from current branch first
+          LATEST_TAG=$(get_latest_tag "origin/$CURRENT_BRANCH")
+          
+          # If no tag found on current branch, try main branch
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No v1.0.X tag found on current branch, checking main branch..."
+            LATEST_TAG=$(get_latest_tag "origin/main")
+          fi
+          
+          # If still no tag found, start with v1.0.0
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No v1.0.X tag found anywhere, starting with v1.0.0"
+            NEW_VERSION="v1.0.1"
+          else
+            echo "Latest tag found: $LATEST_TAG"
+            # Extract the patch version number and increment it
+            PATCH_VERSION=$(echo "$LATEST_TAG" | sed 's/v1\.0\.//')
+            NEW_PATCH=$((PATCH_VERSION + 1))
+            NEW_VERSION="v1.0.$NEW_PATCH"
+          fi
+          
+          echo "New version will be: $NEW_VERSION"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create and push tag
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+        run: |
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Create annotated tag
+          git tag -a "$NEW_VERSION" -m "Auto-generated tag $NEW_VERSION for commit ${{ github.sha }}"
+          
+          # Push the tag
+          git push origin "$NEW_VERSION"
+          
+          echo "Created and pushed tag: $NEW_VERSION"
