@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Organization Name asset type enables comprehensive cross-platform asset discovery by supporting multiple name variations for organizations. This implementation addresses the challenge of inconsistent naming conventions across platforms like GitHub, DockerHub, and LinkedIn.
+The Organization Name asset type enables comprehensive asset discovery by supporting multiple name variations for organizations. This implementation addresses the challenge of inconsistent naming conventions across platforms like GitHub, DockerHub, and LinkedIn.
 
 ## Core Components
 
@@ -238,22 +238,7 @@ BenchmarkOrganizationSearchExpansion_ExpandSearch-8     	   10000	    150 ns/op
 BenchmarkOrganizationRelationshipService_GetSubsidiaries-8  	    1000	   1200 ns/op
 ```
 
-## Security Recommendations
-
-1. **Asset Inventory**: Review all discovered assets for completeness
-2. **Access Control**: Ensure proper access controls on repositories and containers
-3. **Monitoring**: Set up monitoring for new assets using name variations
-4. **Brand Protection**: Monitor for unauthorized use of organization names
-5. **Subsidiary Coverage**: Regularly update subsidiary relationships
-
 ## Integration Patterns
-
-### With Existing Chariot Systems
-
-1. **Asset Discovery**: Integrate with existing scanners
-2. **Risk Assessment**: Link to vulnerability management
-3. **Compliance**: Track regulatory requirements
-4. **Threat Intelligence**: Monitor for threats against all names
 
 ### External Platform APIs
 
@@ -361,21 +346,6 @@ go run ./cmd/schemagen -output client/api.yaml
 go run ./cmd/codegen -input client/api.yaml -gen py:client/python/tabularium
 ```
 
-## Future Enhancements
-
-### Planned Features
-1. **Additional Platforms**: GitLab, Bitbucket, npm, PyPI
-2. **Machine Learning**: Automatic name variation discovery
-3. **Fuzzy Matching**: Handle typos and variations
-4. **Confidence Scoring**: Rate name match confidence
-5. **Historical Tracking**: Full audit trail of changes
-
-### API Extensions
-1. **GraphQL Interface**: Complex relationship queries
-2. **REST Endpoints**: CRUD operations for organizations
-3. **Webhook Integration**: Real-time updates
-4. **Bulk Operations**: Efficient batch processing
-
 ## Troubleshooting
 
 ### Common Issues
@@ -409,19 +379,3 @@ if !org.Valid() {
     log.Printf("  Key: %s", org.Key)
 }
 ```
-
-## Contributing
-
-### Adding New Platforms
-1. Implement platform-specific searcher
-2. Add mock data for testing
-3. Update integration demo
-4. Add platform-specific asset type inference
-
-### Extending Name Types
-1. Add new type constant
-2. Update validation maps
-3. Add tests for new type
-4. Document usage patterns
-
-This implementation provides a robust foundation for comprehensive organization asset discovery while maintaining type safety and performance across the Chariot security platform.
