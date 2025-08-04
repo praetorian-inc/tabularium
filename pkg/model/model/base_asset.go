@@ -15,6 +15,7 @@ type BaseAsset struct {
 	Username string `neo4j:"username" json:"username" desc:"The username associated with this asset." example:"user@example.com"`
 	Key      string `neo4j:"key" json:"key" desc:"Unique key identifying the asset." example:"#asset#dns#name"`
 	// Attributes
+	Origin     string  `neo4j:"origin" json:"origin" desc:"The first user/capability that added this to the system." example:"whois"`
 	Source     string  `neo4j:"source" json:"source" desc:"Source that added this to the system (one of self, account, seed)" example:"seed"`
 	Status     string  `neo4j:"status" json:"status" desc:"Current status of the asset." example:"A"`
 	Created    string  `neo4j:"created" json:"created" desc:"Timestamp when the asset was first created (RFC3339)." example:"2023-10-27T10:00:00Z"`
@@ -102,6 +103,9 @@ func (a *BaseAsset) Visit(o Assetlike) {
 	}
 	if other.Source == SeedSource {
 		a.TTL = 0
+	}
+	if a.Origin == "" {
+		a.Origin = other.Origin
 	}
 
 	a.Secret = other.Secret
