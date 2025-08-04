@@ -38,7 +38,11 @@ func (d *ADDomain) Valid() bool {
 }
 
 func (d *ADDomain) GetLabels() []string {
-	return []string{ADDomainLabel, AssetLabel, TTLLabel}
+	labels := []string{ADDomainLabel, AssetLabel, TTLLabel}
+	if d.Source == SeedSource {
+		labels = append(labels, SeedLabel)
+	}
+	return labels
 }
 
 func (d *ADDomain) GetClass() string {
@@ -72,10 +76,9 @@ func (d *ADDomain) Attribute(name, value string) Attribute {
 	return attr
 }
 
-func (d *ADDomain) Seed() Seed {
-	s := NewSeed(d.Name)
-	s.SetStatus(d.Status)
-	return s
+func (d *ADDomain) SeedModels() []Seedable {
+	copy := *d
+	return []Seedable{&copy}
 }
 
 func (d *ADDomain) Defaulted() {
@@ -104,6 +107,12 @@ func NewADDomain(name string) ADDomain {
 	}
 	d.Defaulted()
 	registry.CallHooks(&d)
+	return d
+}
+
+func NewADDomainSeed(name string) ADDomain {
+	d := NewADDomain(name)
+	d.Source = SeedSource
 	return d
 }
 

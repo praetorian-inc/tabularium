@@ -91,3 +91,12 @@ func TestADDomain_Unmarshall(t *testing.T) {
 		})
 	}
 }
+
+func TestADDomain_SeedModels(t *testing.T) {
+	seed := NewADDomainSeed("example.local")
+	seedModels := seed.SeedModels()
+
+	assert.Equal(t, 1, len(seedModels))
+	assert.Equal(t, &seed, seedModels[0])
+	assert.Contains(t, seed.GetLabels(), SeedLabel)
+}
