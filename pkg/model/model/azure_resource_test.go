@@ -33,8 +33,12 @@ func (t *testAzureResourceWithIPs) IsPrivate() bool {
 	}
 
 	// Check if resource has a public URL/endpoint
-	if url := t.AzureResource.GetURL(); url != "" {
-		return false // Has public URL = not private
+	if urls := t.AzureResource.GetURLs(); len(urls) > 0 {
+		for _, url := range urls {
+			if url != "" {
+				return false // Has at least one public URL = not private
+			}
+		}
 	}
 
 	// No public IPs or URL = assume private
@@ -403,7 +407,7 @@ func TestAzureResource_GetURL(t *testing.T) {
 	tests := []struct {
 		name     string
 		resource *AzureResource
-		want     string
+		want     []string
 	}{
 		{
 			name: "Resource should return empty URL",
@@ -413,13 +417,13 @@ func TestAzureResource_GetURL(t *testing.T) {
 					Properties:   map[string]any{},
 				},
 			},
-			want: "",
+			want: make([]string, 0),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := tt.resource.GetURL()
+			got := tt.resource.GetURLs()
 			assert.Equal(t, tt.want, got)
 		})
 	}
