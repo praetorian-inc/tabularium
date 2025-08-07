@@ -41,3 +41,6 @@ Using a registry of go types + an openapi schema allows for a number of future p
 *   **APIs, and API Documentation:** Automatically generating APIs for interacting with data objects, and the accompanying documentation.
 *   **Dynamic Functionality:** By maintaining the source of truth in go, we can standardize and encapsulate additional dynamic functionality with the go API, using a common type registry.
 
+## Client Libraries (WIP)
+
+To install the python client library: `pip install git+https://github.com/praetorian-inc/tabularium.git#subdirectory=client/python`
