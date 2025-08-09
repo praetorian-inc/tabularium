@@ -29,10 +29,10 @@ var (
 	assetKey = regexp.MustCompile(`^#asset(#[^#]+){2,}$`)
 )
 
-const AssetLabel = "Asset"
+var AssetLabel = NewLabel("Asset")
 
 func (a *Asset) GetLabels() []string {
-	labels := []string{AssetLabel, TTLLabel}
+	labels := []string{AssetLabel.String(), TTLLabel.String()}
 	return labels
 }
 

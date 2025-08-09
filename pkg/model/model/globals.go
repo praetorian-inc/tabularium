@@ -105,8 +105,8 @@ type Insertable interface {
 	GraphModel
 }
 
-const (
-	TTLLabel = "TTL" // TTLLabel attach to models that utilize TTL cleanup in neo4j
+var (
+	TTLLabel = NewLabel("TTL") // TTLLabel attach to models that utilize TTL cleanup in neo4j
 )
 
 const (

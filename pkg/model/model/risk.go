@@ -74,10 +74,10 @@ func (rd *RiskDefinition) GetDescription() string {
 
 var riskKey = regexp.MustCompile(`^#risk#([^#]+)#([^#]+)$`)
 
-const RiskLabel = "Risk"
+var RiskLabel = NewLabel("Risk")
 
 func (r *Risk) GetLabels() []string {
-	return []string{RiskLabel, TTLLabel}
+	return []string{RiskLabel.String(), TTLLabel.String()}
 }
 
 func (r *Risk) GetKey() string {

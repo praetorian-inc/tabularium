@@ -70,7 +70,7 @@ type WebpageResponse struct {
 	Body       string              `json:"body" desc:"Body content of the response." example:"<html><body>Example Domain</body></html>"`
 }
 
-const WebpageLabel = "Webpage"
+var WebpageLabel = NewLabel("Webpage")
 
 func init() {
 	registry.Registry.MustRegisterModel(&Webpage{})
@@ -89,7 +89,7 @@ func (w *Webpage) GetKey() string {
 }
 
 func (w *Webpage) GetLabels() []string {
-	return []string{WebpageLabel, TTLLabel}
+	return []string{WebpageLabel.String(), TTLLabel.String()}
 }
 
 func (w *Webpage) Valid() bool {

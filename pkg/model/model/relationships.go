@@ -84,14 +84,14 @@ type Discovered struct {
 
 func NewDiscovered(source, target GraphModel) GraphRelationship {
 	return &Discovered{
-		BaseRelationship: NewBaseRelationship(source, target, DiscoveredLabel),
+		BaseRelationship: NewBaseRelationship(source, target, DiscoveredLabel.String()),
 	}
 }
 
-const DiscoveredLabel = "DISCOVERED"
+var DiscoveredLabel = NewLabel("DISCOVERED")
 
 func (d Discovered) Label() string {
-	return DiscoveredLabel
+	return DiscoveredLabel.String()
 }
 
 // GetDescription returns a description for the HasVulnerability relationship model.
@@ -105,14 +105,14 @@ type HasVulnerability struct {
 
 func NewHasVulnerability(source, target GraphModel) GraphRelationship {
 	return &HasVulnerability{
-		BaseRelationship: NewBaseRelationship(source, target, HasVulnerabilityLabel),
+		BaseRelationship: NewBaseRelationship(source, target, HasVulnerabilityLabel.String()),
 	}
 }
 
-const HasVulnerabilityLabel = "HAS_VULNERABILITY"
+var HasVulnerabilityLabel = NewLabel("HAS_VULNERABILITY")
 
 func (a HasVulnerability) Label() string {
-	return HasVulnerabilityLabel
+	return HasVulnerabilityLabel.String()
 }
 
 // A pointer to HasVulnerability since its a GraphRelationship
@@ -141,17 +141,17 @@ type InstanceOf struct {
 
 func NewInstanceOf(source, target GraphModel) GraphRelationship {
 	return &InstanceOf{
-		BaseRelationship: NewBaseRelationship(source, target, InstanceOfLabel),
+		BaseRelationship: NewBaseRelationship(source, target, InstanceOfLabel.String()),
 	}
 }
 
-const InstanceOfLabel = "INSTANCE_OF"
+var InstanceOfLabel = NewLabel("INSTANCE_OF")
 
 func (a InstanceOf) Label() string {
-	return InstanceOfLabel
+	return InstanceOfLabel.String()
 }
 
-const HasAttributeLabel = "HAS_ATTRIBUTE"
+var HasAttributeLabel = NewLabel("HAS_ATTRIBUTE")
 
 // GetDescription returns a description for the HasAttribute relationship model.
 func (ha *HasAttribute) GetDescription() string {
@@ -164,15 +164,15 @@ type HasAttribute struct {
 
 func NewHasAttribute(source, target GraphModel) GraphRelationship {
 	return &HasAttribute{
-		BaseRelationship: NewBaseRelationship(source, target, HasAttributeLabel),
+		BaseRelationship: NewBaseRelationship(source, target, HasAttributeLabel.String()),
 	}
 }
 
 func (a HasAttribute) Label() string {
-	return HasAttributeLabel
+	return HasAttributeLabel.String()
 }
 
-const HasTechnologyLabel = "HAS_TECHNOLOGY"
+var HasTechnologyLabel = NewLabel("HAS_TECHNOLOGY")
 
 // GetDescription returns a description for the HasTechnology relationship model.
 func (ht *HasTechnology) GetDescription() string {
@@ -185,15 +185,15 @@ type HasTechnology struct {
 
 func NewHasTechnology(source, target GraphModel) GraphRelationship {
 	return &HasTechnology{
-		BaseRelationship: NewBaseRelationship(source, target, HasTechnologyLabel),
+		BaseRelationship: NewBaseRelationship(source, target, HasTechnologyLabel.String()),
 	}
 }
 
 func (a HasTechnology) Label() string {
-	return HasTechnologyLabel
+	return HasTechnologyLabel.String()
 }
 
-const HasCredentialLabel = "HAS_CREDENTIAL"
+var HasCredentialLabel = NewLabel("HAS_CREDENTIAL")
 
 // GetDescription returns a description for the HasCredential relationship model.
 func (hc *HasCredential) GetDescription() string {
@@ -206,10 +206,10 @@ type HasCredential struct {
 
 func NewCredentialRelationship(asset GraphModel, credential *Credential) GraphRelationship {
 	return &HasCredential{
-		BaseRelationship: NewBaseRelationship(asset, credential, HasCredentialLabel),
+		BaseRelationship: NewBaseRelationship(asset, credential, HasCredentialLabel.String()),
 	}
 }
 
 func (hc *HasCredential) Label() string {
-	return HasCredentialLabel
+	return HasCredentialLabel.String()
 }

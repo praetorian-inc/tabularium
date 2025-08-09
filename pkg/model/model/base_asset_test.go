@@ -21,7 +21,7 @@ func TestAssetlike_Implementations(t *testing.T) {
 			continue
 		}
 
-		if !slices.Contains(graphModel.GetLabels(), AssetLabel) {
+		if !slices.Contains(graphModel.GetLabels(), AssetLabel.String()) {
 			continue
 		}
 

@@ -28,14 +28,14 @@ func init() {
 	registry.Registry.MustRegisterModel(&Preseed{})
 }
 
-const PreseedLabel = "Preseed"
+var PreseedLabel = NewLabel("Preseed")
 
 func (p *Preseed) IsPrivate() bool {
 	return false
 }
 
 func (p *Preseed) GetLabels() []string {
-	return []string{PreseedLabel, TTLLabel}
+	return []string{PreseedLabel.String(), TTLLabel.String()}
 }
 
 func (p *Preseed) Class() string {

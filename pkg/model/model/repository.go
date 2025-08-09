@@ -19,8 +19,8 @@ type Repository struct {
 	Name string `neo4j:"name,omitempty" json:"name,omitempty" desc:"Repository name." example:"praetorian-inc/tabularium"`
 }
 
-const (
-	RepositoryLabel = "Repository"
+var (
+	RepositoryLabel = NewLabel("Repository")
 )
 
 var (
@@ -29,7 +29,7 @@ var (
 )
 
 func (r *Repository) GetLabels() []string {
-	return []string{RepositoryLabel, AssetLabel, TTLLabel}
+	return []string{RepositoryLabel.String(), AssetLabel.String(), TTLLabel.String()}
 }
 
 func (r *Repository) Valid() bool {

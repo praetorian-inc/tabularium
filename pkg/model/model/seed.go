@@ -37,10 +37,10 @@ type Seed struct {
 	History
 }
 
-const SeedLabel = "Seed"
+var SeedLabel = NewLabel("Seed")
 
 func (s *Seed) GetLabels() []string {
-	return []string{SeedLabel}
+	return []string{SeedLabel.String()}
 }
 
 func (s *Seed) GetKey() string {

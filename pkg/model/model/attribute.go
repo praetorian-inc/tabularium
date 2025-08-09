@@ -24,7 +24,7 @@ type Attribute struct {
 	Parent     GraphModelWrapper `neo4j:"-" json:"parent" desc:"Attribute parent."`
 }
 
-const AttributeLabel = "Attribute"
+var AttributeLabel = NewLabel("Attribute")
 
 func init() {
 	registry.Registry.MustRegisterModel(&Attribute{})
@@ -35,7 +35,7 @@ func (a *Attribute) GetKey() string {
 }
 
 func (a *Attribute) GetLabels() []string {
-	return []string{AttributeLabel, TTLLabel}
+	return []string{AttributeLabel.String(), TTLLabel.String()}
 }
 
 func (a *Attribute) Target() string {

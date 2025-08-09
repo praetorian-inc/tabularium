@@ -12,8 +12,8 @@ func init() {
 	registry.Registry.MustRegisterModel(&ADDomain{})
 }
 
-const (
-	ADDomainLabel = "Addomain"
+var (
+	ADDomainLabel = NewLabel("Addomain")
 )
 
 var (
@@ -38,7 +38,7 @@ func (d *ADDomain) Valid() bool {
 }
 
 func (d *ADDomain) GetLabels() []string {
-	return []string{ADDomainLabel, AssetLabel, TTLLabel}
+	return []string{ADDomainLabel.String(), AssetLabel.String(), TTLLabel.String()}
 }
 
 func (d *ADDomain) GetClass() string {

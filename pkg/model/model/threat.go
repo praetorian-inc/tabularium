@@ -6,7 +6,7 @@ import (
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
-const ThreatLabel = "Threat"
+var ThreatLabel = NewLabel("Threat")
 
 func init() {
 	registry.Registry.MustRegisterModel(&Threat{})

@@ -10,7 +10,7 @@ import (
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
-const CloudLabel = "Cloud"
+var CloudLabel = NewLabel("Cloud")
 
 var neo4jNegateLabelRegex = regexp.MustCompile(`[^a-zA-Z0-9\-_]`) // to conform with label validator
 
@@ -54,7 +54,7 @@ func (a *CloudResource) GetHooks() []registry.Hook {
 			Call: func() error {
 				labels := append(a.Labels, resourceLabels[a.ResourceType]...)
 				labels = append(labels, a.ResourceType.String())
-				labels = append(labels, CloudLabel, TTLLabel)
+				labels = append(labels, CloudLabel.String(), TTLLabel.String())
 				slices.Sort(labels)
 				a.Labels = slices.Compact(labels)
 

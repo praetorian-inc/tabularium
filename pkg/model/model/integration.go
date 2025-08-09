@@ -17,8 +17,8 @@ type Integration struct {
 	Value string `neo4j:"value" json:"value" desc:"Value of the integration." example:"1234567890"`
 }
 
-const (
-	IntegrationLabel = "Integration"
+var (
+	IntegrationLabel = NewLabel("Integration")
 )
 
 var (
@@ -26,7 +26,7 @@ var (
 )
 
 func (i *Integration) GetLabels() []string {
-	return []string{IntegrationLabel, AssetLabel, TTLLabel}
+	return []string{IntegrationLabel.String(), AssetLabel.String(), TTLLabel.String()}
 }
 
 func (i *Integration) Valid() bool {

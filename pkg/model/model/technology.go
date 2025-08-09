@@ -32,14 +32,14 @@ type Technology struct {
 	History
 }
 
-const TechnologyLabel = "Technology"
+var TechnologyLabel = NewLabel("Technology")
 
 func (t *Technology) GetKey() string {
 	return t.Key
 }
 
 func (t *Technology) GetLabels() []string {
-	return []string{TechnologyLabel, TTLLabel}
+	return []string{TechnologyLabel.String(), TTLLabel.String()}
 }
 
 func (t *Technology) Valid() bool {
