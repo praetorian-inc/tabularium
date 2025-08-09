@@ -2,14 +2,50 @@ package model
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/praetorian-inc/tabularium/pkg/registry"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestLabels_Registered(t *testing.T) {
+	modelRegistry := registry.Registry
+	labelRegistry := GetLabelRegistry()
+
+	// Get all model types
+	for name, modelType := range modelRegistry.GetAllTypes() {
+		// Create an instance to check if it's a GraphModel
+		instance := reflect.New(modelType.Elem()).Interface()
+		
+		// Skip non-GraphModel types
+		graphModel, ok := instance.(GraphModel)
+		if !ok {
+			continue
+		}
+		
+		// Get labels for this model
+		labels := graphModel.GetLabels()
+		
+		for _, label := range labels {
+			// Skip empty labels (can happen with dynamic labels like in Credential)
+			if label == "" {
+				continue
+			}
+			
+			// Ensure label is registered
+			registeredLabel, exists := labelRegistry.Get(label)
+			require.True(t, exists, "Label %q from model %q should be registered", label, name)
+			
+			// Ensure registered label is identical (case-sensitive) to the label
+			assert.Equal(t, label, registeredLabel, "Registered label should match exactly for model %q", name)
+		}
+	}
+}
 
 func TestLabel_Creation(t *testing.T) {
 	tests := []struct {
@@ -108,9 +144,9 @@ func TestLabelRegistry_MustRegister(t *testing.T) {
 		registry.MustRegister("ForceChangePassword")
 
 		// Assert
-		retrieved := registry.Get("forcechangepassword")
-		require.NotNil(t, retrieved, "Should retrieve registered label")
-		assert.Equal(t, "ForceChangePassword", *retrieved, "Retrieved label should match registered label")
+		retrieved, exists := registry.Get("forcechangepassword")
+		require.True(t, exists, "Should retrieve registered label")
+		assert.Equal(t, "ForceChangePassword", retrieved, "Retrieved label should match registered label")
 	})
 
 	t.Run("Multiple registrations of same label", func(t *testing.T) {
@@ -126,9 +162,9 @@ func TestLabelRegistry_MustRegister(t *testing.T) {
 		registry.MustRegister("Asset")
 
 		// Assert
-		retrieved := registry.Get("asset")
-		require.NotNil(t, retrieved, "Should retrieve registered label")
-		assert.Equal(t, "Asset", *retrieved, "Label should be registered once")
+		retrieved, exists := registry.Get("asset")
+		require.True(t, exists, "Should retrieve registered label")
+		assert.Equal(t, "Asset", retrieved, "Label should be registered once")
 	})
 
 	t.Run("Registration panics on casing collision", func(t *testing.T) {
@@ -140,7 +176,7 @@ func TestLabelRegistry_MustRegister(t *testing.T) {
 
 		// Act & Assert
 		registry.MustRegister("Asset")
-		
+
 		assert.Panics(t, func() {
 			registry.MustRegister("ASSET") // Different casing, same lowercase key
 		}, "Should panic when registering different casing with same lowercase key")
@@ -155,27 +191,27 @@ func TestLabelRegistry_CaseInsensitiveRetrieval(t *testing.T) {
 		expectedResult string
 	}{
 		{
-			name:          "Asset label retrieval",
-			registerValue: "Asset",
-			retrievalKeys: []string{"asset", "Asset", "ASSET", "aSsEt"},
+			name:           "Asset label retrieval",
+			registerValue:  "Asset",
+			retrievalKeys:  []string{"asset", "Asset", "ASSET", "aSsEt"},
 			expectedResult: "Asset",
 		},
 		{
-			name:          "Addomain label retrieval",
-			registerValue: "Addomain",
-			retrievalKeys: []string{"addomain", "Addomain", "ADDOMAIN", "aDdOmAiN"},
+			name:           "Addomain label retrieval",
+			registerValue:  "Addomain",
+			retrievalKeys:  []string{"addomain", "Addomain", "ADDOMAIN", "aDdOmAiN"},
 			expectedResult: "Addomain",
 		},
 		{
-			name:          "ForceChangePassword label retrieval",
-			registerValue: "ForceChangePassword",
-			retrievalKeys: []string{"forcechangepassword", "ForceChangePassword", "FORCECHANGEPASSWORD"},
+			name:           "ForceChangePassword label retrieval",
+			registerValue:  "ForceChangePassword",
+			retrievalKeys:  []string{"forcechangepassword", "ForceChangePassword", "FORCECHANGEPASSWORD"},
 			expectedResult: "ForceChangePassword",
 		},
 		{
-			name:          "HAS_VULNERABILITY label retrieval",
-			registerValue: "HAS_VULNERABILITY",
-			retrievalKeys: []string{"has_vulnerability", "HAS_VULNERABILITY", "Has_Vulnerability"},
+			name:           "HAS_VULNERABILITY label retrieval",
+			registerValue:  "HAS_VULNERABILITY",
+			retrievalKeys:  []string{"has_vulnerability", "HAS_VULNERABILITY", "Has_Vulnerability"},
 			expectedResult: "HAS_VULNERABILITY",
 		},
 	}
@@ -187,14 +223,14 @@ func TestLabelRegistry_CaseInsensitiveRetrieval(t *testing.T) {
 			registry.mu.Lock()
 			registry.labels = make(map[string]string)
 			registry.mu.Unlock()
-			
+
 			registry.MustRegister(tt.registerValue)
 
 			// Act & Assert
 			for _, key := range tt.retrievalKeys {
-				retrieved := registry.Get(key)
-				require.NotNil(t, retrieved, "Should retrieve label with key %q", key)
-				assert.Equal(t, tt.expectedResult, *retrieved, "Retrieved label should match for key %q", key)
+				retrieved, exists := registry.Get(key)
+				require.True(t, exists, "Should retrieve label with key %q", key)
+				assert.Equal(t, tt.expectedResult, retrieved, "Retrieved label should match for key %q", key)
 			}
 		})
 	}
@@ -209,10 +245,11 @@ func TestLabelRegistry_Get(t *testing.T) {
 		registry.mu.Unlock()
 
 		// Act
-		result := registry.Get("nonexistent")
+		result, exists := registry.Get("nonexistent")
 
 		// Assert
-		assert.Nil(t, result, "Should return nil for non-existent label")
+		assert.False(t, exists, "Should return false for non-existent label")
+		assert.Empty(t, result, "Should return empty string for non-existent label")
 	})
 
 	t.Run("Get returns correct label after registration", func(t *testing.T) {
@@ -224,11 +261,11 @@ func TestLabelRegistry_Get(t *testing.T) {
 		registry.MustRegister("Technology")
 
 		// Act
-		result := registry.Get("technology")
+		result, exists := registry.Get("technology")
 
 		// Assert
-		require.NotNil(t, result, "Should return non-nil for existing label")
-		assert.Equal(t, "Technology", *result, "Should return correct label")
+		require.True(t, exists, "Should return true for existing label")
+		assert.Equal(t, "Technology", result, "Should return correct label")
 	})
 
 	t.Run("Get with empty string", func(t *testing.T) {
@@ -240,11 +277,11 @@ func TestLabelRegistry_Get(t *testing.T) {
 		registry.MustRegister("")
 
 		// Act
-		result := registry.Get("")
+		result, exists := registry.Get("")
 
 		// Assert
-		require.NotNil(t, result, "Should return non-nil for empty string label")
-		assert.Equal(t, "", *result, "Should return empty string")
+		require.True(t, exists, "Should return true for empty string label")
+		assert.Equal(t, "", result, "Should return empty string")
 	})
 }
 
@@ -255,7 +292,7 @@ func TestLabelRegistry_List(t *testing.T) {
 		registry.mu.Lock()
 		registry.labels = make(map[string]string)
 		registry.mu.Unlock()
-		
+
 		labels := []string{"Asset", "Risk", "Vulnerability", "Technology"}
 		for _, label := range labels {
 			registry.MustRegister(label)
@@ -293,7 +330,7 @@ func TestLabelRegistry_ThreadSafety(t *testing.T) {
 		registry.mu.Lock()
 		registry.labels = make(map[string]string)
 		registry.mu.Unlock()
-		
+
 		labels := []string{"Asset", "Risk", "Vulnerability", "Technology", "Attribute", "Webpage"}
 		var wg sync.WaitGroup
 
@@ -321,7 +358,7 @@ func TestLabelRegistry_ThreadSafety(t *testing.T) {
 		registry.mu.Lock()
 		registry.labels = make(map[string]string)
 		registry.mu.Unlock()
-		
+
 		var wg sync.WaitGroup
 		stopCh := make(chan struct{})
 
@@ -349,10 +386,10 @@ func TestLabelRegistry_ThreadSafety(t *testing.T) {
 					default:
 						_ = registry.List()
 						for _, label := range []string{"Asset", "Risk", "Vulnerability"} {
-							result := registry.Get(strings.ToLower(label))
-							if result != nil {
+							result, exists := registry.Get(strings.ToLower(label))
+							if exists {
 								// Just access the value to ensure no race
-								_ = *result
+								_ = result
 							}
 						}
 					}
@@ -377,7 +414,7 @@ func TestExistingTabulariumLabels(t *testing.T) {
 		registry.mu.Lock()
 		registry.labels = make(map[string]string)
 		registry.mu.Unlock()
-		
+
 		nodeLabels := []struct {
 			name  string
 			value string
@@ -408,9 +445,9 @@ func TestExistingTabulariumLabels(t *testing.T) {
 		// Assert
 		for _, labelDef := range nodeLabels {
 			lowerKey := strings.ToLower(labelDef.value)
-			result := registry.Get(lowerKey)
-			require.NotNil(t, result, "Should retrieve label %q", labelDef.name)
-			assert.Equal(t, labelDef.value, *result, "Label %q should have correct casing", labelDef.name)
+			result, exists := registry.Get(lowerKey)
+			require.True(t, exists, "Should retrieve label %q", labelDef.name)
+			assert.Equal(t, labelDef.value, result, "Label %q should have correct casing", labelDef.name)
 		}
 	})
 
@@ -420,7 +457,7 @@ func TestExistingTabulariumLabels(t *testing.T) {
 		registry.mu.Lock()
 		registry.labels = make(map[string]string)
 		registry.mu.Unlock()
-		
+
 		relationshipLabels := []struct {
 			name  string
 			value string
@@ -442,9 +479,9 @@ func TestExistingTabulariumLabels(t *testing.T) {
 		// Assert
 		for _, labelDef := range relationshipLabels {
 			lowerKey := strings.ToLower(labelDef.value)
-			result := registry.Get(lowerKey)
-			require.NotNil(t, result, "Should retrieve label %q", labelDef.name)
-			assert.Equal(t, labelDef.value, *result, "Label %q should have correct casing", labelDef.name)
+			result, exists := registry.Get(lowerKey)
+			require.True(t, exists, "Should retrieve label %q", labelDef.name)
+			assert.Equal(t, labelDef.value, result, "Label %q should have correct casing", labelDef.name)
 		}
 	})
 
@@ -454,7 +491,7 @@ func TestExistingTabulariumLabels(t *testing.T) {
 		registry.mu.Lock()
 		registry.labels = make(map[string]string)
 		registry.mu.Unlock()
-		
+
 		allLabels := []string{
 			"Asset", "Addomain", "Attribute", "Cloud", "Credential",
 			"Integration", "Preseed", "Repository", "Risk", "Seed",
@@ -473,9 +510,9 @@ func TestExistingTabulariumLabels(t *testing.T) {
 		assert.Len(t, registeredLabels, len(allLabels), "All labels should be registered")
 		for _, label := range allLabels {
 			assert.Contains(t, registeredLabels, label, "Registry should contain label %q", label)
-			result := registry.Get(strings.ToLower(label))
-			require.NotNil(t, result, "Should retrieve label %q", label)
-			assert.Equal(t, label, *result, "Label %q should have correct casing", label)
+			result, exists := registry.Get(strings.ToLower(label))
+			require.True(t, exists, "Should retrieve label %q", label)
+			assert.Equal(t, label, result, "Label %q should have correct casing", label)
 		}
 	})
 }
@@ -493,9 +530,9 @@ func TestEdgeCases(t *testing.T) {
 
 		// Assert
 		assert.Equal(t, "   ", label, "Should preserve spaces")
-		result := registry.Get("   ")
-		require.NotNil(t, result)
-		assert.Equal(t, "   ", *result)
+		result, exists := registry.Get("   ")
+		require.True(t, exists)
+		assert.Equal(t, "   ", result)
 	})
 
 	t.Run("Label with leading/trailing spaces", func(t *testing.T) {
@@ -510,9 +547,9 @@ func TestEdgeCases(t *testing.T) {
 
 		// Assert
 		assert.Equal(t, "  Asset  ", label, "Should preserve all spaces")
-		result := registry.Get("  asset  ")
-		require.NotNil(t, result)
-		assert.Equal(t, "  Asset  ", *result)
+		result, exists := registry.Get("  asset  ")
+		require.True(t, exists)
+		assert.Equal(t, "  Asset  ", result)
 	})
 
 	t.Run("Very long label name", func(t *testing.T) {
@@ -521,7 +558,7 @@ func TestEdgeCases(t *testing.T) {
 		registry.mu.Lock()
 		registry.labels = make(map[string]string)
 		registry.mu.Unlock()
-		
+
 		longName := strings.Repeat("VeryLongLabel", 100)
 
 		// Act
@@ -529,9 +566,9 @@ func TestEdgeCases(t *testing.T) {
 
 		// Assert
 		assert.Equal(t, longName, label, "Should handle long label names")
-		result := registry.Get(strings.ToLower(longName))
-		require.NotNil(t, result)
-		assert.Equal(t, longName, *result)
+		result, exists := registry.Get(strings.ToLower(longName))
+		require.True(t, exists)
+		assert.Equal(t, longName, result)
 	})
 
 	t.Run("Unicode characters in label", func(t *testing.T) {
@@ -546,9 +583,9 @@ func TestEdgeCases(t *testing.T) {
 
 		// Assert
 		assert.Equal(t, "资产Asset", label, "Should handle Unicode characters")
-		result := registry.Get(strings.ToLower("资产Asset"))
-		require.NotNil(t, result)
-		assert.Equal(t, "资产Asset", *result)
+		result, exists := registry.Get(strings.ToLower("资产Asset"))
+		require.True(t, exists)
+		assert.Equal(t, "资产Asset", result)
 	})
 
 	t.Run("Label with emoji", func(t *testing.T) {
@@ -563,8 +600,8 @@ func TestEdgeCases(t *testing.T) {
 
 		// Assert
 		assert.Equal(t, "Asset🔒", label, "Should handle emoji")
-		result := registry.Get(strings.ToLower("Asset🔒"))
-		require.NotNil(t, result)
-		assert.Equal(t, "Asset🔒", *result)
+		result, exists := registry.Get(strings.ToLower("Asset🔒"))
+		require.True(t, exists)
+		assert.Equal(t, "Asset🔒", result)
 	})
 }

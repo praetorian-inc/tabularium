@@ -86,6 +86,8 @@ type CredentialResponse struct {
 	CredentialValueFiles []CredentialFile    `json:"credentialValueFile"` // For credential file (list of files that need to be placed at specific locations; Janus will place files in runners)
 }
 
+var CredentialLabel = NewLabel("Credential")
+
 type Credential struct {
 	registry.BaseModel
 	Username     string             `neo4j:"username" json:"username" desc:"Username associated with the credential"`
@@ -140,7 +142,7 @@ func (c *Credential) GetCredentialID() string {
 }
 
 func (c *Credential) GetLabels() []string {
-	return []string{"Credential", string(c.Category), string(c.Type)}
+	return []string{CredentialLabel, string(c.Category), string(c.Type)}
 }
 
 func (c *Credential) Valid() bool {

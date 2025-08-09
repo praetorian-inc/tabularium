@@ -38,16 +38,13 @@ func (r *LabelRegistry) MustRegister(label string) {
 }
 
 // Get retrieves a label from the registry using a case-insensitive key
-func (r *LabelRegistry) Get(key string) *string {
+func (r *LabelRegistry) Get(key string) (string, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	
 	lowercaseKey := strings.ToLower(key)
 	label, exists := r.labels[lowercaseKey]
-	if !exists {
-		return nil
-	}
-	return &label
+	return label, exists
 }
 
 // List returns all registered labels
