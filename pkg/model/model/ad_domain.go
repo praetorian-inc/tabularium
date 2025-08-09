@@ -12,10 +12,6 @@ func init() {
 	registry.Registry.MustRegisterModel(&ADDomain{})
 }
 
-const (
-	ADDomainLabel = "Addomain"
-)
-
 var (
 	adDomainKey = regexp.MustCompile(`^#addomain#([^#]+)#([^#]+)$`)
 )
