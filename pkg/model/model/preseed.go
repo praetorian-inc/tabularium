@@ -35,7 +35,7 @@ func (p *Preseed) IsPrivate() bool {
 }
 
 func (p *Preseed) GetLabels() []string {
-	return []string{PreseedLabel.String(), TTLLabel.String()}
+	return []string{PreseedLabel, TTLLabel}
 }
 
 func (p *Preseed) Class() string {

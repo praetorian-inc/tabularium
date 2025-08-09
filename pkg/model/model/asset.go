@@ -32,7 +32,7 @@ var (
 var AssetLabel = NewLabel("Asset")
 
 func (a *Asset) GetLabels() []string {
-	labels := []string{AssetLabel.String(), TTLLabel.String()}
+	labels := []string{AssetLabel, TTLLabel}
 	return labels
 }
 

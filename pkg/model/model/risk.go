@@ -77,7 +77,7 @@ var riskKey = regexp.MustCompile(`^#risk#([^#]+)#([^#]+)$`)
 var RiskLabel = NewLabel("Risk")
 
 func (r *Risk) GetLabels() []string {
-	return []string{RiskLabel.String(), TTLLabel.String()}
+	return []string{RiskLabel, TTLLabel}
 }
 
 func (r *Risk) GetKey() string {

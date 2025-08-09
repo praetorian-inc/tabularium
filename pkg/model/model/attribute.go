@@ -35,7 +35,7 @@ func (a *Attribute) GetKey() string {
 }
 
 func (a *Attribute) GetLabels() []string {
-	return []string{AttributeLabel.String(), TTLLabel.String()}
+	return []string{AttributeLabel, TTLLabel}
 }
 
 func (a *Attribute) Target() string {

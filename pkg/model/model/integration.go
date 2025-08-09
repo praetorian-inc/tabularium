@@ -26,7 +26,7 @@ var (
 )
 
 func (i *Integration) GetLabels() []string {
-	return []string{IntegrationLabel.String(), AssetLabel.String(), TTLLabel.String()}
+	return []string{IntegrationLabel, AssetLabel, TTLLabel}
 }
 
 func (i *Integration) Valid() bool {

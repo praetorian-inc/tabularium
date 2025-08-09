@@ -54,7 +54,7 @@ func (a *CloudResource) GetHooks() []registry.Hook {
 			Call: func() error {
 				labels := append(a.Labels, resourceLabels[a.ResourceType]...)
 				labels = append(labels, a.ResourceType.String())
-				labels = append(labels, CloudLabel.String(), TTLLabel.String())
+				labels = append(labels, CloudLabel, TTLLabel)
 				slices.Sort(labels)
 				a.Labels = slices.Compact(labels)
 

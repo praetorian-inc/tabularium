@@ -29,7 +29,7 @@ var (
 )
 
 func (r *Repository) GetLabels() []string {
-	return []string{RepositoryLabel.String(), AssetLabel.String(), TTLLabel.String()}
+	return []string{RepositoryLabel, AssetLabel, TTLLabel}
 }
 
 func (r *Repository) Valid() bool {

@@ -38,7 +38,7 @@ func (d *ADDomain) Valid() bool {
 }
 
 func (d *ADDomain) GetLabels() []string {
-	return []string{ADDomainLabel.String(), AssetLabel.String(), TTLLabel.String()}
+	return []string{ADDomainLabel, AssetLabel, TTLLabel}
 }
 
 func (d *ADDomain) GetClass() string {

@@ -599,7 +599,7 @@ func TestWebpageGetLabels(t *testing.T) {
 	webpage := &Webpage{}
 	labels := webpage.GetLabels()
 	assert.Contains(t, labels, "Webpage")
-	assert.Contains(t, labels, TTLLabel.String())
+	assert.Contains(t, labels, TTLLabel)
 }
 
 func TestWebpageGetDescription(t *testing.T) {

@@ -39,7 +39,7 @@ func (t *Technology) GetKey() string {
 }
 
 func (t *Technology) GetLabels() []string {
-	return []string{TechnologyLabel.String(), TTLLabel.String()}
+	return []string{TechnologyLabel, TTLLabel}
 }
 
 func (t *Technology) Valid() bool {

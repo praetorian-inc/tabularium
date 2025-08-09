@@ -89,7 +89,7 @@ func (w *Webpage) GetKey() string {
 }
 
 func (w *Webpage) GetLabels() []string {
-	return []string{WebpageLabel.String(), TTLLabel.String()}
+	return []string{WebpageLabel, TTLLabel}
 }
 
 func (w *Webpage) Valid() bool {

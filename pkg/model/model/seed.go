@@ -40,7 +40,7 @@ type Seed struct {
 var SeedLabel = NewLabel("Seed")
 
 func (s *Seed) GetLabels() []string {
-	return []string{SeedLabel.String()}
+	return []string{SeedLabel}
 }
 
 func (s *Seed) GetKey() string {
