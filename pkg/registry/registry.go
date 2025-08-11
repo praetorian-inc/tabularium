@@ -37,14 +37,20 @@ func Name(model Model) string {
 
 // TypeRegistry holds information about all registered types
 type TypeRegistry struct {
-	types map[string]reflect.Type
+	types  map[string]reflect.Type
+	labels map[string]string
 }
 
 // NewTypeRegistry creates a new type registry
 func NewTypeRegistry() *TypeRegistry {
 	return &TypeRegistry{
-		types: make(map[string]reflect.Type),
+		types:  make(map[string]reflect.Type),
+		labels: make(map[string]string),
 	}
+}
+
+type labeled interface {
+	GetLabels() []string
 }
 
 // RegisterModel registers a model type with the registry.
@@ -54,11 +60,41 @@ func (r *TypeRegistry) RegisterModel(model Model) error {
 	gob.Register(model)
 	tipe := reflect.TypeOf(model)
 	name := Name(model)
+
 	if _, ok := r.types[name]; ok {
 		return fmt.Errorf("type %s already registered", name)
 	}
+
+	if labeled, ok := model.(labeled); ok {
+		if err := r.registerLabels(labeled.GetLabels()); err != nil {
+			return err
+		}
+	}
+
 	r.types[name] = tipe
 	return nil
+}
+
+func (r *TypeRegistry) registerLabels(labels []string) error {
+	for _, label := range labels {
+		if label == "" {
+			continue
+		}
+
+		if registered, ok := r.labels[label]; ok && registered != label {
+			return fmt.Errorf("label %q already registered as %q", label, registered)
+		}
+
+		r.labels[strings.ToLower(label)] = label
+	}
+
+	return nil
+}
+
+func (r *TypeRegistry) FormatLabel(label string) (string, bool) {
+	label = strings.ToLower(label)
+	registered, ok := r.labels[label]
+	return registered, ok
 }
 
 // MustRegisterModel registers a model, and panics on failure. Useful for registering models in init()
