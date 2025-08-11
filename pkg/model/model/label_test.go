@@ -17,31 +17,24 @@ func TestLabels_Registered(t *testing.T) {
 	modelRegistry := registry.Registry
 	labelRegistry := GetLabelRegistry()
 
-	// Get all model types
 	for name, modelType := range modelRegistry.GetAllTypes() {
-		// Create an instance to check if it's a GraphModel
 		instance := reflect.New(modelType.Elem()).Interface()
-		
-		// Skip non-GraphModel types
+
 		graphModel, ok := instance.(GraphModel)
 		if !ok {
 			continue
 		}
-		
-		// Get labels for this model
+
 		labels := graphModel.GetLabels()
-		
+
 		for _, label := range labels {
-			// Skip empty labels (can happen with dynamic labels like in Credential)
 			if label == "" {
 				continue
 			}
-			
-			// Ensure label is registered
+
 			registeredLabel, exists := labelRegistry.Get(label)
 			require.True(t, exists, "Label %q from model %q should be registered", label, name)
-			
-			// Ensure registered label is identical (case-sensitive) to the label
+
 			assert.Equal(t, label, registeredLabel, "Registered label should match exactly for model %q", name)
 		}
 	}
@@ -107,7 +100,6 @@ func TestLabel_Creation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Clear registry before each test
 			GetLabelRegistry().mu.Lock()
 			GetLabelRegistry().labels = make(map[string]string)
 			GetLabelRegistry().mu.Unlock()
@@ -125,8 +117,6 @@ func TestLabelRegistry_Initialization(t *testing.T) {
 
 	t.Run("Registry starts empty or with predefined labels", func(t *testing.T) {
 		registry := GetLabelRegistry()
-		// The registry may have labels from other tests or initialization
-		// Just verify it's accessible
 		allLabels := registry.List()
 		assert.NotNil(t, allLabels, "List should return a non-nil slice")
 	})
@@ -156,7 +146,6 @@ func TestLabelRegistry_MustRegister(t *testing.T) {
 		registry.labels = make(map[string]string)
 		registry.mu.Unlock()
 
-		// Act - Register the same label multiple times (should not panic)
 		registry.MustRegister("Asset")
 		registry.MustRegister("Asset")
 		registry.MustRegister("Asset")
@@ -174,11 +163,10 @@ func TestLabelRegistry_MustRegister(t *testing.T) {
 		registry.labels = make(map[string]string)
 		registry.mu.Unlock()
 
-		// Act & Assert
 		registry.MustRegister("Asset")
 
 		assert.Panics(t, func() {
-			registry.MustRegister("ASSET") // Different casing, same lowercase key
+			registry.MustRegister("ASSET")
 		}, "Should panic when registering different casing with same lowercase key")
 	})
 }
@@ -226,7 +214,6 @@ func TestLabelRegistry_CaseInsensitiveRetrieval(t *testing.T) {
 
 			registry.MustRegister(tt.registerValue)
 
-			// Act & Assert
 			for _, key := range tt.retrievalKeys {
 				retrieved, exists := registry.Get(key)
 				require.True(t, exists, "Should retrieve label with key %q", key)
@@ -374,7 +361,6 @@ func TestLabelRegistry_ThreadSafety(t *testing.T) {
 			}(i)
 		}
 
-		// Start readers
 		for i := 0; i < 10; i++ {
 			wg.Add(1)
 			go func() {
@@ -388,7 +374,6 @@ func TestLabelRegistry_ThreadSafety(t *testing.T) {
 						for _, label := range []string{"Asset", "Risk", "Vulnerability"} {
 							result, exists := registry.Get(strings.ToLower(label))
 							if exists {
-								// Just access the value to ensure no race
 								_ = result
 							}
 						}
@@ -397,12 +382,10 @@ func TestLabelRegistry_ThreadSafety(t *testing.T) {
 			}()
 		}
 
-		// Let readers run for a bit
 		time.Sleep(100 * time.Millisecond)
 		close(stopCh)
 		wg.Wait()
 
-		// Assert - Just verify we didn't panic or deadlock
 		assert.True(t, true, "Concurrent operations completed without issues")
 	})
 }

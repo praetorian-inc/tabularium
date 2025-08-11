@@ -116,7 +116,6 @@ func (a *Asset) Visit(o Assetlike) {
 	}
 
 	a.BaseAsset.Visit(other)
-	// allow asset enrichments to control asset privateness
 	a.Private = other.Private
 }
 

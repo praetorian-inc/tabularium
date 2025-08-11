@@ -41,14 +41,11 @@ type Webpage struct {
 	Source   []string `neo4j:"source" json:"source" desc:"Sources that identified this webpage (e.g., seed, crawl)" example:"[\"crawl\", \"login\"]"`
 	Private  bool     `neo4j:"private" json:"private" desc:"Whether the webpage is on a public web server." example:"false"`
 	History
-	// Neo4j fields
 	URL             string         `neo4j:"url" json:"url" desc:"The basic URL of the webpage." example:"https://example.com/path"`
 	State           string         `neo4j:"state" json:"state" desc:"Current analysis state of the webpage (e.g., Unanalyzed, Interesting, Uninteresting)." example:"Unanalyzed"`
 	Metadata        map[string]any `neo4j:"metadata" json:"metadata" dynamodbav:"metadata" desc:"Additional metadata associated with the webpage." example:"{\"title\": \"Example Domain\"}"`
 	DetailsFilepath string         `neo4j:"details_filepath" json:"details_filepath" dynamodbav:"details_filepath" desc:"The path to the details file for the webpage." example:"webpage/1234567890/details-1234567890.json"`
-	// S3 fields
 	WebpageDetails
-	// Not Saved but useful for internal processing
 	Parent GraphModelWrapper `neo4j:"-" json:"parent" desc:"The parent entity from which this webpage was discovered. Only used for creating a relationship"`
 }
 
@@ -104,7 +101,6 @@ func (w *Webpage) SetUsername(username string) {
 	w.Username = username
 }
 
-// Custom gob encoding to ensure WebpageDetails is always empty
 func (w Webpage) GobEncode() ([]byte, error) {
 	temp := WebpageForGob(w)
 	temp.WebpageDetails = WebpageDetails{}
@@ -237,7 +233,6 @@ func (w *Webpage) GetHooks() []registry.Hook {
 				w.basicAnalysis()
 				return nil
 			},
-			Description: "Construction and basic analysis",
 		},
 		{
 			Call: func() error {
@@ -249,7 +244,6 @@ func (w *Webpage) GetHooks() []registry.Hook {
 				}
 				return nil
 			},
-			Description: "Determine if the webpage parent is a public server",
 		},
 	}
 }
@@ -269,7 +263,6 @@ func NewWebpage(url url.URL, parent GraphModel, options ...WebpageOption) Webpag
 	urlString := fmt.Sprintf("%s://%s%s", url.Scheme, url.Host, url.Path)
 	w := Webpage{URL: urlString, Parent: NewGraphModelWrapper(parent)}
 	w.Defaulted()
-	// We run hooks twice to ensure construction and analysis are run
 	registry.CallHooks(&w)
 
 	for _, option := range options {

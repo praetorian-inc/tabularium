@@ -12,7 +12,7 @@ import (
 
 var CloudLabel = NewLabel("Cloud")
 
-var neo4jNegateLabelRegex = regexp.MustCompile(`[^a-zA-Z0-9\-_]`) // to conform with label validator
+var neo4jNegateLabelRegex = regexp.MustCompile(`[^a-zA-Z0-9\-_]`)
 
 type CloudResource struct {
 	registry.BaseModel
@@ -34,12 +34,11 @@ type CloudResource struct {
 	Username     string            `neo4j:"username" json:"username"`
 }
 
-// Defaulted sets sensible default values for CloudResource
 func (c *CloudResource) Defaulted() {
 	c.Status = Active
 	c.Created = Now()
 	c.Visited = Now()
-	c.TTL = Future(7 * 24) // 1 week
+	c.TTL = Future(7 * 24)
 	if c.Properties == nil {
 		c.Properties = make(map[string]any)
 	}
@@ -102,7 +101,6 @@ func (c *CloudResource) Valid() bool {
 	return c.Key != ""
 }
 
-// GetSecret returns the secret reference for this cloud resource
 func (c *CloudResource) GetSecret() string {
 	if c.Secret != nil {
 		return *c.Secret
@@ -116,7 +114,6 @@ func init() {
 	registry.Registry.MustRegisterModel(&AzureResource{})
 	registry.Registry.MustRegisterModel(&GCPResource{})
 
-	// register the type for properties
 	gob.Register(map[string]any{})
 	gob.Register(map[string]string{})
 	gob.Register(map[string][]string{})
