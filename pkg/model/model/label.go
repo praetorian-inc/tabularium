@@ -11,16 +11,23 @@ type LabelRegistry struct {
 	labels map[string]string
 }
 
-var globalRegistry = &LabelRegistry{
-	labels: make(map[string]string),
-}
+var (
+	globalRegistry *LabelRegistry
+	registerOnce   sync.Once
+)
 
 func NewLabel(value string) string {
-	globalRegistry.MustRegister(value)
+	registerOnce.Do(func() {
+		globalRegistry = &LabelRegistry{
+			labels: make(map[string]string),
+		}
+	})
+
+	globalRegistry.mustRegister(value)
 	return value
 }
 
-func (r *LabelRegistry) MustRegister(label string) {
+func (r *LabelRegistry) mustRegister(label string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 

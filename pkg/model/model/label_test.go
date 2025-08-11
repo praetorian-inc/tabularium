@@ -131,7 +131,7 @@ func TestLabelRegistry_MustRegister(t *testing.T) {
 		registry.mu.Unlock()
 
 		// Act
-		registry.MustRegister("ForceChangePassword")
+		registry.mustRegister("ForceChangePassword")
 
 		// Assert
 		retrieved, exists := registry.Get("forcechangepassword")
@@ -146,9 +146,9 @@ func TestLabelRegistry_MustRegister(t *testing.T) {
 		registry.labels = make(map[string]string)
 		registry.mu.Unlock()
 
-		registry.MustRegister("Asset")
-		registry.MustRegister("Asset")
-		registry.MustRegister("Asset")
+		registry.mustRegister("Asset")
+		registry.mustRegister("Asset")
+		registry.mustRegister("Asset")
 
 		// Assert
 		retrieved, exists := registry.Get("asset")
@@ -163,10 +163,10 @@ func TestLabelRegistry_MustRegister(t *testing.T) {
 		registry.labels = make(map[string]string)
 		registry.mu.Unlock()
 
-		registry.MustRegister("Asset")
+		registry.mustRegister("Asset")
 
 		assert.Panics(t, func() {
-			registry.MustRegister("ASSET")
+			registry.mustRegister("ASSET")
 		}, "Should panic when registering different casing with same lowercase key")
 	})
 }
@@ -212,7 +212,7 @@ func TestLabelRegistry_CaseInsensitiveRetrieval(t *testing.T) {
 			registry.labels = make(map[string]string)
 			registry.mu.Unlock()
 
-			registry.MustRegister(tt.registerValue)
+			registry.mustRegister(tt.registerValue)
 
 			for _, key := range tt.retrievalKeys {
 				retrieved, exists := registry.Get(key)
@@ -245,7 +245,7 @@ func TestLabelRegistry_Get(t *testing.T) {
 		registry.mu.Lock()
 		registry.labels = make(map[string]string)
 		registry.mu.Unlock()
-		registry.MustRegister("Technology")
+		registry.mustRegister("Technology")
 
 		// Act
 		result, exists := registry.Get("technology")
@@ -261,7 +261,7 @@ func TestLabelRegistry_Get(t *testing.T) {
 		registry.mu.Lock()
 		registry.labels = make(map[string]string)
 		registry.mu.Unlock()
-		registry.MustRegister("")
+		registry.mustRegister("")
 
 		// Act
 		result, exists := registry.Get("")
@@ -282,7 +282,7 @@ func TestLabelRegistry_List(t *testing.T) {
 
 		labels := []string{"Asset", "Risk", "Vulnerability", "Technology"}
 		for _, label := range labels {
-			registry.MustRegister(label)
+			registry.mustRegister(label)
 		}
 
 		// Act
@@ -326,7 +326,7 @@ func TestLabelRegistry_ThreadSafety(t *testing.T) {
 			wg.Add(1)
 			go func(l string) {
 				defer wg.Done()
-				registry.MustRegister(l)
+				registry.mustRegister(l)
 			}(label)
 		}
 		wg.Wait()
@@ -356,7 +356,7 @@ func TestLabelRegistry_ThreadSafety(t *testing.T) {
 				defer wg.Done()
 				for j := 0; j < 10; j++ {
 					label := fmt.Sprintf("Label_%d_%d", id, j)
-					registry.MustRegister(label)
+					registry.mustRegister(label)
 				}
 			}(i)
 		}
