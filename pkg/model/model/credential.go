@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/model/label"
 
 	"github.com/google/uuid"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
@@ -86,7 +87,7 @@ type CredentialResponse struct {
 	CredentialValueFiles []CredentialFile    `json:"credentialValueFile"` // For credential file (list of files that need to be placed at specific locations; Janus will place files in runners)
 }
 
-var CredentialLabel = NewLabel("Credential")
+var CredentialLabel = label.New("Credential")
 
 type Credential struct {
 	registry.BaseModel

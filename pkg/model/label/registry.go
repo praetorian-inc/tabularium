@@ -1,4 +1,4 @@
-package model
+package label
 
 import (
 	"fmt"
@@ -6,28 +6,17 @@ import (
 	"sync"
 )
 
-type LabelRegistry struct {
+type Registry struct {
 	mu     sync.RWMutex
 	labels map[string]string
 }
 
 var (
-	globalRegistry *LabelRegistry
+	globalRegistry *Registry
 	registerOnce   sync.Once
 )
 
-func NewLabel(value string) string {
-	registerOnce.Do(func() {
-		globalRegistry = &LabelRegistry{
-			labels: make(map[string]string),
-		}
-	})
-
-	globalRegistry.mustRegister(value)
-	return value
-}
-
-func (r *LabelRegistry) mustRegister(label string) {
+func (r *Registry) mustRegister(label string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -39,7 +28,7 @@ func (r *LabelRegistry) mustRegister(label string) {
 	r.labels[key] = label
 }
 
-func (r *LabelRegistry) Get(key string) (string, bool) {
+func (r *Registry) Get(key string) (string, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -48,7 +37,7 @@ func (r *LabelRegistry) Get(key string) (string, bool) {
 	return label, exists
 }
 
-func (r *LabelRegistry) List() []string {
+func (r *Registry) List() []string {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -59,6 +48,12 @@ func (r *LabelRegistry) List() []string {
 	return result
 }
 
-func GetLabelRegistry() *LabelRegistry {
+func GetRegistry() *Registry {
+	registerOnce.Do(func() {
+		globalRegistry = &Registry{
+			labels: make(map[string]string),
+		}
+	})
+
 	return globalRegistry
 }

@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/gob"
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/model/label"
 	"regexp"
 	"slices"
 	"strings"
@@ -10,7 +11,7 @@ import (
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
-var CloudLabel = NewLabel("Cloud")
+var CloudLabel = label.New("Cloud")
 
 var neo4jNegateLabelRegex = regexp.MustCompile(`[^a-zA-Z0-9\-_]`)
 

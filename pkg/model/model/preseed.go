@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/model/label"
 	"strings"
 
 	"github.com/praetorian-inc/tabularium/pkg/model/filters"
@@ -28,7 +29,7 @@ func init() {
 	registry.Registry.MustRegisterModel(&Preseed{})
 }
 
-var PreseedLabel = NewLabel("Preseed")
+var PreseedLabel = label.New("Preseed")
 
 func (p *Preseed) IsPrivate() bool {
 	return false

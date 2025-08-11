@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/model/label"
 	"regexp"
 	"strings"
 
@@ -13,7 +14,7 @@ func init() {
 }
 
 var (
-	ADDomainLabel = NewLabel("Addomain")
+	ADDomainLabel = label.New("Addomain")
 )
 
 var (

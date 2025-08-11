@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/model/label"
 	"net/url"
 	"regexp"
 	"strings"
@@ -74,7 +75,7 @@ func (rd *RiskDefinition) GetDescription() string {
 
 var riskKey = regexp.MustCompile(`^#risk#([^#]+)#([^#]+)$`)
 
-var RiskLabel = NewLabel("Risk")
+var RiskLabel = label.New("Risk")
 
 func (r *Risk) GetLabels() []string {
 	return []string{RiskLabel, TTLLabel}

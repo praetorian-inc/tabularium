@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/model/label"
 	"regexp"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
@@ -18,7 +19,7 @@ type Integration struct {
 }
 
 var (
-	IntegrationLabel = NewLabel("Integration")
+	IntegrationLabel = label.New("Integration")
 )
 
 var (

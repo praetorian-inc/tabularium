@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/model/label"
 	"net/url"
 	"regexp"
 	"strings"
@@ -67,7 +68,7 @@ type WebpageResponse struct {
 	Body       string              `json:"body" desc:"Body content of the response." example:"<html><body>Example Domain</body></html>"`
 }
 
-var WebpageLabel = NewLabel("Webpage")
+var WebpageLabel = label.New("Webpage")
 
 func init() {
 	registry.Registry.MustRegisterModel(&Webpage{})

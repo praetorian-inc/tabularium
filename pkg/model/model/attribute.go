@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/model/label"
 	"strings"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
@@ -24,7 +25,7 @@ type Attribute struct {
 	Parent     GraphModelWrapper `neo4j:"-" json:"parent" desc:"Attribute parent."`
 }
 
-var AttributeLabel = NewLabel("Attribute")
+var AttributeLabel = label.New("Attribute")
 
 func init() {
 	registry.Registry.MustRegisterModel(&Attribute{})

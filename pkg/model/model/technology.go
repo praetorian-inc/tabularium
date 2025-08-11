@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/model/label"
 	"regexp"
 	"strings"
 
@@ -32,7 +33,7 @@ type Technology struct {
 	History
 }
 
-var TechnologyLabel = NewLabel("Technology")
+var TechnologyLabel = label.New("Technology")
 
 func (t *Technology) GetKey() string {
 	return t.Key

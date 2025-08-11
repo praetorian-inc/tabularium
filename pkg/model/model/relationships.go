@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/model/label"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
@@ -88,7 +89,7 @@ func NewDiscovered(source, target GraphModel) GraphRelationship {
 	}
 }
 
-var DiscoveredLabel = NewLabel("DISCOVERED")
+var DiscoveredLabel = label.New("DISCOVERED")
 
 func (d Discovered) Label() string {
 	return DiscoveredLabel
@@ -109,7 +110,7 @@ func NewHasVulnerability(source, target GraphModel) GraphRelationship {
 	}
 }
 
-var HasVulnerabilityLabel = NewLabel("HAS_VULNERABILITY")
+var HasVulnerabilityLabel = label.New("HAS_VULNERABILITY")
 
 func (a HasVulnerability) Label() string {
 	return HasVulnerabilityLabel
@@ -145,13 +146,13 @@ func NewInstanceOf(source, target GraphModel) GraphRelationship {
 	}
 }
 
-var InstanceOfLabel = NewLabel("INSTANCE_OF")
+var InstanceOfLabel = label.New("INSTANCE_OF")
 
 func (a InstanceOf) Label() string {
 	return InstanceOfLabel
 }
 
-var HasAttributeLabel = NewLabel("HAS_ATTRIBUTE")
+var HasAttributeLabel = label.New("HAS_ATTRIBUTE")
 
 // GetDescription returns a description for the HasAttribute relationship model.
 func (ha *HasAttribute) GetDescription() string {
@@ -172,7 +173,7 @@ func (a HasAttribute) Label() string {
 	return HasAttributeLabel
 }
 
-var HasTechnologyLabel = NewLabel("HAS_TECHNOLOGY")
+var HasTechnologyLabel = label.New("HAS_TECHNOLOGY")
 
 // GetDescription returns a description for the HasTechnology relationship model.
 func (ht *HasTechnology) GetDescription() string {
@@ -193,7 +194,7 @@ func (a HasTechnology) Label() string {
 	return HasTechnologyLabel
 }
 
-var HasCredentialLabel = NewLabel("HAS_CREDENTIAL")
+var HasCredentialLabel = label.New("HAS_CREDENTIAL")
 
 // GetDescription returns a description for the HasCredential relationship model.
 func (hc *HasCredential) GetDescription() string {

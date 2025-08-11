@@ -2,11 +2,12 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/model/label"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
-var ThreatLabel = NewLabel("Threat")
+var ThreatLabel = label.New("Threat")
 
 func init() {
 	registry.Registry.MustRegisterModel(&Threat{})
