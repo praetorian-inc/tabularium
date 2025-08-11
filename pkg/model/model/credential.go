@@ -49,6 +49,7 @@ const (
 	WizCredential                  CredentialType = "wiz"                   // Wiz credentials
 	WhoxyCredential                CredentialType = "whoxy"                 // Whoxy API key
 	XpanseCredential               CredentialType = "xpanse"                // Xpanse credentials
+	OktaCredential                 CredentialType = "okta"                  // Okta API credentials
 
 	LegacyCloudCredential CredentialType = "legacy-cloud" // Legacy cloud credentials (AWS, GCP, Azure)
 
