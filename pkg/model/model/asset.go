@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/model/label"
 	"net"
 	"regexp"
 	"strings"
@@ -29,7 +30,7 @@ var (
 	assetKey = regexp.MustCompile(`^#asset(#[^#]+){2,}$`)
 )
 
-const AssetLabel = "Asset"
+var AssetLabel = label.New("Asset")
 
 func (a *Asset) GetLabels() []string {
 	labels := []string{AssetLabel, TTLLabel}
@@ -116,7 +117,6 @@ func (a *Asset) Visit(o Assetlike) {
 	}
 
 	a.BaseAsset.Visit(other)
-	// allow asset enrichments to control asset privateness
 	a.Private = other.Private
 }
 

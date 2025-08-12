@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/model/label"
 	"regexp"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
@@ -17,8 +18,8 @@ type Integration struct {
 	Value string `neo4j:"value" json:"value" desc:"Value of the integration." example:"1234567890"`
 }
 
-const (
-	IntegrationLabel = "Integration"
+var (
+	IntegrationLabel = label.New("Integration")
 )
 
 var (

@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/model/label"
 	"net"
 	"strings"
 
@@ -37,7 +38,7 @@ type Seed struct {
 	History
 }
 
-const SeedLabel = "Seed"
+var SeedLabel = label.New("Seed")
 
 func (s *Seed) GetLabels() []string {
 	return []string{SeedLabel}

@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/model/label"
 	"regexp"
 	"strings"
 
@@ -19,8 +20,8 @@ type Repository struct {
 	Name string `neo4j:"name,omitempty" json:"name,omitempty" desc:"Repository name." example:"praetorian-inc/tabularium"`
 }
 
-const (
-	RepositoryLabel = "Repository"
+var (
+	RepositoryLabel = label.New("Repository")
 )
 
 var (

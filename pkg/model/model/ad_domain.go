@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/model/label"
 	"regexp"
 	"strings"
 
@@ -12,8 +13,8 @@ func init() {
 	registry.Registry.MustRegisterModel(&ADDomain{})
 }
 
-const (
-	ADDomainLabel = "Addomain"
+var (
+	ADDomainLabel = label.New("Addomain")
 )
 
 var (

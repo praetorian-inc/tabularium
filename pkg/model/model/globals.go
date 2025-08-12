@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/gob"
+	"github.com/praetorian-inc/tabularium/pkg/model/label"
 	"time"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
@@ -105,8 +106,8 @@ type Insertable interface {
 	GraphModel
 }
 
-const (
-	TTLLabel = "TTL" // TTLLabel attach to models that utilize TTL cleanup in neo4j
+var (
+	TTLLabel = label.New("TTL") // TTLLabel attach to models that utilize TTL cleanup in neo4j
 )
 
 const (
