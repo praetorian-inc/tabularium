@@ -31,6 +31,7 @@ type Risk struct {
 	TTL        int64  `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the risk record (Unix timestamp)." example:"1706353200"`
 	Comment    string `neo4j:"-" json:"comment,omitempty" desc:"User-provided comment about the risk." example:"Confirmed by manual check"`
 	PlextracID string `neo4j:"plextracid" json:"plextracid" desc:"ID of the risk in PlexTrac." example:"#clientID#reportId#findingId"`
+	ProofPath  string `neo4j:"-" json:"proof_path,omitempty" desc:"Path to the proof file associated with this risk." example:"proofs/example.com/CVE-2023-12345/443"`
 	Target     Target `neo4j:"-" json:"-"` // Internal use, not in schema
 	History
 	MLProperties
@@ -148,8 +149,20 @@ func (r *Risk) setStatus(status string) {
 }
 
 func (r *Risk) Proof(bits []byte) File {
-	file := NewFile(fmt.Sprintf("proofs/%s/%s", r.DNS, r.Name))
+	basePath := fmt.Sprintf("proofs/%s/%s", r.DNS, r.Name)
+
+	var proof map[string]any
+	if json.Unmarshal(bits, &proof) == nil {
+		if port, ok := proof["port"].(string); ok && port != "" {
+			basePath = fmt.Sprintf("proofs/%s/%s/%s", r.DNS, r.Name, port)
+		}
+	}
+
+	file := NewFile(basePath)
 	file.Bytes = bits
+
+	r.ProofPath = file.Name
+
 	return file
 }
 
