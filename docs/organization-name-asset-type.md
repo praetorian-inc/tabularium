@@ -193,12 +193,9 @@ nameHistory.ChangeReason = "Corporate rebranding"
 ### Search Operations
 
 ```go
-// Get all active names
-activeNames := org.GetActiveNames()
-
-// Get names by type
-legalNames := org.GetNamesByType(NameTypeLegal)
-abbreviations := org.GetNamesByType(NameTypeAbbreviation)
+// Query OrganizationName nodes via relationships in Neo4j
+// MATCH (org:Organization)-[:HAS_ORGANIZATION_NAME]->(name:OrganizationName {state: 'active'})
+// WHERE org.key = $orgKey RETURN name
 
 // Search expansion
 expansion := searchService.ExpandSearch("Praetorian")
@@ -235,7 +232,7 @@ foundOrg := searchService.FindOrganization("Praetorian Labs")
 ### Benchmarks
 ```go
 BenchmarkOrganizationSearchExpansion_ExpandSearch-8     	   10000	    150 ns/op
-BenchmarkOrganizationRelationshipService_GetSubsidiaries-8  	    1000	   1200 ns/op
+
 ```
 
 ## Integration Patterns

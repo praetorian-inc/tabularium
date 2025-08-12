@@ -134,39 +134,6 @@ func (o *Organization) CreateNameRelationship(name, nameType, source string) (*O
 	return &orgName, relationship, nil
 }
 
-// GetNames returns organization names filtered by optional state and type
-// Pass nil for no filtering on that field
-func (o *Organization) GetNames(state *string, nameType *string) []string {
-	var names []string
-	for _, name := range o.Names {
-		if state != nil && name.State != *state {
-			continue
-		}
-
-		if nameType != nil && name.Type != *nameType {
-			continue
-		}
-
-		names = append(names, name.Name)
-	}
-	sort.Strings(names)
-	return names
-}
-
-func (o *Organization) GetActiveNames() []string {
-	activeState := NameStateActive
-	return o.GetNames(&activeState, nil)
-}
-
-func (o *Organization) GetNamesByType(nameType string) []string {
-	activeState := NameStateActive
-	return o.GetNames(&activeState, &nameType)
-}
-
-func (o *Organization) GetAllNameVariations() []string {
-	return o.GetNames(nil, nil)
-}
-
 func (o *Organization) IsSubsidiary() bool {
 	return o.ParentOrganization != ""
 }
@@ -287,7 +254,15 @@ func (ose *OrganizationSearchExpansion) ExpandSearch(searchTerm string) []string
 	normalized := NormalizeOrganizationName(searchTerm)
 
 	if org, exists := ose.Organizations[normalized]; exists {
-		return org.GetActiveNames()
+		var names []string
+		names = append(names, org.PrimaryName)
+		for _, name := range org.Names {
+			if name.State == NameStateActive {
+				names = append(names, name.Name)
+			}
+		}
+		sort.Strings(names)
+		return names
 	}
 
 	return []string{searchTerm}
