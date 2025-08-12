@@ -46,6 +46,8 @@ type Webpage struct {
 	State           string         `neo4j:"state" json:"state" desc:"Current analysis state of the webpage (e.g., Unanalyzed, Interesting, Uninteresting)." example:"Unanalyzed"`
 	Metadata        map[string]any `neo4j:"metadata" json:"metadata" dynamodbav:"metadata" desc:"Additional metadata associated with the webpage." example:"{\"title\": \"Example Domain\"}"`
 	DetailsFilepath string         `neo4j:"details_filepath" json:"details_filepath" dynamodbav:"details_filepath" desc:"The path to the details file for the webpage." example:"webpage/1234567890/details-1234567890.json"`
+	IsLoginPortal   bool           `neo4j:"is_login_portal" json:"is_login_portal" desc:"Whether this webpage is identified as a login portal." example:"true"`
+	LoginDetails
 	// S3 fields
 	WebpageDetails
 	// Not Saved but useful for internal processing
@@ -68,6 +70,17 @@ type WebpageResponse struct {
 	StatusCode int                 `json:"status_code" desc:"HTTP status code of the response." example:"200"`
 	Headers    map[string][]string `json:"headers" desc:"Headers received in the response." example:"{\"Content-Type\": [\"text/html\"]}"`
 	Body       string              `json:"body" desc:"Body content of the response." example:"<html><body>Example Domain</body></html>"`
+}
+
+type LoginDetails struct {
+	LoginMethod string   `neo4j:"login_method" json:"login_method" desc:"The method of login detected (form, oauth, saml, basic)." example:"form"`
+	InputFields []string `neo4j:"input_fields" json:"input_fields" desc:"Input field names detected in the login form." example:"[\"username\", \"password\"]"`
+	FormSnippet string   `neo4j:"form_snippet" json:"form_snippet" desc:"HTML snippet of the detected login form." example:"<form><input name=\"username\"><input type=\"password\" name=\"password\"></form>"`
+
+	SSOProvider string `neo4j:"sso_provider" json:"sso_provider" desc:"SSO provider managing this login portal." example:"okta"`
+	SSOAppID    string `neo4j:"sso_app_id" json:"sso_app_id" desc:"External SSO application identifier." example:"app123456"`
+	IsManaged   bool   `neo4j:"is_managed" json:"is_managed" desc:"Whether this login portal is managed by an SSO provider." example:"true"`
+	SSOStatus   string `neo4j:"sso_status" json:"sso_status" desc:"SSO governance status." example:"managed"`
 }
 
 const WebpageLabel = "Webpage"
