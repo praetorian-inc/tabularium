@@ -753,7 +753,7 @@ func TestADObject_FactoryMethods(t *testing.T) {
 		assert.Equal(t, "example.local", user.Domain)
 		assert.Equal(t, "CN=JDoe,CN=Users,DC=example,DC=local", user.DistinguishedName)
 		assert.Equal(t, "jdoe", user.SAMAccountName)
-		assert.Contains(t, user.ObjectTypes, "User")
+		assert.Equal(t, ADUserLabel, user.ObjectClass)
 		assert.Equal(t, "user", user.Class)
 	})
 
@@ -763,7 +763,7 @@ func TestADObject_FactoryMethods(t *testing.T) {
 
 		assert.Equal(t, "corp.com", computer.Domain)
 		assert.Equal(t, "CN=WORKSTATION01,CN=Computers,DC=corp,DC=com", computer.DistinguishedName)
-		assert.Contains(t, computer.ObjectTypes, "Computer")
+		assert.Equal(t, ADComputerLabel, computer.ObjectClass)
 		assert.Equal(t, "computer", computer.Class)
 	})
 
@@ -774,7 +774,7 @@ func TestADObject_FactoryMethods(t *testing.T) {
 		assert.Equal(t, "example.local", group.Domain)
 		assert.Equal(t, "CN=Domain Admins,CN=Groups,DC=example,DC=local", group.DistinguishedName)
 		assert.Equal(t, "Domain Admins", group.SAMAccountName)
-		assert.Contains(t, group.ObjectTypes, "Group")
+		assert.Equal(t, ADGroupLabel, group.ObjectClass)
 		assert.Equal(t, "group", group.Class)
 	})
 
@@ -785,7 +785,7 @@ func TestADObject_FactoryMethods(t *testing.T) {
 		assert.Equal(t, "example.local", gpo.Domain)
 		assert.Contains(t, gpo.DistinguishedName, "31B2F340-016D-11D2-945F-00C04FB984F9")
 		assert.Equal(t, "Default Domain Policy", gpo.DisplayName)
-		assert.Contains(t, gpo.ObjectTypes, "Gpo")
+		assert.Equal(t, ADGPOLabel, gpo.ObjectClass)
 		assert.Equal(t, "gpo", gpo.Class)
 	})
 
@@ -796,44 +796,8 @@ func TestADObject_FactoryMethods(t *testing.T) {
 		assert.Equal(t, "example.local", ou.Domain)
 		assert.Equal(t, "OU=Sales,DC=example,DC=local", ou.DistinguishedName)
 		assert.Equal(t, "Sales", ou.Name)
-		assert.Contains(t, ou.ObjectTypes, "Ou")
+		assert.Equal(t, ADOULabel, ou.ObjectClass)
 		assert.Equal(t, "ou", ou.Class)
-	})
-}
-
-// Test multi-label system (future implementation)
-func TestADObject_MultiLabelSystem(t *testing.T) {
-	t.Run("single label object", func(t *testing.T) {
-		ad := ADObject{
-			ObjectTypes: []string{"User"},
-		}
-
-		labels := ad.GetLabels()
-		assert.Contains(t, labels, "Adobject")
-		assert.Contains(t, labels, "User")
-		assert.Contains(t, labels, TTLLabel)
-	})
-
-	t.Run("multi-label object", func(t *testing.T) {
-		ad := ADObject{
-			ObjectTypes: []string{"Computer", "Certtemplate"},
-		}
-
-		labels := ad.GetLabels()
-		assert.Contains(t, labels, "Adobject")
-		assert.Contains(t, labels, "Computer")
-		assert.Contains(t, labels, "Certtemplate")
-		assert.Contains(t, labels, TTLLabel)
-	})
-
-	t.Run("no object types", func(t *testing.T) {
-		ad := ADObject{
-			ObjectTypes: []string{},
-		}
-
-		labels := ad.GetLabels()
-		assert.Contains(t, labels, "Adobject")
-		assert.Contains(t, labels, TTLLabel)
 	})
 }
 
@@ -954,7 +918,7 @@ func TestADObject_HelperMethods(t *testing.T) {
 			},
 			{
 				name:     "use SAMAccountName as fallback",
-				ad:       ADObject{SamAccountName: "user1"},
+				ad:       ADObject{SAMAccountName: "user1"},
 				expected: "user1",
 			},
 		}

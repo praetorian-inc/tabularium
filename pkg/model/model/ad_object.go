@@ -14,22 +14,22 @@ func init() {
 
 // AD Object Type Label constants
 const (
-	ADObjectLabel       = "Adobject"
+	ADObjectLabel       = "ADObject"
 	ADUserLabel         = "User"
 	ADComputerLabel     = "Computer"
 	ADGroupLabel        = "Group"
-	ADGPOLabel          = "Gpo"
-	ADOULabel           = "Ou"
+	ADGPOLabel          = "GPO"
+	ADOULabel           = "OU"
 	ADContainerLabel    = "Container"
-	ADDomainLabel       = "Addomain" // This must match what ad_domain.go expects
-	ADLocalGroupLabel   = "Adlocalgroup"
-	ADLocalUserLabel    = "Adlocaluser"
-	AIACALabel          = "Aica"
-	RootCALabel         = "Rootca"
-	EnterpriseCALabel   = "Enterpriseca"
-	NTAuthStoreLabel    = "Ntauthstore"
-	CertTemplateLabel   = "Certtemplate"
-	IssuancePolicyLabel = "Issuancepolicy"
+	ADDomainLabel       = "ADDomain"
+	ADLocalGroupLabel   = "ADLocalGroup"
+	ADLocalUserLabel    = "ADLocalUser"
+	AIACALabel          = "AICA"
+	RootCALabel         = "RootCA"
+	EnterpriseCALabel   = "EnterpriseCA"
+	NTAuthStoreLabel    = "NTAuthStore"
+	CertTemplateLabel   = "CertTemplate"
+	IssuancePolicyLabel = "IssuancePolicy"
 )
 
 var (
@@ -41,23 +41,19 @@ var (
 type ADObject struct {
 	BaseAsset
 
-	// Multi-label support
-	ObjectTypes []string `neo4j:"-" json:"objectTypes,omitempty" desc:"Labels to apply to this object in Neo4j." example:"[\"User\", \"Computer\"]"`
-
 	// Core AD Properties
 	Domain            string `neo4j:"domain" json:"domain" desc:"AD domain this object belongs to." example:"example.local"`
 	DistinguishedName string `neo4j:"distinguishedName" json:"distinguishedName" desc:"Full distinguished name in AD." example:"CN=John Doe,CN=Users,DC=example,DC=local"`
 	SID               string `neo4j:"sid" json:"sid" desc:"Security identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
 	ObjectClass       string `neo4j:"objectClass" json:"objectClass" desc:"AD object class." example:"user"`
 	Name              string `neo4j:"name" json:"name" desc:"Common name of the object." example:"John Doe"`
-	SAMAccountName    string `neo4j:"samAccountName,omitempty" json:"samAccountName,omitempty" desc:"SAM account name (for users/computers)." example:"jdoe"`
 	DisplayName       string `neo4j:"displayName,omitempty" json:"displayName,omitempty" desc:"Display name of the object." example:"John Doe"`
 	Description       string `neo4j:"description,omitempty" json:"description,omitempty" desc:"Description of the object." example:"User account for John Doe"`
 
 	// Extended Identity Properties
 	ObjectID       string `neo4j:"objectid,omitempty" json:"objectid,omitempty" desc:"Object identifier (SID)." example:"S-1-5-21-123456789-123456789-123456789-1001"`
 	DomainSID      string `neo4j:"domainsid,omitempty" json:"domainsid,omitempty" desc:"Domain SID." example:"S-1-5-21-123456789-123456789-123456789"`
-	SamAccountName string `neo4j:"samaccountname,omitempty" json:"samaccountname,omitempty" desc:"SAM account name (lowercase field)." example:"jdoe"`
+	SAMAccountName string `neo4j:"samaccountname,omitempty" json:"samaccountname,omitempty" desc:"SAM account name (lowercase field)." example:"jdoe"`
 	ObjectGUID     string `neo4j:"objectguid,omitempty" json:"objectguid,omitempty" desc:"Object GUID." example:"12345678-1234-1234-1234-123456789012"`
 	NetBIOS        string `neo4j:"netbios,omitempty" json:"netbios,omitempty" desc:"NetBIOS domain name." example:"CORP"`
 
@@ -142,7 +138,9 @@ type ADObject struct {
 
 func (ad *ADObject) GetLabels() []string {
 	labels := []string{ADObjectLabel, TTLLabel}
-	labels = append(labels, ad.ObjectTypes...)
+	if ad.ObjectClass != "" {
+		labels = append(labels, ad.ObjectClass)
+	}
 	return labels
 }
 
@@ -176,6 +174,10 @@ func (ad *ADObject) Visit(o Assetlike) {
 		return
 	}
 
+	if ad.GetKey() != other.GetKey() {
+		return
+	}
+
 	ad.BaseAsset.Visit(other)
 
 	// Merge AD-specific fields if they're empty in the current object
@@ -201,9 +203,6 @@ func (ad *ADObject) Visit(o Assetlike) {
 	}
 	if ad.DomainSID == "" && other.DomainSID != "" {
 		ad.DomainSID = other.DomainSID
-	}
-	if ad.SamAccountName == "" && other.SamAccountName != "" {
-		ad.SamAccountName = other.SamAccountName
 	}
 	if ad.ObjectGUID == "" && other.ObjectGUID != "" {
 		ad.ObjectGUID = other.ObjectGUID
@@ -407,8 +406,8 @@ func (ad *ADObject) Visit(o Assetlike) {
 	}
 
 	// Merge object types
-	if len(ad.ObjectTypes) == 0 && len(other.ObjectTypes) > 0 {
-		ad.ObjectTypes = other.ObjectTypes
+	if ad.ObjectClass == "" && other.ObjectClass != "" {
+		ad.ObjectClass = other.ObjectClass
 	}
 }
 
@@ -531,8 +530,8 @@ func (ad *ADObject) GetPrimaryIdentifier() string {
 	if ad.DistinguishedName != "" {
 		return ad.DistinguishedName
 	}
-	if ad.SamAccountName != "" {
-		return ad.SamAccountName
+	if ad.SAMAccountName != "" {
+		return ad.SAMAccountName
 	}
 	return ""
 }
@@ -570,6 +569,7 @@ func (ad *ADObject) GetHooks() []registry.Hook {
 				if ad.Class == "" {
 					ad.Class = strings.ToLower(ad.ObjectClass)
 				}
+				ad.Name = ad.GetCommonName()
 				return nil
 			},
 		},
@@ -585,9 +585,6 @@ func NewADObject(domain, distinguishedName, objectClass string) ADObject {
 		ObjectClass:       objectClass,
 	}
 
-	// Extract the common name from the DN if available
-	ad.Name = ad.GetCommonName()
-
 	ad.Defaulted()
 	registry.CallHooks(&ad)
 
@@ -600,14 +597,12 @@ func NewADUser(domain, distinguishedName, samAccountName string) *ADObject {
 		Domain:            domain,
 		DistinguishedName: distinguishedName,
 		SAMAccountName:    samAccountName,
-		SamAccountName:    samAccountName,
-		ObjectTypes:       []string{ADUserLabel},
-		ObjectClass:       "user",
+		ObjectClass:       ADUserLabel,
 	}
-	ad.Class = "user"
-	ad.Name = ad.GetCommonName()
+
 	ad.Defaulted()
 	registry.CallHooks(ad)
+
 	return ad
 }
 
@@ -617,13 +612,12 @@ func NewADComputer(domain, distinguishedName, dnsHostname string) *ADObject {
 		Domain:            domain,
 		DistinguishedName: distinguishedName,
 		DNSHostname:       dnsHostname,
-		ObjectTypes:       []string{ADComputerLabel},
-		ObjectClass:       "computer",
+		ObjectClass:       ADComputerLabel,
 	}
-	ad.Class = "computer"
-	ad.Name = ad.GetCommonName()
+
 	ad.Defaulted()
 	registry.CallHooks(ad)
+
 	return ad
 }
 
@@ -633,14 +627,12 @@ func NewADGroup(domain, distinguishedName, samAccountName string) *ADObject {
 		Domain:            domain,
 		DistinguishedName: distinguishedName,
 		SAMAccountName:    samAccountName,
-		SamAccountName:    samAccountName,
-		ObjectTypes:       []string{ADGroupLabel},
-		ObjectClass:       "group",
+		ObjectClass:       ADGroupLabel,
 	}
-	ad.Class = "group"
-	ad.Name = ad.GetCommonName()
+
 	ad.Defaulted()
 	registry.CallHooks(ad)
+
 	return ad
 }
 
@@ -650,13 +642,12 @@ func NewADGPO(domain, distinguishedName, displayName string) *ADObject {
 		Domain:            domain,
 		DistinguishedName: distinguishedName,
 		DisplayName:       displayName,
-		ObjectTypes:       []string{ADGPOLabel},
-		ObjectClass:       "groupPolicyContainer",
+		ObjectClass:       ADGPOLabel,
 	}
-	ad.Class = "gpo"
-	ad.Name = ad.GetCommonName()
+
 	ad.Defaulted()
 	registry.CallHooks(ad)
+
 	return ad
 }
 
@@ -666,12 +657,12 @@ func NewADOU(domain, distinguishedName, name string) *ADObject {
 		Domain:            domain,
 		DistinguishedName: distinguishedName,
 		Name:              name,
-		ObjectTypes:       []string{ADOULabel},
-		ObjectClass:       "organizationalUnit",
+		ObjectClass:       ADOULabel,
 	}
-	ad.Class = "ou"
+
 	ad.Defaulted()
 	registry.CallHooks(ad)
+
 	return ad
 }
 
