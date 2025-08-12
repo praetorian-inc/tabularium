@@ -223,6 +223,10 @@ func (w *Webpage) Protocol() string {
 	return w.parseURL().Scheme
 }
 
+func (w *Webpage) Host() string {
+	return w.parseURL().Host
+}
+
 func (w *Webpage) Hostname() string {
 	parsed := w.parseURL()
 	return parsed.Hostname()
