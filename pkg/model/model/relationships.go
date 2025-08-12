@@ -32,6 +32,7 @@ func init() {
 	registry.Registry.MustRegisterModel(&HasAttribute{})
 	registry.Registry.MustRegisterModel(&HasTechnology{})
 	registry.Registry.MustRegisterModel(&HasCredential{})
+	registry.Registry.MustRegisterModel(&HasOrganizationName{})
 }
 
 func (br *BaseRelationship) GetKey() string {
@@ -212,4 +213,25 @@ func NewCredentialRelationship(asset GraphModel, credential *Credential) GraphRe
 
 func (hc *HasCredential) Label() string {
 	return HasCredentialLabel
+}
+
+const HasOrganizationNameLabel = "HAS_ORGANIZATION_NAME"
+
+// GetDescription returns a description for the HasOrganizationName relationship model.
+func (hon *HasOrganizationName) GetDescription() string {
+	return "Represents the relationship between an organization and one of its name variations."
+}
+
+type HasOrganizationName struct {
+	*BaseRelationship
+}
+
+func NewHasOrganizationName(organization *Organization, organizationName *OrganizationName) GraphRelationship {
+	return &HasOrganizationName{
+		BaseRelationship: NewBaseRelationship(organization, organizationName, HasOrganizationNameLabel),
+	}
+}
+
+func (hon *HasOrganizationName) Label() string {
+	return HasOrganizationNameLabel
 }

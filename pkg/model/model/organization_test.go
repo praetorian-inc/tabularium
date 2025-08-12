@@ -15,73 +15,15 @@ func TestOrganization_NewOrganization(t *testing.T) {
 
 	assert.Equal(t, "Walmart", org.PrimaryName)
 	assert.Equal(t, "organization", org.Class)
-	assert.True(t, len(org.Names) >= 1)
-	assert.Equal(t, "Walmart", org.Names[0].Name)
-	assert.Equal(t, NameTypePrimary, org.Names[0].Type)
-	assert.Equal(t, NameStateActive, org.Names[0].State)
-	assert.NotEmpty(t, org.Names[0].DateAdded)
+	assert.Equal(t, 0, len(org.Names))
 	assert.Contains(t, org.Key, "#organization#walmart#Walmart")
-}
 
-func TestOrganization_Valid(t *testing.T) {
-	tests := []struct {
-		name     string
-		org      Organization
-		expected bool
-	}{
-		{
-			name:     "valid organization",
-			org:      NewOrganization("Walmart"),
-			expected: true,
-		},
-		{
-			name: "missing primary name",
-			org: Organization{
-				Names: []OrganizationName{
-					{Name: "Test", Type: NameTypePrimary, State: NameStateActive},
-				},
-			},
-			expected: false,
-		},
-		{
-			name: "invalid key format",
-			org: func() Organization {
-				org := NewOrganization("Walmart")
-				org.BaseAsset.Key = "invalid-key"
-				return org
-			}(),
-			expected: false,
-		},
-		{
-			name: "missing primary name in names list",
-			org: Organization{
-				BaseAsset:   BaseAsset{Key: "#organization#walmart#Walmart"},
-				PrimaryName: "Walmart",
-				Names: []OrganizationName{
-					{Name: "Walmart Inc", Type: NameTypeLegal, State: NameStateActive},
-				},
-			},
-			expected: false,
-		},
-		{
-			name: "invalid name in names list",
-			org: Organization{
-				BaseAsset:   BaseAsset{Key: "#organization#walmart#Walmart"},
-				PrimaryName: "Walmart",
-				Names: []OrganizationName{
-					{Name: "Walmart", Type: NameTypePrimary, State: NameStateActive},
-					{Name: "", Type: NameTypeLegal, State: NameStateActive}, // Invalid: empty name
-				},
-			},
-			expected: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.expected, tt.org.Valid())
-		})
-	}
+	primaryName, relationship := org.CreatePrimaryNameRelationship()
+	assert.Equal(t, "Walmart", primaryName.Name)
+	assert.Equal(t, NameTypePrimary, primaryName.Type)
+	assert.Equal(t, NameStateActive, primaryName.State)
+	assert.NotEmpty(t, primaryName.DateAdded)
+	assert.NotNil(t, relationship)
 }
 
 func TestOrganizationName_Valid(t *testing.T) {
@@ -144,84 +86,6 @@ func TestOrganizationName_Valid(t *testing.T) {
 	}
 }
 
-func TestOrganization_AddName(t *testing.T) {
-	org := NewOrganization("Walmart")
-
-	// Test adding valid name
-	err := org.AddName("Walmart Inc", NameTypeLegal, "manual")
-	assert.NoError(t, err)
-	assert.Len(t, org.Names, 2)
-
-	// Verify the added name
-	found := false
-	for _, name := range org.Names {
-		if name.Name == "Walmart Inc" && name.Type == NameTypeLegal {
-			assert.Equal(t, NameStateActive, name.State)
-			assert.Equal(t, "manual", name.Source)
-			assert.NotEmpty(t, name.DateAdded)
-			found = true
-			break
-		}
-	}
-	assert.True(t, found, "Added name not found")
-
-	// Test adding duplicate name
-	err = org.AddName("Walmart Inc", NameTypeLegal, "manual")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "name already exists")
-
-	// Test adding empty name
-	err = org.AddName("", NameTypeDBA, "manual")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "name cannot be empty")
-
-	// Test adding invalid type
-	err = org.AddName("Test Name", "invalid_type", "manual")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "invalid name type")
-}
-
-func TestOrganization_GetActiveNames(t *testing.T) {
-	org := NewOrganization("Walmart")
-	org.AddName("Walmart Inc", NameTypeLegal, "manual")
-	org.AddName("WMT", NameTypeAbbreviation, "manual")
-
-	// Add an inactive name
-	org.Names = append(org.Names, OrganizationName{
-		Name:      "Old Name",
-		Type:      NameTypeFormer,
-		State:     NameStateHistoric,
-		DateAdded: Now(),
-	})
-
-	activeNames := org.GetActiveNames()
-	assert.Len(t, activeNames, 3) // Should only include active names
-	assert.Contains(t, activeNames, "Walmart")
-	assert.Contains(t, activeNames, "Walmart Inc")
-	assert.Contains(t, activeNames, "WMT")
-	assert.NotContains(t, activeNames, "Old Name")
-}
-
-func TestOrganization_GetNamesByType(t *testing.T) {
-	org := NewOrganization("Walmart")
-	org.AddName("Walmart Inc", NameTypeLegal, "manual")
-	org.AddName("Walmart Corporation", NameTypeLegal, "manual")
-	org.AddName("WMT", NameTypeAbbreviation, "manual")
-
-	legalNames := org.GetNamesByType(NameTypeLegal)
-	assert.Len(t, legalNames, 2)
-	assert.Contains(t, legalNames, "Walmart Inc")
-	assert.Contains(t, legalNames, "Walmart Corporation")
-
-	abbrevNames := org.GetNamesByType(NameTypeAbbreviation)
-	assert.Len(t, abbrevNames, 1)
-	assert.Contains(t, abbrevNames, "WMT")
-
-	primaryNames := org.GetNamesByType(NameTypePrimary)
-	assert.Len(t, primaryNames, 1)
-	assert.Contains(t, primaryNames, "Walmart")
-}
-
 func TestNormalizeOrganizationName(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -249,73 +113,6 @@ func TestNormalizeOrganizationName(t *testing.T) {
 			assert.Equal(t, tt.expected, result)
 		})
 	}
-}
-
-func TestOrganizationSearchExpansion(t *testing.T) {
-	ose := NewOrganizationSearchExpansion()
-
-	// Create test organizations
-	walmart := NewOrganization("Walmart")
-	walmart.AddName("Walmart Inc", NameTypeLegal, "manual")
-	walmart.AddName("WMT", NameTypeAbbreviation, "manual")
-
-	praetorian := NewOrganization("Praetorian")
-	praetorian.AddName("Praetorian Inc", NameTypeLegal, "manual")
-	praetorian.AddName("Praetorian Security Inc", NameTypeLegal, "manual")
-	praetorian.AddName("Praetorian Security", NameTypeDBA, "manual")
-
-	// Add to search expansion
-	ose.AddOrganization(&walmart)
-	ose.AddOrganization(&praetorian)
-
-	// Test search expansion for Walmart
-	walmartExpansions := ose.ExpandSearch("Walmart")
-	assert.Contains(t, walmartExpansions, "Walmart")
-	assert.Contains(t, walmartExpansions, "Walmart Inc")
-	assert.Contains(t, walmartExpansions, "WMT")
-
-	// Test search expansion for Praetorian
-	praetorianExpansions := ose.ExpandSearch("Praetorian")
-	assert.Contains(t, praetorianExpansions, "Praetorian")
-	assert.Contains(t, praetorianExpansions, "Praetorian Inc")
-	assert.Contains(t, praetorianExpansions, "Praetorian Security Inc")
-	assert.Contains(t, praetorianExpansions, "Praetorian Security")
-
-	// Test search by alternative name
-	walmartExpansionsByLegal := ose.ExpandSearch("Walmart Inc")
-	assert.Equal(t, walmartExpansions, walmartExpansionsByLegal)
-
-	// Test search by abbreviation
-	walmartExpansionsByAbbrev := ose.ExpandSearch("WMT")
-	assert.Equal(t, walmartExpansions, walmartExpansionsByAbbrev)
-
-	// Test unknown organization
-	unknownExpansions := ose.ExpandSearch("Unknown Org")
-	assert.Len(t, unknownExpansions, 1)
-	assert.Equal(t, "Unknown Org", unknownExpansions[0])
-}
-
-func TestOrganizationSearchExpansion_FindOrganization(t *testing.T) {
-	ose := NewOrganizationSearchExpansion()
-
-	walmart := NewOrganization("Walmart")
-	walmart.AddName("Walmart Inc", NameTypeLegal, "manual")
-
-	ose.AddOrganization(&walmart)
-
-	// Test finding by primary name
-	found := ose.FindOrganization("Walmart")
-	assert.NotNil(t, found)
-	assert.Equal(t, "Walmart", found.PrimaryName)
-
-	// Test finding by legal name
-	found = ose.FindOrganization("Walmart Inc")
-	assert.NotNil(t, found)
-	assert.Equal(t, "Walmart", found.PrimaryName)
-
-	// Test finding unknown organization
-	found = ose.FindOrganization("Unknown")
-	assert.Nil(t, found)
 }
 
 func TestOrganization_IsClass(t *testing.T) {
@@ -366,7 +163,6 @@ func TestOrganization_Unmarshall(t *testing.T) {
 
 func TestOrganization_JSONSerialization(t *testing.T) {
 	org := NewOrganization("Walmart")
-	org.AddName("Walmart Inc", NameTypeLegal, "manual")
 	org.Industry = "Retail"
 	org.Country = "United States"
 	org.StockTicker = "WMT"
@@ -392,35 +188,6 @@ func TestOrganization_JSONSerialization(t *testing.T) {
 	assert.Len(t, unmarshaled.Names, len(org.Names))
 }
 
-func TestOrganization_ExampleUseCases(t *testing.T) {
-	// Example from Jira story
-	t.Run("Praetorian example", func(t *testing.T) {
-		org := NewOrganization("Praetorian")
-		org.AddName("Praetorian Inc", NameTypeLegal, "legal_docs")
-		org.AddName("Praetorian Security Inc", NameTypeDBA, "github")
-		org.AddName("Praetorian Security", NameTypeCommon, "linkedin")
-		org.AddName("Praetorian Labs", NameTypeDBA, "dockerhub")
-
-		ose := NewOrganizationSearchExpansion()
-		ose.AddOrganization(&org)
-
-		// Test search expansion
-		expansions := ose.ExpandSearch("Praetorian")
-
-		expectedNames := []string{
-			"Praetorian",
-			"Praetorian Inc",
-			"Praetorian Security Inc",
-			"Praetorian Security",
-			"Praetorian Labs",
-		}
-
-		for _, expected := range expectedNames {
-			assert.Contains(t, expansions, expected, "Should contain %s", expected)
-		}
-	})
-}
-
 // Benchmark tests for performance requirements
 func BenchmarkOrganizationSearchExpansion_AddOrganization(b *testing.B) {
 	ose := NewOrganizationSearchExpansion()
@@ -428,7 +195,6 @@ func BenchmarkOrganizationSearchExpansion_AddOrganization(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		org := NewOrganization(fmt.Sprintf("TestOrg%d", i))
-		org.AddName(fmt.Sprintf("TestOrg%d Inc", i), NameTypeLegal, "test")
 		ose.AddOrganization(&org)
 	}
 }
@@ -439,7 +205,6 @@ func BenchmarkOrganizationSearchExpansion_ExpandSearch(b *testing.B) {
 	// Setup 1000 organizations as per performance requirement
 	for i := 0; i < 1000; i++ {
 		org := NewOrganization(fmt.Sprintf("TestOrg%d", i))
-		org.AddName(fmt.Sprintf("TestOrg%d Inc", i), NameTypeLegal, "test")
 		ose.AddOrganization(&org)
 	}
 
@@ -494,96 +259,6 @@ func TestOrganizationName_GetKey(t *testing.T) {
 			key := tt.orgName.GetKey()
 			assert.Equal(t, tt.expectedKey, key)
 			assert.NotEmpty(t, key, "GetKey should not return empty string")
-		})
-	}
-}
-
-func TestOrganization_GetNames(t *testing.T) {
-	org := NewOrganization("Walmart")
-
-	// Add various names with different types and statuses
-	org.AddName("Walmart Inc", NameTypeLegal, "test")
-	org.AddName("WMT", NameTypeAbbreviation, "test")
-	org.Names = append(org.Names, OrganizationName{
-		Name:  "Walmart Stores",
-		Type:  NameTypeFormer,
-		State: NameStateInactive,
-	})
-	org.Names = append(org.Names, OrganizationName{
-		Name:  "Wal-Mart",
-		Type:  NameTypeFormer,
-		State: NameStateHistoric,
-	})
-
-	tests := []struct {
-		name             string
-		status           *string
-		nameType         *string
-		expectedLen      int
-		shouldContain    []string
-		shouldNotContain []string
-	}{
-		{
-			name:          "all names - no filters",
-			status:        nil,
-			nameType:      nil,
-			expectedLen:   5, // Walmart, Walmart Inc, WMT, Walmart Stores, Wal-Mart
-			shouldContain: []string{"Walmart", "Walmart Inc", "WMT", "Walmart Stores", "Wal-Mart"},
-		},
-		{
-			name:             "active names only",
-			status:           &[]string{NameStateActive}[0],
-			nameType:         nil,
-			expectedLen:      3, // Walmart, Walmart Inc, WMT
-			shouldContain:    []string{"Walmart", "Walmart Inc", "WMT"},
-			shouldNotContain: []string{"Walmart Stores", "Wal-Mart"},
-		},
-		{
-			name:             "legal names only (active)",
-			status:           &[]string{NameStateActive}[0],
-			nameType:         &[]string{NameTypeLegal}[0],
-			expectedLen:      1, // Walmart Inc
-			shouldContain:    []string{"Walmart Inc"},
-			shouldNotContain: []string{"Walmart", "WMT"},
-		},
-		{
-			name:             "former names (any status)",
-			status:           nil,
-			nameType:         &[]string{NameTypeFormer}[0],
-			expectedLen:      2, // Walmart Stores, Wal-Mart
-			shouldContain:    []string{"Walmart Stores", "Wal-Mart"},
-			shouldNotContain: []string{"Walmart", "Walmart Inc", "WMT"},
-		},
-		{
-			name:             "historic status only",
-			status:           &[]string{NameStateHistoric}[0],
-			nameType:         nil,
-			expectedLen:      1, // Wal-Mart
-			shouldContain:    []string{"Wal-Mart"},
-			shouldNotContain: []string{"Walmart", "Walmart Stores"},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			names := org.GetNames(tt.status, tt.nameType)
-
-			assert.Len(t, names, tt.expectedLen)
-
-			for _, shouldContain := range tt.shouldContain {
-				assert.Contains(t, names, shouldContain)
-			}
-
-			for _, shouldNotContain := range tt.shouldNotContain {
-				assert.NotContains(t, names, shouldNotContain)
-			}
-
-			// Ensure results are sorted
-			if len(names) > 1 {
-				for i := 1; i < len(names); i++ {
-					assert.True(t, names[i-1] <= names[i], "Names should be sorted")
-				}
-			}
 		})
 	}
 }

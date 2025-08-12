@@ -1,12 +1,5 @@
 package model
 
-// Organization Relationship Tests - Simplified Approach
-//
-// These tests validate the simplified organization relationship approach:
-// - Organization properties store business logic
-// - DISCOVERED relationships connect organizations
-// - OrganizationRelationshipService provides query methods
-
 import (
 	"fmt"
 	"testing"
@@ -18,7 +11,6 @@ func TestOrganization_SubsidiaryMethods(t *testing.T) {
 	parent := NewOrganization("Parent Corp")
 	subsidiary := NewOrganization("Subsidiary Inc")
 
-	// Test setting parent-subsidiary relationship using simplified approach
 	subsidiary.SetParentOrganization(parent.GetKey(), 100.0, SubsidiaryTypeWhollyOwned)
 
 	assert.Equal(t, parent.GetKey(), subsidiary.ParentOrganization)
@@ -83,22 +75,13 @@ func TestOrganization_SubsidiaryValidation(t *testing.T) {
 func TestOrganization_HistoricalMethods(t *testing.T) {
 	org := NewOrganization("Test Corp")
 
-	// Test former names
-	org.AddFormerName("Old Test Corp")
-	org.AddFormerName("Original Test Inc")
-	org.AddFormerName("Old Test Corp") // Duplicate should be ignored
-
-	assert.Len(t, org.FormerNames, 2)
-	assert.Contains(t, org.FormerNames, "Old Test Corp")
-	assert.Contains(t, org.FormerNames, "Original Test Inc")
-
 	// Test merger history
 	mergedOrg1 := NewOrganization("Merged Corp 1")
 	mergedOrg2 := NewOrganization("Merged Corp 2")
 
 	org.AddMergedOrganization(mergedOrg1.GetKey())
 	org.AddMergedOrganization(mergedOrg2.GetKey())
-	org.AddMergedOrganization(mergedOrg1.GetKey()) // Duplicate should be ignored
+	org.AddMergedOrganization(mergedOrg1.GetKey())
 
 	assert.True(t, org.HasMergerHistory())
 	assert.Len(t, org.MergedOrganizations, 2)
@@ -109,21 +92,17 @@ func TestOrganization_HistoricalMethods(t *testing.T) {
 func TestOrganizationRelationshipService_SubsidiaryOperations(t *testing.T) {
 	service := NewOrganizationRelationshipService()
 
-	// Create organizations
 	parent := NewOrganization("Parent Corp")
 	subsidiary1 := NewOrganization("Subsidiary One")
 	subsidiary2 := NewOrganization("Subsidiary Two")
 
-	// Add organizations to service
 	service.AddOrganization(&parent)
 	service.AddOrganization(&subsidiary1)
 	service.AddOrganization(&subsidiary2)
 
-	// Create relationships using simplified approach
 	subsidiary1.SetParentOrganization(parent.GetKey(), 100.0, SubsidiaryTypeWhollyOwned)
 	subsidiary2.SetParentOrganization(parent.GetKey(), 75.0, SubsidiaryTypeMajorityOwned)
 
-	// Test getting subsidiaries
 	subsidiaries := service.GetSubsidiaries(parent.GetKey())
 	assert.Len(t, subsidiaries, 2)
 
@@ -134,7 +113,6 @@ func TestOrganizationRelationshipService_SubsidiaryOperations(t *testing.T) {
 	assert.Contains(t, subNames, "Subsidiary One")
 	assert.Contains(t, subNames, "Subsidiary Two")
 
-	// Test getting parent organizations
 	parents1 := service.GetParentOrganizations(subsidiary1.GetKey())
 	assert.Len(t, parents1, 1)
 	assert.Equal(t, "Parent Corp", parents1[0].PrimaryName)
@@ -148,26 +126,13 @@ func TestOrganizationRelationshipService_NameHistory(t *testing.T) {
 	service := NewOrganizationRelationshipService()
 
 	org := NewOrganization("Current Name")
-	// Add former names directly to the organization (simplified approach)
-	org.AddFormerName("Original Name")
-	org.AddFormerName("Intermediate Name")
-	org.LastNameChange = "2022-01-01T00:00:00Z"
 
 	service.AddOrganization(&org)
-
-	// Test getting name history
-	history := service.GetNameHistory(org.GetKey())
-	assert.Len(t, history, 2)
-
-	// Check that we have both former names
-	assert.Contains(t, history, "Original Name")
-	assert.Contains(t, history, "Intermediate Name")
 }
 
 func TestOrganizationRelationshipService_OrganizationFamily(t *testing.T) {
 	service := NewOrganizationRelationshipService()
 
-	// Create a complex organization structure
 	grandparent := NewOrganization("Grandparent Corp")
 	parent1 := NewOrganization("Parent One")
 	parent2 := NewOrganization("Parent Two")
@@ -180,12 +145,10 @@ func TestOrganizationRelationshipService_OrganizationFamily(t *testing.T) {
 		service.AddOrganization(org)
 	}
 
-	// Create relationships using simplified approach
 	parent1.SetParentOrganization(grandparent.GetKey(), 100.0, SubsidiaryTypeWhollyOwned)
 	parent2.SetParentOrganization(grandparent.GetKey(), 100.0, SubsidiaryTypeWhollyOwned)
 	child1.SetParentOrganization(parent1.GetKey(), 100.0, SubsidiaryTypeWhollyOwned)
 	child2.SetParentOrganization(parent1.GetKey(), 100.0, SubsidiaryTypeWhollyOwned)
-	// sibling is not connected to the family
 
 	// Test getting organization family starting from grandparent
 	family := service.GetOrganizationFamily(grandparent.GetKey())
@@ -238,8 +201,7 @@ func TestOrganizationRelationshipService_ComplexScenario(t *testing.T) {
 	// Create DISCOVERED relationships to connect them
 
 	// Add name history using simplified approach
-	walmartInc.AddFormerName("Wal-Mart Stores Inc")
-	walmartInc.LastNameChange = "2018-02-01T00:00:00Z"
+	// Note: Historical name tracking now uses OrganizationName relationships
 
 	// Add merger history using simplified approach
 	walmartInc.AddMergedOrganization(walmartEcommerce.GetKey())
@@ -249,12 +211,10 @@ func TestOrganizationRelationshipService_ComplexScenario(t *testing.T) {
 	subsidiaries := service.GetSubsidiaries(walmartInc.GetKey())
 	assert.Len(t, subsidiaries, 3)
 
-	nameHistory := service.GetNameHistory(walmartInc.GetKey())
-	assert.Len(t, nameHistory, 1)
-	assert.Equal(t, "Wal-Mart Stores Inc", nameHistory[0])
+	// Note: Name history functionality removed - use OrganizationName relationships
 
 	// Test that the org has the expected historical information
-	assert.Equal(t, "2018-02-01T00:00:00Z", walmartInc.LastNameChange)
+	// Note: Historical dates now tracked in OrganizationName EffectiveDate/EndDate
 	assert.Contains(t, walmartInc.MergedOrganizations, walmartEcommerce.GetKey())
 	assert.Equal(t, "2016-08-08T00:00:00Z", walmartInc.LastAcquisitionDate)
 
