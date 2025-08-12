@@ -193,10 +193,10 @@ func TestJob_WebpageKeyCreationWithProtocol(t *testing.T) {
 			expectedKey: "#job#http://example.com#/path#test-source",
 		},
 		{
-			name:        "Different protocols same domain should have different keys",
-			url:         "https://example.com/path",
+			name:        "Ports should be included in key",
+			url:         "https://example.com:8080/path",
 			source:      "test-source",
-			expectedKey: "#job#https://example.com#/path#test-source",
+			expectedKey: "#job#https://example.com:8080#/path#test-source",
 		},
 	}
 
