@@ -150,7 +150,7 @@ func (w *Webpage) AddRequest(req WebpageRequest) {
 }
 
 func (w *Webpage) Group() string {
-	return w.Hostname()
+	return fmt.Sprintf("%s://%s", w.Protocol(), w.Host())
 }
 
 func (w *Webpage) Identifier() string {

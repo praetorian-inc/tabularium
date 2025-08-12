@@ -2,6 +2,7 @@ package model
 
 import (
 	"log/slog"
+	"net/url"
 	"strings"
 	"testing"
 )
@@ -168,4 +169,66 @@ func TestJob_GetParent(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestJob_WebpageKeyCreationWithProtocol(t *testing.T) {
+	parent := NewAsset("example", "com")
+
+	tests := []struct {
+		name        string
+		url         string
+		source      string
+		expectedKey string
+	}{
+		{
+			name:        "HTTPS webpage should include protocol in key",
+			url:         "https://example.com/path",
+			source:      "test-source",
+			expectedKey: "#job#https://example.com#/path#test-source",
+		},
+		{
+			name:        "HTTP webpage should include protocol in key",
+			url:         "http://example.com/path",
+			source:      "test-source",
+			expectedKey: "#job#http://example.com#/path#test-source",
+		},
+		{
+			name:        "Ports should be included in key",
+			url:         "https://example.com:8080/path",
+			source:      "test-source",
+			expectedKey: "#job#https://example.com:8080#/path#test-source",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			parsedURL, err := url.Parse(tt.url)
+			if err != nil {
+				t.Fatalf("Failed to parse URL: %v", err)
+			}
+
+			webpage := NewWebpage(*parsedURL, &parent)
+			job := NewJob(tt.source, &webpage)
+
+			if job.Key != tt.expectedKey {
+				t.Errorf("Expected key %q, got %q", tt.expectedKey, job.Key)
+			}
+		})
+	}
+
+	// Test that HTTP and HTTPS have different keys
+	t.Run("HTTP and HTTPS protocols create different keys", func(t *testing.T) {
+		httpsURL, _ := url.Parse("https://example.com/path")
+		httpURL, _ := url.Parse("http://example.com/path")
+
+		httpsWebpage := NewWebpage(*httpsURL, &parent)
+		httpWebpage := NewWebpage(*httpURL, &parent)
+
+		httpsJob := NewJob("test-source", &httpsWebpage)
+		httpJob := NewJob("test-source", &httpWebpage)
+
+		if httpsJob.Key == httpJob.Key {
+			t.Errorf("HTTP and HTTPS jobs should have different keys, both got: %q", httpsJob.Key)
+		}
+	})
 }
