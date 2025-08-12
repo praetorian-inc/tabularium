@@ -27,10 +27,9 @@ var (
 	organizationKey = regexp.MustCompile(`^#organization#([^#]+)#([^#]+)$`)
 )
 
-// Organization represents an organization entity with multiple name variations
 type Organization struct {
 	BaseAsset
-	// Primary name is the canonical/preferred name for the organization
+
 	PrimaryName string `neo4j:"primaryName" json:"primaryName" desc:"Primary canonical name of the organization." example:"Walmart"`
 	// Names contains all name variations for this organization
 	Names []OrganizationName `neo4j:"-" json:"names" desc:"All name variations and aliases for this organization."`
@@ -132,35 +131,7 @@ func (o *Organization) GetHooks() []registry.Hook {
 		useGroupAndIdentifier(o, &o.PrimaryName, &o.PrimaryName),
 		{
 			Call: func() error {
-				// Normalize the primary name for consistent storage and key generation
-				// Convert to lowercase and trim spaces
-				normalized := strings.ToLower(strings.TrimSpace(o.PrimaryName))
-
-				// Remove common suffixes/prefixes (including variations with periods)
-				suffixes := []string{
-					" inc.", " inc",
-					" incorporated",
-					" corp.", " corp",
-					" corporation",
-					" llc",
-					" ltd.", " ltd",
-					" limited",
-					" co.", " co",
-					" company",
-				}
-
-				for _, suffix := range suffixes {
-					if strings.HasSuffix(normalized, suffix) {
-						normalized = strings.TrimSuffix(normalized, suffix)
-						normalized = strings.TrimSpace(normalized)
-						break
-					}
-				}
-
-				// Remove special characters for key generation (keep only alphanumeric)
-				keyNormalized := regexp.MustCompile(`[^a-z0-9]`).ReplaceAllString(normalized, "")
-
-				// Generate key based on normalized primary name
+				keyNormalized := NormalizeOrganizationName(o.PrimaryName)
 				o.Key = fmt.Sprintf("#organization#%s#%s", keyNormalized, o.PrimaryName)
 				o.BaseAsset.Identifier = o.PrimaryName
 				o.BaseAsset.Group = o.PrimaryName
