@@ -38,7 +38,7 @@ func NewAzureResource(name, accountRef string, rtype CloudResourceType, properti
 }
 
 func (a *AzureResource) GetDisplayName() string {
-	if displayName, ok := a.Properties["name"].(string); ok {
+	if displayName, ok := a.Properties["displayName"].(string); ok {
 		return displayName
 	}
 	parts := strings.Split(a.Name, "/")
@@ -53,7 +53,27 @@ func (a *AzureResource) GetHooks() []registry.Hook {
 }
 
 func (a *AzureResource) GetIPs() []string {
-	return make([]string, 0) // Return empty slice instead of nil
+	ips := make([]string, 0)
+
+	// Extract private IPs
+	if privateIPs, ok := a.Properties["privateIPs"].([]any); ok {
+		for _, ip := range privateIPs {
+			if ipStr, ok := ip.(string); ok && ipStr != "" {
+				ips = append(ips, ipStr)
+			}
+		}
+	}
+
+	// Extract public IPs
+	if publicIPs, ok := a.Properties["publicIPs"].([]any); ok {
+		for _, ip := range publicIPs {
+			if ipStr, ok := ip.(string); ok && ipStr != "" {
+				ips = append(ips, ipStr)
+			}
+		}
+	}
+
+	return ips
 }
 
 // Azure-specific methods remain unchanged
@@ -70,8 +90,8 @@ func (a *AzureResource) GetResourceGroup() string {
 	return ""
 }
 
-func (a *AzureResource) GetURL() string {
-	return ""
+func (a *AzureResource) GetURLs() []string {
+	return []string{}
 }
 
 func (a *AzureResource) Group() string { return "azureresource" }
@@ -136,8 +156,12 @@ func (a *AzureResource) IsPrivate() bool {
 	}
 
 	// Check if resource has a public URL/endpoint
-	if url := a.GetURL(); url != "" {
-		return false // Has public URL = not private
+	if urls := a.GetURLs(); len(urls) > 0 {
+		for _, url := range urls {
+			if url != "" {
+				return false // Has public URL = not private
+			}
+		}
 	}
 
 	// No public IPs or URL = assume private
