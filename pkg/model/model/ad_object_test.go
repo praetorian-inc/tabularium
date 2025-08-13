@@ -119,7 +119,7 @@ func TestADObject_GetHooks(t *testing.T) {
 		name              string
 		domain            string
 		distinguishedName string
-		objectClass       string
+		label             string
 		expectedKey       string
 		expectedClass     string
 	}{
@@ -127,7 +127,7 @@ func TestADObject_GetHooks(t *testing.T) {
 			name:              "hook generates correct key and class",
 			domain:            "TEST.LOCAL",
 			distinguishedName: "CN=TestUser,DC=test,DC=local",
-			objectClass:       "User",
+			label:             "ADUser",
 			expectedKey:       "#adobject#test.local#cn=testuser,dc=test,dc=local",
 			expectedClass:     "user",
 		},
@@ -135,7 +135,7 @@ func TestADObject_GetHooks(t *testing.T) {
 			name:              "hook handles empty values",
 			domain:            "",
 			distinguishedName: "",
-			objectClass:       "",
+			label:             "",
 			expectedKey:       "#adobject##",
 			expectedClass:     "",
 		},
@@ -143,7 +143,7 @@ func TestADObject_GetHooks(t *testing.T) {
 			name:              "hook handles special characters in DN",
 			domain:            "example.com",
 			distinguishedName: "CN=O'Brien\\, John,CN=Users,DC=example,DC=com",
-			objectClass:       "user",
+			label:             "ADUser",
 			expectedKey:       "#adobject#example.com#cn=o'brien\\, john,cn=users,dc=example,dc=com",
 			expectedClass:     "user",
 		},
@@ -154,7 +154,7 @@ func TestADObject_GetHooks(t *testing.T) {
 			ad := ADObject{
 				Domain:            tt.domain,
 				DistinguishedName: tt.distinguishedName,
-				ObjectClass:       tt.objectClass,
+				Label:             tt.label,
 			}
 
 			err := registry.CallHooks(&ad)
@@ -753,7 +753,8 @@ func TestADObject_FactoryMethods(t *testing.T) {
 		assert.Equal(t, "example.local", user.Domain)
 		assert.Equal(t, "CN=JDoe,CN=Users,DC=example,DC=local", user.DistinguishedName)
 		assert.Equal(t, "jdoe", user.SAMAccountName)
-		assert.Equal(t, ADUserLabel, user.ObjectClass)
+		assert.Equal(t, ADUserLabel, user.Label)
+		assert.Equal(t, "User", user.ObjectClass)
 		assert.Equal(t, "user", user.Class)
 	})
 
@@ -763,7 +764,8 @@ func TestADObject_FactoryMethods(t *testing.T) {
 
 		assert.Equal(t, "corp.com", computer.Domain)
 		assert.Equal(t, "CN=WORKSTATION01,CN=Computers,DC=corp,DC=com", computer.DistinguishedName)
-		assert.Equal(t, ADComputerLabel, computer.ObjectClass)
+		assert.Equal(t, ADComputerLabel, computer.Label)
+		assert.Equal(t, "Computer", computer.ObjectClass)
 		assert.Equal(t, "computer", computer.Class)
 	})
 
@@ -774,7 +776,8 @@ func TestADObject_FactoryMethods(t *testing.T) {
 		assert.Equal(t, "example.local", group.Domain)
 		assert.Equal(t, "CN=Domain Admins,CN=Groups,DC=example,DC=local", group.DistinguishedName)
 		assert.Equal(t, "Domain Admins", group.SAMAccountName)
-		assert.Equal(t, ADGroupLabel, group.ObjectClass)
+		assert.Equal(t, ADGroupLabel, group.Label)
+		assert.Equal(t, "Group", group.ObjectClass)
 		assert.Equal(t, "group", group.Class)
 	})
 
@@ -785,7 +788,8 @@ func TestADObject_FactoryMethods(t *testing.T) {
 		assert.Equal(t, "example.local", gpo.Domain)
 		assert.Contains(t, gpo.DistinguishedName, "31B2F340-016D-11D2-945F-00C04FB984F9")
 		assert.Equal(t, "Default Domain Policy", gpo.DisplayName)
-		assert.Equal(t, ADGPOLabel, gpo.ObjectClass)
+		assert.Equal(t, ADGPOLabel, gpo.Label)
+		assert.Equal(t, "GPO", gpo.ObjectClass)
 		assert.Equal(t, "gpo", gpo.Class)
 	})
 
@@ -796,7 +800,8 @@ func TestADObject_FactoryMethods(t *testing.T) {
 		assert.Equal(t, "example.local", ou.Domain)
 		assert.Equal(t, "OU=Sales,DC=example,DC=local", ou.DistinguishedName)
 		assert.Equal(t, "Sales", ou.Name)
-		assert.Equal(t, ADOULabel, ou.ObjectClass)
+		assert.Equal(t, ADOULabel, ou.Label)
+		assert.Equal(t, "OU", ou.ObjectClass)
 		assert.Equal(t, "ou", ou.Class)
 	})
 }
@@ -805,14 +810,14 @@ func TestADObject_FactoryMethods(t *testing.T) {
 func TestADObject_ExtensiveProperties(t *testing.T) {
 	t.Run("security properties", func(t *testing.T) {
 		ad := ADObject{
-			AdminCount:              1,
+			AdminCount:              true,
 			Sensitive:               true,
 			HasSPN:                  true,
 			UnconstrainedDelegation: true,
 			TrustedToAuth:           true,
 		}
 
-		assert.Equal(t, 1, ad.AdminCount)
+		assert.True(t, ad.AdminCount)
 		assert.True(t, ad.Sensitive)
 		assert.True(t, ad.HasSPN)
 		assert.True(t, ad.UnconstrainedDelegation)
@@ -939,7 +944,7 @@ func TestADObject_HelperMethods(t *testing.T) {
 		}{
 			{
 				name:     "admin count indicates privileged",
-				ad:       ADObject{AdminCount: 1},
+				ad:       ADObject{AdminCount: true},
 				expected: true,
 			},
 			{
@@ -987,7 +992,7 @@ func TestADObject_ComplexScenarios(t *testing.T) {
 				ad := NewADObject("corp.com", "CN=Administrator,CN=Users,DC=corp,DC=com", "user")
 				ad.SID = "S-1-5-21-123456789-123456789-123456789-500"
 				ad.SAMAccountName = "Administrator"
-				ad.AdminCount = 1
+				ad.AdminCount = true
 				ad.Sensitive = true
 				return &ad
 			},
@@ -995,7 +1000,7 @@ func TestADObject_ComplexScenarios(t *testing.T) {
 				assert.True(t, ad.IsClass("user"))
 				assert.True(t, ad.IsInDomain("corp.com"))
 				assert.Equal(t, "Administrator", ad.GetCommonName())
-				assert.Equal(t, 1, ad.AdminCount)
+				assert.True(t, ad.AdminCount)
 				assert.True(t, ad.Sensitive)
 			},
 			description: "Domain Administrator account should have elevated privileges",

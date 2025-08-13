@@ -14,22 +14,22 @@ func init() {
 
 // AD Object Type Label constants
 const (
-	ADObjectLabel       = "ADObject"
-	ADUserLabel         = "User"
-	ADComputerLabel     = "Computer"
-	ADGroupLabel        = "Group"
-	ADGPOLabel          = "GPO"
-	ADOULabel           = "OU"
-	ADContainerLabel    = "Container"
-	ADDomainLabel       = "ADDomain"
-	ADLocalGroupLabel   = "ADLocalGroup"
-	ADLocalUserLabel    = "ADLocalUser"
-	AIACALabel          = "AICA"
-	RootCALabel         = "RootCA"
-	EnterpriseCALabel   = "EnterpriseCA"
-	NTAuthStoreLabel    = "NTAuthStore"
-	CertTemplateLabel   = "CertTemplate"
-	IssuancePolicyLabel = "IssuancePolicy"
+	ADObjectLabel         = "ADObject"
+	ADUserLabel           = "ADUser"
+	ADComputerLabel       = "ADComputer"
+	ADGroupLabel          = "ADGroup"
+	ADGPOLabel            = "ADGPO"
+	ADOULabel             = "ADOU"
+	ADContainerLabel      = "ADContainer"
+	ADDomainLabel         = "ADDomain"
+	ADLocalGroupLabel     = "ADLocalGroup"
+	ADLocalUserLabel      = "ADLocalUser"
+	ADAIACALabel          = "ADIACA"
+	ADRootCALabel         = "ADRootCA"
+	ADEnterpriseCALabel   = "ADEnterpriseCA"
+	ADNTAuthStoreLabel    = "ADNTAuthStore"
+	ADCertTemplateLabel   = "ADCertTemplate"
+	ADIssuancePolicyLabel = "ADIssuancePolicy"
 )
 
 var (
@@ -40,6 +40,7 @@ var (
 // It embeds BaseAsset and provides comprehensive AD properties and methods.
 type ADObject struct {
 	BaseAsset
+	Label string `neo4j:"label" json:"label" desc:"Label of the object." example:"user"`
 
 	// Core AD Properties
 	Domain            string `neo4j:"domain" json:"domain" desc:"AD domain this object belongs to." example:"example.local"`
@@ -58,7 +59,7 @@ type ADObject struct {
 	NetBIOS        string `neo4j:"netbios,omitempty" json:"netbios,omitempty" desc:"NetBIOS domain name." example:"CORP"`
 
 	// Security Properties
-	AdminCount              int      `neo4j:"admincount,omitempty" json:"admincount,omitempty" desc:"AdminSDHolder protection flag." example:"1"`
+	AdminCount              bool     `neo4j:"admincount,omitempty" json:"admincount,omitempty" desc:"AdminSDHolder protection flag." example:"true"`
 	Sensitive               bool     `neo4j:"sensitive,omitempty" json:"sensitive,omitempty" desc:"Account is sensitive and cannot be delegated." example:"true"`
 	HasSPN                  bool     `neo4j:"hasspn,omitempty" json:"hasspn,omitempty" desc:"Has Service Principal Name." example:"true"`
 	UnconstrainedDelegation bool     `neo4j:"unconstraineddelegation,omitempty" json:"unconstraineddelegation,omitempty" desc:"Trusted for unconstrained delegation." example:"false"`
@@ -212,7 +213,7 @@ func (ad *ADObject) Visit(o Assetlike) {
 	}
 
 	// Merge security properties (only if not already set)
-	if ad.AdminCount == 0 && other.AdminCount != 0 {
+	if !ad.AdminCount && other.AdminCount {
 		ad.AdminCount = other.AdminCount
 	}
 	if !ad.Sensitive && other.Sensitive {
@@ -538,7 +539,7 @@ func (ad *ADObject) GetPrimaryIdentifier() string {
 
 // IsPrivileged checks if the object has elevated privileges
 func (ad *ADObject) IsPrivileged() bool {
-	return ad.AdminCount > 0 || ad.Sensitive || ad.UnconstrainedDelegation || ad.TrustedToAuth
+	return ad.AdminCount || ad.Sensitive || ad.UnconstrainedDelegation || ad.TrustedToAuth
 }
 
 func (ad *ADObject) Attribute(name, value string) Attribute {
@@ -566,9 +567,8 @@ func (ad *ADObject) GetHooks() []registry.Hook {
 		{
 			Call: func() error {
 				ad.Key = strings.ToLower(fmt.Sprintf("#adobject#%s#%s", ad.Domain, ad.DistinguishedName))
-				if ad.Class == "" {
-					ad.Class = strings.ToLower(ad.ObjectClass)
-				}
+				ad.ObjectClass = strings.TrimPrefix(ad.Label, "AD")
+				ad.Class = strings.ToLower(ad.ObjectClass)
 				ad.Name = ad.GetCommonName()
 				return nil
 			},
@@ -582,7 +582,7 @@ func NewADObject(domain, distinguishedName, objectClass string) ADObject {
 	ad := ADObject{
 		Domain:            domain,
 		DistinguishedName: distinguishedName,
-		ObjectClass:       objectClass,
+		Label:             objectClass,
 	}
 
 	ad.Defaulted()
@@ -597,7 +597,7 @@ func NewADUser(domain, distinguishedName, samAccountName string) *ADObject {
 		Domain:            domain,
 		DistinguishedName: distinguishedName,
 		SAMAccountName:    samAccountName,
-		ObjectClass:       ADUserLabel,
+		Label:             ADUserLabel,
 	}
 
 	ad.Defaulted()
@@ -612,7 +612,7 @@ func NewADComputer(domain, distinguishedName, dnsHostname string) *ADObject {
 		Domain:            domain,
 		DistinguishedName: distinguishedName,
 		DNSHostname:       dnsHostname,
-		ObjectClass:       ADComputerLabel,
+		Label:             ADComputerLabel,
 	}
 
 	ad.Defaulted()
@@ -627,7 +627,7 @@ func NewADGroup(domain, distinguishedName, samAccountName string) *ADObject {
 		Domain:            domain,
 		DistinguishedName: distinguishedName,
 		SAMAccountName:    samAccountName,
-		ObjectClass:       ADGroupLabel,
+		Label:             ADGroupLabel,
 	}
 
 	ad.Defaulted()
@@ -642,7 +642,7 @@ func NewADGPO(domain, distinguishedName, displayName string) *ADObject {
 		Domain:            domain,
 		DistinguishedName: distinguishedName,
 		DisplayName:       displayName,
-		ObjectClass:       ADGPOLabel,
+		Label:             ADGPOLabel,
 	}
 
 	ad.Defaulted()
@@ -657,7 +657,7 @@ func NewADOU(domain, distinguishedName, name string) *ADObject {
 		Domain:            domain,
 		DistinguishedName: distinguishedName,
 		Name:              name,
-		ObjectClass:       ADOULabel,
+		Label:             ADOULabel,
 	}
 
 	ad.Defaulted()
