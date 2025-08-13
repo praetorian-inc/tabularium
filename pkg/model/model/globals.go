@@ -269,4 +269,4 @@ var AgentClasses = map[string]map[string]bool{
 const GenericPraetorianAegisInstallerMsi = "PraetorianAegisInstaller_generic.msi"
 const GenericPraetorianAegisInstallerDeb = "PraetorianAegisInstaller_generic.deb"
 
-const BigFilesUploadExpiration = 6 * 24 * time.Hour
+const LargeArtifactsUploadExpiration = 6 * 24 * time.Hour
