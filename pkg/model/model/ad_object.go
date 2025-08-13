@@ -43,16 +43,16 @@ type ADObject struct {
 	Label string `neo4j:"label" json:"label" desc:"Label of the object." example:"user"`
 
 	// Core AD Properties
+	ObjectID          string `neo4j:"objectid" json:"objectid" desc:"Object identifier (SID)." example:"S-1-5-21-123456789-123456789-123456789-1001"`
 	Domain            string `neo4j:"domain" json:"domain" desc:"AD domain this object belongs to." example:"example.local"`
 	DistinguishedName string `neo4j:"distinguishedName" json:"distinguishedName" desc:"Full distinguished name in AD." example:"CN=John Doe,CN=Users,DC=example,DC=local"`
-	SID               string `neo4j:"sid" json:"sid" desc:"Security identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
 	ObjectClass       string `neo4j:"objectClass" json:"objectClass" desc:"AD object class." example:"user"`
 	Name              string `neo4j:"name" json:"name" desc:"Common name of the object." example:"John Doe"`
+	SID               string `neo4j:"sid,omitempty" json:"sid,omitempty" desc:"Security identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
 	DisplayName       string `neo4j:"displayName,omitempty" json:"displayName,omitempty" desc:"Display name of the object." example:"John Doe"`
 	Description       string `neo4j:"description,omitempty" json:"description,omitempty" desc:"Description of the object." example:"User account for John Doe"`
 
 	// Extended Identity Properties
-	ObjectID       string `neo4j:"objectid,omitempty" json:"objectid,omitempty" desc:"Object identifier (SID)." example:"S-1-5-21-123456789-123456789-123456789-1001"`
 	DomainSID      string `neo4j:"domainsid,omitempty" json:"domainsid,omitempty" desc:"Domain SID." example:"S-1-5-21-123456789-123456789-123456789"`
 	SAMAccountName string `neo4j:"samaccountname,omitempty" json:"samaccountname,omitempty" desc:"SAM account name (lowercase field)." example:"jdoe"`
 	ObjectGUID     string `neo4j:"objectguid,omitempty" json:"objectguid,omitempty" desc:"Object GUID." example:"12345678-1234-1234-1234-123456789012"`
@@ -146,11 +146,12 @@ func (ad *ADObject) GetLabels() []string {
 }
 
 func (ad *ADObject) Valid() bool {
+	hasObjectID := ad.ObjectID != ""
 	hasDomain := ad.Domain != ""
 	hasDistinguishedName := ad.DistinguishedName != ""
 	keyMatches := adObjectKeyPattern.MatchString(ad.Key)
 
-	return hasDomain && hasDistinguishedName && keyMatches
+	return hasObjectID && hasDomain && hasDistinguishedName && keyMatches
 }
 
 func (ad *ADObject) Group() string {
@@ -181,235 +182,6 @@ func (ad *ADObject) Visit(o Assetlike) {
 
 	ad.BaseAsset.Visit(other)
 
-	// Merge AD-specific fields if they're empty in the current object
-	if ad.SID == "" && other.SID != "" {
-		ad.SID = other.SID
-	}
-	if ad.ObjectClass == "" && other.ObjectClass != "" {
-		ad.ObjectClass = other.ObjectClass
-	}
-	if ad.SAMAccountName == "" && other.SAMAccountName != "" {
-		ad.SAMAccountName = other.SAMAccountName
-	}
-	if ad.DisplayName == "" && other.DisplayName != "" {
-		ad.DisplayName = other.DisplayName
-	}
-	if ad.Description == "" && other.Description != "" {
-		ad.Description = other.Description
-	}
-
-	// Merge extended identity properties
-	if ad.ObjectID == "" && other.ObjectID != "" {
-		ad.ObjectID = other.ObjectID
-	}
-	if ad.DomainSID == "" && other.DomainSID != "" {
-		ad.DomainSID = other.DomainSID
-	}
-	if ad.ObjectGUID == "" && other.ObjectGUID != "" {
-		ad.ObjectGUID = other.ObjectGUID
-	}
-	if ad.NetBIOS == "" && other.NetBIOS != "" {
-		ad.NetBIOS = other.NetBIOS
-	}
-
-	// Merge security properties (only if not already set)
-	if !ad.AdminCount && other.AdminCount {
-		ad.AdminCount = other.AdminCount
-	}
-	if !ad.Sensitive && other.Sensitive {
-		ad.Sensitive = other.Sensitive
-	}
-	if !ad.HasSPN && other.HasSPN {
-		ad.HasSPN = other.HasSPN
-	}
-	if !ad.UnconstrainedDelegation && other.UnconstrainedDelegation {
-		ad.UnconstrainedDelegation = other.UnconstrainedDelegation
-	}
-	if !ad.TrustedToAuth && other.TrustedToAuth {
-		ad.TrustedToAuth = other.TrustedToAuth
-	}
-	if len(ad.AllowedToDelegate) == 0 && len(other.AllowedToDelegate) > 0 {
-		ad.AllowedToDelegate = other.AllowedToDelegate
-	}
-
-	// Merge account properties
-	if !ad.Enabled && other.Enabled {
-		ad.Enabled = other.Enabled
-	}
-	if !ad.PasswordNeverExpires && other.PasswordNeverExpires {
-		ad.PasswordNeverExpires = other.PasswordNeverExpires
-	}
-	if !ad.PasswordNotRequired && other.PasswordNotRequired {
-		ad.PasswordNotRequired = other.PasswordNotRequired
-	}
-	if !ad.DontRequirePreAuth && other.DontRequirePreAuth {
-		ad.DontRequirePreAuth = other.DontRequirePreAuth
-	}
-	if !ad.SmartcardRequired && other.SmartcardRequired {
-		ad.SmartcardRequired = other.SmartcardRequired
-	}
-	if !ad.LockedOut && other.LockedOut {
-		ad.LockedOut = other.LockedOut
-	}
-	if !ad.PasswordExpired && other.PasswordExpired {
-		ad.PasswordExpired = other.PasswordExpired
-	}
-	if !ad.UserCannotChangePassword && other.UserCannotChangePassword {
-		ad.UserCannotChangePassword = other.UserCannotChangePassword
-	}
-	if !ad.IsDeleted && other.IsDeleted {
-		ad.IsDeleted = other.IsDeleted
-	}
-
-	// Merge time properties
-	if ad.LastLogon == 0 && other.LastLogon != 0 {
-		ad.LastLogon = other.LastLogon
-	}
-	if ad.LastLogonTimestamp == 0 && other.LastLogonTimestamp != 0 {
-		ad.LastLogonTimestamp = other.LastLogonTimestamp
-	}
-	if ad.PasswordLastSet == 0 && other.PasswordLastSet != 0 {
-		ad.PasswordLastSet = other.PasswordLastSet
-	}
-	if ad.WhenCreated == 0 && other.WhenCreated != 0 {
-		ad.WhenCreated = other.WhenCreated
-	}
-
-	// Merge group properties
-	if ad.GroupScope == "" && other.GroupScope != "" {
-		ad.GroupScope = other.GroupScope
-	}
-	if ad.GroupType == "" && other.GroupType != "" {
-		ad.GroupType = other.GroupType
-	}
-
-	// Merge computer properties
-	if ad.DNSHostname == "" && other.DNSHostname != "" {
-		ad.DNSHostname = other.DNSHostname
-	}
-	if ad.OperatingSystem == "" && other.OperatingSystem != "" {
-		ad.OperatingSystem = other.OperatingSystem
-	}
-	if ad.OperatingSystemVersion == "" && other.OperatingSystemVersion != "" {
-		ad.OperatingSystemVersion = other.OperatingSystemVersion
-	}
-	if ad.OperatingSystemServicePack == "" && other.OperatingSystemServicePack != "" {
-		ad.OperatingSystemServicePack = other.OperatingSystemServicePack
-	}
-	if len(ad.ServicePrincipalNames) == 0 && len(other.ServicePrincipalNames) > 0 {
-		ad.ServicePrincipalNames = other.ServicePrincipalNames
-	}
-
-	// Merge GPO properties
-	if ad.GPCFileSysPath == "" && other.GPCFileSysPath != "" {
-		ad.GPCFileSysPath = other.GPCFileSysPath
-	}
-	if ad.VersionNumber == 0 && other.VersionNumber != 0 {
-		ad.VersionNumber = other.VersionNumber
-	}
-
-	// Merge LAPS properties
-	if !ad.HasLAPS && other.HasLAPS {
-		ad.HasLAPS = other.HasLAPS
-	}
-	if ad.LAPSExpirationTime == 0 && other.LAPSExpirationTime != 0 {
-		ad.LAPSExpirationTime = other.LAPSExpirationTime
-	}
-
-	// Merge trust properties
-	if ad.TrustDirection == "" && other.TrustDirection != "" {
-		ad.TrustDirection = other.TrustDirection
-	}
-	if ad.TrustType == "" && other.TrustType != "" {
-		ad.TrustType = other.TrustType
-	}
-	if ad.TrustAttributes == 0 && other.TrustAttributes != 0 {
-		ad.TrustAttributes = other.TrustAttributes
-	}
-	if !ad.SIDFiltering && other.SIDFiltering {
-		ad.SIDFiltering = other.SIDFiltering
-	}
-	if !ad.IsTransitive && other.IsTransitive {
-		ad.IsTransitive = other.IsTransitive
-	}
-
-	// Merge certificate properties
-	if ad.CertThumbprint == "" && other.CertThumbprint != "" {
-		ad.CertThumbprint = other.CertThumbprint
-	}
-	if len(ad.CertThumbprints) == 0 && len(other.CertThumbprints) > 0 {
-		ad.CertThumbprints = other.CertThumbprints
-	}
-	if len(ad.CertChain) == 0 && len(other.CertChain) > 0 {
-		ad.CertChain = other.CertChain
-	}
-	if ad.CertName == "" && other.CertName != "" {
-		ad.CertName = other.CertName
-	}
-	if ad.CAName == "" && other.CAName != "" {
-		ad.CAName = other.CAName
-	}
-	if !ad.HasEnrollmentAgentRestrictions && other.HasEnrollmentAgentRestrictions {
-		ad.HasEnrollmentAgentRestrictions = other.HasEnrollmentAgentRestrictions
-	}
-	if ad.EnrollmentAgentRestrictionsJSON == "" && other.EnrollmentAgentRestrictionsJSON != "" {
-		ad.EnrollmentAgentRestrictionsJSON = other.EnrollmentAgentRestrictionsJSON
-	}
-
-	// Merge additional properties
-	if ad.Email == "" && other.Email != "" {
-		ad.Email = other.Email
-	}
-	if ad.Title == "" && other.Title != "" {
-		ad.Title = other.Title
-	}
-	if ad.Department == "" && other.Department != "" {
-		ad.Department = other.Department
-	}
-	if ad.Company == "" && other.Company != "" {
-		ad.Company = other.Company
-	}
-	if ad.HomeDirectory == "" && other.HomeDirectory != "" {
-		ad.HomeDirectory = other.HomeDirectory
-	}
-	if ad.UserPrincipalName == "" && other.UserPrincipalName != "" {
-		ad.UserPrincipalName = other.UserPrincipalName
-	}
-	if ad.Manager == "" && other.Manager != "" {
-		ad.Manager = other.Manager
-	}
-	if ad.SecurityDescriptor == "" && other.SecurityDescriptor != "" {
-		ad.SecurityDescriptor = other.SecurityDescriptor
-	}
-	if ad.UserAccountControl == 0 && other.UserAccountControl != 0 {
-		ad.UserAccountControl = other.UserAccountControl
-	}
-	if len(ad.SIDHistory) == 0 && len(other.SIDHistory) > 0 {
-		ad.SIDHistory = other.SIDHistory
-	}
-	if !ad.IsDC && other.IsDC {
-		ad.IsDC = other.IsDC
-	}
-	if !ad.IsGC && other.IsGC {
-		ad.IsGC = other.IsGC
-	}
-	if !ad.IsRODC && other.IsRODC {
-		ad.IsRODC = other.IsRODC
-	}
-	if ad.FunctionalLevel == "" && other.FunctionalLevel != "" {
-		ad.FunctionalLevel = other.FunctionalLevel
-	}
-	if ad.DomainFQDN == "" && other.DomainFQDN != "" {
-		ad.DomainFQDN = other.DomainFQDN
-	}
-	if ad.ForestName == "" && other.ForestName != "" {
-		ad.ForestName = other.ForestName
-	}
-
-	// Merge object types
-	if ad.ObjectClass == "" && other.ObjectClass != "" {
-		ad.ObjectClass = other.ObjectClass
-	}
 }
 
 // IsClass checks if the AD object is of the specified object class
@@ -563,17 +335,20 @@ func (ad *ADObject) Defaulted() {
 
 func (ad *ADObject) GetHooks() []registry.Hook {
 	return []registry.Hook{
-		useGroupAndIdentifier(ad, &ad.Domain, &ad.DistinguishedName),
+		useGroupAndIdentifier(ad, &ad.Domain, &ad.ObjectID),
 		{
 			Call: func() error {
-				ad.Key = strings.ToLower(fmt.Sprintf("#adobject#%s#%s", ad.Domain, ad.DistinguishedName))
+				ad.Key = strings.ToLower(fmt.Sprintf("#adobject#%s#%s", ad.Domain, ad.ObjectID))
 				ad.ObjectClass = strings.TrimPrefix(ad.Label, "AD")
 				ad.Class = strings.ToLower(ad.ObjectClass)
 				ad.Name = ad.GetCommonName()
+				if strings.HasPrefix(ad.ObjectID, "S-") {
+					ad.SID = ad.ObjectID
+				}
 				return nil
 			},
 		},
-		setGroupAndIdentifier(ad, &ad.Domain, &ad.DistinguishedName),
+		setGroupAndIdentifier(ad, &ad.Domain, &ad.ObjectID),
 	}
 }
 
