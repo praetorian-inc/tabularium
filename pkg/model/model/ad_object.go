@@ -285,11 +285,14 @@ func (ad *ADObject) GetHooks() []registry.Hook {
 }
 
 // NewADObject creates a new ADObject with the specified domain, distinguished name, and object class
-func NewADObject(domain, objectID, objectClass string) ADObject {
+func NewADObject(domain, objectID, distinguishedName, objectClass string) ADObject {
 	ad := ADObject{
 		Domain:   domain,
 		ObjectID: objectID,
 		Label:    objectClass,
+		ADProperties: ADProperties{
+			DistinguishedName: distinguishedName,
+		},
 	}
 
 	ad.Defaulted()
@@ -299,28 +302,28 @@ func NewADObject(domain, objectID, objectClass string) ADObject {
 }
 
 // NewADUser creates a new AD User object
-func NewADUser(domain, objectID string) ADObject {
-	return NewADObject(domain, objectID, ADUserLabel)
+func NewADUser(domain, objectID, distinguishedName string) ADObject {
+	return NewADObject(domain, objectID, distinguishedName, ADUserLabel)
 }
 
 // NewADComputer creates a new AD Computer object
-func NewADComputer(domain, objectID string) ADObject {
-	return NewADObject(domain, objectID, ADComputerLabel)
+func NewADComputer(domain, objectID, distinguishedName string) ADObject {
+	return NewADObject(domain, objectID, distinguishedName, ADComputerLabel)
 }
 
 // NewADGroup creates a new AD Group object
-func NewADGroup(domain, objectID string) ADObject {
-	return NewADObject(domain, objectID, ADGroupLabel)
+func NewADGroup(domain, objectID, distinguishedName string) ADObject {
+	return NewADObject(domain, objectID, distinguishedName, ADGroupLabel)
 }
 
 // NewADGPO creates a new AD GPO object
-func NewADGPO(domain, objectID string) ADObject {
-	return NewADObject(domain, objectID, ADGPOLabel)
+func NewADGPO(domain, objectID, distinguishedName string) ADObject {
+	return NewADObject(domain, objectID, distinguishedName, ADGPOLabel)
 }
 
 // NewADOU creates a new AD OU object
-func NewADOU(domain, objectID string) ADObject {
-	return NewADObject(domain, objectID, ADOULabel)
+func NewADOU(domain, objectID, distinguishedName string) ADObject {
+	return NewADObject(domain, objectID, distinguishedName, ADOULabel)
 }
 
 // GetDescription returns a description for the ADObject model.

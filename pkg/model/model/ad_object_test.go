@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const NO_DISTINGUISHED_NAME = "<blank>" // used to make tests easier to read
+
 // Test core ADObject creation and initialization
 func TestNewADObject(t *testing.T) {
 	tests := []struct {
@@ -75,11 +77,7 @@ func TestNewADObject(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ad := NewADObject(tt.domain, tt.objectID, tt.objectClass)
-			ad.DistinguishedName = tt.distinguishedName
-
-			err := registry.CallHooks(&ad)
-			require.NoError(t, err, "Hook should execute without error")
+			ad := NewADObject(tt.domain, tt.objectID, tt.distinguishedName, tt.objectClass)
 
 			assert.Equal(t, tt.domain, ad.Domain, "Domain should match")
 			assert.Equal(t, tt.objectID, ad.ObjectID, "ObjectID should match")
@@ -154,7 +152,7 @@ func TestADObject_GetHooks(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ad := NewADObject(tt.domain, tt.objectID, tt.label)
+			ad := NewADObject(tt.domain, tt.objectID, NO_DISTINGUISHED_NAME, tt.label)
 
 			err := registry.CallHooks(&ad)
 			require.NoError(t, err, "Hook should execute without error")
@@ -652,11 +650,7 @@ func TestADObject_CommonName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ad := NewADObject("example.local", "S-1-5-21-123456789-123456789-123456789-1001", "user")
-			ad.DistinguishedName = tt.distinguishedName
-			err := registry.CallHooks(&ad)
-
-			require.NoError(t, err, "Hook should execute without error")
+			ad := NewADObject("example.local", "S-1-5-21-123456789-123456789-123456789-1001", tt.distinguishedName, "user")
 
 			assert.Equal(t, tt.commonName, ad.GetCommonName(), "GetCommonName should return correct value")
 		})
@@ -756,7 +750,7 @@ func TestADObject_DomainValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ad := NewADObject(tt.domain, "CN=Test,DC=example,DC=local", "user")
+			ad := NewADObject(tt.domain, "CN=Test,DC=example,DC=local", NO_DISTINGUISHED_NAME, "user")
 			assert.Equal(t, tt.expected, ad.Domain, tt.description)
 		})
 	}
@@ -764,22 +758,22 @@ func TestADObject_DomainValidation(t *testing.T) {
 
 func TestADObject_SecurityBehaviors(t *testing.T) {
 	t.Run("key generation prevents collision", func(t *testing.T) {
-		ad1 := NewADObject("example.local", "S-1-5-21-123456789-123456789-123456789-1001", "user")
-		ad2 := NewADObject("example.local", "S-1-5-21-123456789-123456789-123456789-1002", "user")
+		ad1 := NewADObject("example.local", "S-1-5-21-123456789-123456789-123456789-1001", NO_DISTINGUISHED_NAME, "user")
+		ad2 := NewADObject("example.local", "S-1-5-21-123456789-123456789-123456789-1002", NO_DISTINGUISHED_NAME, "user")
 
 		assert.NotEqual(t, ad1.Key, ad2.Key, "Different DNs should generate different keys")
 	})
 
 	t.Run("key generation is case insensitive", func(t *testing.T) {
-		ad1 := NewADObject("EXAMPLE.LOCAL", "s-1-5-21-123456789-123456789-123456789-1001", "user")
-		ad2 := NewADObject("example.local", "S-1-5-21-123456789-123456789-123456789-1001", "user")
+		ad1 := NewADObject("EXAMPLE.LOCAL", "s-1-5-21-123456789-123456789-123456789-1001", NO_DISTINGUISHED_NAME, "user")
+		ad2 := NewADObject("example.local", "S-1-5-21-123456789-123456789-123456789-1001", NO_DISTINGUISHED_NAME, "user")
 
 		assert.Equal(t, ad1.Key, ad2.Key, "Keys should be case-insensitive")
 	})
 
 	t.Run("domain isolation", func(t *testing.T) {
-		ad1 := NewADObject("domain1.local", "S-1-5-21-123456789-123456789-123456789-1001", "user")
-		ad2 := NewADObject("domain2.local", "S-1-5-21-123456789-123456789-123456789-1001", "user")
+		ad1 := NewADObject("domain1.local", "S-1-5-21-123456789-123456789-123456789-1001", NO_DISTINGUISHED_NAME, "user")
+		ad2 := NewADObject("domain2.local", "S-1-5-21-123456789-123456789-123456789-1001", NO_DISTINGUISHED_NAME, "user")
 
 		assert.NotEqual(t, ad1.Key, ad2.Key, "Same DN in different domains should have different keys")
 		assert.False(t, ad1.IsInDomain("domain2.local"), "Object should not be in different domain")
@@ -791,7 +785,7 @@ func TestADObject_SecurityBehaviors(t *testing.T) {
 func TestADObject_FactoryMethods(t *testing.T) {
 	t.Run("NewADUser", func(t *testing.T) {
 		// Test for future NewADUser factory method
-		user := NewADUser("example.local", "S-1-5-21-123456789-123456789-123456789-1001")
+		user := NewADUser("example.local", "S-1-5-21-123456789-123456789-123456789-1001", NO_DISTINGUISHED_NAME)
 
 		assert.Equal(t, "example.local", user.Domain)
 		assert.Equal(t, "S-1-5-21-123456789-123456789-123456789-1001", user.ObjectID)
@@ -802,7 +796,7 @@ func TestADObject_FactoryMethods(t *testing.T) {
 
 	t.Run("NewADComputer", func(t *testing.T) {
 		// Test for future NewADComputer factory method
-		computer := NewADComputer("corp.com", "S-1-5-21-123456789-123456789-123456789-1002")
+		computer := NewADComputer("corp.com", "S-1-5-21-123456789-123456789-123456789-1002", NO_DISTINGUISHED_NAME)
 
 		assert.Equal(t, "corp.com", computer.Domain)
 		assert.Equal(t, "S-1-5-21-123456789-123456789-123456789-1002", computer.ObjectID)
@@ -813,7 +807,7 @@ func TestADObject_FactoryMethods(t *testing.T) {
 
 	t.Run("NewADGroup", func(t *testing.T) {
 		// Test for future NewADGroup factory method
-		group := NewADGroup("example.local", "S-1-5-21-123456789-123456789-123456789-1003")
+		group := NewADGroup("example.local", "S-1-5-21-123456789-123456789-123456789-1003", NO_DISTINGUISHED_NAME)
 
 		assert.Equal(t, "example.local", group.Domain)
 		assert.Equal(t, "S-1-5-21-123456789-123456789-123456789-1003", group.ObjectID)
@@ -824,7 +818,7 @@ func TestADObject_FactoryMethods(t *testing.T) {
 
 	t.Run("NewADGPO", func(t *testing.T) {
 		// Test for future NewADGPO factory method
-		gpo := NewADGPO("example.local", "31B2F340-016D-11D2-945F-00C04FB984F9")
+		gpo := NewADGPO("example.local", "31B2F340-016D-11D2-945F-00C04FB984F9", NO_DISTINGUISHED_NAME)
 
 		assert.Equal(t, "example.local", gpo.Domain)
 		assert.Equal(t, "31B2F340-016D-11D2-945F-00C04FB984F9", gpo.ObjectID)
@@ -835,7 +829,7 @@ func TestADObject_FactoryMethods(t *testing.T) {
 
 	t.Run("NewADOU", func(t *testing.T) {
 		// Test for future NewADOU factory method
-		ou := NewADOU("example.local", "S-1-5-21-123456789-123456789-123456789-1004")
+		ou := NewADOU("example.local", "S-1-5-21-123456789-123456789-123456789-1004", NO_DISTINGUISHED_NAME)
 
 		assert.Equal(t, "example.local", ou.Domain)
 		assert.Equal(t, "S-1-5-21-123456789-123456789-123456789-1004", ou.ObjectID)
@@ -1036,7 +1030,7 @@ func TestADObject_ComplexScenarios(t *testing.T) {
 		{
 			name: "domain admin user",
 			setupFunc: func() *ADObject {
-				ad := NewADObject("corp.com", "S-1-5-21-123456789-123456789-123456789-1001", "user")
+				ad := NewADObject("corp.com", "S-1-5-21-123456789-123456789-123456789-1001", NO_DISTINGUISHED_NAME, "user")
 				ad.DistinguishedName = "CN=Administrator,CN=Users,DC=corp,DC=com"
 				ad.SID = "S-1-5-21-123456789-123456789-123456789-500"
 				ad.SAMAccountName = "Administrator"
@@ -1057,7 +1051,7 @@ func TestADObject_ComplexScenarios(t *testing.T) {
 		{
 			name: "computer with LAPS",
 			setupFunc: func() *ADObject {
-				ad := NewADObject("example.local", "S-1-5-21-123456789-123456789-123456789-1001", "computer")
+				ad := NewADObject("example.local", "S-1-5-21-123456789-123456789-123456789-1001", NO_DISTINGUISHED_NAME, "computer")
 				ad.DistinguishedName = "CN=WORKSTATION01,OU=Computers,DC=example,DC=local"
 				ad.SAMAccountName = "WORKSTATION01$"
 				ad.HasLAPS = true
@@ -1075,7 +1069,7 @@ func TestADObject_ComplexScenarios(t *testing.T) {
 		{
 			name: "service account with SPN",
 			setupFunc: func() *ADObject {
-				ad := NewADObject("example.local", "S-1-5-21-123456789-123456789-123456789-1001", "user")
+				ad := NewADObject("example.local", "S-1-5-21-123456789-123456789-123456789-1001", NO_DISTINGUISHED_NAME, "user")
 				ad.DistinguishedName = "CN=svc_sql,CN=Users,DC=example,DC=local"
 				ad.SAMAccountName = "svc_sql"
 				ad.HasSPN = true
@@ -1093,7 +1087,7 @@ func TestADObject_ComplexScenarios(t *testing.T) {
 		{
 			name: "nested group",
 			setupFunc: func() *ADObject {
-				ad := NewADObject("corp.com", "S-1-5-21-123456789-123456789-123456789-1001", "group")
+				ad := NewADObject("corp.com", "S-1-5-21-123456789-123456789-123456789-1001", NO_DISTINGUISHED_NAME, "group")
 				ad.DistinguishedName = "CN=Finance Admins,OU=Groups,OU=Finance,DC=corp,DC=com"
 				ad.SAMAccountName = "Finance Admins"
 				registry.CallHooks(&ad)
@@ -1118,7 +1112,7 @@ func TestADObject_ComplexScenarios(t *testing.T) {
 
 // Test concurrent access patterns
 func TestADObject_ConcurrentAccess(t *testing.T) {
-	ad := NewADObject("example.local", "CN=Test,DC=example,DC=local", "user")
+	ad := NewADObject("example.local", "CN=Test,DC=example,DC=local", NO_DISTINGUISHED_NAME, "user")
 
 	// Test concurrent reads
 	t.Run("concurrent reads", func(t *testing.T) {
