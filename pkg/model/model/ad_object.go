@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -24,7 +25,7 @@ const (
 	ADDomainLabel         = "ADDomain"
 	ADLocalGroupLabel     = "ADLocalGroup"
 	ADLocalUserLabel      = "ADLocalUser"
-	ADAIACALabel          = "ADIACA"
+	ADAIACALabel          = "ADAIACA"
 	ADRootCALabel         = "ADRootCA"
 	ADEnterpriseCALabel   = "ADEnterpriseCA"
 	ADNTAuthStoreLabel    = "ADNTAuthStore"
@@ -32,23 +33,307 @@ const (
 	ADIssuancePolicyLabel = "ADIssuancePolicy"
 )
 
+func GetADLabel(label string) string {
+	labels := map[string]string{
+		"adobject":         ADObjectLabel,
+		"aduser":           ADUserLabel,
+		"adcomputer":       ADComputerLabel,
+		"adgroup":          ADGroupLabel,
+		"adgpo":            ADGPOLabel,
+		"adou":             ADOULabel,
+		"adcontainer":      ADContainerLabel,
+		"addomain":         ADDomainLabel,
+		"adlocalgroup":     ADLocalGroupLabel,
+		"adlocaluser":      ADLocalUserLabel,
+		"adaiaca":          ADAIACALabel,
+		"adrootca":         ADRootCALabel,
+		"adenterpriseca":   ADEnterpriseCALabel,
+		"adntauthstore":    ADNTAuthStoreLabel,
+		"adcerttemplate":   ADCertTemplateLabel,
+		"adissuancepolicy": ADIssuancePolicyLabel,
+	}
+
+	return labels[strings.ToLower(label)]
+}
+
 var (
-	adObjectKeyPattern = regexp.MustCompile(`(?i)^#adobject#([^#]+)#((OU|CN|DC)=([^#]+),)+(OU|CN|DC)=([^#]+)$`)
+	adObjectKeyPattern = regexp.MustCompile(`(?i)^#adobject#[^#]+#[A-FS0-9-]+$`)
 )
 
-// ADObject represents an Active Directory object as a standalone Tabularium Model.
-// It embeds BaseAsset and provides comprehensive AD properties and methods.
 type ADObject struct {
 	BaseAsset
-	Label string `neo4j:"label" json:"label" desc:"Label of the object." example:"user"`
+	Label    string `neo4j:"label" json:"label" desc:"Label of the object." example:"user"`
+	Domain   string `neo4j:"domain" json:"domain" desc:"AD domain this object belongs to." example:"example.local"`
+	ObjectID string `neo4j:"objectid" json:"objectid" desc:"Object identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
+	SID      string `neo4j:"sid,omitempty" json:"sid,omitempty" desc:"Security identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
+	ADProperties
+}
+
+func (ad *ADObject) GetLabels() []string {
+	labels := []string{ADObjectLabel, TTLLabel}
+	if ad.ObjectClass != "" {
+		labels = append(labels, ad.ObjectClass)
+	}
+	return labels
+}
+
+func (ad *ADObject) Valid() bool {
+	hasObjectID := ad.ObjectID != ""
+	hasDomain := ad.Domain != ""
+	hasDistinguishedName := ad.DistinguishedName != ""
+	keyMatches := adObjectKeyPattern.MatchString(ad.Key)
+
+	return hasObjectID && hasDomain && hasDistinguishedName && keyMatches
+}
+
+func (ad *ADObject) Group() string {
+	return ad.Domain
+}
+
+func (ad *ADObject) Identifier() string {
+	return ad.DistinguishedName
+}
+
+func (ad *ADObject) Visit(o Assetlike) {
+	other, ok := o.(*ADObject)
+	if !ok {
+		return
+	}
+
+	if ad.Key != other.Key {
+		return
+	}
+
+	ad.ADProperties.Visit(other.ADProperties)
+
+	ad.BaseAsset.Visit(other)
+
+}
+
+// IsClass checks if the AD object is of the specified object class
+func (ad *ADObject) IsClass(objectClass string) bool {
+	return strings.EqualFold(ad.ObjectClass, objectClass)
+}
+
+// IsInDomain checks if the AD object belongs to the specified domain
+func (ad *ADObject) IsInDomain(domain string) bool {
+	return strings.EqualFold(ad.Domain, domain)
+}
+
+// GetParentDN extracts the parent distinguished name from the full DN
+func (ad *ADObject) GetParentDN() string {
+	if ad.DistinguishedName == "" {
+		return ""
+	}
+
+	// Find the first non-escaped comma to get the parent DN
+	// Handle escaped commas in CNs like "CN=O'Brien\, John"
+	dn := ad.DistinguishedName
+	for i := 0; i < len(dn); i++ {
+		if dn[i] == ',' {
+			// Check if this comma is escaped
+			if i > 0 && dn[i-1] == '\\' {
+				continue // Skip escaped comma
+			}
+			// Found non-escaped comma, return parent DN
+			return strings.TrimSpace(dn[i+1:])
+		}
+	}
+
+	return ""
+}
+
+// GetOU extracts the organizational unit from the distinguished name
+func (ad *ADObject) GetOU() string {
+	parentDN := ad.GetParentDN()
+	if parentDN == "" {
+		return ""
+	}
+
+	// Look for OU= in the parent DN
+	parts := strings.Split(parentDN, ",")
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if strings.HasPrefix(strings.ToUpper(part), "OU=") {
+			return part[3:] // Remove "OU=" prefix
+		}
+	}
+
+	return ""
+}
+
+// IsEnabled checks if the account is enabled based on common patterns
+// This is a basic implementation that can be overridden by specific AD object types
+func (ad *ADObject) IsEnabled() bool {
+	// Default assumption is that objects are enabled unless specified otherwise
+	// Specific AD object types should override this method with proper logic
+	return true
+}
+
+// GetCommonName extracts the CN value from the distinguished name
+func (ad *ADObject) GetCommonName() string {
+	if ad.Name != "" {
+		return ad.Name
+	}
+
+	// Extract CN= value from the beginning of the DN
+	if strings.HasPrefix(strings.ToUpper(ad.DistinguishedName), "CN=") {
+		// Find the first non-escaped comma
+		dn := ad.DistinguishedName
+		prefix := "CN="
+		for i := len(prefix); i < len(dn); i++ {
+			if dn[i] == ',' {
+				if i > 0 && dn[i-1] == '\\' {
+					continue // Skip escaped comma
+				}
+				return dn[len(prefix):i]
+			}
+		}
+		return dn[len(prefix):]
+	}
+
+	return ""
+}
+
+// GetEffectiveDomain returns the effective domain for the object
+func (ad *ADObject) GetEffectiveDomain() string {
+	if ad.Domain != "" {
+		return ad.Domain
+	}
+	if ad.NetBIOS != "" {
+		return ad.NetBIOS
+	}
+	// Extract from DN
+	if ad.DistinguishedName != "" {
+		parts := strings.Split(ad.DistinguishedName, ",")
+		var dcParts []string
+		for _, part := range parts {
+			part = strings.TrimSpace(part)
+			if strings.HasPrefix(strings.ToUpper(part), "DC=") {
+				dcParts = append(dcParts, part[3:])
+			}
+		}
+		if len(dcParts) > 0 {
+			return strings.Join(dcParts, ".")
+		}
+	}
+	return ""
+}
+
+// GetPrimaryIdentifier returns the primary identifier for the object
+func (ad *ADObject) GetPrimaryIdentifier() string {
+	if ad.ObjectID != "" {
+		return ad.ObjectID
+	}
+	if ad.DistinguishedName != "" {
+		return ad.DistinguishedName
+	}
+	if ad.SAMAccountName != "" {
+		return ad.SAMAccountName
+	}
+	return ""
+}
+
+// IsPrivileged checks if the object has elevated privileges
+func (ad *ADObject) IsPrivileged() bool {
+	return ad.AdminCount || ad.Sensitive || ad.UnconstrainedDelegation || ad.TrustedToAuth
+}
+
+func (ad *ADObject) Attribute(name, value string) Attribute {
+	attr := NewAttribute(name, value, ad)
+	return attr
+}
+
+func (ad *ADObject) Seed() Seed {
+	return ad.BaseAsset.Seed()
+}
+
+func (ad *ADObject) WithStatus(status string) Target {
+	ret := *ad
+	ret.Status = status
+	return &ret
+}
+
+func (ad *ADObject) Defaulted() {
+	ad.BaseAsset.Defaulted()
+}
+
+func (ad *ADObject) GetHooks() []registry.Hook {
+	return []registry.Hook{
+		useGroupAndIdentifier(ad, &ad.Domain, &ad.ObjectID),
+		{
+			Call: func() error {
+				ad.Domain = strings.ToLower(ad.Domain)
+				ad.ObjectID = strings.ToUpper(ad.ObjectID)
+
+				ad.Key = fmt.Sprintf("#adobject#%s#%s", ad.Domain, ad.ObjectID)
+
+				ad.ObjectClass = strings.TrimPrefix(ad.Label, "AD")
+				ad.Class = strings.ToLower(ad.ObjectClass)
+
+				ad.Name = ad.GetCommonName()
+
+				if strings.HasPrefix(ad.ObjectID, "S-") {
+					ad.SID = ad.ObjectID
+				}
+
+				return nil
+			},
+		},
+		setGroupAndIdentifier(ad, &ad.Domain, &ad.ObjectID),
+	}
+}
+
+// NewADObject creates a new ADObject with the specified domain, distinguished name, and object class
+func NewADObject(domain, objectID, objectClass string) ADObject {
+	ad := ADObject{
+		Domain:   domain,
+		ObjectID: objectID,
+		Label:    objectClass,
+	}
+
+	ad.Defaulted()
+	registry.CallHooks(&ad)
+
+	return ad
+}
+
+// NewADUser creates a new AD User object
+func NewADUser(domain, objectID string) ADObject {
+	return NewADObject(domain, objectID, ADUserLabel)
+}
+
+// NewADComputer creates a new AD Computer object
+func NewADComputer(domain, objectID string) ADObject {
+	return NewADObject(domain, objectID, ADComputerLabel)
+}
+
+// NewADGroup creates a new AD Group object
+func NewADGroup(domain, objectID string) ADObject {
+	return NewADObject(domain, objectID, ADGroupLabel)
+}
+
+// NewADGPO creates a new AD GPO object
+func NewADGPO(domain, objectID string) ADObject {
+	return NewADObject(domain, objectID, ADGPOLabel)
+}
+
+// NewADOU creates a new AD OU object
+func NewADOU(domain, objectID string) ADObject {
+	return NewADObject(domain, objectID, ADOULabel)
+}
+
+// GetDescription returns a description for the ADObject model.
+func (ad *ADObject) GetDescription() string {
+	return "Represents an Active Directory object with properties and organizational unit information."
+}
+
+type ADProperties struct {
 
 	// Core AD Properties
-	ObjectID          string `neo4j:"objectid" json:"objectid" desc:"Object identifier (SID)." example:"S-1-5-21-123456789-123456789-123456789-1001"`
-	Domain            string `neo4j:"domain" json:"domain" desc:"AD domain this object belongs to." example:"example.local"`
 	DistinguishedName string `neo4j:"distinguishedName" json:"distinguishedName" desc:"Full distinguished name in AD." example:"CN=John Doe,CN=Users,DC=example,DC=local"`
 	ObjectClass       string `neo4j:"objectClass" json:"objectClass" desc:"AD object class." example:"user"`
 	Name              string `neo4j:"name" json:"name" desc:"Common name of the object." example:"John Doe"`
-	SID               string `neo4j:"sid,omitempty" json:"sid,omitempty" desc:"Security identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
 	DisplayName       string `neo4j:"displayName,omitempty" json:"displayName,omitempty" desc:"Display name of the object." example:"John Doe"`
 	Description       string `neo4j:"description,omitempty" json:"description,omitempty" desc:"Description of the object." example:"User account for John Doe"`
 
@@ -137,311 +422,7 @@ type ADObject struct {
 	ForestName         string   `neo4j:"forestname,omitempty" json:"forestname,omitempty" desc:"Forest name." example:"example.com"`
 }
 
-func (ad *ADObject) GetLabels() []string {
-	labels := []string{ADObjectLabel, TTLLabel}
-	if ad.ObjectClass != "" {
-		labels = append(labels, ad.ObjectClass)
-	}
-	return labels
-}
-
-func (ad *ADObject) Valid() bool {
-	hasObjectID := ad.ObjectID != ""
-	hasDomain := ad.Domain != ""
-	hasDistinguishedName := ad.DistinguishedName != ""
-	keyMatches := adObjectKeyPattern.MatchString(ad.Key)
-
-	return hasObjectID && hasDomain && hasDistinguishedName && keyMatches
-}
-
-func (ad *ADObject) Group() string {
-	return ad.Domain
-}
-
-func (ad *ADObject) Identifier() string {
-	return ad.DistinguishedName
-}
-
-func (ad *ADObject) Merge(o Assetlike) {
-	ad.BaseAsset.Merge(o)
-
-	if _, ok := o.(*ADObject); ok {
-		// TODO
-	}
-}
-
-func (ad *ADObject) Visit(o Assetlike) {
-	other, ok := o.(*ADObject)
-	if !ok {
-		return
-	}
-
-	if ad.GetKey() != other.GetKey() {
-		return
-	}
-
-	ad.BaseAsset.Visit(other)
-
-}
-
-// IsClass checks if the AD object is of the specified object class
-func (ad *ADObject) IsClass(objectClass string) bool {
-	return strings.EqualFold(ad.ObjectClass, objectClass)
-}
-
-// IsInDomain checks if the AD object belongs to the specified domain
-func (ad *ADObject) IsInDomain(domain string) bool {
-	return strings.EqualFold(ad.Domain, domain)
-}
-
-// GetParentDN extracts the parent distinguished name from the full DN
-func (ad *ADObject) GetParentDN() string {
-	if ad.DistinguishedName == "" {
-		return ""
-	}
-
-	// Find the first non-escaped comma to get the parent DN
-	// Handle escaped commas in CNs like "CN=O'Brien\, John"
-	dn := ad.DistinguishedName
-	for i := 0; i < len(dn); i++ {
-		if dn[i] == ',' {
-			// Check if this comma is escaped
-			if i > 0 && dn[i-1] == '\\' {
-				continue // Skip escaped comma
-			}
-			// Found non-escaped comma, return parent DN
-			return strings.TrimSpace(dn[i+1:])
-		}
-	}
-
-	return ""
-}
-
-// GetOU extracts the organizational unit from the distinguished name
-func (ad *ADObject) GetOU() string {
-	parentDN := ad.GetParentDN()
-	if parentDN == "" {
-		return ""
-	}
-
-	// Look for OU= in the parent DN
-	parts := strings.Split(parentDN, ",")
-	for _, part := range parts {
-		part = strings.TrimSpace(part)
-		if strings.HasPrefix(strings.ToUpper(part), "OU=") {
-			return part[3:] // Remove "OU=" prefix
-		}
-	}
-
-	return ""
-}
-
-// IsEnabled checks if the account is enabled based on common patterns
-// This is a basic implementation that can be overridden by specific AD object types
-func (ad *ADObject) IsEnabled() bool {
-	// Default assumption is that objects are enabled unless specified otherwise
-	// Specific AD object types should override this method with proper logic
-	return true
-}
-
-// GetCommonName extracts the CN value from the distinguished name
-func (ad *ADObject) GetCommonName() string {
-	if ad.DistinguishedName == "" {
-		return ad.Name
-	}
-
-	// Extract CN= value from the beginning of the DN
-	if strings.HasPrefix(strings.ToUpper(ad.DistinguishedName), "CN=") {
-		// Find the first non-escaped comma
-		dn := ad.DistinguishedName
-		for i := 3; i < len(dn); i++ { // Start after "CN="
-			if dn[i] == ',' {
-				// Check if this comma is escaped
-				if i > 0 && dn[i-1] == '\\' {
-					continue // Skip escaped comma
-				}
-				// Found non-escaped comma, return CN value
-				return dn[3:i] // Remove "CN=" prefix
-			}
-		}
-		return ad.DistinguishedName[3:] // No comma found, return everything after CN=
-	}
-
-	return ad.Name
-}
-
-// GetEffectiveDomain returns the effective domain for the object
-func (ad *ADObject) GetEffectiveDomain() string {
-	if ad.Domain != "" {
-		return ad.Domain
-	}
-	if ad.NetBIOS != "" {
-		return ad.NetBIOS
-	}
-	// Extract from DN
-	if ad.DistinguishedName != "" {
-		parts := strings.Split(ad.DistinguishedName, ",")
-		var dcParts []string
-		for _, part := range parts {
-			part = strings.TrimSpace(part)
-			if strings.HasPrefix(strings.ToUpper(part), "DC=") {
-				dcParts = append(dcParts, part[3:])
-			}
-		}
-		if len(dcParts) > 0 {
-			return strings.Join(dcParts, ".")
-		}
-	}
-	return ""
-}
-
-// GetPrimaryIdentifier returns the primary identifier for the object
-func (ad *ADObject) GetPrimaryIdentifier() string {
-	if ad.ObjectID != "" {
-		return ad.ObjectID
-	}
-	if ad.DistinguishedName != "" {
-		return ad.DistinguishedName
-	}
-	if ad.SAMAccountName != "" {
-		return ad.SAMAccountName
-	}
-	return ""
-}
-
-// IsPrivileged checks if the object has elevated privileges
-func (ad *ADObject) IsPrivileged() bool {
-	return ad.AdminCount || ad.Sensitive || ad.UnconstrainedDelegation || ad.TrustedToAuth
-}
-
-func (ad *ADObject) Attribute(name, value string) Attribute {
-	attr := NewAttribute(name, value, ad)
-	return attr
-}
-
-func (ad *ADObject) Seed() Seed {
-	return ad.BaseAsset.Seed()
-}
-
-func (ad *ADObject) WithStatus(status string) Target {
-	ret := *ad
-	ret.Status = status
-	return &ret
-}
-
-func (ad *ADObject) Defaulted() {
-	ad.BaseAsset.Defaulted()
-}
-
-func (ad *ADObject) GetHooks() []registry.Hook {
-	return []registry.Hook{
-		useGroupAndIdentifier(ad, &ad.Domain, &ad.ObjectID),
-		{
-			Call: func() error {
-				ad.Key = strings.ToLower(fmt.Sprintf("#adobject#%s#%s", ad.Domain, ad.ObjectID))
-				ad.ObjectClass = strings.TrimPrefix(ad.Label, "AD")
-				ad.Class = strings.ToLower(ad.ObjectClass)
-				ad.Name = ad.GetCommonName()
-				if strings.HasPrefix(ad.ObjectID, "S-") {
-					ad.SID = ad.ObjectID
-				}
-				return nil
-			},
-		},
-		setGroupAndIdentifier(ad, &ad.Domain, &ad.ObjectID),
-	}
-}
-
-// NewADObject creates a new ADObject with the specified domain, distinguished name, and object class
-func NewADObject(domain, distinguishedName, objectClass string) ADObject {
-	ad := ADObject{
-		Domain:            domain,
-		DistinguishedName: distinguishedName,
-		Label:             objectClass,
-	}
-
-	ad.Defaulted()
-	registry.CallHooks(&ad)
-
-	return ad
-}
-
-// NewADUser creates a new AD User object
-func NewADUser(domain, distinguishedName, samAccountName string) *ADObject {
-	ad := &ADObject{
-		Domain:            domain,
-		DistinguishedName: distinguishedName,
-		SAMAccountName:    samAccountName,
-		Label:             ADUserLabel,
-	}
-
-	ad.Defaulted()
-	registry.CallHooks(ad)
-
-	return ad
-}
-
-// NewADComputer creates a new AD Computer object
-func NewADComputer(domain, distinguishedName, dnsHostname string) *ADObject {
-	ad := &ADObject{
-		Domain:            domain,
-		DistinguishedName: distinguishedName,
-		DNSHostname:       dnsHostname,
-		Label:             ADComputerLabel,
-	}
-
-	ad.Defaulted()
-	registry.CallHooks(ad)
-
-	return ad
-}
-
-// NewADGroup creates a new AD Group object
-func NewADGroup(domain, distinguishedName, samAccountName string) *ADObject {
-	ad := &ADObject{
-		Domain:            domain,
-		DistinguishedName: distinguishedName,
-		SAMAccountName:    samAccountName,
-		Label:             ADGroupLabel,
-	}
-
-	ad.Defaulted()
-	registry.CallHooks(ad)
-
-	return ad
-}
-
-// NewADGPO creates a new AD GPO object
-func NewADGPO(domain, distinguishedName, displayName string) *ADObject {
-	ad := &ADObject{
-		Domain:            domain,
-		DistinguishedName: distinguishedName,
-		DisplayName:       displayName,
-		Label:             ADGPOLabel,
-	}
-
-	ad.Defaulted()
-	registry.CallHooks(ad)
-
-	return ad
-}
-
-// NewADOU creates a new AD OU object
-func NewADOU(domain, distinguishedName, name string) *ADObject {
-	ad := &ADObject{
-		Domain:            domain,
-		DistinguishedName: distinguishedName,
-		Name:              name,
-		Label:             ADOULabel,
-	}
-
-	ad.Defaulted()
-	registry.CallHooks(ad)
-
-	return ad
-}
-
-// GetDescription returns a description for the ADObject model.
-func (ad *ADObject) GetDescription() string {
-	return "Represents an Active Directory object with properties and organizational unit information."
+func (ad *ADProperties) Visit(other ADProperties) {
+	marshaled, _ := json.Marshal(other)
+	json.Unmarshal(marshaled, ad)
 }

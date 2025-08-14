@@ -14,6 +14,7 @@ func TestNewADObject(t *testing.T) {
 	tests := []struct {
 		name              string
 		domain            string
+		objectID          string
 		distinguishedName string
 		objectClass       string
 		expectedKey       string
@@ -23,45 +24,50 @@ func TestNewADObject(t *testing.T) {
 		{
 			name:              "create user object",
 			domain:            "example.local",
+			objectID:          "S-1-5-21-123456789-123456789-123456789-1001",
 			distinguishedName: "CN=John Doe,CN=Users,DC=example,DC=local",
 			objectClass:       "user",
-			expectedKey:       "#adobject#example.local#cn=john doe,cn=users,dc=example,dc=local",
+			expectedKey:       "#adobject#example.local#S-1-5-21-123456789-123456789-123456789-1001",
 			expectedClass:     "user",
 			expectedName:      "John Doe",
 		},
 		{
 			name:              "create computer object",
-			domain:            "CORP.COM",
+			domain:            "corp.com",
+			objectID:          "S-1-5-21-123456789-123456789-123456789-1002",
 			distinguishedName: "CN=WORKSTATION01,CN=Computers,DC=corp,DC=com",
 			objectClass:       "computer",
-			expectedKey:       "#adobject#corp.com#cn=workstation01,cn=computers,dc=corp,dc=com",
+			expectedKey:       "#adobject#corp.com#S-1-5-21-123456789-123456789-123456789-1002",
 			expectedClass:     "computer",
 			expectedName:      "WORKSTATION01",
 		},
 		{
 			name:              "create group object",
 			domain:            "test.domain",
+			objectID:          "S-1-5-21-123456789-123456789-123456789-1003",
 			distinguishedName: "CN=Domain Admins,CN=Groups,DC=test,DC=domain",
 			objectClass:       "group",
-			expectedKey:       "#adobject#test.domain#cn=domain admins,cn=groups,dc=test,dc=domain",
+			expectedKey:       "#adobject#test.domain#S-1-5-21-123456789-123456789-123456789-1003",
 			expectedClass:     "group",
 			expectedName:      "Domain Admins",
 		},
 		{
 			name:              "create OU object",
 			domain:            "example.local",
+			objectID:          "51FB8637-28BC-4816-9A51-984160B207FA",
 			distinguishedName: "OU=Sales,DC=example,DC=local",
 			objectClass:       "organizationalUnit",
-			expectedKey:       "#adobject#example.local#ou=sales,dc=example,dc=local",
+			expectedKey:       "#adobject#example.local#51FB8637-28BC-4816-9A51-984160B207FA",
 			expectedClass:     "organizationalunit",
 			expectedName:      "",
 		},
 		{
 			name:              "DN without CN prefix",
 			domain:            "example.local",
+			objectID:          "S-1-5-21-123456789-123456789-123456789-1005",
 			distinguishedName: "DC=example,DC=local",
 			objectClass:       "domain",
-			expectedKey:       "#adobject#example.local#dc=example,dc=local",
+			expectedKey:       "#adobject#example.local#S-1-5-21-123456789-123456789-123456789-1005",
 			expectedClass:     "domain",
 			expectedName:      "",
 		},
@@ -69,9 +75,14 @@ func TestNewADObject(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ad := NewADObject(tt.domain, tt.distinguishedName, tt.objectClass)
+			ad := NewADObject(tt.domain, tt.objectID, tt.objectClass)
+			ad.DistinguishedName = tt.distinguishedName
+
+			err := registry.CallHooks(&ad)
+			require.NoError(t, err, "Hook should execute without error")
 
 			assert.Equal(t, tt.domain, ad.Domain, "Domain should match")
+			assert.Equal(t, tt.objectID, ad.ObjectID, "ObjectID should match")
 			assert.Equal(t, tt.distinguishedName, ad.DistinguishedName, "DistinguishedName should match")
 			assert.Equal(t, tt.objectClass, ad.ObjectClass, "ObjectClass should match")
 			assert.Equal(t, tt.expectedKey, ad.Key, "Key should be generated correctly")
@@ -116,46 +127,34 @@ func TestADObject_Defaulted(t *testing.T) {
 // Test GetHooks functionality
 func TestADObject_GetHooks(t *testing.T) {
 	tests := []struct {
-		name              string
-		domain            string
-		distinguishedName string
-		label             string
-		expectedKey       string
-		expectedClass     string
+		name          string
+		domain        string
+		objectID      string
+		label         string
+		expectedKey   string
+		expectedClass string
 	}{
 		{
-			name:              "hook generates correct key and class",
-			domain:            "TEST.LOCAL",
-			distinguishedName: "CN=TestUser,DC=test,DC=local",
-			label:             "ADUser",
-			expectedKey:       "#adobject#test.local#cn=testuser,dc=test,dc=local",
-			expectedClass:     "user",
+			name:          "hook generates correct key and class",
+			domain:        "TEST.LOCAL",
+			objectID:      "S-1-5-21-123456789-123456789-123456789-1001",
+			label:         "ADUser",
+			expectedKey:   "#adobject#test.local#S-1-5-21-123456789-123456789-123456789-1001",
+			expectedClass: "user",
 		},
 		{
-			name:              "hook handles empty values",
-			domain:            "",
-			distinguishedName: "",
-			label:             "",
-			expectedKey:       "#adobject##",
-			expectedClass:     "",
-		},
-		{
-			name:              "hook handles special characters in DN",
-			domain:            "example.com",
-			distinguishedName: "CN=O'Brien\\, John,CN=Users,DC=example,DC=com",
-			label:             "ADUser",
-			expectedKey:       "#adobject#example.com#cn=o'brien\\, john,cn=users,dc=example,dc=com",
-			expectedClass:     "user",
+			name:          "hook handles empty values",
+			domain:        "",
+			objectID:      "",
+			label:         "",
+			expectedKey:   "#adobject##",
+			expectedClass: "",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ad := ADObject{
-				Domain:            tt.domain,
-				DistinguishedName: tt.distinguishedName,
-				Label:             tt.label,
-			}
+			ad := NewADObject(tt.domain, tt.objectID, tt.label)
 
 			err := registry.CallHooks(&ad)
 			require.NoError(t, err, "Hook should execute without error")
@@ -171,80 +170,138 @@ func TestADObject_Visit(t *testing.T) {
 	tests := []struct {
 		name     string
 		existing ADObject
-		visiting interface{} // Use interface{} to allow testing with non-ADObject types
+		visiting Assetlike
 		expected ADObject
 	}{
 		{
 			name: "merge with valid ADObject",
 			existing: ADObject{
-				Domain:            "example.local",
-				DistinguishedName: "CN=User1,DC=example,DC=local",
-				ObjectClass:       "user",
-				Name:              "User1",
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=User1,DC=example,DC=local",
+					ObjectClass:       "user",
+					Name:              "User1",
+				},
 			},
-			visiting: ADObject{
-				SID:            "S-1-5-21-123456789-123456789-123456789-1001",
-				SAMAccountName: "user1",
-				DisplayName:    "User One",
-				Description:    "Test user account",
+			visiting: &ADObject{
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
+				ADProperties: ADProperties{
+					SAMAccountName: "user1",
+					DisplayName:    "User One",
+					Description:    "Test user account",
+				},
 			},
 			expected: ADObject{
-				Domain:            "example.local",
-				DistinguishedName: "CN=User1,DC=example,DC=local",
-				ObjectClass:       "user",
-				Name:              "User1",
-				SID:               "S-1-5-21-123456789-123456789-123456789-1001",
-				SAMAccountName:    "user1",
-				DisplayName:       "User One",
-				Description:       "Test user account",
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=User1,DC=example,DC=local",
+					ObjectClass:       "user",
+					Name:              "User1",
+					SAMAccountName:    "user1",
+					DisplayName:       "User One",
+					Description:       "Test user account",
+				},
 			},
 		},
 		{
-			name: "don't override existing values",
+			name: "no updates if different keys",
 			existing: ADObject{
-				SID:            "S-1-5-21-EXISTING",
-				SAMAccountName: "existing",
-				DisplayName:    "Existing Display",
-				Description:    "Existing description",
+				Domain:   "example.local", // key is derived from domain and objectid
+				ObjectID: "S-1-5-21-EXISTING",
+				ADProperties: ADProperties{
+					SAMAccountName: "existing",
+					DisplayName:    "Existing Display",
+					Description:    "Existing description",
+				},
 			},
-			visiting: ADObject{
-				SID:            "S-1-5-21-NEW",
-				SAMAccountName: "new",
-				DisplayName:    "New Display",
-				Description:    "New description",
+			visiting: &ADObject{
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-NEW",
+				ADProperties: ADProperties{
+					SAMAccountName: "new",
+					DisplayName:    "New Display",
+					Description:    "New description",
+				},
 			},
 			expected: ADObject{
-				SID:            "S-1-5-21-EXISTING",
-				SAMAccountName: "existing",
-				DisplayName:    "Existing Display",
-				Description:    "Existing description",
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-EXISTING",
+				ADProperties: ADProperties{
+					SAMAccountName: "existing",
+					DisplayName:    "Existing Display",
+					Description:    "Existing description",
+				},
 			},
 		},
 		{
 			name: "handle non-ADObject type",
 			existing: ADObject{
-				Domain: "example.local",
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
 			},
-			visiting: "not an ADObject",
+			visiting: &Asset{
+				Name: "1.2.3.4", DNS: "example.com",
+			},
 			expected: ADObject{
-				Domain: "example.local",
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
 			},
 		},
 		{
 			name: "partial merge",
 			existing: ADObject{
-				SID:         "S-1-5-21-EXISTING",
-				DisplayName: "Existing",
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
+				ADProperties: ADProperties{
+					DisplayName: "Existing",
+				},
 			},
-			visiting: ADObject{
-				SAMAccountName: "newuser",
-				Description:    "New description",
+			visiting: &ADObject{
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
+				ADProperties: ADProperties{
+					SAMAccountName: "newuser",
+					Description:    "New description",
+				},
 			},
 			expected: ADObject{
-				SID:            "S-1-5-21-EXISTING",
-				DisplayName:    "Existing",
-				SAMAccountName: "newuser",
-				Description:    "New description",
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
+				ADProperties: ADProperties{
+					DisplayName:    "Existing",
+					SAMAccountName: "newuser",
+					Description:    "New description",
+				},
+			},
+		},
+		{
+			name: "blank values don't overwrite existing values",
+			existing: ADObject{
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
+				ADProperties: ADProperties{
+					DisplayName:       "Existing",
+					DistinguishedName: "CN=Existing,DC=example,DC=local",
+				},
+			},
+			visiting: &ADObject{
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
+				ADProperties: ADProperties{
+					DisplayName:       "New",
+					DistinguishedName: "",
+				},
+			},
+			expected: ADObject{
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
+				ADProperties: ADProperties{
+					DisplayName:       "New",
+					DistinguishedName: "CN=Existing,DC=example,DC=local",
+				},
 			},
 		},
 	}
@@ -253,21 +310,18 @@ func TestADObject_Visit(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ad := tt.existing
 
-			// Handle different types of visiting objects
-			switch v := tt.visiting.(type) {
-			case ADObject:
-				ad.Visit(&v)
-			case string:
-				// Test that Visit handles non-ADObject types gracefully
-				// Create a dummy struct that implements Assetlike
-				// For this test, we'll just skip since Visit expects Assetlike
-				// and a string doesn't implement it
-			default:
-				if assetlike, ok := tt.visiting.(Assetlike); ok {
-					ad.Visit(assetlike)
-				}
-			}
+			err := registry.CallHooks(&ad)
+			require.NoError(t, err, "Hook should execute without error")
 
+			err = registry.CallHooks(tt.visiting)
+			require.NoError(t, err, "Hook should execute without error")
+
+			err = registry.CallHooks(&tt.expected)
+			require.NoError(t, err, "Hook should execute without error")
+
+			ad.Visit(tt.visiting)
+
+			assert.Equal(t, tt.expected.ObjectID, ad.ObjectID, "ObjectID should match expected")
 			assert.Equal(t, tt.expected.SID, ad.SID, "SID should match expected")
 			assert.Equal(t, tt.expected.SAMAccountName, ad.SAMAccountName, "SAMAccountName should match expected")
 			assert.Equal(t, tt.expected.DisplayName, ad.DisplayName, "DisplayName should match expected")
@@ -279,48 +333,52 @@ func TestADObject_Visit(t *testing.T) {
 // Test IsClass functionality
 func TestADObject_IsClass(t *testing.T) {
 	tests := []struct {
-		name        string
-		objectClass string
-		checkClass  string
-		expected    bool
+		name       string
+		label      string
+		checkClass string
+		expected   bool
 	}{
 		{
-			name:        "exact match",
-			objectClass: "user",
-			checkClass:  "user",
-			expected:    true,
+			name:       "exact match",
+			label:      ADUserLabel,
+			checkClass: "user",
+			expected:   true,
 		},
 		{
-			name:        "case insensitive match",
-			objectClass: "User",
-			checkClass:  "USER",
-			expected:    true,
+			name:       "case insensitive match",
+			label:      ADUserLabel,
+			checkClass: "USER",
+			expected:   true,
 		},
 		{
-			name:        "different class",
-			objectClass: "computer",
-			checkClass:  "user",
-			expected:    false,
+			name:       "different class",
+			label:      ADComputerLabel,
+			checkClass: "user",
+			expected:   false,
 		},
 		{
-			name:        "empty object class",
-			objectClass: "",
-			checkClass:  "user",
-			expected:    false,
+			name:       "empty object class",
+			label:      "",
+			checkClass: "user",
+			expected:   false,
 		},
 		{
-			name:        "empty check class",
-			objectClass: "user",
-			checkClass:  "",
-			expected:    false,
+			name:       "empty check class",
+			label:      ADUserLabel,
+			checkClass: "",
+			expected:   false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ad := ADObject{ObjectClass: tt.objectClass}
+			ad := ADObject{Label: tt.label}
+			err := registry.CallHooks(&ad)
+			require.NoError(t, err, "Hook should execute without error")
+
 			result := ad.IsClass(tt.checkClass)
-			assert.Equal(t, tt.expected, result, "IsClass result should match expected")
+
+			assert.Equal(t, tt.expected, result, "IsClass(\"%s\") got %v, expected %v", tt.checkClass, result, tt.expected)
 		})
 	}
 }
@@ -425,7 +483,8 @@ func TestADObject_GetParentDN(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ad := ADObject{DistinguishedName: tt.distinguishedName}
+			ad := ADObject{}
+			ad.DistinguishedName = tt.distinguishedName
 			result := ad.GetParentDN()
 			assert.Equal(t, tt.expected, result, "GetParentDN should return correct parent DN")
 		})
@@ -483,7 +542,8 @@ func TestADObject_GetOU(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ad := ADObject{DistinguishedName: tt.distinguishedName}
+			ad := ADObject{}
+			ad.DistinguishedName = tt.distinguishedName
 			result := ad.GetOU()
 			assert.Equal(t, tt.expected, result, "GetOU should return correct OU")
 		})
@@ -551,10 +611,10 @@ func TestADObject_GetCommonName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ad := ADObject{
-				DistinguishedName: tt.distinguishedName,
-				Name:              tt.nameField,
-			}
+			ad := ADObject{}
+			ad.DistinguishedName = tt.distinguishedName
+			ad.Name = tt.nameField
+
 			result := ad.GetCommonName()
 			assert.Equal(t, tt.expected, result, "GetCommonName should return correct value")
 		})
@@ -562,59 +622,43 @@ func TestADObject_GetCommonName(t *testing.T) {
 }
 
 // Test DN validation edge cases
-func TestADObject_DNValidation(t *testing.T) {
+func TestADObject_CommonName(t *testing.T) {
 	tests := []struct {
 		name              string
 		distinguishedName string
-		shouldProcess     bool
-		description       string
+		commonName        string
 	}{
 		{
 			name:              "valid standard DN",
 			distinguishedName: "CN=User,DC=example,DC=local",
-			shouldProcess:     true,
-			description:       "Standard DN should process correctly",
+			commonName:        "User",
 		},
 		{
 			name:              "DN with escaped characters",
 			distinguishedName: "CN=O'Brien\\, John Jr.,OU=Sales\\+Marketing,DC=example,DC=local",
-			shouldProcess:     true,
-			description:       "DN with escaped special characters should process",
+			commonName:        "O'Brien\\, John Jr.",
 		},
 		{
 			name:              "DN with Unicode characters",
 			distinguishedName: "CN=José García,OU=España,DC=example,DC=local",
-			shouldProcess:     true,
-			description:       "DN with Unicode should process",
-		},
-		{
-			name:              "malformed DN missing equals",
-			distinguishedName: "CNUser,DCexample,DClocal",
-			shouldProcess:     true,
-			description:       "Malformed DN should still be accepted",
-		},
-		{
-			name:              "DN with extra spaces",
-			distinguishedName: "CN = User , DC = example , DC = local",
-			shouldProcess:     true,
-			description:       "DN with spaces should process",
+			commonName:        "José García",
 		},
 		{
 			name:              "very long DN",
-			distinguishedName: strings.Repeat("CN=VeryLongName,", 50) + "DC=example,DC=local",
-			shouldProcess:     true,
-			description:       "Very long DN should process",
+			distinguishedName: "CN=" + strings.Repeat("VeryLongName", 50) + ",DC=example,DC=local",
+			commonName:        strings.Repeat("VeryLongName", 50),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ad := NewADObject("example.local", tt.distinguishedName, "user")
+			ad := NewADObject("example.local", "S-1-5-21-123456789-123456789-123456789-1001", "user")
+			ad.DistinguishedName = tt.distinguishedName
+			err := registry.CallHooks(&ad)
 
-			if tt.shouldProcess {
-				assert.Equal(t, tt.distinguishedName, ad.DistinguishedName, tt.description)
-				assert.NotEmpty(t, ad.Key, "Key should be generated for valid DN")
-			}
+			require.NoError(t, err, "Hook should execute without error")
+
+			assert.Equal(t, tt.commonName, ad.GetCommonName(), "GetCommonName should return correct value")
 		})
 	}
 }
@@ -623,45 +667,38 @@ func TestADObject_DNValidation(t *testing.T) {
 func TestADObject_SIDValidation(t *testing.T) {
 	tests := []struct {
 		name        string
-		sid         string
+		objectID    string
+		expectedSID string
 		description string
 	}{
 		{
-			name:        "standard domain SID",
-			sid:         "S-1-5-21-123456789-123456789-123456789-1001",
-			description: "Standard domain SID format",
+			name:        "standard SID as objectID",
+			objectID:    "S-1-5-21-123456789-123456789-123456789-1001",
+			expectedSID: "S-1-5-21-123456789-123456789-123456789-1001",
+			description: "Standard SID format",
 		},
 		{
-			name:        "well-known SID",
-			sid:         "S-1-5-32-544",
-			description: "Well-known Administrators SID",
-		},
-		{
-			name:        "domain controller SID",
-			sid:         "S-1-5-21-123456789-123456789-123456789-516",
-			description: "Domain Controllers group SID",
-		},
-		{
-			name:        "local system SID",
-			sid:         "S-1-5-18",
-			description: "Local System account SID",
+			name:        "UUID as objectID",
+			objectID:    "123e4567-e89b-12d3-a456-426614174000",
+			expectedSID: "",
+			description: "UUID format",
 		},
 		{
 			name:        "empty SID",
-			sid:         "",
+			objectID:    "",
 			description: "Empty SID should be allowed",
-		},
-		{
-			name:        "malformed SID",
-			sid:         "NOT-A-VALID-SID",
-			description: "Malformed SID should still be stored",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ad := ADObject{SID: tt.sid}
-			assert.Equal(t, tt.sid, ad.SID, tt.description)
+			ad := ADObject{}
+			ad.ObjectID = tt.objectID
+
+			err := registry.CallHooks(&ad)
+
+			require.NoError(t, err, "Hook should execute without error")
+			assert.Equal(t, tt.expectedSID, ad.SID, tt.description)
 		})
 	}
 }
@@ -671,36 +708,43 @@ func TestADObject_DomainValidation(t *testing.T) {
 	tests := []struct {
 		name        string
 		domain      string
+		expected    string
 		description string
 	}{
 		{
 			name:        "FQDN domain",
 			domain:      "example.local",
+			expected:    "example.local",
 			description: "Fully qualified domain name",
 		},
 		{
 			name:        "NetBIOS domain",
 			domain:      "EXAMPLE",
+			expected:    "example",
 			description: "NetBIOS style domain name",
 		},
 		{
 			name:        "multi-level domain",
 			domain:      "sub.example.local",
+			expected:    "sub.example.local",
 			description: "Multi-level domain name",
 		},
 		{
 			name:        "domain with numbers",
 			domain:      "example123.local",
+			expected:    "example123.local",
 			description: "Domain with numbers",
 		},
 		{
 			name:        "domain with hyphens",
 			domain:      "example-corp.local",
+			expected:    "example-corp.local",
 			description: "Domain with hyphens",
 		},
 		{
 			name:        "uppercase domain",
 			domain:      "EXAMPLE.LOCAL",
+			expected:    "example.local",
 			description: "Uppercase domain name",
 		},
 		{
@@ -713,30 +757,29 @@ func TestADObject_DomainValidation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ad := NewADObject(tt.domain, "CN=Test,DC=example,DC=local", "user")
-			assert.Equal(t, tt.domain, ad.Domain, tt.description)
+			assert.Equal(t, tt.expected, ad.Domain, tt.description)
 		})
 	}
 }
 
-// Test security-relevant behaviors
 func TestADObject_SecurityBehaviors(t *testing.T) {
 	t.Run("key generation prevents collision", func(t *testing.T) {
-		ad1 := NewADObject("example.local", "CN=User1,DC=example,DC=local", "user")
-		ad2 := NewADObject("example.local", "CN=User2,DC=example,DC=local", "user")
+		ad1 := NewADObject("example.local", "S-1-5-21-123456789-123456789-123456789-1001", "user")
+		ad2 := NewADObject("example.local", "S-1-5-21-123456789-123456789-123456789-1002", "user")
 
 		assert.NotEqual(t, ad1.Key, ad2.Key, "Different DNs should generate different keys")
 	})
 
 	t.Run("key generation is case insensitive", func(t *testing.T) {
-		ad1 := NewADObject("EXAMPLE.LOCAL", "CN=User,DC=EXAMPLE,DC=LOCAL", "USER")
-		ad2 := NewADObject("example.local", "CN=User,DC=example,DC=local", "user")
+		ad1 := NewADObject("EXAMPLE.LOCAL", "s-1-5-21-123456789-123456789-123456789-1001", "user")
+		ad2 := NewADObject("example.local", "S-1-5-21-123456789-123456789-123456789-1001", "user")
 
 		assert.Equal(t, ad1.Key, ad2.Key, "Keys should be case-insensitive")
 	})
 
 	t.Run("domain isolation", func(t *testing.T) {
-		ad1 := NewADObject("domain1.local", "CN=User,DC=domain1,DC=local", "user")
-		ad2 := NewADObject("domain2.local", "CN=User,DC=domain2,DC=local", "user")
+		ad1 := NewADObject("domain1.local", "S-1-5-21-123456789-123456789-123456789-1001", "user")
+		ad2 := NewADObject("domain2.local", "S-1-5-21-123456789-123456789-123456789-1001", "user")
 
 		assert.NotEqual(t, ad1.Key, ad2.Key, "Same DN in different domains should have different keys")
 		assert.False(t, ad1.IsInDomain("domain2.local"), "Object should not be in different domain")
@@ -748,60 +791,56 @@ func TestADObject_SecurityBehaviors(t *testing.T) {
 func TestADObject_FactoryMethods(t *testing.T) {
 	t.Run("NewADUser", func(t *testing.T) {
 		// Test for future NewADUser factory method
-		user := NewADUser("example.local", "CN=JDoe,CN=Users,DC=example,DC=local", "jdoe")
+		user := NewADUser("example.local", "S-1-5-21-123456789-123456789-123456789-1001")
 
 		assert.Equal(t, "example.local", user.Domain)
-		assert.Equal(t, "CN=JDoe,CN=Users,DC=example,DC=local", user.DistinguishedName)
-		assert.Equal(t, "jdoe", user.SAMAccountName)
+		assert.Equal(t, "S-1-5-21-123456789-123456789-123456789-1001", user.ObjectID)
+		assert.Equal(t, "S-1-5-21-123456789-123456789-123456789-1001", user.SID)
 		assert.Equal(t, ADUserLabel, user.Label)
-		assert.Equal(t, "User", user.ObjectClass)
 		assert.Equal(t, "user", user.Class)
 	})
 
 	t.Run("NewADComputer", func(t *testing.T) {
 		// Test for future NewADComputer factory method
-		computer := NewADComputer("corp.com", "CN=WORKSTATION01,CN=Computers,DC=corp,DC=com", "workstation01.corp.com")
+		computer := NewADComputer("corp.com", "S-1-5-21-123456789-123456789-123456789-1002")
 
 		assert.Equal(t, "corp.com", computer.Domain)
-		assert.Equal(t, "CN=WORKSTATION01,CN=Computers,DC=corp,DC=com", computer.DistinguishedName)
+		assert.Equal(t, "S-1-5-21-123456789-123456789-123456789-1002", computer.ObjectID)
+		assert.Equal(t, "S-1-5-21-123456789-123456789-123456789-1002", computer.SID)
 		assert.Equal(t, ADComputerLabel, computer.Label)
-		assert.Equal(t, "Computer", computer.ObjectClass)
 		assert.Equal(t, "computer", computer.Class)
 	})
 
 	t.Run("NewADGroup", func(t *testing.T) {
 		// Test for future NewADGroup factory method
-		group := NewADGroup("example.local", "CN=Domain Admins,CN=Groups,DC=example,DC=local", "Domain Admins")
+		group := NewADGroup("example.local", "S-1-5-21-123456789-123456789-123456789-1003")
 
 		assert.Equal(t, "example.local", group.Domain)
-		assert.Equal(t, "CN=Domain Admins,CN=Groups,DC=example,DC=local", group.DistinguishedName)
-		assert.Equal(t, "Domain Admins", group.SAMAccountName)
+		assert.Equal(t, "S-1-5-21-123456789-123456789-123456789-1003", group.ObjectID)
+		assert.Equal(t, "S-1-5-21-123456789-123456789-123456789-1003", group.SID)
 		assert.Equal(t, ADGroupLabel, group.Label)
-		assert.Equal(t, "Group", group.ObjectClass)
 		assert.Equal(t, "group", group.Class)
 	})
 
 	t.Run("NewADGPO", func(t *testing.T) {
 		// Test for future NewADGPO factory method
-		gpo := NewADGPO("example.local", "CN={31B2F340-016D-11D2-945F-00C04FB984F9},CN=Policies,CN=System,DC=example,DC=local", "Default Domain Policy")
+		gpo := NewADGPO("example.local", "31B2F340-016D-11D2-945F-00C04FB984F9")
 
 		assert.Equal(t, "example.local", gpo.Domain)
-		assert.Contains(t, gpo.DistinguishedName, "31B2F340-016D-11D2-945F-00C04FB984F9")
-		assert.Equal(t, "Default Domain Policy", gpo.DisplayName)
+		assert.Equal(t, "31B2F340-016D-11D2-945F-00C04FB984F9", gpo.ObjectID)
+		assert.Equal(t, "", gpo.SID)
 		assert.Equal(t, ADGPOLabel, gpo.Label)
-		assert.Equal(t, "GPO", gpo.ObjectClass)
 		assert.Equal(t, "gpo", gpo.Class)
 	})
 
 	t.Run("NewADOU", func(t *testing.T) {
 		// Test for future NewADOU factory method
-		ou := NewADOU("example.local", "OU=Sales,DC=example,DC=local", "Sales")
+		ou := NewADOU("example.local", "S-1-5-21-123456789-123456789-123456789-1004")
 
 		assert.Equal(t, "example.local", ou.Domain)
-		assert.Equal(t, "OU=Sales,DC=example,DC=local", ou.DistinguishedName)
-		assert.Equal(t, "Sales", ou.Name)
+		assert.Equal(t, "S-1-5-21-123456789-123456789-123456789-1004", ou.ObjectID)
+		assert.Equal(t, "S-1-5-21-123456789-123456789-123456789-1004", ou.SID)
 		assert.Equal(t, ADOULabel, ou.Label)
-		assert.Equal(t, "OU", ou.ObjectClass)
 		assert.Equal(t, "ou", ou.Class)
 	})
 }
@@ -810,11 +849,13 @@ func TestADObject_FactoryMethods(t *testing.T) {
 func TestADObject_ExtensiveProperties(t *testing.T) {
 	t.Run("security properties", func(t *testing.T) {
 		ad := ADObject{
-			AdminCount:              true,
-			Sensitive:               true,
-			HasSPN:                  true,
-			UnconstrainedDelegation: true,
-			TrustedToAuth:           true,
+			ADProperties: ADProperties{
+				AdminCount:              true,
+				Sensitive:               true,
+				HasSPN:                  true,
+				UnconstrainedDelegation: true,
+				TrustedToAuth:           true,
+			},
 		}
 
 		assert.True(t, ad.AdminCount)
@@ -827,13 +868,15 @@ func TestADObject_ExtensiveProperties(t *testing.T) {
 
 	t.Run("account properties", func(t *testing.T) {
 		ad := ADObject{
-			PasswordNeverExpires:     true,
-			PasswordNotRequired:      false,
-			DontRequirePreAuth:       true,
-			SmartcardRequired:        false,
-			LockedOut:                true,
-			PasswordExpired:          true,
-			UserCannotChangePassword: true,
+			ADProperties: ADProperties{
+				PasswordNeverExpires:     true,
+				PasswordNotRequired:      false,
+				DontRequirePreAuth:       true,
+				SmartcardRequired:        false,
+				LockedOut:                true,
+				PasswordExpired:          true,
+				UserCannotChangePassword: true,
+			},
 		}
 
 		assert.True(t, ad.PasswordNeverExpires)
@@ -847,7 +890,9 @@ func TestADObject_ExtensiveProperties(t *testing.T) {
 
 	t.Run("LAPS properties", func(t *testing.T) {
 		ad := ADObject{
-			HasLAPS: true,
+			ADProperties: ADProperties{
+				HasLAPS: true,
+			},
 		}
 
 		assert.True(t, ad.HasLAPS)
@@ -855,11 +900,13 @@ func TestADObject_ExtensiveProperties(t *testing.T) {
 
 	t.Run("certificate properties", func(t *testing.T) {
 		ad := ADObject{
-			CertThumbprint:  "ABC123DEF456",
-			CertThumbprints: []string{"ABC123DEF456", "789GHI012JKL"},
-			CertChain:       []string{"root", "intermediate", "leaf"},
-			CertName:        "test-cert",
-			CAName:          "Example-CA",
+			ADProperties: ADProperties{
+				CertThumbprint:  "ABC123DEF456",
+				CertThumbprints: []string{"ABC123DEF456", "789GHI012JKL"},
+				CertChain:       []string{"root", "intermediate", "leaf"},
+				CertName:        "test-cert",
+				CAName:          "Example-CA",
+			},
 		}
 
 		assert.Equal(t, "ABC123DEF456", ad.CertThumbprint)
@@ -887,12 +934,12 @@ func TestADObject_HelperMethods(t *testing.T) {
 			},
 			{
 				name:     "extract from DN when domain empty",
-				ad:       ADObject{DistinguishedName: "CN=User,DC=corp,DC=com"},
+				ad:       ADObject{ADProperties: ADProperties{DistinguishedName: "CN=User,DC=corp,DC=com"}},
 				expected: "corp.com",
 			},
 			{
 				name:     "use NetBIOS when available",
-				ad:       ADObject{NetBIOS: "CORP"},
+				ad:       ADObject{ADProperties: ADProperties{NetBIOS: "CORP"}},
 				expected: "CORP",
 			},
 		}
@@ -918,12 +965,12 @@ func TestADObject_HelperMethods(t *testing.T) {
 			},
 			{
 				name:     "use DN when SID not available",
-				ad:       ADObject{DistinguishedName: "CN=User,DC=example,DC=local"},
+				ad:       ADObject{ADProperties: ADProperties{DistinguishedName: "CN=User,DC=example,DC=local"}},
 				expected: "CN=User,DC=example,DC=local",
 			},
 			{
 				name:     "use SAMAccountName as fallback",
-				ad:       ADObject{SAMAccountName: "user1"},
+				ad:       ADObject{ADProperties: ADProperties{SAMAccountName: "user1"}},
 				expected: "user1",
 			},
 		}
@@ -944,22 +991,22 @@ func TestADObject_HelperMethods(t *testing.T) {
 		}{
 			{
 				name:     "admin count indicates privileged",
-				ad:       ADObject{AdminCount: true},
+				ad:       ADObject{ADProperties: ADProperties{AdminCount: true}},
 				expected: true,
 			},
 			{
 				name:     "sensitive flag indicates privileged",
-				ad:       ADObject{Sensitive: true},
+				ad:       ADObject{ADProperties: ADProperties{Sensitive: true}},
 				expected: true,
 			},
 			{
 				name:     "unconstrained delegation indicates privileged",
-				ad:       ADObject{UnconstrainedDelegation: true},
+				ad:       ADObject{ADProperties: ADProperties{UnconstrainedDelegation: true}},
 				expected: true,
 			},
 			{
 				name:     "trusted to auth indicates privileged",
-				ad:       ADObject{TrustedToAuth: true},
+				ad:       ADObject{ADProperties: ADProperties{TrustedToAuth: true}},
 				expected: true,
 			},
 			{
@@ -989,11 +1036,13 @@ func TestADObject_ComplexScenarios(t *testing.T) {
 		{
 			name: "domain admin user",
 			setupFunc: func() *ADObject {
-				ad := NewADObject("corp.com", "CN=Administrator,CN=Users,DC=corp,DC=com", "user")
+				ad := NewADObject("corp.com", "S-1-5-21-123456789-123456789-123456789-1001", "user")
+				ad.DistinguishedName = "CN=Administrator,CN=Users,DC=corp,DC=com"
 				ad.SID = "S-1-5-21-123456789-123456789-123456789-500"
 				ad.SAMAccountName = "Administrator"
 				ad.AdminCount = true
 				ad.Sensitive = true
+				registry.CallHooks(&ad)
 				return &ad
 			},
 			testFunc: func(t *testing.T, ad *ADObject) {
@@ -1008,9 +1057,11 @@ func TestADObject_ComplexScenarios(t *testing.T) {
 		{
 			name: "computer with LAPS",
 			setupFunc: func() *ADObject {
-				ad := NewADObject("example.local", "CN=WORKSTATION01,OU=Computers,DC=example,DC=local", "computer")
+				ad := NewADObject("example.local", "S-1-5-21-123456789-123456789-123456789-1001", "computer")
+				ad.DistinguishedName = "CN=WORKSTATION01,OU=Computers,DC=example,DC=local"
 				ad.SAMAccountName = "WORKSTATION01$"
 				ad.HasLAPS = true
+				registry.CallHooks(&ad)
 				return &ad
 			},
 			testFunc: func(t *testing.T, ad *ADObject) {
@@ -1024,10 +1075,12 @@ func TestADObject_ComplexScenarios(t *testing.T) {
 		{
 			name: "service account with SPN",
 			setupFunc: func() *ADObject {
-				ad := NewADObject("example.local", "CN=svc_sql,CN=Users,DC=example,DC=local", "user")
+				ad := NewADObject("example.local", "S-1-5-21-123456789-123456789-123456789-1001", "user")
+				ad.DistinguishedName = "CN=svc_sql,CN=Users,DC=example,DC=local"
 				ad.SAMAccountName = "svc_sql"
 				ad.HasSPN = true
 				ad.TrustedToAuth = true
+				registry.CallHooks(&ad)
 				return &ad
 			},
 			testFunc: func(t *testing.T, ad *ADObject) {
@@ -1040,8 +1093,10 @@ func TestADObject_ComplexScenarios(t *testing.T) {
 		{
 			name: "nested group",
 			setupFunc: func() *ADObject {
-				ad := NewADObject("corp.com", "CN=Finance Admins,OU=Groups,OU=Finance,DC=corp,DC=com", "group")
+				ad := NewADObject("corp.com", "S-1-5-21-123456789-123456789-123456789-1001", "group")
+				ad.DistinguishedName = "CN=Finance Admins,OU=Groups,OU=Finance,DC=corp,DC=com"
 				ad.SAMAccountName = "Finance Admins"
+				registry.CallHooks(&ad)
 				return &ad
 			},
 			testFunc: func(t *testing.T, ad *ADObject) {
@@ -1083,36 +1138,4 @@ func TestADObject_ConcurrentAccess(t *testing.T) {
 			<-done
 		}
 	})
-}
-
-// Benchmark tests for performance-critical operations
-func BenchmarkADObject_NewADObject(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_ = NewADObject("example.local", "CN=User,CN=Users,DC=example,DC=local", "user")
-	}
-}
-
-func BenchmarkADObject_GetParentDN(b *testing.B) {
-	ad := ADObject{DistinguishedName: "CN=User,OU=Sales,OU=Departments,DC=example,DC=local"}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_ = ad.GetParentDN()
-	}
-}
-
-func BenchmarkADObject_GetOU(b *testing.B) {
-	ad := ADObject{DistinguishedName: "CN=User,OU=Sales,OU=Departments,DC=example,DC=local"}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_ = ad.GetOU()
-	}
-}
-
-func BenchmarkADObject_Visit(b *testing.B) {
-	ad1 := NewADObject("example.local", "CN=User1,DC=example,DC=local", "user")
-	ad2 := NewADObject("example.local", "CN=User2,DC=example,DC=local", "user")
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		ad1.Visit(&ad2)
-	}
 }
