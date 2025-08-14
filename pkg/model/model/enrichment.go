@@ -14,7 +14,7 @@ const (
 
 func init() {
 	registry.Registry.MustRegisterModel(&Enrichment{})
-	registry.Registry.MustRegisterModel(&CvssMetrics{})
+	registry.Registry.MustRegisterModel(&CVSSMetrics{})
 	registry.Registry.MustRegisterModel(&Epss{})
 	registry.Registry.MustRegisterModel(&Ssvc{})
 	registry.Registry.MustRegisterModel(&Weakness{})
@@ -25,12 +25,12 @@ func init() {
 	registry.Registry.MustRegisterModel(&ExploitTimeline{})
 }
 
-// GetDescription returns a description for the CvssMetrics model.
-func (c *CvssMetrics) GetDescription() string {
+// GetDescription returns a description for the CVSSMetrics model.
+func (c *CVSSMetrics) GetDescription() string {
 	return "Represents Common Vulnerability Scoring System (CVSS) metrics for a vulnerability."
 }
 
-type CvssMetrics struct {
+type CVSSMetrics struct {
 	registry.BaseModel
 	Version             string   `json:"version" desc:"CVSS version (e.g., v2, v3.0, v3.1, v4.0)." example:"v3.1"`
 	Type                string   `json:"type" desc:"Type of CVSS metric (Primary or Secondary)." example:"Primary"`
@@ -174,7 +174,7 @@ type Enrichment struct {
 	Description     string           `json:"description" desc:"Detailed description of the vulnerability or enrichment context." example:"A remote code execution vulnerability exists..."`
 	Published       string           `json:"published" desc:"Date the vulnerability or enrichment data was published (RFC3339)." example:"2023-11-01T00:00:00Z"`
 	Modified        string           `json:"modified" desc:"Date the vulnerability or enrichment data was last modified (RFC3339)." example:"2023-11-10T12:00:00Z"`
-	Cvss            []CvssMetrics    `json:"cvss,omitempty" desc:"List of associated CVSS metrics."`
+	CVSS            []CVSSMetrics    `json:"CVSS,omitempty" desc:"List of associated CVSS metrics."`
 	Epss            *Epss            `json:"epss,omitempty" desc:"Associated EPSS score and percentile."`
 	Ssvces          []Ssvc           `json:"ssvc,omitempty" desc:"List of associated SSVC assessments."`
 	Weaknesses      []Weakness       `json:"weaknesses,omitempty" desc:"List of associated weaknesses (e.g., CWEs)."`
@@ -189,12 +189,12 @@ func (e *Enrichment) Vulnerability() Vulnerability {
 	v.Exploit = e.Exploits != nil && e.Exploits.Counts.Exploits > 0
 
 	version := ""
-	for _, cvss := range e.Cvss {
-		if cvss.Version < version || cvss.BaseScore == nil {
+	for _, CVSS := range e.CVSS {
+		if CVSS.Version < version || CVSS.BaseScore == nil {
 			continue
 		}
-		version = cvss.Version
-		v.CVSS = cvss.BaseScore
+		version = CVSS.Version
+		v.CVSS = CVSS.BaseScore
 	}
 
 	if e.Epss != nil {
