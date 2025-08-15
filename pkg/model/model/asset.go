@@ -33,6 +33,9 @@ const AssetLabel = "Asset"
 
 func (a *Asset) GetLabels() []string {
 	labels := []string{AssetLabel, TTLLabel}
+	if a.Source == SeedSource {
+		labels = append(labels, SeedLabel)
+	}
 	return labels
 }
 
@@ -126,13 +129,46 @@ func (a *Asset) Spawn(dns, name string) Asset {
 	return asset
 }
 
-func (a *Asset) Seed() Seed {
-	if a.DNS != a.Name {
-		return Seed{}
+func (a *Asset) SeedModels() []Seedable {
+	copy := *a
+	return []Seedable{&copy}
+}
+
+func (a *Asset) DomainVerificationJob(parentJob *Job, config ...string) Job {
+	isDomain := a.Class == "domain" || a.Class == "tld"
+	isSeed := a.Source == SeedSource
+	if !isDomain || !isSeed {
+		return Job{}
 	}
-	s := NewSeed(a.DNS)
-	s.SetStatus(a.Status)
-	return s
+
+	copy := *a
+	job := Job{
+		Source:  "whois",
+		Target:  TargetWrapper{Model: &copy},
+		Status:  fmt.Sprintf("%s#%s", Queued, "whois"),
+		Config:  make(map[string]string),
+		Created: Now(),
+		Updated: Now(),
+		TTL:     Future(12),
+		Queue:   Standard,
+		Parent:  parentJob.Target,
+		Full:    true,
+	}
+
+	if job.Target.Model != nil {
+		template := fmt.Sprintf("#job#%%s#%s#%s", job.Target.Model.Identifier(), job.Source)
+		if len(template) <= 1024 {
+			shortenedDNS := job.Target.Model.Group()[:min(1024-len(template), len(job.Target.Model.Group()))]
+			job.DNS = shortenedDNS
+			job.Key = fmt.Sprintf(template, shortenedDNS)
+		}
+	}
+
+	job.Config["source"] = parentJob.Source
+	for i := 0; i < len(config); i += 2 {
+		job.Config[config[i]] = config[i+1]
+	}
+	return job
 }
 
 func (a *Asset) WithStatus(status string) Target {
@@ -183,6 +219,14 @@ func NewAsset(dns, name string) Asset {
 	a.Defaulted()
 	registry.CallHooks(&a)
 
+	return a
+}
+
+func NewAssetSeed(name string) Asset {
+	a := NewAsset(name, name)
+	a.Source = SeedSource
+	a.Status = Pending
+	a.TTL = 0
 	return a
 }
 
