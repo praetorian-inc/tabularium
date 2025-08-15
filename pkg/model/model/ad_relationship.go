@@ -179,6 +179,7 @@ func (ar *ADRelationship) Label() string {
 
 func NewADRelationship(source, target GraphModel, label string) GraphRelationship {
 	return &ADRelationship{
+		RelationshipType: label,
 		BaseRelationship: NewBaseRelationship(source, target, label),
 	}
 }
