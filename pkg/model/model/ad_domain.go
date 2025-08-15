@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/praetorian-inc/tabularium/pkg/model/beta"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -23,7 +22,6 @@ var (
 
 type ADDomain struct {
 	BaseAsset
-	beta.Beta
 	Name string `neo4j:"name" json:"name" desc:"NetBIOS of the domain." example:"example.internal"`
 }
 
