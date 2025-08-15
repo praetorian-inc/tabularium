@@ -24,6 +24,8 @@ const (
 	DISPLAY_RESPONSE_FILE_PATH   = "file-path"
 	SCREENSHOT                   = "screenshot"
 	SC_RESOURCES                 = "resources"
+	SSO_IDENTIFIED               = "sso-identified"
+	OKTA_ID                      = "okta-id"
 )
 
 type WebpageOption func(*Webpage) error
