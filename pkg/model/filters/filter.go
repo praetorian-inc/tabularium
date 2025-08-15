@@ -91,4 +91,5 @@ const (
 	OperatorAnd                = "AND"
 	OperatorIn                 = "IN"
 	OperatorIsNotNull          = "IS NOT NULL"
+	OperatorIsNull             = "IS NULL"
 )
