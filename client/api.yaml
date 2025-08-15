@@ -126,6 +126,11 @@ components:
             service
           example: "true"
           type: boolean
+        largeArtifact:
+          description: If true, this capability generates large artifacts that can
+            be stored and reviewed later
+          example: "false"
+          type: boolean
         name:
           description: The name of the capability
           example: portscan
@@ -1110,6 +1115,10 @@ components:
           description: Unique key for the job.
           example: '#job#example.com#asset#portscan'
           type: string
+        largeArtifactFileName:
+          description: The name of the file that contains the large artifacts.
+          example: large_artifact.zip
+          type: string
         name:
           description: The IP address this job was executed from
           example: 1.2.3.4
@@ -1117,6 +1126,10 @@ components:
         parent:
           description: Optional parent target from which this job was spawned.
           type: object
+        s3DownloadURL:
+          description: The URL of the file that contains the large output.
+          example: https://s3.amazonaws.com/big_output.zip
+          type: string
         source:
           description: The source or capability that generated this job.
           example: portscan

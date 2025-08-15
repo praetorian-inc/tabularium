@@ -15,22 +15,24 @@ type Job struct {
 	Username string `dynamodbav:"username" json:"username" desc:"Username who initiated or owns the job." example:"user@example.com"`
 	Key      string `dynamodbav:"key" json:"key" desc:"Unique key for the job." example:"#job#example.com#asset#portscan"`
 	// Attributes
-	DNS          string            `dynamodbav:"dns" json:"dns" desc:"Primary DNS associated with the job's target." example:"example.com"`
-	Source       string            `dynamodbav:"source" json:"source" desc:"The source or capability that generated this job." example:"portscan"`
-	Comment      string            `dynamodbav:"comment" json:"comment,omitempty" desc:"Optional comment about the job." example:"Scanning standard web ports"`
-	Created      string            `dynamodbav:"created" json:"created" desc:"Timestamp when the job was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
-	Updated      string            `dynamodbav:"updated" json:"updated" desc:"Timestamp when the job was last updated (RFC3339)." example:"2023-10-27T10:05:00Z"`
-	Delayed      string            `dynamodbav:"delayed,omitempty" json:"delayed,omitempty" desc:"Timestamp that this job should be delayed until" example:"2023-10-27T10:00:00Z"`
-	Status       string            `dynamodbav:"status" json:"status" desc:"Current status of the job (e.g., JQ#portscan)." example:"JQ#portscan"`
-	TTL          int64             `dynamodbav:"ttl" json:"ttl" desc:"Time-to-live for the job record (Unix timestamp)." example:"1706353200"`
-	Name         string            `dynamodbav:"name,omitempty" json:"name,omitempty" desc:"The IP address this job was executed from" example:"1.2.3.4"`
-	Config       map[string]string `dynamodbav:"-" json:"config" desc:"Configuration parameters for the job capability." example:"{\"test\": \"cve-1111-2222\"}"`
-	Full         bool              `dynamodbav:"-" json:"full,omitempty" desc:"Indicates if this is a full scan job." example:"false"`
-	Capabilities []string          `dynamodbav:"-" json:"capabilities,omitempty" desc:"List of specific capabilities to run for this job." example:"[\"portscan\", \"nuclei\"]"`
-	Queue        string            `dynamodbav:"-" desc:"Target queue for the job." example:"standard"`
-	Target       TargetWrapper     `dynamodbav:"target" json:"target" desc:"The primary target of the job."`
-	Parent       TargetWrapper     `dynamodbav:"parent" json:"parent,omitempty" desc:"Optional parent target from which this job was spawned."`
-	RateLimit    RateLimit         `dynamodbav:"-" json:"-"`
+	DNS                   string            `dynamodbav:"dns" json:"dns" desc:"Primary DNS associated with the job's target." example:"example.com"`
+	Source                string            `dynamodbav:"source" json:"source" desc:"The source or capability that generated this job." example:"portscan"`
+	Comment               string            `dynamodbav:"comment" json:"comment,omitempty" desc:"Optional comment about the job." example:"Scanning standard web ports"`
+	Created               string            `dynamodbav:"created" json:"created" desc:"Timestamp when the job was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
+	Updated               string            `dynamodbav:"updated" json:"updated" desc:"Timestamp when the job was last updated (RFC3339)." example:"2023-10-27T10:05:00Z"`
+	Delayed               string            `dynamodbav:"delayed,omitempty" json:"delayed,omitempty" desc:"Timestamp that this job should be delayed until" example:"2023-10-27T10:00:00Z"`
+	Status                string            `dynamodbav:"status" json:"status" desc:"Current status of the job (e.g., JQ#portscan)." example:"JQ#portscan"`
+	TTL                   int64             `dynamodbav:"ttl" json:"ttl" desc:"Time-to-live for the job record (Unix timestamp)." example:"1706353200"`
+	Name                  string            `dynamodbav:"name,omitempty" json:"name,omitempty" desc:"The IP address this job was executed from" example:"1.2.3.4"`
+	Config                map[string]string `dynamodbav:"-" json:"config" desc:"Configuration parameters for the job capability." example:"{\"test\": \"cve-1111-2222\"}"`
+	LargeArtifactFileName string            `dynamodbav:"largeArtifactFileName" json:"largeArtifactFileName,omitempty" desc:"The name of the file that contains the large artifacts." example:"large_artifact.zip"`
+	S3DownloadURL         string            `dynamodbav:"s3DownloadURL" json:"s3DownloadURL,omitempty" desc:"The URL of the file that contains the large output." example:"https://s3.amazonaws.com/big_output.zip"`
+	Full                  bool              `dynamodbav:"-" json:"full,omitempty" desc:"Indicates if this is a full scan job." example:"false"`
+	Capabilities          []string          `dynamodbav:"-" json:"capabilities,omitempty" desc:"List of specific capabilities to run for this job." example:"[\"portscan\", \"nuclei\"]"`
+	Queue                 string            `dynamodbav:"-" desc:"Target queue for the job." example:"standard"`
+	Target                TargetWrapper     `dynamodbav:"target" json:"target" desc:"The primary target of the job."`
+	Parent                TargetWrapper     `dynamodbav:"parent" json:"parent,omitempty" desc:"Optional parent target from which this job was spawned."`
+	RateLimit             RateLimit         `dynamodbav:"-" json:"-"`
 	// internal
 	Async  bool                  `dynamodbav:"-" json:"-"`
 	stream chan []registry.Model `dynamodbav:"-" json:"-"`
