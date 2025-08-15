@@ -66,3 +66,130 @@ func TestBeta_MarshalDynamoDBAttributeValue(t *testing.T) {
 		assert.Equal(t, true, attribute.Value)
 	})
 }
+
+func TestBeta_UnmarshalJSON(t *testing.T) {
+	t.Run("simple unmarshal", func(t *testing.T) {
+		b := beta.Beta{}
+
+		data := []byte(`{}`)
+		err := json.Unmarshal(data, &b)
+		require.NoError(t, err)
+		assert.True(t, b.IsBeta())
+	})
+
+	t.Run("simple unmarshal should ignore true beta value", func(t *testing.T) {
+		b := beta.Beta{}
+
+		data := []byte(`{"beta":true}`)
+		err := json.Unmarshal(data, &b)
+		require.NoError(t, err)
+		assert.True(t, b.IsBeta())
+	})
+
+	t.Run("simple unmarshal should ignore false beta value", func(t *testing.T) {
+		b := beta.Beta{}
+
+		data := []byte(`{"beta":false}`)
+		err := json.Unmarshal(data, &b)
+		require.NoError(t, err)
+		assert.True(t, b.IsBeta())
+	})
+
+	t.Run("embedded unmarshal", func(t *testing.T) {
+		b := TestBetaType{}
+
+		data := []byte(`{"id":"test-id","name":"Test Name"}`)
+		err := json.Unmarshal(data, &b)
+		require.NoError(t, err)
+		assert.True(t, b.IsBeta())
+	})
+
+	t.Run("embedded unmarshal should ignore true beta value", func(t *testing.T) {
+		b := TestBetaType{}
+
+		data := []byte(`{"beta":true,"id":"test-id","name":"Test Name"}`)
+		err := json.Unmarshal(data, &b)
+		require.NoError(t, err)
+		assert.True(t, b.IsBeta())
+	})
+
+	t.Run("embedded unmarshal should ignore false beta value", func(t *testing.T) {
+		b := TestBetaType{}
+
+		data := []byte(`{"beta":false,"id":"test-id","name":"Test Name"}`)
+		err := json.Unmarshal(data, &b)
+		require.NoError(t, err)
+		assert.True(t, b.IsBeta())
+	})
+}
+
+func TestBeta_UnmarshalDynamoDBAttributeValue(t *testing.T) {
+	t.Run("simple unmarshal", func(t *testing.T) {
+		avs := map[string]types.AttributeValue{}
+
+		b := beta.Beta{}
+		err := attributevalue.UnmarshalMap(avs, &b)
+		require.NoError(t, err)
+		assert.True(t, b.IsBeta())
+	})
+
+	t.Run("simple unmarshal should ignore true beta value", func(t *testing.T) {
+		avs := map[string]types.AttributeValue{
+			"beta": &types.AttributeValueMemberBOOL{Value: true},
+		}
+
+		b := beta.Beta{}
+		err := attributevalue.UnmarshalMap(avs, &b)
+		require.NoError(t, err)
+		assert.True(t, b.IsBeta())
+	})
+
+	t.Run("simple unmarshal should ignore false beta value", func(t *testing.T) {
+		avs := map[string]types.AttributeValue{
+			"beta": &types.AttributeValueMemberBOOL{Value: false},
+		}
+
+		b := beta.Beta{}
+		err := attributevalue.UnmarshalMap(avs, &b)
+		require.NoError(t, err)
+		assert.True(t, b.IsBeta())
+	})
+
+	t.Run("embedded unmarshal", func(t *testing.T) {
+		avs := map[string]types.AttributeValue{
+			"id":   &types.AttributeValueMemberS{Value: "test-id"},
+			"name": &types.AttributeValueMemberS{Value: "Test Name"},
+		}
+
+		b := TestBetaType{}
+		err := attributevalue.UnmarshalMap(avs, &b)
+		require.NoError(t, err)
+		assert.True(t, b.IsBeta())
+	})
+
+	t.Run("embedded unmarshal should ignore true beta value", func(t *testing.T) {
+		avs := map[string]types.AttributeValue{
+			"beta": &types.AttributeValueMemberBOOL{Value: true},
+			"id":   &types.AttributeValueMemberS{Value: "test-id"},
+			"name": &types.AttributeValueMemberS{Value: "Test Name"},
+		}
+
+		b := TestBetaType{}
+		err := attributevalue.UnmarshalMap(avs, &b)
+		require.NoError(t, err)
+		assert.True(t, b.IsBeta())
+	})
+
+	t.Run("embedded unmarshal should ignore false beta value", func(t *testing.T) {
+		avs := map[string]types.AttributeValue{
+			"beta": &types.AttributeValueMemberBOOL{Value: false},
+			"id":   &types.AttributeValueMemberS{Value: "test-id"},
+			"name": &types.AttributeValueMemberS{Value: "Test Name"},
+		}
+
+		b := TestBetaType{}
+		err := attributevalue.UnmarshalMap(avs, &b)
+		require.NoError(t, err)
+		assert.True(t, b.IsBeta())
+	})
+}

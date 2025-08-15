@@ -19,7 +19,7 @@ func (b Beta) IsBeta() bool {
 
 // betaValue is the actual type that implements the marshaling logic.
 // when a Marshaler type is anonymously embedded, its marshaling logic
-// hijacks the parent's marshaling logic. This will erase all of the 
+// hijacks the parent's marshaling logic. This will erase all of the
 // parent's other fields. Therefore, we must embed the actual marshaling
 // logic one layer deeper than Beta.
 type betaValue struct{}
@@ -35,4 +35,16 @@ func (b betaValue) MarshalMap(out map[string]any) error {
 
 func (b betaValue) MarshalDynamoDBAttributeValue() (types.AttributeValue, error) {
 	return &types.AttributeValueMemberBOOL{Value: true}, nil
+}
+
+func (b *betaValue) UnmarshalJSON(_ []byte) error {
+	return nil
+}
+
+func (b *betaValue) UnmarshalMap(_ map[string]any) error {
+	return nil
+}
+
+func (b *betaValue) UnmarshalDynamoDBAttributeValue(_ types.AttributeValue) error {
+	return nil
 }
