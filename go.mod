@@ -1,6 +1,6 @@
 module github.com/praetorian-inc/tabularium
 
-go 1.23.4
+go 1.24.6
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.36.6
@@ -11,6 +11,7 @@ require (
 	github.com/knqyf263/go-cpe v0.0.0-20230627041855-cb0794d06872
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/net v0.42.0
+	golang.org/x/text v0.27.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
