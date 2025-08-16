@@ -29,6 +29,7 @@ const (
 	AegisConfigCredential CredentialType = "aegis-config"    // Aegis config credential
 
 	// API Keys
+	ApolloCredential               CredentialType = "apollo_api"            // Apollo.io API key
 	AxoniousCredential             CredentialType = "axonious"              // Axonious API key
 	BitbucketCredential            CredentialType = "bitbucket"             // Bitbucket API key
 	BuiltWithCredential            CredentialType = "builtwith"             // Built with credentials
