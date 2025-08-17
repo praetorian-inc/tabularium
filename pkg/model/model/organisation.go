@@ -26,7 +26,7 @@ func (o *Organisation) GetDescription() string {
 type Organisation struct {
 	registry.BaseModel
 	Username string `neo4j:"username" json:"username" desc:"Chariot username associated with the organization record." example:"user@example.com"`
-	Key      string `neo4j:"key" json:"key" desc:"Unique key identifying the organization." example:"#organisation#example.com#Example Corp"`
+	Key      string `neo4j:"key" json:"key" desc:"Unique key identifying the organization." example:"#organization#example.com#Example Corp"`
 
 	// Core Organization Information
 	Name        *string `neo4j:"name,omitempty" json:"name,omitempty" desc:"Organization name." example:"Example Corporation"`
