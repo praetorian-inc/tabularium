@@ -12,10 +12,10 @@ func init() {
 }
 
 var (
-	organisationKeyRegex = regexp.MustCompile(`^#organisation#[^#]+#[^#]+$`)
+	organizationKeyRegex = regexp.MustCompile(`^#organization#[^#]+#[^#]+$`)
 )
 
-const OrganisationLabel = "Organisation"
+const OrganizationLabel = "Organization"
 
 // GetDescription returns a description for the Organisation model.
 func (o *Organisation) GetDescription() string {
@@ -109,16 +109,16 @@ func (o *Organisation) GetKey() string {
 }
 
 func (o *Organisation) GetLabels() []string {
-	return []string{OrganisationLabel, TTLLabel}
+	return []string{OrganizationLabel, TTLLabel}
 }
 
 func (o *Organisation) Valid() bool {
-	return organisationKeyRegex.MatchString(o.Key) && o.Domain != nil
+	return organizationKeyRegex.MatchString(o.Key) && o.Domain != nil
 }
 
 // Helper function to generate organization key
 func (o *Organisation) GenerateKey(domain, name string) {
-	o.Key = fmt.Sprintf("#organisation#%s#%s", domain, name)
+	o.Key = fmt.Sprintf("#organization#%s#%s", domain, name)
 }
 
 // NewOrganisation creates a new organization record
