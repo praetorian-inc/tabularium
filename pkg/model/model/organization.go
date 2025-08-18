@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&Organisation{})
+	registry.Registry.MustRegisterModel(&Organization{})
 }
 
 var (
@@ -17,13 +17,13 @@ var (
 
 const OrganizationLabel = "Organization"
 
-// GetDescription returns a description for the Organisation model.
-func (o *Organisation) GetDescription() string {
+// GetDescription returns a description for the Organization model.
+func (o *Organization) GetDescription() string {
 	return "Represents organization data enriched from Apollo.io API, including company details, industry, revenue, employees, and contact information."
 }
 
-// Organisation represents enriched organization data from Apollo.io
-type Organisation struct {
+// Organization represents enriched organization data from Apollo.io
+type Organization struct {
 	registry.BaseModel
 	Username string `neo4j:"username" json:"username" desc:"Chariot username associated with the organization record." example:"user@example.com"`
 	Key      string `neo4j:"key" json:"key" desc:"Unique key identifying the organization." example:"#organization#example.com#Example Corp"`
@@ -104,26 +104,26 @@ type Organisation struct {
 }
 
 
-func (o *Organisation) GetKey() string {
+func (o *Organization) GetKey() string {
 	return o.Key
 }
 
-func (o *Organisation) GetLabels() []string {
+func (o *Organization) GetLabels() []string {
 	return []string{OrganizationLabel, TTLLabel}
 }
 
-func (o *Organisation) Valid() bool {
+func (o *Organization) Valid() bool {
 	return organizationKeyRegex.MatchString(o.Key) && o.Domain != nil
 }
 
 // Helper function to generate organization key
-func (o *Organisation) GenerateKey(domain, name string) {
+func (o *Organization) GenerateKey(domain, name string) {
 	o.Key = fmt.Sprintf("#organization#%s#%s", domain, name)
 }
 
-// NewOrganisation creates a new organization record
-func NewOrganisation(domain, name, username string) *Organisation {
-	org := &Organisation{
+// NewOrganization creates a new organization record
+func NewOrganization(domain, name, username string) *Organization {
+	org := &Organization{
 		Domain:   &domain,
 		Name:     &name,
 		Username: username,
