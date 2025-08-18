@@ -67,6 +67,10 @@ func (a *BaseAsset) SetSource(source string) {
 	a.Source = source
 }
 
+func (a *BaseAsset) SetOrigin(origin string) {
+	a.Origin = origin
+}
+
 func (a *BaseAsset) IsStatus(value string) bool {
 	return strings.HasPrefix(a.Status, value)
 }
@@ -89,6 +93,9 @@ func (a *BaseAsset) Merge(u Assetlike) {
 	}
 	if !a.IsStatus(Active) {
 		a.TTL = 0
+	}
+	if a.Origin == "" {
+		a.Origin = update.Origin
 	}
 }
 

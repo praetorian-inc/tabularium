@@ -7,4 +7,5 @@ type Seedable interface {
 	SeedModels() []Seedable
 	GetSource() string
 	SetSource(string)
+	SetOrigin(string)
 }
