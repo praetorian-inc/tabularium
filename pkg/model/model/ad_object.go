@@ -93,10 +93,9 @@ func (ad *ADObject) GetLabels() []string {
 func (ad *ADObject) Valid() bool {
 	hasObjectID := ad.ObjectID != ""
 	hasDomain := ad.Domain != ""
-	hasDistinguishedName := ad.DistinguishedName != ""
 	keyMatches := adObjectKeyPattern.MatchString(ad.Key)
 
-	return hasObjectID && hasDomain && hasDistinguishedName && keyMatches
+	return hasObjectID && hasDomain && keyMatches
 }
 
 func (ad *ADObject) Group() string {
