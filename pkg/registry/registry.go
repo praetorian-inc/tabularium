@@ -47,26 +47,32 @@ func NewTypeRegistry() *TypeRegistry {
 	}
 }
 
-// RegisterModel registers a model type with the registry.
-// It returns an error if the type is already registered or if it doesn't
-// implement the registry.Model interface.
-func (r *TypeRegistry) RegisterModel(model Model) error {
-	gob.Register(model)
-	tipe := reflect.TypeOf(model)
-	name := Name(model)
-	if _, ok := r.types[name]; ok {
-		return fmt.Errorf("type %s already registered", name)
-	}
-	r.types[name] = tipe
-	return nil
-}
-
 // MustRegisterModel registers a model, and panics on failure. Useful for registering models in init()
-func (r *TypeRegistry) MustRegisterModel(model Model) {
-	err := r.RegisterModel(model)
+func (r *TypeRegistry) MustRegisterModel(model Model, aliases ...string) {
+	err := r.RegisterModel(model, aliases...)
 	if err != nil {
 		panic(err)
 	}
+}
+
+// RegisterModel registers a model type with the registry.
+// It returns an error if the type is already registered or if it doesn't
+// implement the registry.Model interface.
+func (r *TypeRegistry) RegisterModel(model Model, aliases ...string) error {
+	gob.Register(model)
+	tipe := reflect.TypeOf(model)
+	name := Name(model)
+
+	if _, ok := r.types[name]; ok {
+		return fmt.Errorf("type %s already registered", name)
+	}
+
+	r.types[name] = tipe
+	for _, alias := range aliases {
+		r.types[strings.ToLower(alias)] = tipe
+	}
+
+	return nil
 }
 
 // GetType returns the registered type for a given name

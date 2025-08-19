@@ -42,6 +42,10 @@ func (a *BaseAsset) GetBase() *BaseAsset {
 	return a
 }
 
+func (a *BaseAsset) GetClass() string {
+	return a.Class
+}
+
 func (a *BaseAsset) SetStatus(status string) {
 	a.Status = status
 }

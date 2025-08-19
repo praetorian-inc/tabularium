@@ -28,8 +28,8 @@ func TestNewADObject(t *testing.T) {
 			domain:            "example.local",
 			objectID:          "S-1-5-21-123456789-123456789-123456789-1001",
 			distinguishedName: "CN=John Doe,CN=Users,DC=example,DC=local",
-			objectClass:       "user",
-			expectedKey:       "#adobject#example.local#S-1-5-21-123456789-123456789-123456789-1001",
+			objectClass:       "User",
+			expectedKey:       "#aduser#example.local#S-1-5-21-123456789-123456789-123456789-1001",
 			expectedClass:     "user",
 			expectedName:      "John Doe",
 		},
@@ -38,8 +38,8 @@ func TestNewADObject(t *testing.T) {
 			domain:            "corp.com",
 			objectID:          "S-1-5-21-123456789-123456789-123456789-1002",
 			distinguishedName: "CN=WORKSTATION01,CN=Computers,DC=corp,DC=com",
-			objectClass:       "computer",
-			expectedKey:       "#adobject#corp.com#S-1-5-21-123456789-123456789-123456789-1002",
+			objectClass:       "Computer",
+			expectedKey:       "#adcomputer#corp.com#S-1-5-21-123456789-123456789-123456789-1002",
 			expectedClass:     "computer",
 			expectedName:      "WORKSTATION01",
 		},
@@ -48,8 +48,8 @@ func TestNewADObject(t *testing.T) {
 			domain:            "test.domain",
 			objectID:          "S-1-5-21-123456789-123456789-123456789-1003",
 			distinguishedName: "CN=Domain Admins,CN=Groups,DC=test,DC=domain",
-			objectClass:       "group",
-			expectedKey:       "#adobject#test.domain#S-1-5-21-123456789-123456789-123456789-1003",
+			objectClass:       "Group",
+			expectedKey:       "#adgroup#test.domain#S-1-5-21-123456789-123456789-123456789-1003",
 			expectedClass:     "group",
 			expectedName:      "Domain Admins",
 		},
@@ -58,9 +58,9 @@ func TestNewADObject(t *testing.T) {
 			domain:            "example.local",
 			objectID:          "51FB8637-28BC-4816-9A51-984160B207FA",
 			distinguishedName: "OU=Sales,DC=example,DC=local",
-			objectClass:       "organizationalUnit",
-			expectedKey:       "#adobject#example.local#51FB8637-28BC-4816-9A51-984160B207FA",
-			expectedClass:     "organizationalunit",
+			objectClass:       "OU",
+			expectedKey:       "#adou#example.local#51FB8637-28BC-4816-9A51-984160B207FA",
+			expectedClass:     "ou",
 			expectedName:      "",
 		},
 		{
@@ -68,8 +68,8 @@ func TestNewADObject(t *testing.T) {
 			domain:            "example.local",
 			objectID:          "S-1-5-21-123456789-123456789-123456789-1005",
 			distinguishedName: "DC=example,DC=local",
-			objectClass:       "domain",
-			expectedKey:       "#adobject#example.local#S-1-5-21-123456789-123456789-123456789-1005",
+			objectClass:       "Domain",
+			expectedKey:       "#addomain#example.local#S-1-5-21-123456789-123456789-123456789-1005",
 			expectedClass:     "domain",
 			expectedName:      "",
 		},
@@ -89,6 +89,42 @@ func TestNewADObject(t *testing.T) {
 			assert.True(t, ad.Valid(), "ADObject should be valid")
 			assert.NotEmpty(t, ad.Created, "Created timestamp should be set")
 			assert.NotEmpty(t, ad.Visited, "Visited timestamp should be set")
+		})
+	}
+}
+
+func TestNewADObject_FromAlias(t *testing.T) {
+	tests := []struct {
+		name  string
+		alias string
+	}{
+		{
+			name:  "adobject",
+			alias: "adobject",
+		},
+		{
+			name:  "aduser",
+			alias: "aduser",
+		},
+		{
+			name:  "adcomputer",
+			alias: "adcomputer",
+		},
+		{
+			name:  "adgroup",
+			alias: "adgroup",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ad, ok := registry.Registry.MakeType(tt.alias)
+			require.True(t, ok)
+			assert.NotNil(t, ad)
+
+			adObject, ok := ad.(*ADObject)
+			require.True(t, ok)
+			assert.Contains(t, adObject.GetLabels(), ADObjectLabel)
 		})
 	}
 }
@@ -137,7 +173,7 @@ func TestADObject_GetHooks(t *testing.T) {
 			domain:        "TEST.LOCAL",
 			objectID:      "S-1-5-21-123456789-123456789-123456789-1001",
 			label:         "ADUser",
-			expectedKey:   "#adobject#test.local#S-1-5-21-123456789-123456789-123456789-1001",
+			expectedKey:   "#aduser#test.local#S-1-5-21-123456789-123456789-123456789-1001",
 			expectedClass: "user",
 		},
 		{
@@ -146,7 +182,7 @@ func TestADObject_GetHooks(t *testing.T) {
 			objectID:      "",
 			label:         "",
 			expectedKey:   "#adobject##",
-			expectedClass: "",
+			expectedClass: "object",
 		},
 	}
 

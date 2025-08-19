@@ -9,10 +9,6 @@ import (
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
-func init() {
-	registry.Registry.MustRegisterModel(&ADObject{})
-}
-
 // AD Object Type Label constants
 const (
 	ADObjectLabel         = "ADObject"
@@ -33,31 +29,46 @@ const (
 	ADIssuancePolicyLabel = "ADIssuancePolicy"
 )
 
+var ADLabels = map[string]string{
+	"adobject":         ADObjectLabel,
+	"aduser":           ADUserLabel,
+	"adcomputer":       ADComputerLabel,
+	"adgroup":          ADGroupLabel,
+	"adgpo":            ADGPOLabel,
+	"adou":             ADOULabel,
+	"adcontainer":      ADContainerLabel,
+	"addomain":         ADDomainLabel,
+	"adlocalgroup":     ADLocalGroupLabel,
+	"adlocaluser":      ADLocalUserLabel,
+	"adaiaca":          ADAIACALabel,
+	"adrootca":         ADRootCALabel,
+	"adenterpriseca":   ADEnterpriseCALabel,
+	"adntauthstore":    ADNTAuthStoreLabel,
+	"adcerttemplate":   ADCertTemplateLabel,
+	"adissuancepolicy": ADIssuancePolicyLabel,
+}
+
 func GetADLabel(label string) string {
-	labels := map[string]string{
-		"adobject":         ADObjectLabel,
-		"aduser":           ADUserLabel,
-		"adcomputer":       ADComputerLabel,
-		"adgroup":          ADGroupLabel,
-		"adgpo":            ADGPOLabel,
-		"adou":             ADOULabel,
-		"adcontainer":      ADContainerLabel,
-		"addomain":         ADDomainLabel,
-		"adlocalgroup":     ADLocalGroupLabel,
-		"adlocaluser":      ADLocalUserLabel,
-		"adaiaca":          ADAIACALabel,
-		"adrootca":         ADRootCALabel,
-		"adenterpriseca":   ADEnterpriseCALabel,
-		"adntauthstore":    ADNTAuthStoreLabel,
-		"adcerttemplate":   ADCertTemplateLabel,
-		"adissuancepolicy": ADIssuancePolicyLabel,
+	label = strings.ToLower(label)
+	check1 := ADLabels[label]
+	if check1 != "" {
+		return check1
 	}
 
-	return labels[strings.ToLower(label)]
+	label = "ad" + label
+	return ADLabels[label]
+}
+
+func init() {
+	labels := []string{}
+	for _, label := range ADLabels {
+		labels = append(labels, label)
+	}
+	registry.Registry.MustRegisterModel(&ADObject{}, labels...)
 }
 
 var (
-	adObjectKeyPattern = regexp.MustCompile(`(?i)^#adobject#[^#]+#[A-FS0-9-]+$`)
+	adObjectKeyPattern = regexp.MustCompile(`(?i)^#ad[a-z]+#[^#]+#[A-FS0-9-]+$`)
 )
 
 type ADObject struct {
@@ -71,8 +82,8 @@ type ADObject struct {
 
 func (ad *ADObject) GetLabels() []string {
 	labels := []string{ADObjectLabel, TTLLabel}
-	if ad.ObjectClass != "" {
-		labels = append(labels, ad.ObjectClass)
+	if ad.Label != "" {
+		labels = append(labels, ad.Label)
 	}
 	return labels
 }
@@ -112,7 +123,7 @@ func (ad *ADObject) Visit(o Assetlike) {
 
 // IsClass checks if the AD object is of the specified object class
 func (ad *ADObject) IsClass(objectClass string) bool {
-	return strings.EqualFold(ad.ObjectClass, objectClass)
+	return strings.EqualFold(ad.ObjectClass, objectClass) || strings.EqualFold("adobject", objectClass)
 }
 
 // IsInDomain checks if the AD object belongs to the specified domain
@@ -263,10 +274,15 @@ func (ad *ADObject) GetHooks() []registry.Hook {
 		useGroupAndIdentifier(ad, &ad.Domain, &ad.ObjectID),
 		{
 			Call: func() error {
+				ad.Label = GetADLabel(ad.Label)
+				if ad.Label == "" {
+					ad.Label = ADObjectLabel
+				}
+
 				ad.Domain = strings.ToLower(ad.Domain)
 				ad.ObjectID = strings.ToUpper(ad.ObjectID)
 
-				ad.Key = fmt.Sprintf("#adobject#%s#%s", ad.Domain, ad.ObjectID)
+				ad.Key = fmt.Sprintf("#%s#%s#%s", strings.ToLower(ad.Label), ad.Domain, ad.ObjectID)
 
 				ad.ObjectClass = strings.TrimPrefix(ad.Label, "AD")
 				ad.Class = strings.ToLower(ad.ObjectClass)
