@@ -64,6 +64,7 @@ func init() {
 	for _, label := range ADLabels {
 		labels = append(labels, label)
 	}
+
 	registry.Registry.MustRegisterModel(&ADObject{}, labels...)
 }
 
@@ -73,6 +74,7 @@ var (
 
 type ADObject struct {
 	BaseAsset
+	registry.ModelAlias
 	Label    string `neo4j:"label" json:"label" desc:"Label of the object." example:"user"`
 	Domain   string `neo4j:"domain" json:"domain" desc:"AD domain this object belongs to." example:"example.local"`
 	ObjectID string `neo4j:"objectid" json:"objectid" desc:"Object identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
@@ -274,11 +276,7 @@ func (ad *ADObject) GetHooks() []registry.Hook {
 		useGroupAndIdentifier(ad, &ad.Domain, &ad.ObjectID),
 		{
 			Call: func() error {
-				ad.Label = GetADLabel(ad.Label)
-				if ad.Label == "" {
-					ad.Label = ADObjectLabel
-				}
-
+				ad.Label = ad.getADLabel()
 				ad.Domain = strings.ToLower(ad.Domain)
 				ad.ObjectID = strings.ToUpper(ad.ObjectID)
 
@@ -298,6 +296,20 @@ func (ad *ADObject) GetHooks() []registry.Hook {
 		},
 		setGroupAndIdentifier(ad, &ad.Domain, &ad.ObjectID),
 	}
+}
+
+func (ad *ADObject) getADLabel() string {
+	label := GetADLabel(ad.Label)
+	if label != "" {
+		return label
+	}
+
+	label = GetADLabel(ad.Alias)
+	if label != "" {
+		return label
+	}
+
+	return ADObjectLabel
 }
 
 // NewADObject creates a new ADObject with the specified domain, distinguished name, and object class
@@ -320,6 +332,11 @@ func NewADObject(domain, objectID, distinguishedName, objectClass string) ADObje
 // NewADUser creates a new AD User object
 func NewADUser(domain, objectID, distinguishedName string) ADObject {
 	return NewADObject(domain, objectID, distinguishedName, ADUserLabel)
+}
+
+// NewADDomain creates a new AD Domain object
+func NewADDomain(domain, objectID, distinguishedName string) ADObject {
+	return NewADObject(domain, objectID, distinguishedName, ADDomainLabel)
 }
 
 // NewADComputer creates a new AD Computer object

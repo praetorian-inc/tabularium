@@ -88,7 +88,13 @@ func (r *TypeRegistry) MakeType(name string) (Model, bool) {
 	if !ok {
 		return nil, false
 	}
-	return reflect.New(typ.Elem()).Interface().(Model), true
+
+	model := reflect.New(typ.Elem()).Interface().(Model)
+	if alias, ok := model.(Alias); ok {
+		alias.SetAlias(name)
+	}
+
+	return model, true
 }
 
 // GetAllTypes returns all registered types

@@ -125,6 +125,7 @@ func TestNewADObject_FromAlias(t *testing.T) {
 			adObject, ok := ad.(*ADObject)
 			require.True(t, ok)
 			assert.Contains(t, adObject.GetLabels(), ADObjectLabel)
+			assert.Equal(t, tt.alias, adObject.Alias)
 		})
 	}
 }
