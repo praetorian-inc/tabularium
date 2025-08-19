@@ -73,7 +73,7 @@ func (a *BaseAsset) Merge(u Assetlike) {
 	if !a.IsStatus(Active) {
 		a.TTL = 0
 	}
-	a.Metadata.Visit(update.Metadata)
+	a.Metadata.Merge(update.Metadata)
 }
 
 func (a *BaseAsset) Visit(o Assetlike) {
