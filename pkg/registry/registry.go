@@ -37,13 +37,15 @@ func Name(model Model) string {
 
 // TypeRegistry holds information about all registered types
 type TypeRegistry struct {
-	types map[string]reflect.Type
+	types   map[string]reflect.Type
+	aliases map[string]string
 }
 
 // NewTypeRegistry creates a new type registry
 func NewTypeRegistry() *TypeRegistry {
 	return &TypeRegistry{
-		types: make(map[string]reflect.Type),
+		types:   make(map[string]reflect.Type),
+		aliases: make(map[string]string),
 	}
 }
 
@@ -70,9 +72,20 @@ func (r *TypeRegistry) RegisterModel(model Model, aliases ...string) error {
 	r.types[name] = tipe
 	for _, alias := range aliases {
 		r.types[strings.ToLower(alias)] = tipe
+		r.aliases[strings.ToLower(alias)] = name
 	}
 
 	return nil
+}
+
+func (r *TypeRegistry) GetAliases(name string) []string {
+	aliases := []string{name}
+	for alias, n := range r.aliases {
+		if n == name {
+			aliases = append(aliases, alias)
+		}
+	}
+	return aliases
 }
 
 // GetType returns the registered type for a given name
