@@ -30,7 +30,7 @@ const (
 
 	// API Keys
 	ApolloCredential               CredentialType = "apollo_api"            // Apollo.io API key
-	MailgunCredential              CredentialType = "mailgun"               // Mailgun API key
+	MailgunCredential              CredentialType = "MailGunPhishingGithub"  // Mailgun API key for GitHub phishing
 	AxoniousCredential             CredentialType = "axonious"              // Axonious API key
 	BitbucketCredential            CredentialType = "bitbucket"             // Bitbucket API key
 	BuiltWithCredential            CredentialType = "builtwith"             // Built with credentials
