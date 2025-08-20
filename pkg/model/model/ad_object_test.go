@@ -18,7 +18,7 @@ func TestNewADObject(t *testing.T) {
 		domain            string
 		objectID          string
 		distinguishedName string
-		objectClass       string
+		class             string
 		expectedKey       string
 		expectedClass     string
 		expectedName      string
@@ -28,7 +28,7 @@ func TestNewADObject(t *testing.T) {
 			domain:            "example.local",
 			objectID:          "S-1-5-21-123456789-123456789-123456789-1001",
 			distinguishedName: "CN=John Doe,CN=Users,DC=example,DC=local",
-			objectClass:       "User",
+			class:             "User",
 			expectedKey:       "#aduser#example.local#S-1-5-21-123456789-123456789-123456789-1001",
 			expectedClass:     "user",
 			expectedName:      "John Doe",
@@ -38,7 +38,7 @@ func TestNewADObject(t *testing.T) {
 			domain:            "corp.com",
 			objectID:          "S-1-5-21-123456789-123456789-123456789-1002",
 			distinguishedName: "CN=WORKSTATION01,CN=Computers,DC=corp,DC=com",
-			objectClass:       "Computer",
+			class:             "Computer",
 			expectedKey:       "#adcomputer#corp.com#S-1-5-21-123456789-123456789-123456789-1002",
 			expectedClass:     "computer",
 			expectedName:      "WORKSTATION01",
@@ -48,7 +48,7 @@ func TestNewADObject(t *testing.T) {
 			domain:            "test.domain",
 			objectID:          "S-1-5-21-123456789-123456789-123456789-1003",
 			distinguishedName: "CN=Domain Admins,CN=Groups,DC=test,DC=domain",
-			objectClass:       "Group",
+			class:             "Group",
 			expectedKey:       "#adgroup#test.domain#S-1-5-21-123456789-123456789-123456789-1003",
 			expectedClass:     "group",
 			expectedName:      "Domain Admins",
@@ -58,7 +58,7 @@ func TestNewADObject(t *testing.T) {
 			domain:            "example.local",
 			objectID:          "51FB8637-28BC-4816-9A51-984160B207FA",
 			distinguishedName: "OU=Sales,DC=example,DC=local",
-			objectClass:       "OU",
+			class:             "OU",
 			expectedKey:       "#adou#example.local#51FB8637-28BC-4816-9A51-984160B207FA",
 			expectedClass:     "ou",
 			expectedName:      "",
@@ -68,7 +68,7 @@ func TestNewADObject(t *testing.T) {
 			domain:            "example.local",
 			objectID:          "S-1-5-21-123456789-123456789-123456789-1005",
 			distinguishedName: "DC=example,DC=local",
-			objectClass:       "Domain",
+			class:             "Domain",
 			expectedKey:       "#addomain#example.local#S-1-5-21-123456789-123456789-123456789-1005",
 			expectedClass:     "domain",
 			expectedName:      "",
@@ -77,12 +77,12 @@ func TestNewADObject(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ad := NewADObject(tt.domain, tt.objectID, tt.distinguishedName, tt.objectClass)
+			ad := NewADObject(tt.domain, tt.objectID, tt.distinguishedName, tt.class)
 
 			assert.Equal(t, tt.domain, ad.Domain, "Domain should match")
 			assert.Equal(t, tt.objectID, ad.ObjectID, "ObjectID should match")
 			assert.Equal(t, tt.distinguishedName, ad.DistinguishedName, "DistinguishedName should match")
-			assert.Equal(t, tt.objectClass, ad.ObjectClass, "ObjectClass should match")
+			assert.Equal(t, tt.class, ad.Class, "Class should match")
 			assert.Equal(t, tt.expectedKey, ad.Key, "Key should be generated correctly")
 			assert.Equal(t, tt.expectedClass, ad.Class, "Class should be set correctly")
 			assert.Equal(t, tt.expectedName, ad.Name, "Name should be extracted from DN")
@@ -215,7 +215,6 @@ func TestADObject_Visit(t *testing.T) {
 				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
 				ADProperties: ADProperties{
 					DistinguishedName: "CN=User1,DC=example,DC=local",
-					ObjectClass:       "user",
 					Name:              "User1",
 				},
 			},
@@ -233,7 +232,6 @@ func TestADObject_Visit(t *testing.T) {
 				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
 				ADProperties: ADProperties{
 					DistinguishedName: "CN=User1,DC=example,DC=local",
-					ObjectClass:       "user",
 					Name:              "User1",
 					SAMAccountName:    "user1",
 					DisplayName:       "User One",
