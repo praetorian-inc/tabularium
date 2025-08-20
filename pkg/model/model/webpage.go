@@ -228,6 +228,7 @@ func (w *Webpage) Defaulted() {
 	w.Created = Now()
 	w.Visited = Now()
 	w.TTL = Future(7 * 24)
+	w.Metadata = map[string]any{}
 }
 
 func (w *Webpage) GetHooks() []registry.Hook {
