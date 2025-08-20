@@ -32,6 +32,11 @@ type WebpageOption func(*Webpage) error
 
 type WebpageForGob Webpage
 
+// SSOIdentification represents SSO provider information
+type SSOIdentification struct {
+	LastSeen string `json:"lastSeen" desc:"Timestamp when the SSO provider was last seen (RFC3339)." example:"2023-10-27T11:00:00Z"`
+}
+
 type Webpage struct {
 	registry.BaseModel
 	Username string   `neo4j:"username" json:"username" desc:"The username associated with this webpage, if authenticated." example:"user@example.com"`
@@ -44,10 +49,11 @@ type Webpage struct {
 	Private  bool     `neo4j:"private" json:"private" desc:"Whether the webpage is on a public web server." example:"false"`
 	History
 	// Neo4j fields
-	URL             string         `neo4j:"url" json:"url" desc:"The basic URL of the webpage." example:"https://example.com/path"`
-	State           string         `neo4j:"state" json:"state" desc:"Current analysis state of the webpage (e.g., Unanalyzed, Interesting, Uninteresting)." example:"Unanalyzed"`
-	Metadata        map[string]any `neo4j:"metadata" json:"metadata" dynamodbav:"metadata" desc:"Additional metadata associated with the webpage." example:"{\"title\": \"Example Domain\"}"`
-	DetailsFilepath string         `neo4j:"details_filepath" json:"details_filepath" dynamodbav:"details_filepath" desc:"The path to the details file for the webpage." example:"webpage/1234567890/details-1234567890.json"`
+	URL             string                       `neo4j:"url" json:"url" desc:"The basic URL of the webpage." example:"https://example.com/path"`
+	State           string                       `neo4j:"state" json:"state" desc:"Current analysis state of the webpage (e.g., Unanalyzed, Interesting, Uninteresting)." example:"Unanalyzed"`
+	Metadata        map[string]any               `neo4j:"metadata" json:"metadata" dynamodbav:"metadata" desc:"Additional metadata associated with the webpage." example:"{\"title\": \"Example Domain\"}"`
+	SSOIdentified   map[string]SSOIdentification `neo4j:"sso_identified" json:"sso_identified" desc:"SSO providers that have identified this webpage with their last seen timestamps." example:"{\"okta\": {\"lastSeen\": \"2023-10-27T11:00:00Z\"}}"`
+	DetailsFilepath string                       `neo4j:"details_filepath" json:"details_filepath" dynamodbav:"details_filepath" desc:"The path to the details file for the webpage." example:"webpage/1234567890/details-1234567890.json"`
 	// S3 fields
 	WebpageDetails
 	// Not Saved but useful for internal processing
@@ -186,6 +192,7 @@ func (w *Webpage) Merge(other Webpage) {
 			w.State = other.State
 		}
 	}
+	w.MergeSSOIdentified(other)
 	w.MergeMetadata(other)
 	w.MergeSource(other)
 	w.MergeRequests(other.Requests...)
@@ -222,7 +229,7 @@ func (w *Webpage) Defaulted() {
 	w.Created = Now()
 	w.Visited = Now()
 	w.TTL = Future(7 * 24)
-	w.Metadata = map[string]any{}
+	w.SSOIdentified = map[string]SSOIdentification{}
 }
 
 func (w *Webpage) GetHooks() []registry.Hook {

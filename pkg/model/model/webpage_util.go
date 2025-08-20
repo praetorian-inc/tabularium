@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"maps"
 	"net/http"
 	"net/url"
 	"slices"
@@ -42,6 +43,14 @@ func (w *Webpage) PopulateResponse(request *WebpageRequest) error {
 	}
 	request.Response = &resp
 	return nil
+}
+
+func (w *Webpage) MergeSSOIdentified(other Webpage) {
+	if w.SSOIdentified == nil {
+		w.SSOIdentified = make(map[string]SSOIdentification)
+	}
+
+	maps.Copy(w.SSOIdentified, other.SSOIdentified)
 }
 
 func (w *Webpage) MergeMetadata(other Webpage) {
