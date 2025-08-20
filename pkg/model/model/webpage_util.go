@@ -47,7 +47,7 @@ func (w *Webpage) PopulateResponse(request *WebpageRequest) error {
 
 func (w *Webpage) MergeSSOIdentified(other Webpage) {
 	if w.SSOIdentified == nil {
-		w.SSOIdentified = make(map[string]SSOIdentification)
+		w.SSOIdentified = make(map[string]SSOWebpage)
 	}
 
 	maps.Copy(w.SSOIdentified, other.SSOIdentified)
