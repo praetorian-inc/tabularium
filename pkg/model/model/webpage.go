@@ -26,6 +26,10 @@ const (
 	SC_RESOURCES                 = "resources"
 )
 
+const (
+	SSO_PROVIDER_OKTA = "okta"
+)
+
 type WebpageOption func(*Webpage) error
 
 type WebpageForGob Webpage
@@ -286,4 +290,11 @@ func NewWebpage(url url.URL, parent GraphModel, options ...WebpageOption) Webpag
 
 	registry.CallHooks(&w)
 	return w
+}
+
+func (w *Webpage) AddSSOProvider(provider string, ssoData SSOWebpage) {
+	if w.SSOIdentified == nil {
+		w.SSOIdentified = make(map[string]SSOWebpage)
+	}
+	w.SSOIdentified[provider] = ssoData
 }

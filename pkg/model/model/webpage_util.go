@@ -57,10 +57,6 @@ func (w *Webpage) MergeSSOIdentified(other Webpage) {
 }
 
 func (w *Webpage) cleanupExpiredSSO() {
-	if len(w.SSOIdentified) == 0 {
-		return
-	}
-
 	now := time.Now()
 	expiryTime := now.Add(-48 * time.Hour)
 
