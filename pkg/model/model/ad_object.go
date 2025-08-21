@@ -478,15 +478,15 @@ type ADProperties struct {
 	RestrictOutboundNTLM                    bool     `neo4j:"restrictoutboundntlm,omitempty" json:"restrictoutboundntlm,omitempty" desc:"Outbound NTLM authentication is restricted" example:"false"`
 	GMSA                                    bool     `neo4j:"gmsa,omitempty" json:"gmsa,omitempty" desc:"Group Managed Service Account" example:"true"`
 	MSA                                     bool     `neo4j:"msa,omitempty" json:"msa,omitempty" desc:"Managed Service Account" example:"false"`
-	DoesAnyAceGrantOwnerRights              string   `neo4j:"doesanyacegrantownerrights,omitempty" json:"doesanyacegrantownerrights,omitempty" desc:"Whether any ACE grants owner rights" example:"true"`
-	DoesAnyInheritedAceGrantOwnerRights     string   `neo4j:"doesanyinheritedacegrantownerrights,omitempty" json:"doesanyinheritedacegrantownerrights,omitempty" desc:"Whether any inherited ACE grants owner rights" example:"false"`
+	DoesAnyAceGrantOwnerRights              bool     `neo4j:"doesanyacegrantownerrights,omitempty" json:"doesanyacegrantownerrights,omitempty" desc:"Whether any ACE grants owner rights" example:"true"`
+	DoesAnyInheritedAceGrantOwnerRights     bool     `neo4j:"doesanyinheritedacegrantownerrights,omitempty" json:"doesanyinheritedacegrantownerrights,omitempty" desc:"Whether any inherited ACE grants owner rights" example:"false"`
 	ADCSWebEnrollmentHTTP                   string   `neo4j:"adcswebenrollmenthttp,omitempty" json:"adcswebenrollmenthttp,omitempty" desc:"ADCS web enrollment HTTP endpoint availability" example:"http://ca.contoso.local/certsrv"`
 	ADCSWebEnrollmentHTTPS                  string   `neo4j:"adcswebenrollmenthttps,omitempty" json:"adcswebenrollmenthttps,omitempty" desc:"ADCS web enrollment HTTPS endpoint availability" example:"https://ca.contoso.local/certsrv"`
 	ADCSWebEnrollmentHTTPSEPA               string   `neo4j:"adcswebenrollmenthttpsepa,omitempty" json:"adcswebenrollmenthttpsepa,omitempty" desc:"ADCS web enrollment HTTPS with Extended Protection" example:"https://ca.contoso.local/certsrv"`
-	LDAPSigning                             string   `neo4j:"ldapsigning,omitempty" json:"ldapsigning,omitempty" desc:"LDAP signing requirement" example:"Required"`
-	LDAPAvailable                           string   `neo4j:"ldapavailable,omitempty" json:"ldapavailable,omitempty" desc:"Whether LDAP service is available" example:"true"`
-	LDAPSAvailable                          string   `neo4j:"ldapsavailable,omitempty" json:"ldapsavailable,omitempty" desc:"Whether LDAPS (secure LDAP) is available" example:"true"`
-	LDAPSEPA                                string   `neo4j:"ldapsepa,omitempty" json:"ldapsepa,omitempty" desc:"LDAPS with Extended Protection for Authentication" example:"Enabled"`
+	LDAPSigning                             bool     `neo4j:"ldapsigning,omitempty" json:"ldapsigning,omitempty" desc:"LDAP signing requirement" example:"Required"`
+	LDAPAvailable                           bool     `neo4j:"ldapavailable,omitempty" json:"ldapavailable,omitempty" desc:"Whether LDAP service is available" example:"true"`
+	LDAPSAvailable                          bool     `neo4j:"ldapsavailable,omitempty" json:"ldapsavailable,omitempty" desc:"Whether LDAPS (secure LDAP) is available" example:"true"`
+	LDAPSEPA                                bool     `neo4j:"ldapsepa,omitempty" json:"ldapsepa,omitempty" desc:"LDAPS with Extended Protection for Authentication" example:"Enabled"`
 	IsDC                                    bool     `neo4j:"isdc,omitempty" json:"isdc,omitempty" desc:"Whether computer is a Domain Controller" example:"true"`
 	IsReadOnlyDC                            bool     `neo4j:"isreadonlydc,omitempty" json:"isreadonlydc,omitempty" desc:"Whether computer is a Read-Only Domain Controller" example:"false"`
 	HTTPEnrollmentEndpoints                 string   `neo4j:"httpenrollmentendpoints,omitempty" json:"httpenrollmentendpoints,omitempty" desc:"List of HTTP certificate enrollment endpoints" example:"[\"http://ca1.contoso.local/certsrv\", \"http://ca2.contoso.local/certsrv\"]"`

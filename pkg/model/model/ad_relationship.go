@@ -118,7 +118,6 @@ const (
 
 	// ADCS Attack Paths
 	ADADCSESC1Label   = "ADCSESC1"
-	ADADCSESC2Label   = "ADCSESC2"
 	ADADCSESC3Label   = "ADCSESC3"
 	ADADCSESC4Label   = "ADCSESC4"
 	ADADCSESC6aLabel  = "ADCSESC6a"
@@ -159,20 +158,15 @@ const (
 	ADHasTrustKeysLabel = "HasTrustKeys"
 )
 
-// ADRelationship represents an Active Directory relationship between two AD objects
 type ADRelationship struct {
 	*BaseRelationship
-
-	// RelationshipType determines the Neo4j relationship label
 	RelationshipType string `neo4j:"-" json:"relationshipType"`
 }
 
-// GetDescription returns a description for the ADRelationship model.
 func (ar *ADRelationship) GetDescription() string {
 	return "Represents an Active Directory relationship between two AD objects, supporting all BloodHound relationship types."
 }
 
-// Label returns the Neo4j relationship label based on the relationship type
 func (ar *ADRelationship) Label() string {
 	return ar.RelationshipType
 }
