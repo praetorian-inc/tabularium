@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
@@ -17,12 +18,10 @@ var (
 
 const PersonLabel = "Person"
 
-// GetDescription returns a description for the Person model.
 func (p *Person) GetDescription() string {
 	return "Represents person data enriched from Apollo.io People Enrichment API, including contact details, employment history, and social profiles."
 }
 
-// Person represents enriched person data from Apollo.io People Enrichment API
 type Person struct {
 	registry.BaseModel
 	Username string `neo4j:"username" json:"username" desc:"Chariot username associated with the person record." example:"user@example.com"`
@@ -77,14 +76,14 @@ type Person struct {
 	Departments      *[]string `neo4j:"departments,omitempty" json:"departments,omitempty" desc:"List of departments person works in." example:"[\"Engineering\", \"Product\"]"`
 	Functions        *[]string `neo4j:"functions,omitempty" json:"functions,omitempty" desc:"List of job functions." example:"[\"Software Development\", \"Technical Leadership\"]"`
 	
-	// Timestamps
+	// Timestamps and Status
 	TTL     int64  `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the person record (Unix timestamp)." example:"1706353200"`
 	Created string `neo4j:"created" json:"created" desc:"Timestamp when the person record was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
 	Visited string `neo4j:"visited" json:"visited" desc:"Timestamp when the person was last visited or updated (RFC3339)." example:"2023-10-27T11:00:00Z"`
+	Status  string `neo4j:"status" json:"status" desc:"Operational status of the person record." example:"A"`
 	History
 }
 
-// EmploymentRecord represents a single employment history entry
 type EmploymentRecord struct {
 	ID               *string `json:"_id,omitempty" desc:"Employment record ID."`
 	OrganizationID   *string `json:"organization_id,omitempty" desc:"Apollo.io organization ID."`
@@ -121,12 +120,12 @@ func (p *Person) GenerateKey(email, name string) {
 	}
 }
 
-// NewPerson creates a new person record
 func NewPerson(email, name, username string) *Person {
 	person := &Person{
 		Email:    &email,
 		Name:     &name,
 		Username: username,
+		Status:   "A", // Default to Active status
 	}
 	person.GenerateKey(email, name)
 	person.Created = Now()
@@ -134,14 +133,50 @@ func NewPerson(email, name, username string) *Person {
 	return person
 }
 
-// NewPersonFromName creates a new person record with just a name (no email)
 func NewPersonFromName(name, username string) *Person {
 	person := &Person{
 		Name:     &name,
 		Username: username,
+		Status:   "A", // Default to Active status
 	}
 	person.GenerateKey("", name)
 	person.Created = Now()
 	person.Visited = Now()
 	return person
+}
+
+// Target interface methods
+func (p *Person) GetStatus() string {
+	return p.Status
+}
+
+func (p *Person) WithStatus(status string) Target {
+	p.Status = status
+	return p
+}
+
+func (p *Person) Group() string {
+	if p.Email != nil && *p.Email != "" {
+		return *p.Email
+	}
+	if p.Name != nil {
+		return *p.Name
+	}
+	return p.Username
+}
+
+func (p *Person) Identifier() string {
+	return p.Key
+}
+
+func (p *Person) IsClass(value string) bool {
+	return value == "person"
+}
+
+func (p *Person) IsPrivate() bool {
+	return false
+}
+
+func (p *Person) IsStatus(value string) bool {
+	return strings.HasPrefix(p.Status, value)
 }

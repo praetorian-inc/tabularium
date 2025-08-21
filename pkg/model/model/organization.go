@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
@@ -17,7 +18,6 @@ var (
 
 const OrganizationLabel = "Organization"
 
-// GetDescription returns a description for the Organization model.
 func (o *Organization) GetDescription() string {
 	return "Represents organization data enriched from Apollo.io API, including company details, industry, revenue, employees, and contact information."
 }
@@ -96,10 +96,11 @@ type Organization struct {
 	AdditionalAddresses *[]string `neo4j:"additional_addresses,omitempty" json:"additional_addresses,omitempty" desc:"List of additional office addresses." example:"[\"456 Oak St, New York, NY\", \"789 Pine Ave, Austin, TX\"]"`
 	AddressTypes *[]string `neo4j:"address_types,omitempty" json:"address_types,omitempty" desc:"List of address types." example:"[\"headquarters\", \"office\", \"branch\"]"`
 
-	// Timestamps
+	// Timestamps and Status
 	TTL     int64  `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the organization record (Unix timestamp)." example:"1706353200"`
 	Created string `neo4j:"created" json:"created" desc:"Timestamp when the organization record was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
 	Visited string `neo4j:"visited" json:"visited" desc:"Timestamp when the organization was last visited or updated (RFC3339)." example:"2023-10-27T11:00:00Z"`
+	Status  string `neo4j:"status" json:"status" desc:"Operational status of the organization record." example:"A"`
 	History
 }
 
@@ -121,15 +122,51 @@ func (o *Organization) GenerateKey(domain, name string) {
 	o.Key = fmt.Sprintf("#organization#%s#%s", domain, name)
 }
 
-// NewOrganization creates a new organization record
 func NewOrganization(domain, name, username string) *Organization {
 	org := &Organization{
 		Domain:   &domain,
 		Name:     &name,
 		Username: username,
+		Status:   "A", // Default to Active status
 	}
 	org.GenerateKey(domain, name)
 	org.Created = Now()
 	org.Visited = Now()
 	return org
+}
+
+// Target interface methods
+func (o *Organization) GetStatus() string {
+	return o.Status
+}
+
+func (o *Organization) WithStatus(status string) Target {
+	o.Status = status
+	return o
+}
+
+func (o *Organization) Group() string {
+	if o.Domain != nil && *o.Domain != "" {
+		return *o.Domain
+	}
+	if o.Name != nil {
+		return *o.Name
+	}
+	return o.Username
+}
+
+func (o *Organization) Identifier() string {
+	return o.Key
+}
+
+func (o *Organization) IsClass(value string) bool {
+	return value == "organization"
+}
+
+func (o *Organization) IsPrivate() bool {
+	return false
+}
+
+func (o *Organization) IsStatus(value string) bool {
+	return strings.HasPrefix(o.Status, value)
 }
