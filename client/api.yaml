@@ -1081,6 +1081,11 @@ components:
           description: Target queue for the job.
           example: standard
           type: string
+        allowRepeat:
+          description: Indicates if repeating this job should be allowed. Used for
+            manual jobs, or rescan jobs, that should not block other job executions.
+          example: "false"
+          type: boolean
         capabilities:
           description: List of specific capabilities to run for this job.
           example: '["portscan", "nuclei"]'
@@ -1157,6 +1162,7 @@ components:
       required:
       - BaseModel
       - Queue
+      - allowRepeat
       - config
       - created
       - dns
