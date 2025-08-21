@@ -83,7 +83,7 @@ type ADObject struct {
 }
 
 func (ad *ADObject) GetLabels() []string {
-	labels := []string{ADObjectLabel, TTLLabel}
+	labels := []string{ADObjectLabel, AssetLabel, TTLLabel}
 	if ad.Label != "" {
 		labels = append(labels, ad.Label)
 	}

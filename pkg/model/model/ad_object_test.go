@@ -135,7 +135,7 @@ func TestADObject_GetLabels(t *testing.T) {
 
 	assert.Contains(t, labels, ADObjectLabel, "Should contain ADObject label")
 	assert.Contains(t, labels, TTLLabel, "Should contain TTL label")
-	assert.Len(t, labels, 2, "Should have exactly 2 labels")
+	assert.Len(t, labels, 3, "Should have exactly 2 labels")
 }
 
 // Test GetDescription functionality
