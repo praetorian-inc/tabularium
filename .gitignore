@@ -1,1 +1,34 @@
+# IDE files
 .idea/
+.vscode/
+*.iml
+
+# Build artifacts
+dist/
+build/
+*.o
+*.so
+*.a
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Temporary files
+*.tmp
+*.log
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Go specific
+*.test
+*.out
+vendor/
+
+# Claude Flow artifacts
+.claude-flow/
+.swarm/
+*.db
