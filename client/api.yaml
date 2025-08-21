@@ -2076,6 +2076,12 @@ components:
           items:
             type: string
           type: array
+        sso_identified:
+          description: SSO providers that have identified this webpage with their
+            last seen timestamps.
+          example: '{"okta": {"last_seen": "2023-10-27T11:00:00Z", "id": "1234567890",
+            "name": "Chariot"}}'
+          type: object
         state:
           description: Current analysis state of the webpage (e.g., Unanalyzed, Interesting,
             Uninteresting).
@@ -2114,6 +2120,7 @@ components:
       - parent
       - private
       - source
+      - sso_identified
       - state
       - status
       - ttl
