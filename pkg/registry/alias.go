@@ -5,7 +5,7 @@ type Alias interface {
 }
 
 type ModelAlias struct {
-	Alias string
+	Alias string `neo4j:"-" json:"-"`
 }
 
 func (m *ModelAlias) SetAlias(alias string) {
