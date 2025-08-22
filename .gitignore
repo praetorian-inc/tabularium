@@ -32,3 +32,4 @@ vendor/
 .claude-flow/
 .swarm/
 *.db
+
