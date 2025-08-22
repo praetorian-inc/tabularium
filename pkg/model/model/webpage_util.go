@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"maps"
 	"net/http"
 	"net/url"
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func (w *Webpage) basicAnalysis() {
@@ -42,6 +44,33 @@ func (w *Webpage) PopulateResponse(request *WebpageRequest) error {
 	}
 	request.Response = &resp
 	return nil
+}
+
+func (w *Webpage) MergeSSOIdentified(other Webpage) {
+	if w.SSOIdentified == nil {
+		w.SSOIdentified = make(map[string]SSOWebpage)
+	}
+
+	maps.Copy(w.SSOIdentified, other.SSOIdentified)
+
+	w.cleanupExpiredSSO()
+}
+
+func (w *Webpage) cleanupExpiredSSO() {
+	now := time.Now()
+	expiryTime := now.Add(-48 * time.Hour)
+
+	for provider, ssoData := range w.SSOIdentified {
+		lastSeenTime, err := time.Parse(time.RFC3339, ssoData.LastSeen)
+		if err != nil {
+			slog.Warn("Failed to parse SSO LastSeen timestamp", "webpage", w.Key, "username", w.Username, "provider", provider, "lastSeen", ssoData.LastSeen, "error", err)
+			continue
+		}
+
+		if lastSeenTime.Before(expiryTime) {
+			delete(w.SSOIdentified, provider)
+		}
+	}
 }
 
 func (w *Webpage) MergeMetadata(other Webpage) {

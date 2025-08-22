@@ -40,6 +40,14 @@ func TestRepository_NewRepository(t *testing.T) {
 	assert.Equal(t, "repository", repo.Class)
 	assert.Equal(t, "#repository#https://bitbucket.org/praetorian-inc/tabularium#tabularium", repo.Key)
 
+	// full dockerhub URL
+	repo = NewRepository("https://hub.docker.com/r/praetorian-inc/tabularium")
+	assert.Equal(t, "praetorian-inc", repo.Org)
+	assert.Equal(t, "tabularium", repo.Name)
+	assert.Equal(t, "https://hub.docker.com/r/praetorian-inc/tabularium", repo.URL)
+	assert.Equal(t, "repository", repo.Class)
+	assert.Equal(t, "#repository#https://hub.docker.com/r/praetorian-inc/tabularium#tabularium", repo.Key)
+
 	// partial URL - missing schema
 	repo = NewRepository("github.com/praetorian-inc/tabularium")
 	assert.Equal(t, "praetorian-inc", repo.Org)
@@ -69,6 +77,9 @@ func TestRepository_Valid(t *testing.T) {
 	assert.True(t, repo.Valid())
 
 	repo = NewRepository("https://bitbucket.org/praetorian-inc/tabularium")
+	assert.True(t, repo.Valid())
+
+	repo = NewRepository("https://hub.docker.com/r/praetorian-inc/tabularium")
 	assert.True(t, repo.Valid())
 
 	repo = NewRepository("github.com/praetorian-inc/tabularium")

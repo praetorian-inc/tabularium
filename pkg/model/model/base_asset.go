@@ -97,6 +97,7 @@ func (a *BaseAsset) Merge(u Assetlike) {
 	if a.Origin == "" {
 		a.Origin = update.Origin
 	}
+	a.Metadata.Merge(update.Metadata)
 }
 
 func (a *BaseAsset) Visit(o Assetlike) {
@@ -208,9 +209,19 @@ type Metadata struct {
 	CloudAccount string `neo4j:"cloudAccount,omitempty" json:"cloudAccount,omitempty" desc:"Specific account identifier within the cloud provider." example:"billing-account-id"`
 }
 
-// Visit will copy over any non-empty fields from the other metadata into this metadata.
-// Uses reflection here to maintain type-safety elsewhere in the codebase
+func (m *Metadata) Merge(other Metadata) {
+	m.updateFields(other)
+	m.updateSlices(other)
+}
+
 func (m *Metadata) Visit(other Metadata) {
+	m.updateFields(other)
+	m.visitSlices(other)
+}
+
+// updateFields will copy over any non-empty fields from the other metadata into this metadata.
+// Uses reflection here to maintain type-safety elsewhere in the codebase
+func (m *Metadata) updateFields(other Metadata) {
 	v := reflect.ValueOf(m).Elem()
 	otherV := reflect.ValueOf(other)
 
@@ -222,9 +233,10 @@ func (m *Metadata) Visit(other Metadata) {
 			field.SetString(otherField.String())
 		}
 	}
+}
 
-	// Handle slices - maintain unique values
-	// If we end up with more of these fields - switch to more generic logic like above
+// visitSlices will copy over any non-empty slices from the other metadata into this metadata.
+func (m *Metadata) visitSlices(other Metadata) {
 	seen := make(map[string]bool)
 	for _, s := range append(m.Surface, other.Surface...) {
 		seen[s] = true
@@ -242,6 +254,20 @@ func (m *Metadata) Visit(other Metadata) {
 		seen[s] = true
 	}
 	m.Capability = slices.Collect(maps.Keys(seen))
+}
+
+// updateSlices will overwrite non-empty slices from the other metadata into this metadata.
+// updateSlices is called when manually updating an asset
+func (m *Metadata) updateSlices(other Metadata) {
+	if other.Surface != nil {
+		m.Surface = other.Surface
+	}
+	if other.AttackSurface != nil {
+		m.AttackSurface = other.AttackSurface
+	}
+	if other.Capability != nil {
+		m.Capability = other.Capability
+	}
 }
 
 // GetDescription returns a description for the Metadata model.

@@ -1081,6 +1081,11 @@ components:
           description: Target queue for the job.
           example: standard
           type: string
+        allowRepeat:
+          description: Indicates if repeating this job should be allowed. Used for
+            manual jobs, or rescan jobs, that should not block other job executions.
+          example: "false"
+          type: boolean
         capabilities:
           description: List of specific capabilities to run for this job.
           example: '["portscan", "nuclei"]'
@@ -1157,6 +1162,7 @@ components:
       required:
       - BaseModel
       - Queue
+      - allowRepeat
       - config
       - created
       - dns
@@ -2076,6 +2082,12 @@ components:
           items:
             type: string
           type: array
+        sso_identified:
+          description: SSO providers that have identified this webpage with their
+            last seen timestamps.
+          example: '{"okta": {"last_seen": "2023-10-27T11:00:00Z", "id": "1234567890",
+            "name": "Chariot"}}'
+          type: object
         state:
           description: Current analysis state of the webpage (e.g., Unanalyzed, Interesting,
             Uninteresting).
@@ -2114,6 +2126,7 @@ components:
       - parent
       - private
       - source
+      - sso_identified
       - state
       - status
       - ttl
