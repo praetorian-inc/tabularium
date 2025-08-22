@@ -170,7 +170,8 @@ func (p *Person) Identifier() string {
 }
 
 func (p *Person) IsClass(value string) bool {
-	return value == "person"
+	// Person models use direct type matching in registry, not class-based matching
+	return false
 }
 
 func (p *Person) IsPrivate() bool {

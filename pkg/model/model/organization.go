@@ -160,7 +160,8 @@ func (o *Organization) Identifier() string {
 }
 
 func (o *Organization) IsClass(value string) bool {
-	return value == "organization"
+	// Organization models use direct type matching in registry, not class-based matching
+	return false
 }
 
 func (o *Organization) IsPrivate() bool {
