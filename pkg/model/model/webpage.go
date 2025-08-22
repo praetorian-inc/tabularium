@@ -27,7 +27,8 @@ const (
 )
 
 const (
-	SSO_PROVIDER_OKTA = "okta"
+	SSO_PROVIDER_OKTA    = "okta"
+	SSO_PROVIDER_PINGONE = "pingone"
 )
 
 type WebpageOption func(*Webpage) error
