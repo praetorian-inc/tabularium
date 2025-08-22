@@ -1081,6 +1081,11 @@ components:
           description: Target queue for the job.
           example: standard
           type: string
+        allowRepeat:
+          description: Indicates if repeating this job should be allowed. Used for
+            manual jobs, or rescan jobs, that should not block other job executions.
+          example: "false"
+          type: boolean
         capabilities:
           description: List of specific capabilities to run for this job.
           example: '["portscan", "nuclei"]'
@@ -1157,6 +1162,7 @@ components:
       required:
       - BaseModel
       - Queue
+      - allowRepeat
       - config
       - created
       - dns
@@ -1362,6 +1368,384 @@ components:
           type: boolean
       required:
       - BaseModel
+      type: object
+    organization:
+      description: Represents organization data enriched from Apollo.io API, including
+        company details, industry, revenue, employees, and contact information.
+      properties:
+        BaseModel:
+          type: object
+        History:
+          type: object
+        additional_addresses:
+          description: List of additional office addresses.
+          example: '["456 Oak St, New York, NY", "789 Pine Ave, Austin, TX"]'
+          type: array
+        address_types:
+          description: List of address types.
+          example: '["headquarters", "office", "branch"]'
+          type: array
+        alternate_phones:
+          description: List of additional phone numbers.
+          example: '["+1-555-123-4567", "+1-555-987-6543"]'
+          type: array
+        annual_revenue:
+          description: Annual revenue in USD.
+          example: "50000000"
+          type: number
+        apollio_id:
+          description: Apollo.io organization identifier.
+          example: apollo123456
+          type: string
+        blog_url:
+          description: Company blog URL.
+          example: https://blog.example.com
+          type: string
+        business_model:
+          description: Business model description.
+          example: B2B SaaS
+          type: string
+        city:
+          description: City where the organization is headquartered.
+          example: San Francisco
+          type: string
+        country:
+          description: Country where the organization is based.
+          example: United States
+          type: string
+        created:
+          description: Timestamp when the organization record was created (RFC3339).
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        data_quality_score:
+          description: Data quality score from Apollo.io.
+          example: "0.95"
+          type: number
+        description:
+          description: Organization description.
+          example: Leading technology company providing innovative solutions.
+          type: string
+        domain:
+          description: Primary domain associated with the organization.
+          example: example.com
+          type: string
+        email:
+          description: Primary contact email.
+          example: contact@example.com
+          type: string
+        employee_range:
+          description: Employee count range.
+          example: 1000-5000
+          type: string
+        enrichment_source:
+          description: Source of enrichment data.
+          example: apollo.io
+          type: string
+        estimated_num_employees:
+          description: Estimated number of employees.
+          example: "5000"
+          type: integer
+        exchange:
+          description: Stock exchange where shares are traded.
+          example: NASDAQ
+          type: string
+        facebook_url:
+          description: Facebook page URL.
+          example: https://www.facebook.com/examplecorp
+          type: string
+        fax:
+          description: Fax number.
+          example: +1-555-123-4568
+          type: string
+        founded_year:
+          description: Year the organization was founded.
+          example: "2010"
+          type: integer
+        funding_amounts:
+          description: List of funding amounts in USD.
+          example: '[1000000, 5000000, 15000000]'
+          type: array
+        funding_rounds:
+          description: List of funding round types.
+          example: '["Seed", "Series A", "Series B"]'
+          type: array
+        industry:
+          description: Primary industry classification.
+          example: Software & Technology
+          type: string
+        investors:
+          description: List of investors.
+          example: '["Accel Partners", "Sequoia Capital", "Greylock Partners"]'
+          type: array
+        key:
+          description: Unique key identifying the organization.
+          example: '#organization#example.com#Example Corp'
+          type: string
+        keywords:
+          description: Keywords associated with the organization.
+          example: '["SaaS", "cloud", "enterprise"]'
+          type: array
+        last_enriched_at:
+          description: Timestamp when data was last enriched from Apollo.io (RFC3339).
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        linkedin_url:
+          description: LinkedIn company page URL.
+          example: https://www.linkedin.com/company/example-corp
+          type: string
+        market_capitalization:
+          description: Market capitalization in USD.
+          example: "1000000000"
+          type: number
+        name:
+          description: Organization name.
+          example: Example Corporation
+          type: string
+        organization_type:
+          description: Type of organization.
+          example: Public Company
+          type: string
+        phone:
+          description: Primary phone number.
+          example: +1-555-123-4567
+          type: string
+        phone_types:
+          description: List of phone types corresponding to alternate phones.
+          example: '["main", "fax"]'
+          type: array
+        postal_code:
+          description: Postal or ZIP code.
+          example: "94105"
+          type: string
+        publicly_traded:
+          description: Whether the organization is publicly traded.
+          example: "true"
+          type: boolean
+        revenue_range:
+          description: Revenue range description.
+          example: $10M-$50M
+          type: string
+        state:
+          description: State or region.
+          example: California
+          type: string
+        status:
+          description: Operational status of the organization record.
+          example: A
+          type: string
+        street_address:
+          description: Street address of headquarters.
+          example: 123 Market Street
+          type: string
+        sub_industries:
+          description: List of sub-industry classifications.
+          example: '["Enterprise Software", "Cloud Computing"]'
+          type: array
+        tech_categories:
+          description: List of technology categories.
+          example: '["CRM", "Cloud", "DevOps"]'
+          type: array
+        tech_vendors:
+          description: List of technology vendors.
+          example: '["Salesforce.com", "Amazon", "Docker Inc"]'
+          type: array
+        technologies:
+          description: List of technologies used by the organization.
+          example: '["Salesforce", "AWS", "Docker"]'
+          type: array
+        ticker_symbol:
+          description: Stock ticker symbol if publicly traded.
+          example: EXMP
+          type: string
+        ttl:
+          description: Time-to-live for the organization record (Unix timestamp).
+          example: "1706353200"
+          format: int64
+          type: integer
+        twitter_url:
+          description: Twitter profile URL.
+          example: https://twitter.com/examplecorp
+          type: string
+        username:
+          description: Chariot username associated with the organization record.
+          example: user@example.com
+          type: string
+        visited:
+          description: Timestamp when the organization was last visited or updated
+            (RFC3339).
+          example: "2023-10-27T11:00:00Z"
+          type: string
+        website:
+          description: Organization website URL.
+          example: https://www.example.com
+          type: string
+      required:
+      - BaseModel
+      - History
+      - created
+      - key
+      - status
+      - ttl
+      - username
+      - visited
+      type: object
+    person:
+      description: Represents person data enriched from Apollo.io People Enrichment
+        API, including contact details, employment history, and social profiles.
+      properties:
+        BaseModel:
+          type: object
+        History:
+          type: object
+        apollo_id:
+          description: Apollo.io person identifier.
+          example: 671bd2e8c2c9b5000169ba39
+          type: string
+        city:
+          description: City where the person is located.
+          example: San Francisco
+          type: string
+        country:
+          description: Country where the person is located.
+          example: United States
+          type: string
+        created:
+          description: Timestamp when the person record was created (RFC3339).
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        data_quality_score:
+          description: Data quality score from Apollo.io.
+          example: "0.92"
+          type: number
+        departments:
+          description: List of departments person works in.
+          example: '["Engineering", "Product"]'
+          type: array
+        email:
+          description: Person's primary email address.
+          example: john.doe@example.com
+          type: string
+        email_status:
+          description: Email verification status.
+          example: verified
+          type: string
+        employment_history:
+          description: List of person's employment history records.
+          type: array
+        enrichment_source:
+          description: Source of enrichment data.
+          example: apollo.io
+          type: string
+        extrapolated_email_confidence:
+          description: Confidence score for extrapolated email.
+          example: "0.95"
+          type: number
+        facebook_url:
+          description: Facebook profile URL.
+          example: https://www.facebook.com/johndoe
+          type: string
+        first_name:
+          description: Person's first name.
+          example: John
+          type: string
+        functions:
+          description: List of job functions.
+          example: '["Software Development", "Technical Leadership"]'
+          type: array
+        github_url:
+          description: GitHub profile URL.
+          example: https://github.com/johndoe
+          type: string
+        headline:
+          description: Person's professional headline.
+          example: Senior Software Engineer at Example Corp
+          type: string
+        key:
+          description: Unique key identifying the person.
+          example: '#person#john.doe@example.com#John Doe'
+          type: string
+        last_enriched_at:
+          description: Timestamp when data was last enriched from Apollo.io (RFC3339).
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        last_name:
+          description: Person's last name.
+          example: Doe
+          type: string
+        linkedin_url:
+          description: LinkedIn profile URL.
+          example: https://www.linkedin.com/in/johndoe
+          type: string
+        name:
+          description: Person's full name.
+          example: John Doe
+          type: string
+        organization_id:
+          description: Apollo.io organization ID where person currently works.
+          example: 5e66b6381e05b4008c8331b8
+          type: string
+        organization_name:
+          description: Name of organization where person currently works.
+          example: Example Corp
+          type: string
+        personal_emails:
+          description: List of personal email addresses.
+          example: '["john.doe@gmail.com", "johndoe@yahoo.com"]'
+          type: array
+        phone:
+          description: Person's phone number.
+          example: +1-555-123-4567
+          type: string
+        photo_url:
+          description: Person's profile photo URL.
+          example: https://media.licdn.com/dms/image/123/profile-pic.jpg
+          type: string
+        seniority:
+          description: Seniority level.
+          example: Senior
+          type: string
+        state:
+          description: State or region where the person is located.
+          example: California
+          type: string
+        status:
+          description: Operational status of the person record.
+          example: A
+          type: string
+        title:
+          description: Person's current job title.
+          example: Senior Software Engineer
+          type: string
+        ttl:
+          description: Time-to-live for the person record (Unix timestamp).
+          example: "1706353200"
+          format: int64
+          type: integer
+        twitter_url:
+          description: Twitter profile URL.
+          example: https://twitter.com/johndoe
+          type: string
+        username:
+          description: Chariot username associated with the person record.
+          example: user@example.com
+          type: string
+        visited:
+          description: Timestamp when the person was last visited or updated (RFC3339).
+          example: "2023-10-27T11:00:00Z"
+          type: string
+        work_email:
+          description: Person's work email address.
+          example: john.doe@company.com
+          type: string
+      required:
+      - BaseModel
+      - History
+      - created
+      - key
+      - status
+      - ttl
+      - username
+      - visited
       type: object
     preseed:
       description: Represents pre-seeded information about an asset or entity, often
@@ -2076,6 +2460,12 @@ components:
           items:
             type: string
           type: array
+        sso_identified:
+          description: SSO providers that have identified this webpage with their
+            last seen timestamps.
+          example: '{"okta": {"last_seen": "2023-10-27T11:00:00Z", "id": "1234567890",
+            "name": "Chariot"}}'
+          type: object
         state:
           description: Current analysis state of the webpage (e.g., Unanalyzed, Interesting,
             Uninteresting).
@@ -2114,6 +2504,7 @@ components:
       - parent
       - private
       - source
+      - sso_identified
       - state
       - status
       - ttl
