@@ -35,9 +35,10 @@ type WebpageOption func(*Webpage) error
 type WebpageForGob Webpage
 
 type SSOWebpage struct {
-	LastSeen string `json:"last_seen" desc:"Timestamp when the webpage was last seen (RFC3339)." example:"2023-10-27T11:00:00Z"`
-	Id       string `json:"id" desc:"The ID of the webpage." example:"1234567890"`
-	Name     string `json:"name" desc:"The webpage name." example:"Chariot"`
+	LastSeen        string `json:"last_seen" desc:"Timestamp when the webpage was last seen (RFC3339)." example:"2023-10-27T11:00:00Z"`
+	Id              string `json:"id" desc:"The ID of the webpage." example:"1234567890"`
+	Name            string `json:"name" desc:"The webpage name." example:"Chariot"`
+	OriginalOktaURL string `json:"original_okta_url" desc:"The original OKTA URL before any redirects." example:"https://app.okta.com/example"`
 }
 
 type Webpage struct {
