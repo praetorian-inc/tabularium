@@ -184,6 +184,9 @@ func (w *Webpage) Merge(other Webpage) {
 			w.State = other.State
 		}
 	}
+	if other.DetailsFilepath != "" {
+		w.DetailsFilepath = other.DetailsFilepath
+	}
 	w.MergeMetadata(other)
 	w.MergeSource(other)
 	w.MergeRequests(other.Requests...)
