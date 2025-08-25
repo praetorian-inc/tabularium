@@ -1871,6 +1871,10 @@ components:
           type: object
         MLProperties:
           type: object
+        beta:
+          description: Whether the risk is in beta.
+          example: "true"
+          type: boolean
         comment:
           description: User-provided comment about the risk.
           example: Confirmed by manual check
@@ -1928,6 +1932,7 @@ components:
       - BaseModel
       - History
       - MLProperties
+      - beta
       - created
       - dns
       - key
