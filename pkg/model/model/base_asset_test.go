@@ -36,6 +36,7 @@ func TestAsset_Visit(t *testing.T) {
 		baseAsset  BaseAsset
 		otherAsset BaseAsset
 		wantStatus string
+		wantOrigin string
 		wantTTL    bool
 	}{
 		{
@@ -128,6 +129,26 @@ func TestAsset_Visit(t *testing.T) {
 			wantStatus: ActiveHigh,
 			wantTTL:    true,
 		},
+		{
+			name: "existing: origin empty, other: origin set",
+			baseAsset: BaseAsset{
+				Origin: "",
+			},
+			otherAsset: BaseAsset{
+				Origin: "other",
+			},
+			wantOrigin: "other",
+		},
+		{
+			name: "existing: origin set, other: origin set",
+			baseAsset: BaseAsset{
+				Origin: "existing",
+			},
+			otherAsset: BaseAsset{
+				Origin: "other",
+			},
+			wantOrigin: "existing",
+		},
 	}
 
 	for _, tt := range tests {
@@ -155,6 +176,10 @@ func TestAsset_Visit(t *testing.T) {
 
 			if result.Visited != tt.otherAsset.Visited {
 				t.Error("Visit() visited timestamp not set to other")
+			}
+
+			if tt.wantOrigin != "" && result.Origin != tt.wantOrigin {
+				t.Errorf("Visit() origin = %v, want %v", result.Origin, tt.wantOrigin)
 			}
 		})
 	}
