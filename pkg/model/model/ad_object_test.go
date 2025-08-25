@@ -581,13 +581,6 @@ func TestADObject_GetOU(t *testing.T) {
 	}
 }
 
-// Test IsEnabled functionality
-func TestADObject_IsEnabled(t *testing.T) {
-	ad := ADObject{}
-	// Default implementation always returns true
-	assert.True(t, ad.IsEnabled(), "IsEnabled should return true by default")
-}
-
 // Test GetCommonName functionality
 func TestADObject_GetCommonName(t *testing.T) {
 	tests := []struct {
@@ -1165,4 +1158,13 @@ func TestADObject_ConcurrentAccess(t *testing.T) {
 			<-done
 		}
 	})
+}
+
+func TestADDomain_SeedModels(t *testing.T) {
+	seed := NewADDomainSeed("example.local", "S-1-5-21-123456789-123456789-123456789-1001", "CN=example.local,DC=example,DC=local")
+	seedModels := seed.SeedModels()
+
+	assert.Equal(t, 1, len(seedModels))
+	assert.Equal(t, &seed, seedModels[0])
+	assert.Contains(t, seed.GetLabels(), SeedLabel)
 }

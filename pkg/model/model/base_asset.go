@@ -15,6 +15,7 @@ type BaseAsset struct {
 	Username string `neo4j:"username" json:"username" desc:"The username associated with this asset." example:"user@example.com"`
 	Key      string `neo4j:"key" json:"key" desc:"Unique key identifying the asset." example:"#asset#dns#name"`
 	// Attributes
+	Origin     string  `neo4j:"origin" json:"origin" desc:"The first user/capability that added this to the system." example:"whois"`
 	Source     string  `neo4j:"source" json:"source" desc:"Source that added this to the system (one of self, account, seed)" example:"seed"`
 	Status     string  `neo4j:"status" json:"status" desc:"Current status of the asset." example:"A"`
 	Created    string  `neo4j:"created" json:"created" desc:"Timestamp when the asset was first created (RFC3339)." example:"2023-10-27T10:00:00Z"`
@@ -50,8 +51,28 @@ func (a *BaseAsset) SetStatus(status string) {
 	a.Status = status
 }
 
+func (a *BaseAsset) GetStatus() string {
+	return a.Status
+}
+
 func (a *BaseAsset) GetMetadata() *Metadata {
 	return &a.Metadata
+}
+
+func (a *BaseAsset) GetSource() string {
+	return a.Source
+}
+
+func (a *BaseAsset) SetSource(source string) {
+	// a seed or account source should always win over other sources
+	if a.Source == SeedSource || a.Source == AccountSource {
+		return
+	}
+	a.Source = source
+}
+
+func (a *BaseAsset) SetOrigin(origin string) {
+	a.Origin = origin
 }
 
 func (a *BaseAsset) IsStatus(value string) bool {
@@ -77,6 +98,9 @@ func (a *BaseAsset) Merge(u Assetlike) {
 	if !a.IsStatus(Active) {
 		a.TTL = 0
 	}
+	if a.Origin == "" {
+		a.Origin = update.Origin
+	}
 	a.Metadata.Merge(update.Metadata)
 }
 
@@ -88,6 +112,12 @@ func (a *BaseAsset) Visit(o Assetlike) {
 	}
 	if a.IsStatus(Active) && a.TTL != 0 {
 		a.TTL = other.TTL
+	}
+	if other.Source == SeedSource {
+		a.TTL = 0
+	}
+	if a.Origin == "" {
+		a.Origin = other.Origin
 	}
 
 	a.Secret = other.Secret
@@ -107,10 +137,6 @@ func (a *BaseAsset) Substate() string {
 		return a.Status[1:]
 	}
 	return ""
-}
-
-func (a *BaseAsset) GetStatus() string {
-	return a.Status
 }
 
 func (a *BaseAsset) SetStatusFromLastSeen(lastSeenStr string, layout string) {
@@ -136,18 +162,6 @@ func (a *BaseAsset) GetSecret() string {
 		return *a.Secret
 	}
 	return ""
-}
-
-func (a *BaseAsset) SetSource(source string) {
-	// a seed or account source should always win over other sources
-	if a.Source == SeedSource || a.Source == AccountSource {
-		return
-	}
-	a.Source = source
-}
-
-func (a *BaseAsset) Seed() Seed {
-	return Seed{}
 }
 
 func (a *BaseAsset) Defaulted() {
@@ -185,6 +199,7 @@ type Metadata struct {
 
 	Registrant string `neo4j:"registrant,omitempty" json:"registrant,omitempty" desc:"Registered owner of the asset (e.g., domain)." example:"Google LLC"`
 	Registrar  string `neo4j:"registrar,omitempty" json:"registrar,omitempty" desc:"Registrar managing the asset (e.g., domain)." example:"MarkMonitor Inc."`
+	Email      string `neo4j:"email,omitempty" json:"email,omitempty" desc:"Optional contact email associated with the seed." example:"contact@example.com"`
 
 	// deprecated
 	Surface []string `neo4j:"surface,omitempty" json:"surface,omitempty" desc:"List of attack surface identifiers related to the asset." example:"[\"web\", \"dns\"]"`

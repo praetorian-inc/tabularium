@@ -89,6 +89,9 @@ func (ad *ADObject) GetLabels() []string {
 	if ad.Label != "" {
 		labels = append(labels, ad.Label)
 	}
+	if ad.Source == SeedSource {
+		labels = append(labels, SeedLabel)
+	}
 	return labels
 }
 
@@ -121,20 +124,21 @@ func (ad *ADObject) Visit(o Assetlike) {
 	ad.ADProperties.Visit(other.ADProperties)
 
 	ad.BaseAsset.Visit(other)
-
 }
 
-// IsClass checks if the AD object is of the specified object class
+func (d *ADObject) SeedModels() []Seedable {
+	copy := *d
+	return []Seedable{&copy}
+}
+
 func (ad *ADObject) IsClass(class string) bool {
 	return strings.EqualFold(ad.Class, class) || strings.EqualFold("adobject", class)
 }
 
-// IsInDomain checks if the AD object belongs to the specified domain
 func (ad *ADObject) IsInDomain(domain string) bool {
 	return strings.EqualFold(ad.Domain, domain)
 }
 
-// GetParentDN extracts the parent distinguished name from the full DN
 func (ad *ADObject) GetParentDN() string {
 	if ad.DistinguishedName == "" {
 		return ""
@@ -157,7 +161,6 @@ func (ad *ADObject) GetParentDN() string {
 	return ""
 }
 
-// GetOU extracts the organizational unit from the distinguished name
 func (ad *ADObject) GetOU() string {
 	parentDN := ad.GetParentDN()
 	if parentDN == "" {
@@ -176,15 +179,6 @@ func (ad *ADObject) GetOU() string {
 	return ""
 }
 
-// IsEnabled checks if the account is enabled based on common patterns
-// This is a basic implementation that can be overridden by specific AD object types
-func (ad *ADObject) IsEnabled() bool {
-	// Default assumption is that objects are enabled unless specified otherwise
-	// Specific AD object types should override this method with proper logic
-	return true
-}
-
-// GetCommonName extracts the CN value from the distinguished name
 func (ad *ADObject) GetCommonName() string {
 	if ad.Name != "" {
 		return ad.Name
@@ -209,7 +203,6 @@ func (ad *ADObject) GetCommonName() string {
 	return ""
 }
 
-// GetEffectiveDomain returns the effective domain for the object
 func (ad *ADObject) GetEffectiveDomain() string {
 	if ad.Domain != "" {
 		return ad.Domain
@@ -234,7 +227,6 @@ func (ad *ADObject) GetEffectiveDomain() string {
 	return ""
 }
 
-// GetPrimaryIdentifier returns the primary identifier for the object
 func (ad *ADObject) GetPrimaryIdentifier() string {
 	if ad.ObjectID != "" {
 		return ad.ObjectID
@@ -248,7 +240,6 @@ func (ad *ADObject) GetPrimaryIdentifier() string {
 	return ""
 }
 
-// IsPrivileged checks if the object has elevated privileges
 func (ad *ADObject) IsPrivileged() bool {
 	return ad.AdminCount || ad.Sensitive || ad.UnconstrainedDelegation || ad.TrustedToAuth
 }
@@ -256,10 +247,6 @@ func (ad *ADObject) IsPrivileged() bool {
 func (ad *ADObject) Attribute(name, value string) Attribute {
 	attr := NewAttribute(name, value, ad)
 	return attr
-}
-
-func (ad *ADObject) Seed() Seed {
-	return ad.BaseAsset.Seed()
 }
 
 func (ad *ADObject) WithStatus(status string) Target {
@@ -337,6 +324,12 @@ func NewADUser(domain, objectID, distinguishedName string) ADObject {
 // NewADDomain creates a new AD Domain object
 func NewADDomain(domain, objectID, distinguishedName string) ADObject {
 	return NewADObject(domain, objectID, distinguishedName, ADDomainLabel)
+}
+
+func NewADDomainSeed(domain, objectID, distinguishedName string) ADObject {
+	object := NewADDomain(domain, objectID, distinguishedName)
+	object.SetSource(SeedSource)
+	return object
 }
 
 // NewADComputer creates a new AD Computer object

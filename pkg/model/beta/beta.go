@@ -6,11 +6,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
+type BetaObject interface {
+	IsBeta() bool
+}
+
 // Beta is a marker type that can be embedded anonymously in structs
 // to mark them as beta features. When embedded, it automatically adds
 // "beta": true to various marshaled output formats.
 type Beta struct {
-	Beta betaValue `neo4j:"beta" json:"beta" dynamodbav:"beta"`
+	Beta betaValue `neo4j:"beta" json:"beta" dynamodbav:"beta" desc:"Whether the object is in beta." example:"true"`
 }
 
 func (b Beta) IsBeta() bool {
