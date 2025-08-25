@@ -29,7 +29,8 @@ const (
 	AegisConfigCredential CredentialType = "aegis-config"    // Aegis config credential
 
 	// API Keys
-	AxoniousCredential             CredentialType = "axonious"              // Axonious API key
+	AxoniousCredential             CredentialType = "axonious" // Axonious API key
+	AgentCredential                CredentialType = "agent"
 	BitbucketCredential            CredentialType = "bitbucket"             // Bitbucket API key
 	BuiltWithCredential            CredentialType = "builtwith"             // Built with credentials
 	CloudflareCredential           CredentialType = "cloudflare"            // Cloudflare API key
