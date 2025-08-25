@@ -135,115 +135,6 @@ func (ad *ADObject) IsClass(class string) bool {
 	return strings.EqualFold(ad.Class, class) || strings.EqualFold("adobject", class)
 }
 
-func (ad *ADObject) IsInDomain(domain string) bool {
-	return strings.EqualFold(ad.Domain, domain)
-}
-
-func (ad *ADObject) GetParentDN() string {
-	if ad.DistinguishedName == "" {
-		return ""
-	}
-
-	// Find the first non-escaped comma to get the parent DN
-	// Handle escaped commas in CNs like "CN=O'Brien\, John"
-	dn := ad.DistinguishedName
-	for i := 0; i < len(dn); i++ {
-		if dn[i] == ',' {
-			// Check if this comma is escaped
-			if i > 0 && dn[i-1] == '\\' {
-				continue // Skip escaped comma
-			}
-			// Found non-escaped comma, return parent DN
-			return strings.TrimSpace(dn[i+1:])
-		}
-	}
-
-	return ""
-}
-
-func (ad *ADObject) GetOU() string {
-	parentDN := ad.GetParentDN()
-	if parentDN == "" {
-		return ""
-	}
-
-	// Look for OU= in the parent DN
-	parts := strings.Split(parentDN, ",")
-	for _, part := range parts {
-		part = strings.TrimSpace(part)
-		if strings.HasPrefix(strings.ToUpper(part), "OU=") {
-			return part[3:] // Remove "OU=" prefix
-		}
-	}
-
-	return ""
-}
-
-func (ad *ADObject) GetCommonName() string {
-	if ad.Name != "" {
-		return ad.Name
-	}
-
-	// Extract CN= value from the beginning of the DN
-	if strings.HasPrefix(strings.ToUpper(ad.DistinguishedName), "CN=") {
-		// Find the first non-escaped comma
-		dn := ad.DistinguishedName
-		prefix := "CN="
-		for i := len(prefix); i < len(dn); i++ {
-			if dn[i] == ',' {
-				if i > 0 && dn[i-1] == '\\' {
-					continue // Skip escaped comma
-				}
-				return dn[len(prefix):i]
-			}
-		}
-		return dn[len(prefix):]
-	}
-
-	return ""
-}
-
-func (ad *ADObject) GetEffectiveDomain() string {
-	if ad.Domain != "" {
-		return ad.Domain
-	}
-	if ad.NetBIOS != "" {
-		return ad.NetBIOS
-	}
-	// Extract from DN
-	if ad.DistinguishedName != "" {
-		parts := strings.Split(ad.DistinguishedName, ",")
-		var dcParts []string
-		for _, part := range parts {
-			part = strings.TrimSpace(part)
-			if strings.HasPrefix(strings.ToUpper(part), "DC=") {
-				dcParts = append(dcParts, part[3:])
-			}
-		}
-		if len(dcParts) > 0 {
-			return strings.Join(dcParts, ".")
-		}
-	}
-	return ""
-}
-
-func (ad *ADObject) GetPrimaryIdentifier() string {
-	if ad.ObjectID != "" {
-		return ad.ObjectID
-	}
-	if ad.DistinguishedName != "" {
-		return ad.DistinguishedName
-	}
-	if ad.SAMAccountName != "" {
-		return ad.SAMAccountName
-	}
-	return ""
-}
-
-func (ad *ADObject) IsPrivileged() bool {
-	return ad.AdminCount || ad.Sensitive || ad.UnconstrainedDelegation || ad.TrustedToAuth
-}
-
 func (ad *ADObject) Attribute(name, value string) Attribute {
 	attr := NewAttribute(name, value, ad)
 	return attr
@@ -271,8 +162,6 @@ func (ad *ADObject) GetHooks() []registry.Hook {
 				ad.Key = fmt.Sprintf("#%s#%s#%s", strings.ToLower(ad.Label), ad.Domain, ad.ObjectID)
 
 				ad.Class = strings.ToLower(strings.TrimPrefix(ad.Label, "AD"))
-
-				ad.Name = ad.GetCommonName()
 
 				if strings.HasPrefix(ad.ObjectID, "S-") {
 					ad.SID = ad.ObjectID
