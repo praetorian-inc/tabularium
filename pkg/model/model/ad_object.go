@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/praetorian-inc/tabularium/pkg/model/beta"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -73,6 +74,7 @@ var (
 )
 
 type ADObject struct {
+	beta.Beta
 	BaseAsset
 	registry.ModelAlias
 	Label    string `neo4j:"label" json:"label" desc:"Label of the object." example:"user"`
