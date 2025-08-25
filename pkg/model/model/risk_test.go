@@ -3,6 +3,7 @@ package model
 import (
 	"testing"
 
+	"github.com/praetorian-inc/tabularium/pkg/model/beta"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -148,7 +149,7 @@ func TestRiskConstructors(t *testing.T) {
 			risk2 := NewRiskWithDNS(test.target, test.riskName, test.dns, TriageInfo)
 			assert.Equal(t, test.dns, risk2.DNS, "NewRiskWithDNS: DNS should match provided DNS")
 			assert.Equal(t, risk1.Name, risk2.Name, "Names should match")
-			assert.Equal(t, risk1.Status, risk2.Status, "Status should match") 
+			assert.Equal(t, risk1.Status, risk2.Status, "Status should match")
 			assert.Equal(t, risk1.Source, risk2.Source, "Source should match")
 			assert.Equal(t, risk1.Target, risk2.Target, "Target should match")
 		})
@@ -196,4 +197,26 @@ func TestRisk_Valid(t *testing.T) {
 	assert.False(t, missingStatus.Valid())
 	assert.False(t, missingName.Valid())
 	assert.False(t, missingDNS.Valid())
+}
+
+type betaAsset struct {
+	beta.Beta
+	Asset
+}
+
+func NewBetaAsset(dns, name string) betaAsset {
+	return betaAsset{
+		Asset: NewAsset(dns, name),
+	}
+}
+
+func TestRisk_IsBeta(t *testing.T) {
+	normalAsset := NewAsset("example.com", "example.com")
+	betaAsset := NewBetaAsset("example.com", "example.com")
+
+	risk := NewRisk(&normalAsset, "test", TriageInfo)
+	assert.False(t, risk.Beta)
+
+	risk = NewRisk(&betaAsset, "test", TriageInfo)
+	assert.True(t, risk.Beta)
 }
