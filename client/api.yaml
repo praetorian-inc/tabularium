@@ -253,6 +253,11 @@ components:
           description: Name of the attribute.
           example: https
           type: string
+        origin_source:
+          description: Source that added this to the system (one of self, account,
+            seed)
+          example: seed
+          type: string
         parent:
           description: Attribute parent.
           type: object
@@ -287,6 +292,7 @@ components:
       - created
       - key
       - name
+      - origin_source
       - parent
       - source
       - status
@@ -1283,6 +1289,10 @@ components:
           description: Country associated with the asset.
           example: US
           type: string
+        email:
+          description: Optional contact email associated with the seed.
+          example: contact@example.com
+          type: string
         expiration:
           description: Date the asset registration expires (RFC3339).
           example: "2024-09-15T00:00:00Z"
@@ -1988,82 +1998,6 @@ components:
       - created
       - ip
       - key
-      - username
-      - visited
-      type: object
-    seed:
-      description: Represents a seed input for discovery, such as a domain, IP range,
-        or ASN.
-      properties:
-        BaseModel:
-          type: object
-        History:
-          type: object
-        class:
-          description: Classification of the seed type (e.g., domain, tld, ip, cidr).
-          example: domain
-          type: string
-        comment:
-          description: User-provided comment about the seed.
-          example: Initial customer seed
-          type: string
-        created:
-          description: Timestamp when the seed was created (RFC3339).
-          example: "2023-10-27T09:00:00Z"
-          type: string
-        dns:
-          description: The DNS name or IP address of the seed.
-          example: example.com
-          type: string
-        email:
-          description: Optional contact email associated with the seed.
-          example: contact@example.com
-          type: string
-        key:
-          description: Unique key identifying the seed.
-          example: '#seed#domain#example.com'
-          type: string
-        location:
-          description: Optional location associated with the seed.
-          example: Headquarters
-          type: string
-        name:
-          description: Optional name associated with the seed (e.g., company name).
-          example: Example Corp
-          type: string
-        registrar:
-          description: Optional registrar information for the seed (if domain).
-          example: MarkMonitor Inc.
-          type: string
-        source:
-          description: Source from which the seed was obtained.
-          example: ns1
-          type: string
-        status:
-          description: Composite of the current status of the seed and the seed type.
-          example: domain#P
-          type: string
-        type:
-          description: Broader type category (e.g., domain, ip).
-          example: domain
-          type: string
-        username:
-          description: Chariot username associated with the seed.
-          example: user@example.com
-          type: string
-        visited:
-          description: Timestamp when the seed was last processed or visited (RFC3339).
-          example: "2023-10-27T09:30:00Z"
-          type: string
-      required:
-      - BaseModel
-      - History
-      - class
-      - created
-      - dns
-      - key
-      - status
-      - type
       - username
       - visited
       type: object
