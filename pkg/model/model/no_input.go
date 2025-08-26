@@ -29,6 +29,8 @@ func (n *NoInput) IsClass(string) bool        { return false }
 func (n *NoInput) IsPrivate() bool            { return false }
 func (n *NoInput) GetLabels() []string        { return []string{} }
 func (n *NoInput) Valid() bool                { return false }
+func (n *NoInput) GetKey() string             { return n.Key }
+
 func (n *NoInput) GetDescription() string {
 	return "Sentinel target for capabilities that require no input target."
 }
