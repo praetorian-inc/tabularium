@@ -1379,6 +1379,20 @@ components:
       required:
       - BaseModel
       type: object
+    noinput:
+      description: Sentinel target for capabilities that require no input target.
+      properties:
+        BaseModel:
+          type: object
+        key:
+          type: string
+        status:
+          type: string
+      required:
+      - BaseModel
+      - key
+      - status
+      type: object
     organization:
       description: Represents organization data enriched from Apollo.io API, including
         company details, industry, revenue, employees, and contact information.
