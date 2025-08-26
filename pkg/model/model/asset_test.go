@@ -217,3 +217,57 @@ func TestAsset_Unmarshall(t *testing.T) {
 		})
 	}
 }
+
+func TestAsset_SeedModels(t *testing.T) {
+	seedAsset := NewAssetSeed("example.com")
+	seedModels := seedAsset.SeedModels()
+
+	assert.Equal(t, 1, len(seedModels))
+	assert.Equal(t, &seedAsset, seedModels[0])
+	assert.Contains(t, seedAsset.GetLabels(), SeedLabel)
+}
+
+func TestAsset_DomainVerificationJob(t *testing.T) {
+	tests := []struct {
+		name   string
+		seed   Asset
+		config []string
+		want   map[string]string
+	}{
+		{
+			name:   "Basic domain verification job",
+			seed:   NewAssetSeed("example.com"),
+			config: []string{"source", "test-source"},
+			want: map[string]string{
+				"source": "test-source",
+			},
+		},
+		{
+			name: "Domain verification job with multiple config pairs",
+			seed: func() Asset {
+				s := NewAssetSeed("example.com")
+				s.SetStatus(Active)
+				return s
+			}(),
+			config: []string{"source", "test-source", "key", "value"},
+			want: map[string]string{
+				"source": "test-source",
+				"key":    "value",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dummy := NewJob("whois", &tt.seed)
+			job := tt.seed.DomainVerificationJob(&dummy, tt.config...)
+
+			assert.Equal(t, job.Config, tt.want)
+
+			assert.Equal(t, job.Target.Model.Group(), tt.seed.DNS)
+			assert.Equal(t, job.Target.Model.GetStatus(), tt.seed.Status)
+			assert.Equal(t, job.Source, "whois")
+			assert.True(t, job.Full)
+		})
+	}
+}
