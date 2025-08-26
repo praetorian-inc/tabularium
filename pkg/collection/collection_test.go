@@ -1,9 +1,12 @@
 package collection
 
 import (
-	"github.com/praetorian-inc/tabularium/pkg/lib/plural"
 	"reflect"
 	"testing"
+
+	"github.com/praetorian-inc/tabularium/pkg/lib/plural"
+	"github.com/praetorian-inc/tabularium/pkg/model/model"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
@@ -253,4 +256,25 @@ func TestGet_WithUnregisteredTypeInCollection(t *testing.T) {
 	} else if !reflect.DeepEqual(resultsUnregistered[0], itemUnregistered) {
 		t.Errorf("Get[*unregisteredModel]() returned wrong item. Got: %v, Want: %v", resultsUnregistered[0], itemUnregistered)
 	}
+}
+
+func TestAddInterface_Seed(t *testing.T) {
+	c := Collection{Label: model.SeedLabel}
+
+	seed1 := model.NewAssetSeed("example.com")
+	seed2 := model.NewAssetSeed("1.2.3.4")
+	seed3 := model.NewAssetSeed("1.2.3.4/24")
+	asset := model.NewAsset("example.com", "example.com")
+	attribute := model.NewAttribute("name", "value", &asset)
+
+	c.Add(&seed1)
+	c.Add(&seed2)
+	c.Add(&seed3)
+	c.Add(&asset)
+	c.Add(&attribute)
+
+	assert.Len(t, c.Items, 3)
+	assert.Len(t, c.Items["seeds"], 3)
+	assert.Len(t, c.Items["assets"], 1)
+	assert.Len(t, c.Items["attributes"], 1)
 }
