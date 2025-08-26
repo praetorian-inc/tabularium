@@ -283,7 +283,10 @@ func NewWebpage(url url.URL, parent GraphModel, options ...WebpageOption) Webpag
 		url.Path = DEFAULT_URL_PATH
 	}
 	urlString := fmt.Sprintf("%s://%s%s", url.Scheme, url.Host, url.Path)
-	w := Webpage{URL: urlString, Parent: NewGraphModelWrapper(parent)}
+	w := Webpage{URL: urlString}
+	if parent != nil {
+		w.Parent = NewGraphModelWrapper(parent)
+	}
 	w.Defaulted()
 	// We run hooks twice to ensure construction and analysis are run
 	registry.CallHooks(&w)
