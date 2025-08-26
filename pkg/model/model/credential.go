@@ -43,8 +43,8 @@ const (
 	CrowdStrikeSpotlightCredential  CredentialType = "crowdstrike-spotlight"   // CrowdStrike Spotlight credentials
 	NessusCredential                CredentialType = "nessus"                  // Nessus API key
 	NS1Credential                   CredentialType = "ns1"                     // NS1 API key
-	PortswiggerCredential           CredentialType = "portswigger"             // Portswigger API key
-	PortswiggerInternalCredential   CredentialType = "burp-internal"           // internal burp instance API creds
+	BurpSuiteCredential             CredentialType = "burpsuite"               // BurpSuite API key
+	BurpSuiteInternalCredential     CredentialType = "burpsuite-internal"      // internal burp instance API creds
 	QualysCredential                CredentialType = "qualys"                  // Qualys credentials
 	ShodanCredential                CredentialType = "shodan"                  // Shodan API key
 	TenableVMCredential             CredentialType = "tenable-vm"              // Tenable API key
