@@ -29,6 +29,7 @@ type Job struct {
 	S3DownloadURL         string            `dynamodbav:"s3DownloadURL" json:"s3DownloadURL,omitempty" desc:"The URL of the file that contains the large output." example:"https://s3.amazonaws.com/big_output.zip"`
 	AllowRepeat           bool              `dynamodbav:"allowRepeat" json:"allowRepeat" desc:"Indicates if repeating this job should be allowed. Used for manual jobs, or rescan jobs, that should not block other job executions." example:"false"`
 	Full                  bool              `dynamodbav:"-" json:"full,omitempty" desc:"Indicates if this is a full scan job." example:"false"`
+	EnableCallbacks       bool              `dynamodbav:"enableCallbacks" json:"enableCallbacks" desc:"Indicates if the job should expose web service callbacks for neo4j access." example:"false"`
 	Capabilities          []string          `dynamodbav:"-" json:"capabilities,omitempty" desc:"List of specific capabilities to run for this job." example:"[\"portscan\", \"nuclei\"]"`
 	Queue                 string            `dynamodbav:"-" desc:"Target queue for the job." example:"standard"`
 	Target                TargetWrapper     `dynamodbav:"target" json:"target" desc:"The primary target of the job."`
