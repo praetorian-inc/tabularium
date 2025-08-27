@@ -158,7 +158,7 @@ func (t *Wrapper[T]) getType(props map[string]any) (string, error) {
 func (t *Wrapper[T]) fromProps(props map[string]any) error {
 	tipe := t.Type
 	tipes := GetTypes[T](Registry)
-	if !slices.Contains(tipes, tipe) {
+	if !slices.Contains(tipes, strings.ToLower(tipe)) {
 		return fmt.Errorf("provided type %q not known or does not implement %T", tipe, t.Model)
 	}
 

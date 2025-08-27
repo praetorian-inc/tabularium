@@ -89,19 +89,609 @@ components:
       - username
       - value
       type: object
-    addomain:
-      description: Represents an Active Directory domain, including its name, status,
-        and creation/modification timestamps.
+    adaiaca:
+      description: Represents an Active Directory object with properties and organizational
+        unit information.
       properties:
+        ADProperties:
+          type: object
         BaseAsset:
           type: object
-        name:
-          description: NetBIOS of the domain.
-          example: example.internal
+        Beta:
+          type: object
+        ModelAlias:
+          type: object
+        domain:
+          description: AD domain this object belongs to.
+          example: example.local
+          type: string
+        label:
+          description: Label of the object.
+          example: user
+          type: string
+        objectid:
+          description: Object identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+        sid:
+          description: Security identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
           type: string
       required:
+      - ADProperties
       - BaseAsset
-      - name
+      - Beta
+      - ModelAlias
+      - domain
+      - label
+      - objectid
+      type: object
+    adcerttemplate:
+      description: Represents an Active Directory object with properties and organizational
+        unit information.
+      properties:
+        ADProperties:
+          type: object
+        BaseAsset:
+          type: object
+        Beta:
+          type: object
+        ModelAlias:
+          type: object
+        domain:
+          description: AD domain this object belongs to.
+          example: example.local
+          type: string
+        label:
+          description: Label of the object.
+          example: user
+          type: string
+        objectid:
+          description: Object identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+        sid:
+          description: Security identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+      required:
+      - ADProperties
+      - BaseAsset
+      - Beta
+      - ModelAlias
+      - domain
+      - label
+      - objectid
+      type: object
+    adcomputer:
+      description: Represents an Active Directory object with properties and organizational
+        unit information.
+      properties:
+        ADProperties:
+          type: object
+        BaseAsset:
+          type: object
+        Beta:
+          type: object
+        ModelAlias:
+          type: object
+        domain:
+          description: AD domain this object belongs to.
+          example: example.local
+          type: string
+        label:
+          description: Label of the object.
+          example: user
+          type: string
+        objectid:
+          description: Object identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+        sid:
+          description: Security identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+      required:
+      - ADProperties
+      - BaseAsset
+      - Beta
+      - ModelAlias
+      - domain
+      - label
+      - objectid
+      type: object
+    adcontainer:
+      description: Represents an Active Directory object with properties and organizational
+        unit information.
+      properties:
+        ADProperties:
+          type: object
+        BaseAsset:
+          type: object
+        Beta:
+          type: object
+        ModelAlias:
+          type: object
+        domain:
+          description: AD domain this object belongs to.
+          example: example.local
+          type: string
+        label:
+          description: Label of the object.
+          example: user
+          type: string
+        objectid:
+          description: Object identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+        sid:
+          description: Security identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+      required:
+      - ADProperties
+      - BaseAsset
+      - Beta
+      - ModelAlias
+      - domain
+      - label
+      - objectid
+      type: object
+    addomain:
+      description: Represents an Active Directory object with properties and organizational
+        unit information.
+      properties:
+        ADProperties:
+          type: object
+        BaseAsset:
+          type: object
+        Beta:
+          type: object
+        ModelAlias:
+          type: object
+        domain:
+          description: AD domain this object belongs to.
+          example: example.local
+          type: string
+        label:
+          description: Label of the object.
+          example: user
+          type: string
+        objectid:
+          description: Object identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+        sid:
+          description: Security identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+      required:
+      - ADProperties
+      - BaseAsset
+      - Beta
+      - ModelAlias
+      - domain
+      - label
+      - objectid
+      type: object
+    adenterpriseca:
+      description: Represents an Active Directory object with properties and organizational
+        unit information.
+      properties:
+        ADProperties:
+          type: object
+        BaseAsset:
+          type: object
+        Beta:
+          type: object
+        ModelAlias:
+          type: object
+        domain:
+          description: AD domain this object belongs to.
+          example: example.local
+          type: string
+        label:
+          description: Label of the object.
+          example: user
+          type: string
+        objectid:
+          description: Object identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+        sid:
+          description: Security identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+      required:
+      - ADProperties
+      - BaseAsset
+      - Beta
+      - ModelAlias
+      - domain
+      - label
+      - objectid
+      type: object
+    adgpo:
+      description: Represents an Active Directory object with properties and organizational
+        unit information.
+      properties:
+        ADProperties:
+          type: object
+        BaseAsset:
+          type: object
+        Beta:
+          type: object
+        ModelAlias:
+          type: object
+        domain:
+          description: AD domain this object belongs to.
+          example: example.local
+          type: string
+        label:
+          description: Label of the object.
+          example: user
+          type: string
+        objectid:
+          description: Object identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+        sid:
+          description: Security identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+      required:
+      - ADProperties
+      - BaseAsset
+      - Beta
+      - ModelAlias
+      - domain
+      - label
+      - objectid
+      type: object
+    adgroup:
+      description: Represents an Active Directory object with properties and organizational
+        unit information.
+      properties:
+        ADProperties:
+          type: object
+        BaseAsset:
+          type: object
+        Beta:
+          type: object
+        ModelAlias:
+          type: object
+        domain:
+          description: AD domain this object belongs to.
+          example: example.local
+          type: string
+        label:
+          description: Label of the object.
+          example: user
+          type: string
+        objectid:
+          description: Object identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+        sid:
+          description: Security identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+      required:
+      - ADProperties
+      - BaseAsset
+      - Beta
+      - ModelAlias
+      - domain
+      - label
+      - objectid
+      type: object
+    adissuancepolicy:
+      description: Represents an Active Directory object with properties and organizational
+        unit information.
+      properties:
+        ADProperties:
+          type: object
+        BaseAsset:
+          type: object
+        Beta:
+          type: object
+        ModelAlias:
+          type: object
+        domain:
+          description: AD domain this object belongs to.
+          example: example.local
+          type: string
+        label:
+          description: Label of the object.
+          example: user
+          type: string
+        objectid:
+          description: Object identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+        sid:
+          description: Security identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+      required:
+      - ADProperties
+      - BaseAsset
+      - Beta
+      - ModelAlias
+      - domain
+      - label
+      - objectid
+      type: object
+    adlocalgroup:
+      description: Represents an Active Directory object with properties and organizational
+        unit information.
+      properties:
+        ADProperties:
+          type: object
+        BaseAsset:
+          type: object
+        Beta:
+          type: object
+        ModelAlias:
+          type: object
+        domain:
+          description: AD domain this object belongs to.
+          example: example.local
+          type: string
+        label:
+          description: Label of the object.
+          example: user
+          type: string
+        objectid:
+          description: Object identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+        sid:
+          description: Security identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+      required:
+      - ADProperties
+      - BaseAsset
+      - Beta
+      - ModelAlias
+      - domain
+      - label
+      - objectid
+      type: object
+    adlocaluser:
+      description: Represents an Active Directory object with properties and organizational
+        unit information.
+      properties:
+        ADProperties:
+          type: object
+        BaseAsset:
+          type: object
+        Beta:
+          type: object
+        ModelAlias:
+          type: object
+        domain:
+          description: AD domain this object belongs to.
+          example: example.local
+          type: string
+        label:
+          description: Label of the object.
+          example: user
+          type: string
+        objectid:
+          description: Object identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+        sid:
+          description: Security identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+      required:
+      - ADProperties
+      - BaseAsset
+      - Beta
+      - ModelAlias
+      - domain
+      - label
+      - objectid
+      type: object
+    adntauthstore:
+      description: Represents an Active Directory object with properties and organizational
+        unit information.
+      properties:
+        ADProperties:
+          type: object
+        BaseAsset:
+          type: object
+        Beta:
+          type: object
+        ModelAlias:
+          type: object
+        domain:
+          description: AD domain this object belongs to.
+          example: example.local
+          type: string
+        label:
+          description: Label of the object.
+          example: user
+          type: string
+        objectid:
+          description: Object identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+        sid:
+          description: Security identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+      required:
+      - ADProperties
+      - BaseAsset
+      - Beta
+      - ModelAlias
+      - domain
+      - label
+      - objectid
+      type: object
+    adobject:
+      description: Represents an Active Directory object with properties and organizational
+        unit information.
+      properties:
+        ADProperties:
+          type: object
+        BaseAsset:
+          type: object
+        Beta:
+          type: object
+        ModelAlias:
+          type: object
+        domain:
+          description: AD domain this object belongs to.
+          example: example.local
+          type: string
+        label:
+          description: Label of the object.
+          example: user
+          type: string
+        objectid:
+          description: Object identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+        sid:
+          description: Security identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+      required:
+      - ADProperties
+      - BaseAsset
+      - Beta
+      - ModelAlias
+      - domain
+      - label
+      - objectid
+      type: object
+    adou:
+      description: Represents an Active Directory object with properties and organizational
+        unit information.
+      properties:
+        ADProperties:
+          type: object
+        BaseAsset:
+          type: object
+        Beta:
+          type: object
+        ModelAlias:
+          type: object
+        domain:
+          description: AD domain this object belongs to.
+          example: example.local
+          type: string
+        label:
+          description: Label of the object.
+          example: user
+          type: string
+        objectid:
+          description: Object identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+        sid:
+          description: Security identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+      required:
+      - ADProperties
+      - BaseAsset
+      - Beta
+      - ModelAlias
+      - domain
+      - label
+      - objectid
+      type: object
+    adrelationship:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    adrootca:
+      description: Represents an Active Directory object with properties and organizational
+        unit information.
+      properties:
+        ADProperties:
+          type: object
+        BaseAsset:
+          type: object
+        Beta:
+          type: object
+        ModelAlias:
+          type: object
+        domain:
+          description: AD domain this object belongs to.
+          example: example.local
+          type: string
+        label:
+          description: Label of the object.
+          example: user
+          type: string
+        objectid:
+          description: Object identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+        sid:
+          description: Security identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+      required:
+      - ADProperties
+      - BaseAsset
+      - Beta
+      - ModelAlias
+      - domain
+      - label
+      - objectid
+      type: object
+    aduser:
+      description: Represents an Active Directory object with properties and organizational
+        unit information.
+      properties:
+        ADProperties:
+          type: object
+        BaseAsset:
+          type: object
+        Beta:
+          type: object
+        ModelAlias:
+          type: object
+        domain:
+          description: AD domain this object belongs to.
+          example: example.local
+          type: string
+        label:
+          description: Label of the object.
+          example: user
+          type: string
+        objectid:
+          description: Object identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+        sid:
+          description: Security identifier.
+          example: S-1-5-21-123456789-123456789-123456789-1001
+          type: string
+      required:
+      - ADProperties
+      - BaseAsset
+      - Beta
+      - ModelAlias
+      - domain
+      - label
+      - objectid
       type: object
     agoracapability:
       description: Describes a single capability registered with Agora and how to
