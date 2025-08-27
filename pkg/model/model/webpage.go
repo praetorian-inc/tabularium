@@ -282,6 +282,7 @@ func NewWebpage(url url.URL, parent GraphModel, options ...WebpageOption) Webpag
 	if url.Path == "" {
 		url.Path = DEFAULT_URL_PATH
 	}
+	url = cleanDefaultPorts(url)
 	urlString := fmt.Sprintf("%s://%s%s", url.Scheme, url.Host, url.Path)
 	w := Webpage{URL: urlString}
 	if parent != nil {
@@ -304,4 +305,13 @@ func (w *Webpage) AddSSOProvider(provider string, ssoData SSOWebpage) {
 		w.SSOIdentified = make(map[string]SSOWebpage)
 	}
 	w.SSOIdentified[provider] = ssoData
+}
+
+func cleanDefaultPorts(url url.URL) url.URL {
+	if url.Scheme == "http" && strings.HasSuffix(url.Host, ":80") {
+		url.Host = strings.TrimSuffix(url.Host, ":80")
+	} else if url.Scheme == "https" && strings.HasSuffix(url.Host, ":443") {
+		url.Host = strings.TrimSuffix(url.Host, ":443")
+	}
+	return url
 }
