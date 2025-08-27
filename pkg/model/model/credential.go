@@ -44,7 +44,7 @@ const (
 	NessusCredential                CredentialType = "nessus"                  // Nessus API key
 	NS1Credential                   CredentialType = "ns1"                     // NS1 API key
 	BurpSuiteCredential             CredentialType = "burpsuite"               // BurpSuite API key
-	BurpSuiteInternalCredential     CredentialType = "burpsuite-internal"      // internal burp instance API creds
+	BurpSuiteInternalCredential     CredentialType = "burp-internal"           // internal burp instance API creds
 	QualysCredential                CredentialType = "qualys"                  // Qualys credentials
 	ShodanCredential                CredentialType = "shodan"                  // Shodan API key
 	TenableVMCredential             CredentialType = "tenable-vm"              // Tenable API key
