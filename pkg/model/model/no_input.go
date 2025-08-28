@@ -16,7 +16,9 @@ func init() {
 }
 
 func NewNoInput(identifier string) *NoInput {
-	n := &NoInput{}
+	n := &NoInput{
+		IdentifierValue: identifier,
+	}
 	registry.CallHooks(n)
 	return n
 }
