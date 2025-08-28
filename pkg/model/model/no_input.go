@@ -23,7 +23,7 @@ func NewNoInput() *NoInput {
 func (n *NoInput) GetStatus() string          { return n.Status }
 func (n *NoInput) WithStatus(s string) Target { n.Status = s; return n }
 func (n *NoInput) Group() string              { return "" }
-func (n *NoInput) Identifier() string         { return "" }
+func (n *NoInput) Identifier() string         { return Now() }
 func (n *NoInput) IsStatus(string) bool       { return true }
 func (n *NoInput) IsClass(string) bool        { return false }
 func (n *NoInput) IsPrivate() bool            { return false }
