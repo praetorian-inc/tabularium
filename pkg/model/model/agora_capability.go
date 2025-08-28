@@ -24,60 +24,48 @@ const (
 	CategoryCICD
 )
 
+// CategoryStrings maps category IDs to their string representations
+var CategoryStrings = map[Category]string{
+	CategoryRecon:    "recon",
+	CategoryAD:       "ad",
+	CategoryNetwork:  "network",
+	CategoryWindows:  "windows",
+	CategoryLinux:    "linux",
+	CategoryDNS:      "dns",
+	CategoryWeb:      "web",
+	CategoryDatabase: "database",
+	CategorySMB:      "smb",
+	CategoryCICD:     "cicd",
+}
+
+// CategoryNames maps string names to category IDs (reverse lookup)
+var CategoryNames = map[string]Category{
+	"recon":    CategoryRecon,
+	"ad":       CategoryAD,
+	"network":  CategoryNetwork,
+	"windows":  CategoryWindows,
+	"linux":    CategoryLinux,
+	"dns":      CategoryDNS,
+	"web":      CategoryWeb,
+	"database": CategoryDatabase,
+	"smb":      CategorySMB,
+	"cicd":     CategoryCICD,
+}
+
 // String returns the string representation of a category
 func (c Category) String() string {
-	switch c {
-	case CategoryRecon:
-		return "recon"
-	case CategoryAD:
-		return "ad"
-	case CategoryNetwork:
-		return "network"
-	case CategoryWindows:
-		return "windows"
-	case CategoryLinux:
-		return "linux"
-	case CategoryDNS:
-		return "dns"
-	case CategoryWeb:
-		return "web"
-	case CategoryDatabase:
-		return "database"
-	case CategorySMB:
-		return "smb"
-	case CategoryCICD:
-		return "cicd"
-	default:
-		return ""
+	if name, exists := CategoryStrings[c]; exists {
+		return name
 	}
+	return ""
 }
 
 // ParseCategory parses a string into a Category
 func ParseCategory(name string) Category {
-	switch strings.ToLower(name) {
-	case "recon":
-		return CategoryRecon
-	case "ad":
-		return CategoryAD
-	case "network":
-		return CategoryNetwork
-	case "windows":
-		return CategoryWindows
-	case "linux":
-		return CategoryLinux
-	case "dns":
-		return CategoryDNS
-	case "web":
-		return CategoryWeb
-	case "database":
-		return CategoryDatabase
-	case "smb":
-		return CategorySMB
-	case "cicd":
-		return CategoryCICD
-	default:
-		return 0
+	if cat, exists := CategoryNames[strings.ToLower(name)]; exists {
+		return cat
 	}
+	return 0
 }
 
 // ParseCategories parses a comma-separated string into a slice of categories
