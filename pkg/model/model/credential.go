@@ -29,7 +29,8 @@ const (
 	AegisConfigCredential CredentialType = "aegis-config"    // Aegis config credential
 
 	// API Keys
-	ApolloCredential                CredentialType = "apollo_api"              // Apollo.io API key
+	ApolloCredential                CredentialType = "apollo_api" // Apollo.io API key
+	AgentCredential                 CredentialType = "agent"
 	MailgunCredentialGitHubPhishing CredentialType = "mailgun_phishing_github" // Mailgun API key for GitHub phishing
 	AxoniousCredential              CredentialType = "axonious"                // Axonious API key
 	BitbucketCredential             CredentialType = "bitbucket"               // Bitbucket API key
