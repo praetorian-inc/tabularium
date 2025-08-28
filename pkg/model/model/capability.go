@@ -43,6 +43,8 @@ type Capability interface {
 	CheckAffiliation(Asset) (bool, error)
 	// Integration returns whether this capability is an integration
 	Integration() bool
+	// EnableCallbacks returns whether this capability requires web service callbacks for neo4j access
+	EnableCallbacks() bool
 	Lifecycle
 }
 
