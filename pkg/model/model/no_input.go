@@ -6,9 +6,9 @@ import "github.com/praetorian-inc/tabularium/pkg/registry"
 // This is a sentinel type used for capabilities that operate solely on parameters.
 type NoInput struct {
 	registry.BaseModel
-	Status          string `json:"status"`
-	Key             string `json:"key"`
-	IdentifierValue string `json:"identifier"`
+	Status          string `json:"status" dynamodbav:"status"`
+	Key             string `json:"key" dynamodbav:"key"`
+	IdentifierValue string `json:"identifier" dynamodbav:"identifier"`
 }
 
 func init() {
