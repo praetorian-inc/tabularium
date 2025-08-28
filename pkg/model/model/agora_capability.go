@@ -80,6 +80,33 @@ func ParseCategory(name string) Category {
 	}
 }
 
+// ParseCategories parses a comma-separated string into a slice of categories
+func ParseCategories(categoriesStr string) []Category {
+	if categoriesStr == "" {
+		return nil
+	}
+
+	var categories []Category
+	parts := strings.Split(categoriesStr, ",")
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if cat := ParseCategory(part); cat != 0 {
+			categories = append(categories, cat)
+		}
+	}
+	return categories
+}
+
+// HasCategory checks if a category slice contains a specific category
+func HasCategory(categories []Category, target Category) bool {
+	for _, cat := range categories {
+		if cat == target {
+			return true
+		}
+	}
+	return false
+}
+
 // Platform represents the platform enum
 type Platform int
 
@@ -133,7 +160,7 @@ type AgoraCapability struct {
 	Title         string                `json:"title" desc:"The pretty name of the capability" example:"AWS"`
 	Target        string                `json:"target" desc:"The target of the capability" example:"asset"`
 	Description   string                `json:"description" desc:"A description of the capability suitable for human or LLM use" example:"Identifies open ports on a target host"`
-	Category      string                `json:"category" desc:"The categories of the capability" example:"recon,ad"`
+	Category      []Category            `json:"category" desc:"The categories of the capability" example:"[\"recon\", \"ad\"]"`
 	RunsOn        Platform              `json:"runs_on" desc:"The platform the capability runs on" example:"windows"`
 	Version       string                `json:"version" desc:"The version of the capability (major.minor.patch)" example:"1.0.0"`
 	Executor      string                `json:"executor" desc:"The task executor that can execute this capability" example:"JanusPlugin"`
