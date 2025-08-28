@@ -703,6 +703,10 @@ components:
           description: Indicates if this is an asynchronous capability
           example: "false"
           type: boolean
+        category:
+          description: The category of the capability
+          example: recon
+          type: string
         description:
           description: A description of the capability suitable for human or LLM use
           example: Identifies open ports on a target host
@@ -750,6 +754,7 @@ components:
       required:
       - BaseModel
       - async
+      - category
       - description
       - executor
       - integration
