@@ -105,17 +105,36 @@ const (
 	PlatformMacOS
 )
 
+// PlatformStrings maps platform IDs to their string representations
+var PlatformStrings = map[Platform]string{
+	PlatformAny:     "any",
+	PlatformWindows: "windows",
+	PlatformLinux:   "linux",
+	PlatformMacOS:   "macos",
+}
+
+// PlatformNames maps string names to platform IDs (reverse lookup)
+var PlatformNames = map[string]Platform{
+	"any":     PlatformAny,
+	"":        PlatformAny, // Empty string defaults to "any"
+	"windows": PlatformWindows,
+	"linux":   PlatformLinux,
+	"macos":   PlatformMacOS,
+}
+
 func (p Platform) String() string {
-	switch p {
-	case PlatformWindows:
-		return "windows"
-	case PlatformLinux:
-		return "linux"
-	case PlatformMacOS:
-		return "macos"
-	default:
-		return ""
+	if name, exists := PlatformStrings[p]; exists {
+		return name
 	}
+	return ""
+}
+
+// ParsePlatform parses a string into a Platform
+func ParsePlatform(name string) Platform {
+	if platform, exists := PlatformNames[strings.ToLower(name)]; exists {
+		return platform
+	}
+	return PlatformAny // Default to any if unknown
 }
 
 func (p Platform) MarshalJSON() ([]byte, error) {
@@ -128,17 +147,7 @@ func (p *Platform) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	switch strings.ToLower(str) {
-	case "windows":
-		*p = PlatformWindows
-	case "linux":
-		*p = PlatformLinux
-	case "macos":
-		*p = PlatformMacOS
-	default:
-		*p = PlatformAny
-	}
-
+	*p = ParsePlatform(str)
 	return nil
 }
 
@@ -148,8 +157,8 @@ type AgoraCapability struct {
 	Title         string                `json:"title" desc:"The pretty name of the capability" example:"AWS"`
 	Target        string                `json:"target" desc:"The target of the capability" example:"asset"`
 	Description   string                `json:"description" desc:"A description of the capability suitable for human or LLM use" example:"Identifies open ports on a target host"`
-	Category      []Category            `json:"category" desc:"The categories of the capability" example:"[\"recon\", \"ad\"]"`
-	RunsOn        Platform              `json:"runs_on" desc:"The platform the capability runs on" example:"windows"`
+	Category      []Category            `json:"category" desc:"The categories this capability belongs to. Use Category enum constants like CategoryRecon, CategoryAD, CategoryNetwork, etc. Access string values via CategoryStrings[category]" example:"[\"recon\", \"ad\"]"`
+	RunsOn        Platform              `json:"runs_on" desc:"The platform this capability runs on. Use Platform enum constants like PlatformWindows, PlatformLinux, PlatformAny, etc. Access string values via PlatformStrings[platform]" example:"windows"`
 	Version       string                `json:"version" desc:"The version of the capability (major.minor.patch)" example:"1.0.0"`
 	Executor      string                `json:"executor" desc:"The task executor that can execute this capability" example:"JanusPlugin"`
 	Surface       attacksurface.Surface `json:"surface" desc:"The attack surface of the capability" example:"internal"`
