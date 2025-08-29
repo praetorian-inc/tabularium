@@ -84,3 +84,18 @@ pip install git+https://github.com/praetorian-inc/tabularium.git#subdirectory=cl
 - Go 1.24.6+
 - `datamodel-code-generator` for Python client generation
 - Standard Go testing framework (no additional test frameworks used)
+
+## Error Patterns and Model Structure
+
+All models extend the `BaseAsset` type and follow consistent patterns:
+- Models are registered using `registry.Registry.MustRegisterModel(&ModelName{})` in their `init()` function
+- Models use struct tags: `json`, `desc`, `neo4j`, and `example` for schema generation
+- Core models include Asset, Risk, Job, Integration, User, Organization and many others
+- The registry system enables runtime model discovery and automatic schema generation
+
+## Model File Locations
+
+Models are primarily located in `pkg/model/model/` but there are model-related utilities in:
+- `pkg/model/filters/` - Filter types for querying models
+- `pkg/model/attacksurface/` - Attack surface specific models 
+- `pkg/model/beta/` - Beta/experimental model features
