@@ -75,6 +75,9 @@ const (
 	GCPResourceGlobalForwardingRule CloudResourceType = "compute.googleapis.com/GlobalForwardingRule"
 	GCPResourceDNSManagedZone       CloudResourceType = "dns.googleapis.com/ManagedZone"
 	GCPResourceAddress              CloudResourceType = "compute.googleapis.com/Address" // used for both global and regional
+	GCRContainerImage               CloudResourceType = "containerregistry.googleapis.com/Image"
+	GCRArtifactRepository           CloudResourceType = "artifactregistry.googleapis.com/Repository"
+	GCRArtifactoryDockerImage       CloudResourceType = "artifactregistry.googleapis.com/DockerImage"
 
 	// Unknown - Catch all
 	ResourceTypeUnknown CloudResourceType = "Unknown"
