@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 	"github.com/stretchr/testify/assert"
@@ -824,6 +825,215 @@ func TestWebpageGobEncoding(t *testing.T) {
 		assert.Empty(t, decodedWebpage.WebpageDetails.Requests, "WebpageDetails should be empty after gob encoding")
 		assert.Equal(t, expectedDetails, webpage.WebpageDetails, "Original webpage should still have WebpageDetails")
 		assert.NotEmpty(t, decodedWebpage.Source, "Source should not be empty")
+	})
+}
+
+func TestWebpageSSO(t *testing.T) {
+	// Use recent timestamps to avoid cleanup during tests
+	recentTime := time.Now().Add(-1 * time.Hour)
+	recentTimeStr := recentTime.Format(time.RFC3339)
+	newerTimeStr := recentTime.Add(30 * time.Minute).Format(time.RFC3339)
+	olderTimeStr := recentTime.Add(-30 * time.Minute).Format(time.RFC3339)
+
+	t.Run("add SSO provider", func(t *testing.T) {
+		webpage := createTestWebpage(testBaseURL + "/test")
+
+		oktaData := SSOWebpage{
+			LastSeen:            recentTimeStr,
+			Id:                  "okta123",
+			Name:                "Test App",
+			OriginalProviderURL: "https://test.okta.com/app/123",
+		}
+
+		webpage.AddSSOProvider(SSO_PROVIDER_OKTA, oktaData)
+
+		assert.NotNil(t, webpage.SSOIdentified)
+		assert.Contains(t, webpage.SSOIdentified, SSO_PROVIDER_OKTA)
+		assert.Equal(t, oktaData, webpage.SSOIdentified[SSO_PROVIDER_OKTA])
+	})
+
+	t.Run("add multiple SSO providers", func(t *testing.T) {
+		webpage := createTestWebpage(testBaseURL + "/test")
+
+		oktaData := SSOWebpage{
+			LastSeen:            recentTimeStr,
+			Id:                  "okta123",
+			Name:                "Test App Okta",
+			OriginalProviderURL: "https://test.okta.com/app/123",
+		}
+
+		pingOneData := SSOWebpage{
+			LastSeen:            newerTimeStr,
+			Id:                  "ping456",
+			Name:                "Test App PingOne",
+			OriginalProviderURL: "https://auth.pingone.com/123",
+		}
+
+		webpage.AddSSOProvider(SSO_PROVIDER_OKTA, oktaData)
+		webpage.AddSSOProvider(SSO_PROVIDER_PINGONE, pingOneData)
+
+		assert.Len(t, webpage.SSOIdentified, 2)
+		assert.Equal(t, oktaData, webpage.SSOIdentified[SSO_PROVIDER_OKTA])
+		assert.Equal(t, pingOneData, webpage.SSOIdentified[SSO_PROVIDER_PINGONE])
+	})
+
+	t.Run("SSO merge during Visit", func(t *testing.T) {
+		webpage1 := createTestWebpage(testBaseURL + "/test")
+		webpage2 := createTestWebpage(testBaseURL + "/test")
+
+		// Initial SSO data on webpage1
+		oktaData1 := SSOWebpage{
+			LastSeen:            olderTimeStr,
+			Id:                  "okta123",
+			Name:                "Test App Old",
+			OriginalProviderURL: "https://test.okta.com/app/123",
+		}
+		webpage1.AddSSOProvider(SSO_PROVIDER_OKTA, oktaData1)
+
+		// Updated SSO data on webpage2
+		oktaData2 := SSOWebpage{
+			LastSeen:            newerTimeStr,
+			Id:                  "okta123",
+			Name:                "Test App Updated",
+			OriginalProviderURL: "https://test.okta.com/app/123",
+		}
+		pingOneData := SSOWebpage{
+			LastSeen:            recentTimeStr,
+			Id:                  "ping456",
+			Name:                "Test App PingOne",
+			OriginalProviderURL: "https://auth.pingone.com/123",
+		}
+		webpage2.AddSSOProvider(SSO_PROVIDER_OKTA, oktaData2)
+		webpage2.AddSSOProvider(SSO_PROVIDER_PINGONE, pingOneData)
+
+		// Visit should merge SSO data
+		err := webpage1.Visit(webpage2)
+		assert.NoError(t, err)
+
+		// Verify merged data
+		assert.Len(t, webpage1.SSOIdentified, 2)
+		assert.Equal(t, oktaData2, webpage1.SSOIdentified[SSO_PROVIDER_OKTA], "Okta data should be updated with newer timestamp")
+		assert.Equal(t, pingOneData, webpage1.SSOIdentified[SSO_PROVIDER_PINGONE], "PingOne data should be added")
+	})
+
+	t.Run("SSO merge with empty source data", func(t *testing.T) {
+		webpage1 := createTestWebpage(testBaseURL + "/test")
+		webpage2 := createTestWebpage(testBaseURL + "/test")
+
+		// Only webpage2 has SSO data
+		oktaData := SSOWebpage{
+			LastSeen:            recentTimeStr,
+			Id:                  "okta123",
+			Name:                "Test App",
+			OriginalProviderURL: "https://test.okta.com/app/123",
+		}
+		webpage2.AddSSOProvider(SSO_PROVIDER_OKTA, oktaData)
+
+		err := webpage1.Visit(webpage2)
+		assert.NoError(t, err)
+
+		// webpage1 should now have the SSO data
+		assert.NotNil(t, webpage1.SSOIdentified)
+		assert.Contains(t, webpage1.SSOIdentified, SSO_PROVIDER_OKTA)
+		assert.Equal(t, oktaData, webpage1.SSOIdentified[SSO_PROVIDER_OKTA])
+	})
+
+	t.Run("SSO merge with empty target data", func(t *testing.T) {
+		webpage1 := createTestWebpage(testBaseURL + "/test")
+		webpage2 := createTestWebpage(testBaseURL + "/test")
+
+		// Only webpage1 has SSO data
+		oktaData := SSOWebpage{
+			LastSeen:            recentTimeStr,
+			Id:                  "okta123",
+			Name:                "Test App",
+			OriginalProviderURL: "https://test.okta.com/app/123",
+		}
+		webpage1.AddSSOProvider(SSO_PROVIDER_OKTA, oktaData)
+
+		err := webpage1.Visit(webpage2)
+		assert.NoError(t, err)
+
+		// webpage1 should retain its SSO data
+		assert.NotNil(t, webpage1.SSOIdentified)
+		assert.Contains(t, webpage1.SSOIdentified, SSO_PROVIDER_OKTA)
+		assert.Equal(t, oktaData, webpage1.SSOIdentified[SSO_PROVIDER_OKTA])
+	})
+
+	t.Run("SSO cleanup expired data", func(t *testing.T) {
+		webpage := createTestWebpage(testBaseURL + "/test")
+
+		// Add expired SSO data (more than 48 hours old)
+		expiredTime := time.Now().Add(-50 * time.Hour).Format(time.RFC3339)
+		expiredOktaData := SSOWebpage{
+			LastSeen:            expiredTime,
+			Id:                  "okta123",
+			Name:                "Expired SSO",
+			OriginalProviderURL: "https://expired.okta.com/app/123",
+		}
+
+		// Add recent SSO data
+		validPingData := SSOWebpage{
+			LastSeen:            recentTimeStr,
+			Id:                  "ping456",
+			Name:                "Valid SSO",
+			OriginalProviderURL: "https://valid.pingone.com/123",
+		}
+
+		webpage.AddSSOProvider(SSO_PROVIDER_OKTA, expiredOktaData)
+		webpage.AddSSOProvider(SSO_PROVIDER_PINGONE, validPingData)
+
+		// Force cleanup by merging with empty webpage
+		emptyWebpage := createTestWebpage(testBaseURL + "/other")
+		webpage.MergeSSOIdentified(emptyWebpage)
+
+		// Expired data should be cleaned up, valid data should remain
+		assert.Len(t, webpage.SSOIdentified, 1, "Expired SSO data should be cleaned up")
+		assert.NotContains(t, webpage.SSOIdentified, SSO_PROVIDER_OKTA, "Expired Okta data should be removed")
+		assert.Contains(t, webpage.SSOIdentified, SSO_PROVIDER_PINGONE, "Valid PingOne data should remain")
+		assert.Equal(t, validPingData, webpage.SSOIdentified[SSO_PROVIDER_PINGONE])
+	})
+
+	t.Run("SSO merge with nil SSOIdentified map", func(t *testing.T) {
+		webpage1 := createTestWebpage(testBaseURL + "/test")
+		webpage2 := createTestWebpage(testBaseURL + "/test")
+
+		// Ensure webpage1 has nil SSOIdentified
+		webpage1.SSOIdentified = nil
+
+		// webpage2 has SSO data
+		oktaData := SSOWebpage{
+			LastSeen:            recentTimeStr,
+			Id:                  "okta123",
+			Name:                "Test App",
+			OriginalProviderURL: "https://test.okta.com/app/123",
+		}
+		webpage2.AddSSOProvider(SSO_PROVIDER_OKTA, oktaData)
+
+		err := webpage1.Visit(webpage2)
+		assert.NoError(t, err)
+
+		// webpage1 should initialize SSOIdentified and copy the data
+		assert.NotNil(t, webpage1.SSOIdentified)
+		assert.Contains(t, webpage1.SSOIdentified, SSO_PROVIDER_OKTA)
+		assert.Equal(t, oktaData, webpage1.SSOIdentified[SSO_PROVIDER_OKTA])
+	})
+
+	t.Run("SSO AddSSOProvider initializes map if nil", func(t *testing.T) {
+		webpage := createTestWebpage(testBaseURL + "/test")
+		webpage.SSOIdentified = nil
+
+		oktaData := SSOWebpage{
+			LastSeen:            recentTimeStr,
+			Id:                  "okta123",
+			Name:                "Test App",
+			OriginalProviderURL: "https://test.okta.com/app/123",
+		}
+
+		webpage.AddSSOProvider(SSO_PROVIDER_OKTA, oktaData)
+
+		assert.NotNil(t, webpage.SSOIdentified, "SSOIdentified map should be initialized")
+		assert.Equal(t, oktaData, webpage.SSOIdentified[SSO_PROVIDER_OKTA])
 	})
 }
 
