@@ -11,6 +11,7 @@ type AgoraCapability struct {
 	Title         string                `json:"title" desc:"The pretty name of the capability" example:"AWS"`
 	Target        string                `json:"target" desc:"The target of the capability" example:"asset"`
 	Description   string                `json:"description" desc:"A description of the capability suitable for human or LLM use" example:"Identifies open ports on a target host"`
+	Category      string                `json:"category" desc:"The category of the capability" example:"recon"`
 	Version       string                `json:"version" desc:"The version of the capability (major.minor.patch)" example:"1.0.0"`
 	Executor      string                `json:"executor" desc:"The task executor that can execute this capability" example:"JanusPlugin"`
 	Surface       attacksurface.Surface `json:"surface" desc:"The attack surface of the capability" example:"internal"`
