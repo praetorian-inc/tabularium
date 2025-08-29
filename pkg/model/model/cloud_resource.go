@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/praetorian-inc/tabularium/pkg/model/beta"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -17,6 +18,7 @@ var neo4jNegateLabelRegex = regexp.MustCompile(`[^a-zA-Z0-9\-_]`) // to conform 
 type CloudResource struct {
 	registry.BaseModel
 	History
+	beta.Beta
 	Key          string            `neo4j:"key" json:"key"`
 	Name         string            `neo4j:"name" json:"name"`
 	DisplayName  string            `neo4j:"displayName" json:"displayName"`

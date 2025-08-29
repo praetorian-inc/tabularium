@@ -1,6 +1,9 @@
 package model
 
-import "regexp"
+import (
+	"regexp"
+	"strings"
+)
 
 type CloudResourceType string
 
@@ -10,20 +13,37 @@ func (c CloudResourceType) String() string {
 
 const (
 	// AWS
-	AWSAccount        CloudResourceType = "AWS::Organizations::Account"
-	AWSLambdaFunction CloudResourceType = "AWS::Lambda::Function"
-	AWSS3Bucket       CloudResourceType = "AWS::S3::Bucket"
-	AWSEC2Instance    CloudResourceType = "AWS::EC2::Instance"
-	AWSRole           CloudResourceType = "AWS::IAM::Role"
-	AWSUser           CloudResourceType = "AWS::IAM::User"
-	AWSGateway        CloudResourceType = "AWS::ApiGateway::RestApi"
-	AWSSNSTopic       CloudResourceType = "AWS::SNS::Topic"
-	AWSSQSQueue       CloudResourceType = "AWS::SQS::Queue"
-	AWSRDSInstance    CloudResourceType = "AWS::RDS::DBInstance"
+	AWSAccount             CloudResourceType = "AWS::Organizations::Account"
+	AWSLambdaFunction      CloudResourceType = "AWS::Lambda::Function"
+	AWSS3Bucket            CloudResourceType = "AWS::S3::Bucket"
+	AWSEC2Instance         CloudResourceType = "AWS::EC2::Instance"
+	AWSCloudFormationStack CloudResourceType = "AWS::CloudFormation::Stack"
+	AWSEcrRepository       CloudResourceType = "AWS::ECR::Repository"
+	AWSEcrPublicRepository CloudResourceType = "AWS::ECR::PublicRepository"
+	AWSRole                CloudResourceType = "AWS::IAM::Role"
+	AWSUser                CloudResourceType = "AWS::IAM::User"
+	AWSGroup               CloudResourceType = "AWS::IAM::Group"
+	AWSGateway             CloudResourceType = "AWS::ApiGateway::RestApi"
+	AWSSNSTopic            CloudResourceType = "AWS::SNS::Topic"
+	AWSSQSQueue            CloudResourceType = "AWS::SQS::Queue"
+	AWSRDSInstance         CloudResourceType = "AWS::RDS::DBInstance"
 
 	// Azure
-	AzureVM           CloudResourceType = "Microsoft.Compute/virtualMachines"
-	AzureSubscription CloudResourceType = "Microsoft.Resources/subscriptions"
+	AzureVM                       CloudResourceType = "Microsoft.Compute/virtualMachines"
+	AzureSubscription             CloudResourceType = "Microsoft.Resources/subscriptions"
+	AzureVMUserData               CloudResourceType = "Microsoft.Compute/virtualMachines/userData"
+	AzureVMExtensions             CloudResourceType = "Microsoft.Compute/virtualMachines/extensions"
+	AzureVMDiskEncryption         CloudResourceType = "Microsoft.Compute/virtualMachines/diskEncryption"
+	AzureVMTags                   CloudResourceType = "Microsoft.Compute/virtualMachines/tags"
+	AzureWebSite                  CloudResourceType = "Microsoft.Web/Sites"
+	AzureWebSiteConfiguration     CloudResourceType = "Microsoft.Web/sites/configuration"
+	AzureWebSiteConnectionStrings CloudResourceType = "Microsoft.Web/sites/connectionStrings"
+	AzureWebSiteKeys              CloudResourceType = "Microsoft.Web/sites/keys"
+	AzureWebSiteSettings          CloudResourceType = "Microsoft.Web/sites/settings"
+	AzureWebSiteTags              CloudResourceType = "Microsoft.Web/sites/tags"
+	AzureAutomationRunbooks       CloudResourceType = "Microsoft.Automation/automationAccounts/runbooks"
+	AzureAutomationVariables      CloudResourceType = "Microsoft.Automation/automationAccounts/variables"
+	AzureAutomationJobs           CloudResourceType = "Microsoft.Automation/automationAccounts/jobs"
 
 	// GCP
 	GCPResourceBucket               CloudResourceType = "storage.googleapis.com/Bucket"
@@ -55,6 +75,9 @@ const (
 	GCPResourceGlobalForwardingRule CloudResourceType = "compute.googleapis.com/GlobalForwardingRule"
 	GCPResourceDNSManagedZone       CloudResourceType = "dns.googleapis.com/ManagedZone"
 	GCPResourceAddress              CloudResourceType = "compute.googleapis.com/Address" // used for both global and regional
+	GCRContainerImage               CloudResourceType = "containerregistry.googleapis.com/Image"
+	GCRArtifactRepository           CloudResourceType = "artifactregistry.googleapis.com/Repository"
+	GCRArtifactoryDockerImage       CloudResourceType = "artifactregistry.googleapis.com/DockerImage"
 
 	// Unknown - Catch all
 	ResourceTypeUnknown CloudResourceType = "Unknown"
@@ -73,4 +96,15 @@ var resourceValidators = map[CloudResourceType]*regexp.Regexp{
 	AWSRole:           regexp.MustCompile(`^arn:aws:iam::\d{12}:role/.*$`),
 	AWSUser:           regexp.MustCompile(`^arn:aws:iam::\d{12}:user/.*$`),
 	AWSGateway:        regexp.MustCompile(`^arn:aws:apigateway:[a-z-0-9]+:\d{12}:restapi:.*$`),
+}
+
+func IsSupportedResourceType(tipe CloudResourceType, supported []CloudResourceType) bool {
+	for _, s := range supported {
+		if strings.EqualFold(tipe.String(), s.String()) {
+			return true
+		}
+
+	}
+
+	return false
 }
