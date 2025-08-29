@@ -1,18 +1,41 @@
 package registry
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type asset struct {
 	BaseModel
 }
 
-func (a *asset) GetDescription() string { return "" }
+func (a *asset) GetDescription() string { return "dummy asset" }
 
 func init() {
-	Registry.MustRegisterModel(&asset{})
+	Registry.MustRegisterModel(&asset{}, "alias1", "alias2")
+}
+
+func TestTypeRegistry_GetModel(t *testing.T) {
+	asset, ok := Registry.MakeType("asset")
+	require.True(t, ok)
+	assert.NotNil(t, asset)
+	assert.Equal(t, "dummy asset", asset.GetDescription())
+
+	alias1, ok := Registry.MakeType("alias1")
+	require.True(t, ok)
+	assert.NotNil(t, alias1)
+	assert.Equal(t, "dummy asset", alias1.GetDescription())
+
+	alias2, ok := Registry.MakeType("alias2")
+	require.True(t, ok)
+	assert.NotNil(t, alias2)
+	assert.Equal(t, "dummy asset", alias2.GetDescription())
+
+	alias3, ok := Registry.MakeType("notAnAlias")
+	assert.False(t, ok)
+	assert.Nil(t, alias3)
 }
 
 func TestTypeRegistry_MakeType(t *testing.T) {

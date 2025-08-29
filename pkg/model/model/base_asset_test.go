@@ -36,6 +36,7 @@ func TestAsset_Visit(t *testing.T) {
 		baseAsset  BaseAsset
 		otherAsset BaseAsset
 		wantStatus string
+		wantOrigin string
 		wantTTL    bool
 	}{
 		{
@@ -128,6 +129,26 @@ func TestAsset_Visit(t *testing.T) {
 			wantStatus: ActiveHigh,
 			wantTTL:    true,
 		},
+		{
+			name: "existing: origin empty, other: origin set",
+			baseAsset: BaseAsset{
+				Origin: "",
+			},
+			otherAsset: BaseAsset{
+				Origin: "other",
+			},
+			wantOrigin: "other",
+		},
+		{
+			name: "existing: origin set, other: origin set",
+			baseAsset: BaseAsset{
+				Origin: "existing",
+			},
+			otherAsset: BaseAsset{
+				Origin: "other",
+			},
+			wantOrigin: "existing",
+		},
 	}
 
 	for _, tt := range tests {
@@ -156,6 +177,91 @@ func TestAsset_Visit(t *testing.T) {
 			if result.Visited != tt.otherAsset.Visited {
 				t.Error("Visit() visited timestamp not set to other")
 			}
+
+			if tt.wantOrigin != "" && result.Origin != tt.wantOrigin {
+				t.Errorf("Visit() origin = %v, want %v", result.Origin, tt.wantOrigin)
+			}
+		})
+	}
+}
+
+func TestMetadata_Merge(t *testing.T) {
+	tests := []struct {
+		name   string
+		base   Metadata
+		other  Metadata
+		expect Metadata
+	}{
+		{
+			name:  "merge empty base with empty other",
+			base:  Metadata{},
+			other: Metadata{},
+		},
+		{
+			name: "merge empty base with populated other",
+			base: Metadata{},
+			other: Metadata{
+				ASNumber: "AS12345",
+			},
+			expect: Metadata{
+				ASNumber: "AS12345",
+			},
+		},
+		{
+			name: "merge populated base with empty other",
+			base: Metadata{
+				ASNumber: "AS12345",
+			},
+			other: Metadata{},
+			expect: Metadata{
+				ASNumber: "AS12345",
+			},
+		},
+		{
+			name: "merge populated base with populated slices",
+			base: Metadata{
+				ASNumber: "AS12345",
+			},
+			other: Metadata{
+				AttackSurface: []string{"b", "c"},
+			},
+			expect: Metadata{
+				ASNumber:      "AS12345",
+				AttackSurface: []string{"b", "c"},
+			},
+		},
+		{
+			name: "merge populated base with populated other slices",
+			base: Metadata{
+				ASNumber:      "AS12345",
+				AttackSurface: []string{"a", "b"},
+			},
+			other: Metadata{},
+			expect: Metadata{
+				ASNumber:      "AS12345",
+				AttackSurface: []string{"a", "b"},
+			},
+		},
+		{
+			name: "merge populated base with both populated slices",
+			base: Metadata{
+				ASNumber:      "AS12345",
+				AttackSurface: []string{"a", "b"},
+			},
+			other: Metadata{
+				AttackSurface: []string{"b", "c"},
+			},
+			expect: Metadata{
+				ASNumber:      "AS12345",
+				AttackSurface: []string{"b", "c"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.base.Merge(tt.other)
+			assert.Equal(t, tt.expect, tt.base)
 		})
 	}
 }

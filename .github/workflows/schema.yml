@@ -3,8 +3,6 @@ name: Schema and Client Generation
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
 
 jobs:
   generate:
@@ -61,8 +59,8 @@ jobs:
 
       - name: Push changes (PR context)
         if: github.event_name == 'pull_request'
-        run: git push --force-with-lease origin HEAD:${{ github.head_ref }}
+        run: git push origin ${{ github.head_ref }}
 
       - name: Push changes (Push context)
         if: github.event_name == 'push'
-        run: git push --force-with-lease origin HEAD:${{ github.ref_name }}
+        run: git push origin ${{ github.ref_name }}

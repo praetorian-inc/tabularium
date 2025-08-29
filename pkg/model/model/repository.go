@@ -24,7 +24,7 @@ const (
 )
 
 var (
-	repository    = regexp.MustCompile(`^(https://)?(github\.com|gitlab\.com|bitbucket\.(com|org))/([^/]+)/(([^/]+/)*[^/]+)$`)
+	repository    = regexp.MustCompile(`^(https://)?(github\.com|gitlab\.com|bitbucket\.(com|org)|hub\.docker\.com)/([^/]+)/(([^/]+/)*[^/]+)$`)
 	repositoryKey = regexp.MustCompile(`^#repository(#[^#]+){2,}$`)
 )
 
@@ -111,7 +111,7 @@ func (r *Repository) extractOrgAndRepo() error {
 		return fmt.Errorf("invalid repository URL: %s", r.URL)
 	}
 	r.Name = parts[len(parts)-1]
-	r.Org = parts[3]
+	r.Org = parts[len(parts)-2]
 	return nil
 }
 
