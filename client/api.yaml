@@ -703,6 +703,14 @@ components:
           description: Indicates if this is an asynchronous capability
           example: "false"
           type: boolean
+        category:
+          description: The categories this capability belongs to. Use Category enum
+            constants like CategoryRecon, CategoryAD, CategoryNetwork, etc. Access
+            string values via CategoryStrings[category]
+          example: '["recon", "ad"]'
+          items:
+            type: integer
+          type: array
         description:
           description: A description of the capability suitable for human or LLM use
           example: Identifies open ports on a target host
@@ -731,6 +739,12 @@ components:
           items:
             type: object
           type: array
+        runs_on:
+          description: The platform this capability runs on. Use Platform enum constants
+            like PlatformWindows, PlatformLinux, PlatformAny, etc. Access string values
+            via PlatformStrings[platform]
+          example: windows
+          type: integer
         surface:
           description: The attack surface of the capability
           example: internal
@@ -1974,12 +1988,15 @@ components:
       properties:
         BaseModel:
           type: object
+        identifier:
+          type: string
         key:
           type: string
         status:
           type: string
       required:
       - BaseModel
+      - identifier
       - key
       - status
       type: object
