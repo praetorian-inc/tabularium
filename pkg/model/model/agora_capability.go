@@ -12,7 +12,8 @@ import (
 type Category int
 
 const (
-	CategoryRecon Category = iota + 1
+	CategoryUnknown Category = iota
+	CategoryRecon
 	CategoryAD
 	CategoryNetwork
 	CategoryWindows
@@ -95,6 +96,29 @@ func HasCategory(categories []Category, target Category) bool {
 	return false
 }
 
+// CategorySlice represents a slice of categories with custom JSON marshaling
+type CategorySlice []Category
+
+// MarshalJSON implements custom JSON marshaling for CategorySlice
+func (cs CategorySlice) MarshalJSON() ([]byte, error) {
+	var names []string
+	for _, cat := range cs {
+		names = append(names, cat.String())
+	}
+	return json.Marshal(strings.Join(names, ","))
+}
+
+// UnmarshalJSON implements custom JSON unmarshaling for CategorySlice
+func (cs *CategorySlice) UnmarshalJSON(data []byte) error {
+	var str string
+	if err := json.Unmarshal(data, &str); err != nil {
+		return err
+	}
+
+	*cs = CategorySlice(ParseCategories(str))
+	return nil
+}
+
 // Platform represents the platform enum
 type Platform int
 
@@ -157,8 +181,8 @@ type AgoraCapability struct {
 	Title         string                `json:"title" desc:"The pretty name of the capability" example:"AWS"`
 	Target        string                `json:"target" desc:"The target of the capability" example:"asset"`
 	Description   string                `json:"description" desc:"A description of the capability suitable for human or LLM use" example:"Identifies open ports on a target host"`
-	Category      []Category            `json:"category" desc:"The categories this capability belongs to. Use Category enum constants like CategoryRecon, CategoryAD, CategoryNetwork, etc. Access string values via CategoryStrings[category]" example:"[\"recon\", \"ad\"]"`
-	RunsOn        Platform              `json:"runs_on" desc:"The platform this capability runs on. Use Platform enum constants like PlatformWindows, PlatformLinux, PlatformAny, etc. Access string values via PlatformStrings[platform]" example:"windows"`
+	Category      CategorySlice         `json:"category,omitempty" desc:"The categories this capability belongs to. Use Category enum constants like CategoryRecon, CategoryAD, CategoryNetwork, etc. Access string values via CategoryStrings[category]" example:"[\"recon\", \"ad\"]"`
+	RunsOn        Platform              `json:"runs_on,omitempty" desc:"The platform this capability runs on. Use Platform enum constants like PlatformWindows, PlatformLinux, PlatformAny, etc. Access string values via PlatformStrings[platform]" example:"windows"`
 	Version       string                `json:"version" desc:"The version of the capability (major.minor.patch)" example:"1.0.0"`
 	Executor      string                `json:"executor" desc:"The task executor that can execute this capability" example:"JanusPlugin"`
 	Surface       attacksurface.Surface `json:"surface" desc:"The attack surface of the capability" example:"internal"`
