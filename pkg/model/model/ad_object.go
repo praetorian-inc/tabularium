@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/praetorian-inc/tabularium/pkg/model/beta"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -51,9 +50,9 @@ var ADLabels = map[string]string{
 
 func GetADLabel(label string) string {
 	label = strings.ToLower(label)
-	check1 := ADLabels[label]
-	if check1 != "" {
-		return check1
+	adLabel := ADLabels[label]
+	if adLabel != "" {
+		return adLabel
 	}
 
 	label = "ad" + label
@@ -74,7 +73,6 @@ var (
 )
 
 type ADObject struct {
-	beta.Beta
 	BaseAsset
 	registry.ModelAlias
 	Label    string `neo4j:"label" json:"label" desc:"Label of the object." example:"user"`
