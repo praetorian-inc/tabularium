@@ -12,7 +12,7 @@ func GetLabel(label string) string {
 	if strings.HasPrefix(lowercase, "ad") {
 		return GetADLabel(lowercase)
 	}
-	if strings.HasPrefix(lowercase, "webapplication") {
+	if strings.HasPrefix(lowercase, strings.ToLower(WebApplicationLabel)) {
 		return WebApplicationLabel
 	}
 	return cases.Title(language.English).String(lowercase)
