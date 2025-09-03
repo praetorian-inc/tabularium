@@ -180,6 +180,9 @@ func normalizeURL(rawURL string) (string, error) {
 
 	if parsed.Path == "" {
 		parsed.Path = "/"
+	} else {
+		// Normalize path to lowercase for consistency
+		parsed.Path = strings.ToLower(parsed.Path)
 	}
 
 	parsed.RawQuery = ""

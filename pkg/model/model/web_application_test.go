@@ -64,7 +64,7 @@ func TestWebApplicationStruct(t *testing.T) {
 			primaryURL:  "HTTPS://APP.EXAMPLE.COM/Path",
 			appName:     "Example App",
 			urls:        []string{},
-			expectedKey: "#webapplication#https://app.example.com/Path",
+			expectedKey: "#webapplication#https://app.example.com/path",
 		},
 	}
 
@@ -134,7 +134,7 @@ func TestWebApplicationURLNormalization(t *testing.T) {
 		{
 			name:     "Mixed case normalized",
 			input:    "HTTPS://EXAMPLE.COM/PATH",
-			expected: "https://example.com/PATH",
+			expected: "https://example.com/path",
 			hasError: false,
 		},
 		{
@@ -439,7 +439,7 @@ func TestWebApplicationURLsNormalization(t *testing.T) {
 	expectedURLs := []string{
 		"https://api.example.com/",
 		"http://admin.example.com/",
-		"https://mixed.example.com/Path",
+		"https://mixed.example.com/path",
 		"https://valid.example.com/",
 	}
 	
