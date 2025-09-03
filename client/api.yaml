@@ -965,6 +965,8 @@ components:
       properties:
         BaseModel:
           type: object
+        Beta:
+          type: object
         History:
           type: object
         accountRef:
@@ -1002,6 +1004,7 @@ components:
           type: string
       required:
       - BaseModel
+      - Beta
       - History
       - accountRef
       - created
