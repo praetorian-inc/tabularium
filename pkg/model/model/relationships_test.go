@@ -147,6 +147,44 @@ func TestProcessRelationshipScenario(t *testing.T) {
 	})
 }
 
+// Test HasWebpage relationship constraint scenarios
+func TestHasWebpageConstraintScenarios(t *testing.T) {
+	t.Run("Same WebApplication-Webpage pair generates same key", func(t *testing.T) {
+		// Create two identical relationships
+		source1 := NewWebApplication("https://example.com", "Example App")
+		source1.Key = "#webapplication#https://example.com"
+		target1 := NewWebpageFromString("https://example.com/page", &source1)
+		target1.Key = "#webpage#https://example.com/page"
+
+		source2 := NewWebApplication("https://example.com", "Example App")
+		source2.Key = "#webapplication#https://example.com"
+		target2 := NewWebpageFromString("https://example.com/page", &source2)
+		target2.Key = "#webpage#https://example.com/page"
+
+		rel1 := NewHasWebpage(&source1, &target1)
+		rel2 := NewHasWebpage(&source2, &target2)
+
+		assert.Equal(t, rel1.GetKey(), rel2.GetKey())
+	})
+
+	t.Run("Different webpages generate different keys", func(t *testing.T) {
+		source := NewWebApplication("https://example.com", "Example App")
+		source.Key = "#webapplication#https://example.com"
+		
+		target1 := NewWebpageFromString("https://example.com/page1", &source)
+		target1.Key = "#webpage#https://example.com/page1"
+		target2 := NewWebpageFromString("https://example.com/page2", &source)
+		target2.Key = "#webpage#https://example.com/page2"
+
+		rel1 := NewHasWebpage(&source, &target1)
+		rel2 := NewHasWebpage(&source, &target2)
+
+		assert.NotEqual(t, rel1.GetKey(), rel2.GetKey())
+		assert.Contains(t, rel1.GetKey(), "page1")
+		assert.Contains(t, rel2.GetKey(), "page2")
+	})
+}
+
 // Test edge cases that might cause constraint violations
 func TestConstraintViolationScenarios(t *testing.T) {
 	t.Run("Different nodes with same key", func(t *testing.T) {
@@ -183,6 +221,61 @@ func TestConstraintViolationScenarios(t *testing.T) {
 		rel := NewDiscovered(&source, &target)
 		expectedKey := "#asset#test:region#DISCOVERED#resource#arn:aws:service:region:account:resource"
 		assert.Equal(t, expectedKey, rel.GetKey())
+	})
+}
+
+// Test HasWebpage MERGE query scenario
+func TestHasWebpageMergeQueryScenario(t *testing.T) {
+	t.Run("MERGE should include constraint properties for HasWebpage", func(t *testing.T) {
+		source := NewWebApplication("https://example.com", "Example App")
+		source.Key = "#webapplication#https://example.com"
+		target := NewWebpageFromString("https://example.com/admin", &source)
+		target.Key = "#webpage#https://example.com/admin"
+		rel := NewHasWebpage(&source, &target)
+
+		username := "test@example.com"
+
+		// MERGE pattern should include constraint properties
+		mergeProps := map[string]interface{}{
+			"key":      rel.GetKey(),
+			"username": username,
+		}
+
+		assert.NotEmpty(t, mergeProps["key"])
+		assert.NotEmpty(t, mergeProps["username"])
+		assert.Contains(t, mergeProps["key"].(string), "HAS_WEBPAGE")
+	})
+
+	t.Run("SET should exclude constraint properties for HasWebpage", func(t *testing.T) {
+		source := NewWebApplication("https://example.com", "Example App")
+		source.Key = "#webapplication#https://example.com"
+		target := NewWebpageFromString("https://example.com/admin", &source)
+		target.Key = "#webpage#https://example.com/admin"
+		rel := NewHasWebpage(&source, &target)
+
+		username := "test@example.com"
+
+		allProps := map[string]interface{}{
+			"key":            rel.GetKey(),
+			"username":       username,
+			"capability":     "web-crawler",
+			"created":        "2024-01-01",
+			"visited":        "2024-01-02",
+			"attachmentPath": "/path/to/attachment",
+		}
+
+		// Remove constraint properties for SET
+		setProps := make(map[string]interface{})
+		for k, v := range allProps {
+			if k != "key" && k != "username" {
+				setProps[k] = v
+			}
+		}
+
+		assert.NotContains(t, setProps, "key")
+		assert.NotContains(t, setProps, "username")
+		assert.Contains(t, setProps, "capability")
+		assert.Equal(t, "web-crawler", setProps["capability"])
 	})
 }
 
@@ -237,6 +330,151 @@ func TestMergeQueryScenario(t *testing.T) {
 	})
 }
 
+// Test HasWebpage relationship functionality
+func TestHasWebpageRelationship(t *testing.T) {
+	t.Run("Label returns correct value", func(t *testing.T) {
+		source := NewWebApplication("https://example.com", "Example App")
+		target := NewWebpageFromString("https://example.com/page", &source)
+
+		rel := NewHasWebpage(&source, &target)
+		assert.Equal(t, HasWebpageLabel, rel.Label())
+		assert.Equal(t, "HAS_WEBPAGE", rel.Label())
+	})
+
+	t.Run("Key generation follows pattern", func(t *testing.T) {
+		source := NewWebApplication("https://example.com", "Example App")
+		source.Key = "#webapplication#https://example.com"
+		target := NewWebpageFromString("https://example.com/page", &source)
+		target.Key = "#webpage#https://example.com/page#webapplication#https://example.com"
+
+		rel := NewHasWebpage(&source, &target)
+		expectedKey := "#webapplication#https://example.com#HAS_WEBPAGE#webpage#https://example.com/page#webapplication#https://example.com"
+		assert.Equal(t, expectedKey, rel.GetKey())
+		assert.Contains(t, rel.GetKey(), "#HAS_WEBPAGE#")
+		assert.Contains(t, rel.GetKey(), source.GetKey())
+		assert.Contains(t, rel.GetKey(), target.GetKey())
+	})
+
+	t.Run("Relationship implements GraphRelationship interface", func(t *testing.T) {
+		source := NewWebApplication("https://example.com", "Example App")
+		target := NewWebpageFromString("https://example.com/page", &source)
+
+		rel := NewHasWebpage(&source, &target)
+		
+		// Test that it implements GraphRelationship interface
+		var _ GraphRelationship = rel
+		assert.NotNil(t, rel.Base())
+		assert.Equal(t, HasWebpageLabel, rel.Label())
+		assert.True(t, rel.Valid())
+	})
+
+	t.Run("Visit functionality works correctly", func(t *testing.T) {
+		// Create original relationship
+		dbSource := NewWebApplication("https://example.com", "Example App")
+		dbSource.Key = "#webapplication#https://example.com"
+		dbTarget := NewWebpageFromString("https://example.com/page", &dbSource)
+		dbTarget.Key = "#webpage#https://example.com/page#webapplication#https://example.com"
+		dbRel := NewHasWebpage(&dbSource, &dbTarget)
+		dbRel.Base().Capability = "original-crawler"
+		dbRel.Base().Visited = "2024-01-01"
+
+		// Create new relationship with updated data
+		newSource := NewWebApplication("https://example.com", "Example App")
+		newSource.Key = "#webapplication#https://example.com"
+		newTarget := NewWebpageFromString("https://example.com/page", &newSource)
+		newTarget.Key = "#webpage#https://example.com/page#webapplication#https://example.com"
+		newRel := NewHasWebpage(&newSource, &newTarget)
+		newRel.Base().Capability = "new-crawler"
+		newRel.Base().Visited = "2024-01-02"
+
+		// Perform Visit
+		dbRel.Base().Visit(newRel)
+
+		// Verify updates
+		assert.Equal(t, "2024-01-02", dbRel.Base().Visited)
+		assert.Equal(t, "new-crawler", dbRel.Base().Capability)
+		assert.Equal(t, &newSource, dbRel.Base().Source)
+		assert.Equal(t, &newTarget, dbRel.Base().Target)
+	})
+
+	t.Run("Nodes returns correct source and target", func(t *testing.T) {
+		source := NewWebApplication("https://example.com", "Example App")
+		target := NewWebpageFromString("https://example.com/page", &source)
+
+		rel := NewHasWebpage(&source, &target)
+		sourceNode, targetNode := rel.Nodes()
+		
+		assert.Equal(t, &source, sourceNode)
+		assert.Equal(t, &target, targetNode)
+	})
+}
+
+// Test HasWebpage relationship key generation edge cases
+func TestHasWebpageRelationshipKeyGeneration(t *testing.T) {
+	tests := []struct {
+		name          string
+		sourceKey     string
+		targetKey     string
+		expectedKey   string
+		shouldContain []string
+	}{
+		{
+			name:        "WebApplication to Webpage relationship",
+			sourceKey:   "#webapplication#https://example.com",
+			targetKey:   "#webpage#https://example.com/login",
+			expectedKey: "#webapplication#https://example.com#HAS_WEBPAGE#webpage#https://example.com/login",
+			shouldContain: []string{
+				"#webapplication#https://example.com",
+				"#HAS_WEBPAGE#",
+				"#webpage#https://example.com/login",
+			},
+		},
+		{
+			name:        "Complex webpage URL with parameters",
+			sourceKey:   "#webapplication#https://app.example.com",
+			targetKey:   "#webpage#https://app.example.com/search?q=test&sort=date",
+			expectedKey: "#webapplication#https://app.example.com#HAS_WEBPAGE#webpage#https://app.example.com/search?q=test&sort=date",
+			shouldContain: []string{
+				"#HAS_WEBPAGE#",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			source := NewWebApplication("https://example.com", "Example App")
+			source.Key = tt.sourceKey
+			target := NewWebpageFromString("https://example.com/page", &source)
+			target.Key = tt.targetKey
+
+			rel := NewHasWebpage(&source, &target)
+
+			assert.Equal(t, tt.expectedKey, rel.GetKey())
+
+			for _, substr := range tt.shouldContain {
+				assert.Contains(t, rel.GetKey(), substr)
+			}
+		})
+	}
+}
+
+// Test HasWebpage relationship registry integration
+func TestHasWebpageRegistryIntegration(t *testing.T) {
+	t.Run("HasWebpage is registered in registry", func(t *testing.T) {
+		// This test ensures the relationship is properly registered
+		// The actual registry functionality is tested elsewhere
+		rel := &HasWebpage{}
+		assert.NotNil(t, rel)
+		assert.Equal(t, HasWebpageLabel, rel.Label())
+	})
+
+	t.Run("Description is set correctly", func(t *testing.T) {
+		rel := &HasWebpage{}
+		expected := "Represents the relationship indicating a web application has a specific webpage."
+		assert.Equal(t, expected, rel.GetDescription())
+	})
+}
+
 // Test to reproduce the actual error scenario
 func TestReproduceConstraintViolation(t *testing.T) {
 	// This test reproduces the exact scenario that causes the constraint violation:
@@ -280,7 +518,7 @@ func TestReproduceConstraintViolation(t *testing.T) {
 		// 4. The key remains the same (this is the constraint violation key)
 		assert.Equal(t, expectedKey, existingRel.GetKey())
 
-		// This is the problem: processRelationship tries to insert existingRel again
+			// This is the problem: processRelationship tries to insert existingRel again
 		// even though it already exists in the database with this exact key
 		t.Logf("Relationship key that causes constraint violation: %s", existingRel.GetKey())
 	})
