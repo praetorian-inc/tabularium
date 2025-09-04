@@ -25,7 +25,7 @@ func init() {
 }
 
 func (w *WebApplication) GetLabels() []string {
-	labels := []string{WebApplicationLabel, TTLLabel}
+	labels := []string{WebApplicationLabel, AssetLabel, TTLLabel}
 	if w.Source == SeedSource {
 		labels = append(labels, SeedLabel)
 	}
@@ -44,7 +44,7 @@ func (w *WebApplication) GetHooks() []registry.Hook {
 					}
 					w.PrimaryURL = normalizedURL
 
-						key := fmt.Sprintf("#webapplication#%s", w.PrimaryURL)
+					key := fmt.Sprintf("#webapplication#%s", w.PrimaryURL)
 					if len(key) > 2048 {
 						key = key[:2048]
 					}
@@ -77,7 +77,6 @@ func (w *WebApplication) Valid() bool {
 	return webAppKeyRegex.MatchString(w.Key)
 }
 
-
 func (w *WebApplication) WithStatus(status string) Target {
 	ret := *w
 	ret.Status = status
@@ -100,7 +99,6 @@ func (w *WebApplication) Identifier() string {
 	}
 	return w.PrimaryURL
 }
-
 
 func (w *WebApplication) Merge(other Assetlike) {
 	w.BaseAsset.Merge(other)
@@ -211,7 +209,6 @@ func NewWebApplicationSeed(primaryURL string) WebApplication {
 	w.TTL = 0
 	return w
 }
-
 
 func (w *WebApplication) SeedModels() []Seedable {
 	copy := *w
