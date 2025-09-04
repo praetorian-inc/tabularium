@@ -45,7 +45,7 @@ jobs:
             fi
           else
             echo "On non-main branch - using v1.0.X-pre-N-$SANITIZED_BRANCH format"
-            # Get latest v1.0.X tag from main branch as base version (keep this version, don't increment)
+            # Always get the latest v1.0.X tag from main branch as base version
             LATEST_MAIN_TAG=$(git tag -l "v1.0.*" --merged "origin/main" --sort=-version:refname | grep -E '^v1\.0\.[0-9]+$' | head -n1)
             
             # Get latest pre-release tag for this specific branch to find the highest pre-release counter
@@ -55,7 +55,7 @@ jobs:
               echo "No v1.0.X tag found on main, using base version v1.0.0"
               BASE_VERSION="v1.0.0"
             else
-              echo "Latest main tag found: $LATEST_MAIN_TAG (using as base version)"
+              echo "Latest main tag found: $LATEST_MAIN_TAG (using as current base version)"
               BASE_VERSION="$LATEST_MAIN_TAG"
             fi
             
@@ -64,14 +64,26 @@ jobs:
               PRE_COUNTER=0
             else
               echo "Latest pre-release tag found: $LATEST_PRE_TAG"
-              # Extract the pre-release counter (the number after -pre- and before the final -branch)
-              PRE_COUNTER=$(echo "$LATEST_PRE_TAG" | sed 's/.*-pre-\([0-9]*\)-.*/\1/')
-              if [[ ! "$PRE_COUNTER" =~ ^[0-9]+$ ]]; then
-                echo "Could not parse pre-release counter, defaulting to 0"
-                PRE_COUNTER=0
+         
+              # Extract the base version from the existing pre-release tag
+              EXISTING_BASE=$(echo "$LATEST_PRE_TAG" | sed 's/-pre-.*$//')
+              echo "Existing base version in branch tag: $EXISTING_BASE"
+              echo "Current main base version: $BASE_VERSION"
+              
+              if [ "$EXISTING_BASE" = "$BASE_VERSION" ]; then
+                # Same base version - increment the pre-release counter
+                PRE_COUNTER=$(echo "$LATEST_PRE_TAG" | sed 's/.*-pre-\([0-9]*\)-.*/\1/')
+                if [[ ! "$PRE_COUNTER" =~ ^[0-9]+$ ]]; then
+                  echo "Could not parse pre-release counter, defaulting to 0"
+                  PRE_COUNTER=0
+                else
+                  echo "Base version unchanged, incrementing pre-release counter from $PRE_COUNTER"
+                  PRE_COUNTER=$((PRE_COUNTER + 1))
+                fi
               else
-                echo "Current pre-release counter: $PRE_COUNTER"
-                PRE_COUNTER=$((PRE_COUNTER + 1))
+                # Different base version - reset counter to 0 (main version advanced)
+                echo "Base version changed from $EXISTING_BASE to $BASE_VERSION - resetting pre-release counter to 0"
+                PRE_COUNTER=0
               fi
             fi
             
