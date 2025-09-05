@@ -1,6 +1,8 @@
 package model
 
 import (
+	"encoding/json"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -269,14 +271,14 @@ func TestWebApplicationLabels(t *testing.T) {
 	w := NewWebApplication("https://example.com", "Example")
 	labels := w.GetLabels()
 	
-	expectedLabels := []string{WebApplicationLabel, TTLLabel}
+	expectedLabels := []string{WebApplicationLabel, AssetLabel, TTLLabel}
 	assert.ElementsMatch(t, expectedLabels, labels)
 	
 	// Test seed webapp labels
 	seedApp := NewWebApplicationSeed("https://seed.example.com")
 	seedLabels := seedApp.GetLabels()
 	
-	expectedSeedLabels := []string{WebApplicationLabel, TTLLabel, SeedLabel}
+	expectedSeedLabels := []string{WebApplicationLabel, AssetLabel, TTLLabel, SeedLabel}
 	assert.ElementsMatch(t, expectedSeedLabels, seedLabels)
 }
 
@@ -488,4 +490,241 @@ func TestWebApplicationSeedableInterface(t *testing.T) {
 	assert.True(t, webApp.IsStatus(Pending))
 	assert.Equal(t, "https://example.com", webApp.Group())
 	assert.Equal(t, "/", webApp.Identifier())
+}
+
+func TestWebApplicationBurpSiteIDField(t *testing.T) {
+	tests := []struct {
+		name       string
+		burpSiteID string
+		primaryURL string
+		appName    string
+	}{
+		{
+			name:       "Basic BurpSiteID",
+			burpSiteID: "abc123-def456-ghi789",
+			primaryURL: "https://app.example.com",
+			appName:    "Example App",
+		},
+		{
+			name:       "Empty BurpSiteID",
+			burpSiteID: "",
+			primaryURL: "https://app.example.com",
+			appName:    "Example App",
+		},
+		{
+			name:       "Complex BurpSiteID",
+			burpSiteID: "burp_site_123456789_abcdef",
+			primaryURL: "https://complex.example.com/path",
+			appName:    "Complex App",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := NewWebApplication(tt.primaryURL, tt.appName)
+			w.BurpSiteID = tt.burpSiteID
+			
+			assert.Equal(t, tt.burpSiteID, w.BurpSiteID)
+		})
+	}
+}
+
+func TestWebApplicationBurpSiteIDMerge(t *testing.T) {
+	tests := []struct {
+		name             string
+		app1BurpSiteID   string
+		app2BurpSiteID   string
+		expectedBurpSiteID string
+	}{
+		{
+			name:             "Merge with empty source",
+			app1BurpSiteID:   "original-id",
+			app2BurpSiteID:   "",
+			expectedBurpSiteID: "original-id",
+		},
+		{
+			name:             "Merge with non-empty source",
+			app1BurpSiteID:   "original-id",
+			app2BurpSiteID:   "new-id",
+			expectedBurpSiteID: "new-id",
+		},
+		{
+			name:             "Merge empty with non-empty",
+			app1BurpSiteID:   "",
+			app2BurpSiteID:   "new-id",
+			expectedBurpSiteID: "new-id",
+		},
+		{
+			name:             "Merge both empty",
+			app1BurpSiteID:   "",
+			app2BurpSiteID:   "",
+			expectedBurpSiteID: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w1 := NewWebApplication("https://app1.example.com", "App 1")
+			w1.BurpSiteID = tt.app1BurpSiteID
+			
+			w2 := NewWebApplication("https://app2.example.com", "App 2")
+			w2.BurpSiteID = tt.app2BurpSiteID
+			
+			w1.Merge(&w2)
+			assert.Equal(t, tt.expectedBurpSiteID, w1.BurpSiteID)
+		})
+	}
+}
+
+func TestWebApplicationBurpSiteIDVisit(t *testing.T) {
+	tests := []struct {
+		name             string
+		app1BurpSiteID   string
+		app2BurpSiteID   string
+		expectedBurpSiteID string
+	}{
+		{
+			name:             "Visit with empty destination",
+			app1BurpSiteID:   "",
+			app2BurpSiteID:   "source-id",
+			expectedBurpSiteID: "source-id",
+		},
+		{
+			name:             "Visit with non-empty destination",
+			app1BurpSiteID:   "dest-id",
+			app2BurpSiteID:   "source-id",
+			expectedBurpSiteID: "dest-id", // Should not change
+		},
+		{
+			name:             "Visit with empty source",
+			app1BurpSiteID:   "dest-id",
+			app2BurpSiteID:   "",
+			expectedBurpSiteID: "dest-id",
+		},
+		{
+			name:             "Visit both empty",
+			app1BurpSiteID:   "",
+			app2BurpSiteID:   "",
+			expectedBurpSiteID: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w1 := NewWebApplication("https://app1.example.com", "App 1")
+			w1.BurpSiteID = tt.app1BurpSiteID
+			
+			w2 := NewWebApplication("https://app2.example.com", "App 2")
+			w2.BurpSiteID = tt.app2BurpSiteID
+			
+			w1.Visit(&w2)
+			assert.Equal(t, tt.expectedBurpSiteID, w1.BurpSiteID)
+		})
+	}
+}
+
+func TestWebApplicationBurpSiteIDJSONRoundTrip(t *testing.T) {
+	original := NewWebApplication("https://example.com", "Test App")
+	original.BurpSiteID = "test-burp-site-id-123"
+	
+	// Marshal to JSON
+	jsonData, err := json.Marshal(original)
+	require.NoError(t, err)
+	
+	// Verify BurpSiteID is in JSON
+	assert.Contains(t, string(jsonData), "burp_site_id")
+	assert.Contains(t, string(jsonData), "test-burp-site-id-123")
+	
+	// Unmarshal back
+	var unmarshaled WebApplication
+	err = json.Unmarshal(jsonData, &unmarshaled)
+	require.NoError(t, err)
+	
+	// Verify BurpSiteID round-tripped correctly
+	assert.Equal(t, original.BurpSiteID, unmarshaled.BurpSiteID)
+}
+
+func TestWebApplicationBurpSiteIDStructTags(t *testing.T) {
+	webAppType := reflect.TypeOf(WebApplication{})
+	
+	// Get the BurpSiteID field
+	field, found := webAppType.FieldByName("BurpSiteID")
+	require.True(t, found, "BurpSiteID field should exist")
+	
+	// Check neo4j tag
+	neo4jTag := field.Tag.Get("neo4j")
+	assert.Equal(t, "burp_site_id", neo4jTag, "neo4j tag should be 'burp_site_id'")
+	
+	// Check json tag
+	jsonTag := field.Tag.Get("json")
+	assert.Equal(t, "burp_site_id", jsonTag, "json tag should be 'burp_site_id'")
+	
+	// Check desc tag exists (should be consistent with other fields)
+	descTag := field.Tag.Get("desc")
+	assert.NotEmpty(t, descTag, "desc tag should exist")
+	
+	// Check example tag exists
+	exampleTag := field.Tag.Get("example")
+	assert.NotEmpty(t, exampleTag, "example tag should exist")
+}
+
+func TestWebApplicationInterfaceComplianceWithBurpSiteID(t *testing.T) {
+	w := NewWebApplication("https://example.com", "Test App")
+	w.BurpSiteID = "test-id-123"
+	
+	// Test that WebApplication still implements Target interface
+	var target Target = &w
+	assert.NotNil(t, target)
+	
+	// Test that WebApplication still implements Assetlike interface
+	var assetlike Assetlike = &w
+	assert.NotNil(t, assetlike)
+	
+	// Test WithStatus maintains BurpSiteID
+	newStatusTarget := w.WithStatus(Pending)
+	newStatusWebApp, ok := newStatusTarget.(*WebApplication)
+	require.True(t, ok, "WithStatus should return a WebApplication")
+	assert.Equal(t, w.BurpSiteID, newStatusWebApp.BurpSiteID, "BurpSiteID should be preserved in WithStatus")
+}
+
+func TestWebApplicationRegistryIntegrationWithBurpSiteID(t *testing.T) {
+	// Verify the registry can still create WebApplication instances
+	model, found := registry.Registry.MakeType("webapplication")
+	require.True(t, found)
+	require.IsType(t, &WebApplication{}, model)
+	
+	// Set BurpSiteID and verify it persists through registry operations
+	webApp := model.(*WebApplication)
+	webApp.PrimaryURL = "https://registry.test.com"
+	webApp.Name = "Registry Test"
+	webApp.BurpSiteID = "registry-test-id"
+	
+	// Call registry hooks to ensure they don't interfere with BurpSiteID
+	webApp.Defaulted()
+	registry.CallHooks(webApp)
+	
+	// Verify BurpSiteID is preserved
+	assert.Equal(t, "registry-test-id", webApp.BurpSiteID)
+	
+	// Verify other fields are still properly processed
+	assert.Equal(t, "#webapplication#https://registry.test.com/", webApp.Key)
+	assert.True(t, webApp.Valid())
+}
+
+func TestWebApplicationSeedWithBurpSiteID(t *testing.T) {
+	// Test that seed creation works with BurpSiteID
+	seed := NewWebApplicationSeed("https://seed.example.com")
+	seed.BurpSiteID = "seed-burp-id"
+	
+	assert.Equal(t, "seed-burp-id", seed.BurpSiteID)
+	assert.Equal(t, SeedSource, seed.Source)
+	assert.Equal(t, Pending, seed.Status)
+	assert.Zero(t, seed.TTL)
+	
+	// Test SeedModels preserves BurpSiteID
+	seedModels := seed.SeedModels()
+	require.Len(t, seedModels, 1)
+	
+	copiedWebApp := seedModels[0].(*WebApplication)
+	assert.Equal(t, seed.BurpSiteID, copiedWebApp.BurpSiteID)
 }

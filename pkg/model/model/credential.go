@@ -46,6 +46,8 @@ const (
 	NS1Credential                   CredentialType = "ns1"                     // NS1 API key
 	BurpSuiteCredential             CredentialType = "portswigger"             // Customer BurpSuite API key
 	BurpSuiteInternalCredential     CredentialType = "burp-internal"           // Internal BurpSuite instance API creds
+	BurpSiteLoginCredential         CredentialType = "burp-site-login"         // Burp site login credentials
+	BurpRecordingCredential         CredentialType = "burp-recording"          // Burp login recording scripts
 	QualysCredential                CredentialType = "qualys"                  // Qualys credentials
 	ShodanCredential                CredentialType = "shodan"                  // Shodan API key
 	TenableVMCredential             CredentialType = "tenable-vm"              // Tenable API key
