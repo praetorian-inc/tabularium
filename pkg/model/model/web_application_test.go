@@ -269,14 +269,14 @@ func TestWebApplicationLabels(t *testing.T) {
 	w := NewWebApplication("https://example.com", "Example")
 	labels := w.GetLabels()
 	
-	expectedLabels := []string{WebApplicationLabel, TTLLabel}
+	expectedLabels := []string{WebApplicationLabel, AssetLabel, TTLLabel}
 	assert.ElementsMatch(t, expectedLabels, labels)
 	
 	// Test seed webapp labels
 	seedApp := NewWebApplicationSeed("https://seed.example.com")
 	seedLabels := seedApp.GetLabels()
 	
-	expectedSeedLabels := []string{WebApplicationLabel, TTLLabel, SeedLabel}
+	expectedSeedLabels := []string{WebApplicationLabel, AssetLabel, TTLLabel, SeedLabel}
 	assert.ElementsMatch(t, expectedSeedLabels, seedLabels)
 }
 
@@ -374,6 +374,22 @@ func TestWebApplicationEdgeCases(t *testing.T) {
 	// The hook should handle invalid URLs gracefully
 	err := hooks[1].Call()
 	assert.Error(t, err) // Should return error for invalid URL
+	
+	// Test empty primary_url validation
+	w3 := WebApplication{
+		PrimaryURL: "",
+	}
+	hooks3 := w3.GetHooks()
+	require.NotEmpty(t, hooks3)
+	
+	// The hook should reject empty PrimaryURL
+	err3 := hooks3[1].Call()
+	assert.Error(t, err3) // Should return error for empty PrimaryURL
+	assert.Contains(t, err3.Error(), "requires non-empty PrimaryURL")
+	
+	// Test Group() and Identifier() methods with empty primary_url
+	assert.Equal(t, "", w3.Group())
+	assert.Equal(t, "", w3.Identifier())
 	
 	// Test merge with non-WebApplication
 	asset := NewAsset("example.com", "example.com")

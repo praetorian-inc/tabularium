@@ -37,19 +37,22 @@ func (w *WebApplication) GetHooks() []registry.Hook {
 		useGroupAndIdentifier(w, &w.Name, &w.PrimaryURL),
 		{
 			Call: func() error {
-				if w.PrimaryURL != "" {
-					normalizedURL, err := normalizeURL(w.PrimaryURL)
-					if err != nil {
-						return fmt.Errorf("failed to normalize PrimaryURL: %w", err)
-					}
-					w.PrimaryURL = normalizedURL
-
-					key := fmt.Sprintf("#webapplication#%s", w.PrimaryURL)
-					if len(key) > 2048 {
-						key = key[:2048]
-					}
-					w.Key = key
+				// Validate that PrimaryURL is not empty for WebApplication
+				if w.PrimaryURL == "" {
+					return fmt.Errorf("WebApplication requires non-empty PrimaryURL")
 				}
+
+				normalizedURL, err := normalizeURL(w.PrimaryURL)
+				if err != nil {
+					return fmt.Errorf("failed to normalize PrimaryURL: %w", err)
+				}
+				w.PrimaryURL = normalizedURL
+
+				key := fmt.Sprintf("#webapplication#%s", w.PrimaryURL)
+				if len(key) > 2048 {
+					key = key[:2048]
+				}
+				w.Key = key
 
 				normalizedURLs := make([]string, 0, len(w.URLs))
 				for _, u := range w.URLs {
