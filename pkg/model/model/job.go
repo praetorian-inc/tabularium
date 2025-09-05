@@ -28,6 +28,7 @@ type Job struct {
 	LargeArtifactFileName string            `dynamodbav:"largeArtifactFileName" json:"largeArtifactFileName,omitempty" desc:"The name of the file that contains the large artifacts." example:"large_artifact.zip"`
 	S3DownloadURL         string            `dynamodbav:"s3DownloadURL" json:"s3DownloadURL,omitempty" desc:"The URL of the file that contains the large output." example:"https://s3.amazonaws.com/big_output.zip"`
 	AllowRepeat           bool              `dynamodbav:"allowRepeat" json:"allowRepeat" desc:"Indicates if repeating this job should be allowed. Used for manual jobs, or rescan jobs, that should not block other job executions." example:"false"`
+	MessagingEnabled      bool              `dynamodbav:"messagingEnabled" json:"messagingEnabled" desc:"Indicates if bidirectional messaging is enabled for this job, allowing real-time communication with the running capability." example:"false"`
 	Full                  bool              `dynamodbav:"-" json:"full,omitempty" desc:"Indicates if this is a full scan job." example:"false"`
 	Capabilities          []string          `dynamodbav:"-" json:"capabilities,omitempty" desc:"List of specific capabilities to run for this job." example:"[\"portscan\", \"nuclei\"]"`
 	Queue                 string            `dynamodbav:"-" desc:"Target queue for the job." example:"standard"`
