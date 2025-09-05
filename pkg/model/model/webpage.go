@@ -55,7 +55,6 @@ type Webpage struct {
 	History
 	// Neo4j fields
 	URL             string                `neo4j:"url" json:"url" desc:"The basic URL of the webpage." example:"https://example.com/path"`
-	State           string                `neo4j:"state" json:"state" desc:"Current analysis state of the webpage (e.g., Unanalyzed, Interesting, Uninteresting)." example:"Unanalyzed"`
 	Metadata        map[string]any        `neo4j:"metadata" json:"metadata" dynamodbav:"metadata" desc:"Additional metadata associated with the webpage." example:"{\"title\": \"Example Domain\"}"`
 	SSOIdentified   map[string]SSOWebpage `neo4j:"sso_identified" json:"sso_identified" desc:"SSO providers that have identified this webpage with their last seen timestamps." example:"{\"okta\": {\"last_seen\": \"2023-10-27T11:00:00Z\", \"id\": \"1234567890\", \"name\": \"Chariot\"}}"`
 	DetailsFilepath string                `neo4j:"details_filepath" json:"details_filepath" dynamodbav:"details_filepath" desc:"The path to the details file for the webpage." example:"webpage/1234567890/details-1234567890.json"`
@@ -189,14 +188,6 @@ func (w *Webpage) WithStatus(status string) Target {
 }
 
 func (w *Webpage) Merge(other Webpage) {
-	switch w.State {
-	case Unanalyzed:
-		w.State = other.State
-	case Uninteresting:
-		if other.State == Interesting {
-			w.State = other.State
-		}
-	}
 	if other.DetailsFilepath != "" {
 		w.DetailsFilepath = other.DetailsFilepath
 	}
@@ -233,7 +224,6 @@ func (w *Webpage) Dehydrate() (File, Hydratable) {
 func (w *Webpage) Defaulted() {
 	w.Source = []string{}
 	w.Status = Active
-	w.State = Unanalyzed
 	w.Created = Now()
 	w.Visited = Now()
 	w.TTL = Future(7 * 24)
@@ -251,7 +241,6 @@ func (w *Webpage) GetHooks() []registry.Hook {
 					}
 					w.Key = key
 				}
-				w.basicAnalysis()
 				return nil
 			},
 			Description: "Construction and basic analysis",

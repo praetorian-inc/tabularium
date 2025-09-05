@@ -186,54 +186,82 @@ func TestConstraintViolationScenarios(t *testing.T) {
 	})
 }
 
-// Test the actual MERGE query generation scenario
-func TestMergeQueryScenario(t *testing.T) {
-	// This test documents what properties should be in MERGE vs SET
+// Test HasWebpage relationship functionality
+func TestHasWebpageRelationship(t *testing.T) {
+	t.Run("Label returns correct value", func(t *testing.T) {
+		source := NewWebApplication("https://example.com", "Example App")
+		target := NewWebpageFromString("https://example.com/page", &source)
 
-	source := NewAsset("amazon", "411435703965")
-	source.Key = "#asset#amazon#411435703965"
-	target := NewAsset("awsresource", "411435703965")
-	target.Key = "#awsresource#411435703965#arn:aws:account:ap-northeast-1:411435703965:411435703965"
-	rel := NewDiscovered(&source, &target)
-
-	username := "zach.grace+play@praetorian.com"
-
-	t.Run("MERGE should include constraint properties", func(t *testing.T) {
-		// The MERGE pattern should include:
-		mergeProps := map[string]interface{}{
-			"key":      rel.GetKey(),
-			"username": username,
-		}
-
-		assert.NotEmpty(t, mergeProps["key"])
-		assert.NotEmpty(t, mergeProps["username"])
+		rel := NewHasWebpage(&source, &target)
+		assert.Equal(t, HasWebpageLabel, rel.Label())
+		assert.Equal(t, "HAS_WEBPAGE", rel.Label())
 	})
 
-	t.Run("SET should exclude constraint properties", func(t *testing.T) {
-		// After MERGE, SET should include all other properties except key and username
-		// to avoid constraint violations
+	t.Run("Key generation follows pattern", func(t *testing.T) {
+		source := NewWebApplication("https://example.com", "Example App")
+		source.Key = "#webapplication#https://example.com"
+		target := NewWebpageFromString("https://example.com/page", &source)
+		target.Key = "#webpage#https://example.com/page#webapplication#https://example.com"
 
-		// This would be done in the actual query builder
-		allProps := map[string]interface{}{
-			"key":            rel.GetKey(),
-			"username":       username,
-			"capability":     "amazon",
-			"created":        "2024-01-01",
-			"visited":        "2024-01-02",
-			"attachmentPath": "/path",
-		}
+		rel := NewHasWebpage(&source, &target)
+		expectedKey := "#webapplication#https://example.com#HAS_WEBPAGE#webpage#https://example.com/page#webapplication#https://example.com"
+		assert.Equal(t, expectedKey, rel.GetKey())
+		assert.Contains(t, rel.GetKey(), "#HAS_WEBPAGE#")
+		assert.Contains(t, rel.GetKey(), source.GetKey())
+		assert.Contains(t, rel.GetKey(), target.GetKey())
+	})
 
-		// Remove constraint properties for SET
-		setProps := make(map[string]interface{})
-		for k, v := range allProps {
-			if k != "key" && k != "username" {
-				setProps[k] = v
-			}
-		}
+	t.Run("Relationship implements GraphRelationship interface", func(t *testing.T) {
+		source := NewWebApplication("https://example.com", "Example App")
+		target := NewWebpageFromString("https://example.com/page", &source)
 
-		assert.NotContains(t, setProps, "key")
-		assert.NotContains(t, setProps, "username")
-		assert.Contains(t, setProps, "capability")
+		rel := NewHasWebpage(&source, &target)
+
+		// Test that it implements GraphRelationship interface
+		var _ GraphRelationship = rel
+		assert.NotNil(t, rel.Base())
+		assert.Equal(t, HasWebpageLabel, rel.Label())
+		assert.True(t, rel.Valid())
+	})
+
+	t.Run("Visit functionality works correctly", func(t *testing.T) {
+		// Create original relationship
+		dbSource := NewWebApplication("https://example.com", "Example App")
+		dbSource.Key = "#webapplication#https://example.com"
+		dbTarget := NewWebpageFromString("https://example.com/page", &dbSource)
+		dbTarget.Key = "#webpage#https://example.com/page#webapplication#https://example.com"
+		dbRel := NewHasWebpage(&dbSource, &dbTarget)
+		dbRel.Base().Capability = "original-crawler"
+		dbRel.Base().Visited = "2024-01-01"
+
+		// Create new relationship with updated data
+		newSource := NewWebApplication("https://example.com", "Example App")
+		newSource.Key = "#webapplication#https://example.com"
+		newTarget := NewWebpageFromString("https://example.com/page", &newSource)
+		newTarget.Key = "#webpage#https://example.com/page#webapplication#https://example.com"
+		newRel := NewHasWebpage(&newSource, &newTarget)
+		newRel.Base().Capability = "new-crawler"
+		newRel.Base().Visited = "2024-01-02"
+
+		// Perform Visit
+		dbRel.Base().Visit(newRel)
+
+		// Verify updates
+		assert.Equal(t, "2024-01-02", dbRel.Base().Visited)
+		assert.Equal(t, "new-crawler", dbRel.Base().Capability)
+		assert.Equal(t, &newSource, dbRel.Base().Source)
+		assert.Equal(t, &newTarget, dbRel.Base().Target)
+	})
+
+	t.Run("Nodes returns correct source and target", func(t *testing.T) {
+		source := NewWebApplication("https://example.com", "Example App")
+		target := NewWebpageFromString("https://example.com/page", &source)
+
+		rel := NewHasWebpage(&source, &target)
+		sourceNode, targetNode := rel.Nodes()
+
+		assert.Equal(t, &source, sourceNode)
+		assert.Equal(t, &target, targetNode)
 	})
 }
 

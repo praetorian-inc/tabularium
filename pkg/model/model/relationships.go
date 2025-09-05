@@ -6,7 +6,6 @@ import (
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
-// GetDescription returns a description for the BaseRelationship model.
 func (br *BaseRelationship) GetDescription() string {
 	return "Represents the base structure for all graph relationships, containing source, target, and metadata."
 }
@@ -32,6 +31,7 @@ func init() {
 	registry.Registry.MustRegisterModel(&HasAttribute{})
 	registry.Registry.MustRegisterModel(&HasTechnology{})
 	registry.Registry.MustRegisterModel(&HasCredential{})
+	registry.Registry.MustRegisterModel(&HasWebpage{})
 }
 
 func (br *BaseRelationship) GetKey() string {
@@ -73,7 +73,6 @@ func NewBaseRelationship(source, target GraphModel, label string) *BaseRelations
 	}
 }
 
-// GetDescription returns a description for the Discovered relationship model.
 func (d *Discovered) GetDescription() string {
 	return "Represents a discovery relationship between two entities (e.g., a host discovered a service)."
 }
@@ -94,7 +93,6 @@ func (d Discovered) Label() string {
 	return DiscoveredLabel
 }
 
-// GetDescription returns a description for the HasVulnerability relationship model.
 func (hv *HasVulnerability) GetDescription() string {
 	return "Represents the relationship indicating an asset has a specific vulnerability."
 }
@@ -212,4 +210,25 @@ func NewCredentialRelationship(asset GraphModel, credential *Credential) GraphRe
 
 func (hc *HasCredential) Label() string {
 	return HasCredentialLabel
+}
+
+const HasWebpageLabel = "HAS_WEBPAGE"
+
+type HasWebpage struct {
+	*BaseRelationship
+}
+
+func NewHasWebpage(source, target GraphModel) GraphRelationship {
+	return &HasWebpage{
+		BaseRelationship: NewBaseRelationship(source, target, HasWebpageLabel),
+	}
+}
+
+func (hw HasWebpage) Label() string {
+	return HasWebpageLabel
+}
+
+// GetDescription returns a description for the HasWebpage relationship model.
+func (hw *HasWebpage) GetDescription() string {
+	return "Represents the relationship indicating a web application has a specific webpage."
 }

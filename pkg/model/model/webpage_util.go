@@ -15,28 +15,6 @@ import (
 	"time"
 )
 
-func (w *Webpage) basicAnalysis() {
-	if w.State == Interesting && w.Metadata[PARAMETERS_IDENTIFIED] != nil {
-		return
-	}
-
-	for _, req := range w.Requests {
-		url, err := url.Parse(req.RawURL)
-		if err != nil {
-			continue
-		}
-		params := url.Query()
-		hasParameters := len(params) > 0
-		onlyJSVer := len(params) == 1 && len(params["ver"]) == 1
-
-		if hasParameters && !onlyJSVer {
-			w.State = Interesting
-			w.Metadata[PARAMETERS_IDENTIFIED] = true
-			break
-		}
-	}
-}
-
 func (w *Webpage) PopulateResponse(request *WebpageRequest) error {
 	resp, err := w.doRequest(request.Method, request.RawURL, request.Headers, request.Body)
 	if err != nil {
@@ -296,13 +274,6 @@ func RemoveReservedCharacters(s string) string {
 		result = strings.ReplaceAll(result, string(char), "_")
 	}
 	return result
-}
-
-func WithState(state string) WebpageOption {
-	return func(w *Webpage) error {
-		w.State = state
-		return nil
-	}
 }
 
 func WithRequests(requests ...WebpageRequest) WebpageOption {
