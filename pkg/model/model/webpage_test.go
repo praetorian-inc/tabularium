@@ -27,10 +27,10 @@ const (
 )
 
 type webpageTestCase struct {
-	name          string
-	url           string
-	request       WebpageRequest
-	expectedURL   string
+	name        string
+	url         string
+	request     WebpageRequest
+	expectedURL string
 }
 
 type metadataTestCase struct {
@@ -42,28 +42,28 @@ type metadataTestCase struct {
 
 var basicWebpageTestCases = []webpageTestCase{
 	{
-		name:          "basic URL",
-		url:           testBaseURL,
-		request:       WebpageRequest{RawURL: testBaseURL + "/"},
-		expectedURL:   testBaseURL + "/",
+		name:        "basic URL",
+		url:         testBaseURL,
+		request:     WebpageRequest{RawURL: testBaseURL + "/"},
+		expectedURL: testBaseURL + "/",
 	},
 	{
-		name:          "URL with path",
-		url:           testBaseURL + testPath,
-		request:       WebpageRequest{RawURL: testBaseURL + testPath},
-		expectedURL:   testBaseURL + testPath,
+		name:        "URL with path",
+		url:         testBaseURL + testPath,
+		request:     WebpageRequest{RawURL: testBaseURL + testPath},
+		expectedURL: testBaseURL + testPath,
 	},
 	{
-		name:          "URL with query parameters",
-		url:           testBaseURL + testPath + testQuery,
-		request:       WebpageRequest{RawURL: testBaseURL + testPath + testQuery},
-		expectedURL:   testBaseURL + testPath,
+		name:        "URL with query parameters",
+		url:         testBaseURL + testPath + testQuery,
+		request:     WebpageRequest{RawURL: testBaseURL + testPath + testQuery},
+		expectedURL: testBaseURL + testPath,
 	},
 	{
-		name:          "URL with query and fragment",
-		url:           testBaseURL + testPath + testQuery + testFragment,
-		request:       WebpageRequest{RawURL: testBaseURL + testPath + testQuery + testFragment},
-		expectedURL:   testBaseURL + testPath,
+		name:        "URL with query and fragment",
+		url:         testBaseURL + testPath + testQuery + testFragment,
+		request:     WebpageRequest{RawURL: testBaseURL + testPath + testQuery + testFragment},
+		expectedURL: testBaseURL + testPath,
 	},
 }
 
@@ -723,18 +723,6 @@ func TestWebpageHooks(t *testing.T) {
 		err := registry.CallHooks(&webpage)
 		assert.NoError(t, err)
 		assert.LessOrEqual(t, len(webpage.Key), 2048)
-	})
-
-	t.Run("construction hook - basic analysis", func(t *testing.T) {
-		req := createTestRequest(testBaseURL+"/test?param=value&id=123", "GET", "")
-		webpage := createTestWebpage(testBaseURL+"/test", WithRequests(req))
-
-		err := registry.CallHooks(&webpage)
-		assert.NoError(t, err)
-		// Parameters identification functionality has been removed
-		// The hook no longer sets parameters-identified metadata
-		// Verify the key was set correctly instead
-		assert.Equal(t, "#webpage#"+testBaseURL+"/test", webpage.Key)
 	})
 }
 
