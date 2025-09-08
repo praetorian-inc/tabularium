@@ -23,10 +23,10 @@ func Normalize(rawURL string) (string, error) {
 		return "", fmt.Errorf("URL missing host")
 	}
 
-	*parsed = NormalizeCasing(*parsed)
 	*parsed = RemoveDefaultPorts(*parsed)
 	*parsed = NormalizePath(*parsed)
 	*parsed = RemoveQueryAndFragment(*parsed)
+	*parsed = NormalizeCasing(*parsed)
 
 	return parsed.String(), nil
 }
@@ -78,20 +78,4 @@ func FixSchemePortMismatch(rawURL string) (string, error) {
 	*parsed = RemoveDefaultPorts(*parsed)
 
 	return parsed.String(), nil
-}
-
-func GetSiteName(rawURL string, maxLength int) (string, error) {
-	parsed, err := url.Parse(rawURL)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse target URL: %w", err)
-	}
-
-	*parsed = RemoveDefaultPorts(*parsed)
-	siteName := parsed.Host
-
-	if maxLength > 0 && len(siteName) > maxLength {
-		siteName = siteName[:maxLength]
-	}
-
-	return siteName, nil
 }
