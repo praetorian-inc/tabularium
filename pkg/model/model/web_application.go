@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
+	"slices"
 	"strings"
 
+	uu "github.com/praetorian-inc/tabularium/pkg/lib/url"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -24,6 +26,10 @@ func init() {
 	registry.Registry.MustRegisterModel(&WebApplication{})
 }
 
+func (w *WebApplication) GetDescription() string {
+	return "Represents a web application with a primary URL and associated URLs, designed for security testing and attack surface management."
+}
+
 func (w *WebApplication) GetLabels() []string {
 	labels := []string{WebApplicationLabel, AssetLabel, TTLLabel}
 	if w.Source == SeedSource {
@@ -37,12 +43,11 @@ func (w *WebApplication) GetHooks() []registry.Hook {
 		useGroupAndIdentifier(w, &w.Name, &w.PrimaryURL),
 		{
 			Call: func() error {
-				// Validate that PrimaryURL is not empty for WebApplication
 				if w.PrimaryURL == "" {
 					return fmt.Errorf("WebApplication requires non-empty PrimaryURL")
 				}
 
-				normalizedURL, err := normalizeURL(w.PrimaryURL)
+				normalizedURL, err := uu.Normalize(w.PrimaryURL)
 				if err != nil {
 					return fmt.Errorf("failed to normalize PrimaryURL: %w", err)
 				}
@@ -56,7 +61,7 @@ func (w *WebApplication) GetHooks() []registry.Hook {
 
 				normalizedURLs := make([]string, 0, len(w.URLs))
 				for _, u := range w.URLs {
-					if normalized, err := normalizeURL(u); err == nil {
+					if normalized, err := uu.Normalize(u); err == nil {
 						normalizedURLs = append(normalizedURLs, normalized)
 					}
 				}
@@ -106,20 +111,12 @@ func (w *WebApplication) Identifier() string {
 func (w *WebApplication) Merge(other Assetlike) {
 	w.BaseAsset.Merge(other)
 	if otherApp, ok := other.(*WebApplication); ok {
-		if otherApp.PrimaryURL != "" {
-			w.PrimaryURL = otherApp.PrimaryURL
-		}
 		if otherApp.Name != "" {
 			w.Name = otherApp.Name
 		}
-		urlSet := make(map[string]bool)
-		for _, u := range w.URLs {
-			urlSet[u] = true
-		}
 		for _, u := range otherApp.URLs {
-			if !urlSet[u] {
+			if !slices.Contains(w.URLs, u) {
 				w.URLs = append(w.URLs, u)
-				urlSet[u] = true
 			}
 		}
 	}
@@ -128,9 +125,6 @@ func (w *WebApplication) Merge(other Assetlike) {
 func (w *WebApplication) Visit(other Assetlike) {
 	w.BaseAsset.Visit(other)
 	if otherApp, ok := other.(*WebApplication); ok {
-		if otherApp.PrimaryURL != "" && w.PrimaryURL == "" {
-			w.PrimaryURL = otherApp.PrimaryURL
-		}
 		if otherApp.Name != "" && w.Name == "" {
 			w.Name = otherApp.Name
 		}
@@ -147,49 +141,6 @@ func (w *WebApplication) IsHTTP() bool {
 
 func (w *WebApplication) IsHTTPS() bool {
 	return strings.HasPrefix(w.PrimaryURL, "https://")
-}
-
-func (w *WebApplication) IsPublic() bool {
-	return !w.IsPrivate()
-}
-
-func normalizeURL(rawURL string) (string, error) {
-	if rawURL == "" {
-		return "", fmt.Errorf("empty URL")
-	}
-
-	parsed, err := url.Parse(rawURL)
-	if err != nil {
-		return "", fmt.Errorf("invalid URL: %w", err)
-	}
-
-	if parsed.Scheme == "" {
-		return "", fmt.Errorf("URL missing scheme")
-	}
-	parsed.Scheme = strings.ToLower(parsed.Scheme)
-
-	if parsed.Host == "" {
-		return "", fmt.Errorf("URL missing host")
-	}
-	parsed.Host = strings.ToLower(parsed.Host)
-
-	if parsed.Scheme == "http" && strings.HasSuffix(parsed.Host, ":80") {
-		parsed.Host = strings.TrimSuffix(parsed.Host, ":80")
-	} else if parsed.Scheme == "https" && strings.HasSuffix(parsed.Host, ":443") {
-		parsed.Host = strings.TrimSuffix(parsed.Host, ":443")
-	}
-
-	if parsed.Path == "" {
-		parsed.Path = "/"
-	} else {
-		// Normalize path to lowercase for consistency
-		parsed.Path = strings.ToLower(parsed.Path)
-	}
-
-	parsed.RawQuery = ""
-	parsed.Fragment = ""
-
-	return parsed.String(), nil
 }
 
 func NewWebApplication(primaryURL, name string) WebApplication {
@@ -216,8 +167,4 @@ func NewWebApplicationSeed(primaryURL string) WebApplication {
 func (w *WebApplication) SeedModels() []Seedable {
 	copy := *w
 	return []Seedable{&copy}
-}
-
-func (w *WebApplication) GetDescription() string {
-	return "Represents a web application with a primary URL and associated URLs, designed for security testing and attack surface management."
 }
