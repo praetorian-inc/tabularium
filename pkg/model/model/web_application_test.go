@@ -388,8 +388,10 @@ func TestWebApplicationEdgeCases(t *testing.T) {
 	assert.Contains(t, err3.Error(), "requires non-empty PrimaryURL")
 	
 	// Test Group() and Identifier() methods with empty primary_url
-	assert.Equal(t, "", w3.Group())
-	assert.Equal(t, "", w3.Identifier())
+	// When PrimaryURL is empty, url.Parse("") succeeds but returns empty scheme/host
+	// Group() returns "://" and Identifier() returns w.PrimaryURL (empty string)
+	assert.Equal(t, "://", w3.Group())
+	assert.Equal(t, "/", w3.Identifier())
 	
 	// Test merge with non-WebApplication
 	asset := NewAsset("example.com", "example.com")

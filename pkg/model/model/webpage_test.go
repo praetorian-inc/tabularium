@@ -31,14 +31,6 @@ type webpageTestCase struct {
 	url           string
 	request       WebpageRequest
 	expectedURL   string
-	expectedState string
-}
-
-type stateTestCase struct {
-	name          string
-	initialState1 string
-	initialState2 string
-	expectedState string
 }
 
 type metadataTestCase struct {
@@ -54,28 +46,24 @@ var basicWebpageTestCases = []webpageTestCase{
 		url:           testBaseURL,
 		request:       WebpageRequest{RawURL: testBaseURL + "/"},
 		expectedURL:   testBaseURL + "/",
-		expectedState: Unanalyzed,
 	},
 	{
 		name:          "URL with path",
 		url:           testBaseURL + testPath,
 		request:       WebpageRequest{RawURL: testBaseURL + testPath},
 		expectedURL:   testBaseURL + testPath,
-		expectedState: Unanalyzed,
 	},
 	{
 		name:          "URL with query parameters",
 		url:           testBaseURL + testPath + testQuery,
 		request:       WebpageRequest{RawURL: testBaseURL + testPath + testQuery},
 		expectedURL:   testBaseURL + testPath,
-		expectedState: Interesting,
 	},
 	{
 		name:          "URL with query and fragment",
 		url:           testBaseURL + testPath + testQuery + testFragment,
 		request:       WebpageRequest{RawURL: testBaseURL + testPath + testQuery + testFragment},
 		expectedURL:   testBaseURL + testPath,
-		expectedState: Interesting,
 	},
 }
 
@@ -743,7 +731,10 @@ func TestWebpageHooks(t *testing.T) {
 
 		err := registry.CallHooks(&webpage)
 		assert.NoError(t, err)
-		assertWebpageMetadata(t, webpage, PARAMETERS_IDENTIFIED, true)
+		// Parameters identification functionality has been removed
+		// The hook no longer sets parameters-identified metadata
+		// Verify the key was set correctly instead
+		assert.Equal(t, "#webpage#"+testBaseURL+"/test", webpage.Key)
 	})
 }
 
