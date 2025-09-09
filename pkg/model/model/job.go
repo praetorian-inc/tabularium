@@ -26,7 +26,7 @@ type Job struct {
 	TTL                   int64             `dynamodbav:"ttl" json:"ttl" desc:"Time-to-live for the job record (Unix timestamp)." example:"1706353200"`
 	Name                  string            `dynamodbav:"name,omitempty" json:"name,omitempty" desc:"The IP address this job was executed from" example:"1.2.3.4"`
 	Config                map[string]string `dynamodbav:"config" json:"config" desc:"Configuration parameters for the job capability." example:"{\"test\": \"cve-1111-2222\"}"`
-	Secret                map[string]string `dynamodbav:"-" json:"-" desc:"Sensitive configuration parameters (credentials, tokens, keys)."`
+	Secret                map[string]string `dynamodbav:"-" json:"secret" desc:"Sensitive configuration parameters (credentials, tokens, keys)."`
 	LargeArtifactFileName string            `dynamodbav:"largeArtifactFileName" json:"largeArtifactFileName,omitempty" desc:"The name of the file that contains the large artifacts." example:"large_artifact.zip"`
 	S3DownloadURL         string            `dynamodbav:"s3DownloadURL" json:"s3DownloadURL,omitempty" desc:"The URL of the file that contains the large output." example:"https://s3.amazonaws.com/big_output.zip"`
 	AllowRepeat           bool              `dynamodbav:"allowRepeat" json:"allowRepeat" desc:"Indicates if repeating this job should be allowed. Used for manual jobs, or rescan jobs, that should not block other job executions." example:"false"`
