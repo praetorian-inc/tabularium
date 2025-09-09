@@ -5,7 +5,6 @@ import (
 	"net/url"
 	"regexp"
 	"slices"
-	"strings"
 
 	"github.com/praetorian-inc/tabularium/pkg/lib/normalize"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
@@ -134,14 +133,6 @@ func (w *WebApplication) Visit(other Assetlike) {
 
 func (w *WebApplication) Attribute(name, value string) Attribute {
 	return NewAttribute(name, value, w)
-}
-
-func (w *WebApplication) IsHTTP() bool {
-	return strings.HasPrefix(w.PrimaryURL, "http://") || strings.HasPrefix(w.PrimaryURL, "https://")
-}
-
-func (w *WebApplication) IsHTTPS() bool {
-	return strings.HasPrefix(w.PrimaryURL, "https://")
 }
 
 func NewWebApplication(primaryURL, name string) WebApplication {
