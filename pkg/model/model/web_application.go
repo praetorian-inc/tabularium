@@ -132,26 +132,18 @@ func (w *WebApplication) Merge(other Assetlike) {
 		if otherApp.Name != "" {
 			w.Name = otherApp.Name
 		}
+		if otherApp.PrimaryURL != "" {
+			w.PrimaryURL = otherApp.PrimaryURL
+		}
 		for _, u := range otherApp.URLs {
 			if !slices.Contains(w.URLs, u) {
 				w.URLs = append(w.URLs, u)
 			}
 		}
+		if otherApp.BurpSiteID != "" {
+			w.BurpSiteID = otherApp.BurpSiteID
+		}
 	}
-
-	// Update fields with non-empty values from other
-	if otherApp.PrimaryURL != "" {
-		w.PrimaryURL = otherApp.PrimaryURL
-	}
-	if otherApp.Name != "" {
-		w.Name = otherApp.Name
-	}
-	if otherApp.BurpSiteID != "" {
-		w.BurpSiteID = otherApp.BurpSiteID
-	}
-
-	// Merge URLs without duplicates
-	w.mergeURLs(otherApp.URLs)
 }
 
 // Visit updates empty fields from another Assetlike without overwriting existing values
@@ -160,6 +152,12 @@ func (w *WebApplication) Visit(other Assetlike) {
 	if otherApp, ok := other.(*WebApplication); ok {
 		if otherApp.Name != "" && w.Name == "" {
 			w.Name = otherApp.Name
+		}
+		if otherApp.PrimaryURL != "" && w.PrimaryURL == "" {
+			w.PrimaryURL = otherApp.PrimaryURL
+		}
+		if otherApp.BurpSiteID != "" && w.BurpSiteID == "" {
+			w.BurpSiteID = otherApp.BurpSiteID
 		}
 	}
 }
@@ -176,6 +174,11 @@ func (w *WebApplication) IsHTTP() bool {
 // IsHTTPS returns true if the PrimaryURL uses HTTPS protocol
 func (w *WebApplication) IsHTTPS() bool {
 	return strings.HasPrefix(w.PrimaryURL, "https://")
+}
+
+// HasBurpSiteID returns true if the WebApplication has a non-empty BurpSiteID
+func (w *WebApplication) HasBurpSiteID() bool {
+	return w.BurpSiteID != ""
 }
 
 func NewWebApplication(primaryURL, name string) WebApplication {

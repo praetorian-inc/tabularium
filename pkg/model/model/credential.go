@@ -73,31 +73,6 @@ const (
 	CredentialOperationDelete CredentialOperation = "delete"
 )
 
-// LoginCredentialParams defines the structure for login credential parameters
-type LoginCredentialParams struct {
-	Username   string `json:"username"`
-	Password   string `json:"password"`
-	Label      string `json:"label"`
-	WebappKey  string `json:"webappKey"`
-}
-
-// RecordingCredentialParams defines the structure for recording credential parameters
-type RecordingCredentialParams struct {
-	Script    string `json:"script"`
-	Label     string `json:"label"`
-	WebappKey string `json:"webappKey"`
-}
-
-// LoginCredentialDeleteParams defines the structure for login credential deletion parameters
-type LoginCredentialDeleteParams struct {
-	LoginCredentialID string `json:"login_credential_id"`
-}
-
-// RecordingCredentialDeleteParams defines the structure for recording credential deletion parameters
-type RecordingCredentialDeleteParams struct {
-	RecordingID string `json:"recording_id"`
-}
-
 type CredentialRequest struct {
 	Username     string               `json:"username"`
 	CredentialID string               `json:"credentialId,omitempty"` // unique identifier for the credential
