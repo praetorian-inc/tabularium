@@ -9,8 +9,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/praetorian-inc/tabularium/pkg/lib/normalize"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
-	uu "github.com/praetorian-inc/tabularium/pkg/lib/url"
 )
 
 var webPageKeyRegex = regexp.MustCompile(`^#webpage#https?://.+(##.*)?$`)
@@ -273,7 +273,7 @@ func NewWebpage(url url.URL, parent GraphModel, options ...WebpageOption) Webpag
 	if url.Path == "" {
 		url.Path = DEFAULT_URL_PATH
 	}
-	url = uu.RemoveDefaultPorts(url)
+	url = normalize.RemoveDefaultPorts(url)
 	urlString := fmt.Sprintf("%s://%s%s", url.Scheme, url.Host, url.Path)
 	w := Webpage{URL: urlString}
 	if parent != nil {
@@ -297,4 +297,3 @@ func (w *Webpage) AddSSOProvider(provider string, ssoData SSOWebpage) {
 	}
 	w.SSOIdentified[provider] = ssoData
 }
-
