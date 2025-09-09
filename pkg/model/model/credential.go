@@ -10,6 +10,7 @@ import (
 type CredentialCategory string
 type CredentialType string
 type CredentialLifecycle string
+type CredentialOperation string
 type AdditionalCredParams map[string]any
 
 const (
@@ -65,7 +66,37 @@ const (
 	// Credential Lifecycles
 	CredentialLifecycleStatic    CredentialLifecycle = "static"
 	CredentialLifecycleTemporary CredentialLifecycle = "temporary"
+
+	// Credential Operations
+	CredentialOperationGet    CredentialOperation = "get"
+	CredentialOperationAdd    CredentialOperation = "add"
+	CredentialOperationDelete CredentialOperation = "delete"
 )
+
+// LoginCredentialParams defines the structure for login credential parameters
+type LoginCredentialParams struct {
+	Username   string `json:"username"`
+	Password   string `json:"password"`
+	Label      string `json:"label"`
+	WebappKey  string `json:"webappKey"`
+}
+
+// RecordingCredentialParams defines the structure for recording credential parameters
+type RecordingCredentialParams struct {
+	Script    string `json:"script"`
+	Label     string `json:"label"`
+	WebappKey string `json:"webappKey"`
+}
+
+// LoginCredentialDeleteParams defines the structure for login credential deletion parameters
+type LoginCredentialDeleteParams struct {
+	LoginCredentialID string `json:"login_credential_id"`
+}
+
+// RecordingCredentialDeleteParams defines the structure for recording credential deletion parameters
+type RecordingCredentialDeleteParams struct {
+	RecordingID string `json:"recording_id"`
+}
 
 type CredentialRequest struct {
 	Username     string               `json:"username"`
@@ -73,6 +104,7 @@ type CredentialRequest struct {
 	ResourceKey  string               `json:"resourceKey,omitempty"`  // key of the resource to get the credential for
 	Category     CredentialCategory   `json:"category"`               // internal, client integration, etc.
 	Type         CredentialType       `json:"type"`                   // static, AWS, GCP, etc.
+	Operation    CredentialOperation  `json:"operation"`              // get, add, delete operation type
 	Format       []CredentialFormat   `json:"format"`                 // formats to get credentials in - file, env, token, etc.
 	Parameters   AdditionalCredParams `json:"parameters,omitempty"`   // additional parameters to help with retrieval (if any)
 }
