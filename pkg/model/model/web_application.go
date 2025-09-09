@@ -7,7 +7,7 @@ import (
 	"slices"
 	"strings"
 
-	uu "github.com/praetorian-inc/tabularium/pkg/lib/url"
+	"github.com/praetorian-inc/tabularium/pkg/lib/normalize"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -47,7 +47,7 @@ func (w *WebApplication) GetHooks() []registry.Hook {
 					return fmt.Errorf("WebApplication requires non-empty PrimaryURL")
 				}
 
-				normalizedURL, err := uu.Normalize(w.PrimaryURL)
+				normalizedURL, err := normalize.Normalize(w.PrimaryURL)
 				if err != nil {
 					return fmt.Errorf("failed to normalize PrimaryURL: %w", err)
 				}
@@ -61,7 +61,7 @@ func (w *WebApplication) GetHooks() []registry.Hook {
 
 				normalizedURLs := make([]string, 0, len(w.URLs))
 				for _, u := range w.URLs {
-					if normalized, err := uu.Normalize(u); err == nil {
+					if normalized, err := normalize.Normalize(u); err == nil {
 						normalizedURLs = append(normalizedURLs, normalized)
 					}
 				}
