@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
+	"slices"
 	"strings"
 
+	uu "github.com/praetorian-inc/tabularium/pkg/lib/url"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -34,6 +36,10 @@ func init() {
 	registry.Registry.MustRegisterModel(&WebApplication{})
 }
 
+func (w *WebApplication) GetDescription() string {
+	return "Represents a web application with a primary URL and associated URLs, designed for security testing and attack surface management."
+}
+
 func (w *WebApplication) GetLabels() []string {
 	labels := []string{WebApplicationLabel, AssetLabel, TTLLabel}
 	if w.Source == SeedSource {
@@ -47,7 +53,31 @@ func (w *WebApplication) GetHooks() []registry.Hook {
 		useGroupAndIdentifier(w, &w.Name, &w.PrimaryURL),
 		{
 			Call: func() error {
-				return w.normalize()
+				if w.PrimaryURL == "" {
+					return fmt.Errorf("WebApplication requires non-empty PrimaryURL")
+				}
+
+				normalizedURL, err := uu.Normalize(w.PrimaryURL)
+				if err != nil {
+					return fmt.Errorf("failed to normalize PrimaryURL: %w", err)
+				}
+				w.PrimaryURL = normalizedURL
+
+				key := fmt.Sprintf("#webapplication#%s", w.PrimaryURL)
+				if len(key) > 2048 {
+					key = key[:2048]
+				}
+				w.Key = key
+
+				normalizedURLs := make([]string, 0, len(w.URLs))
+				for _, u := range w.URLs {
+					if normalized, err := uu.Normalize(u); err == nil {
+						normalizedURLs = append(normalizedURLs, normalized)
+					}
+				}
+				w.URLs = normalizedURLs
+
+				return nil
 			},
 		},
 		setGroupAndIdentifier(w, &w.Name, &w.PrimaryURL),
@@ -98,9 +128,15 @@ func (w *WebApplication) Identifier() string {
 // Merge combines data from another Assetlike, preferring non-empty values from other
 func (w *WebApplication) Merge(other Assetlike) {
 	w.BaseAsset.Merge(other)
-	otherApp, ok := other.(*WebApplication)
-	if !ok {
-		return
+	if otherApp, ok := other.(*WebApplication); ok {
+		if otherApp.Name != "" {
+			w.Name = otherApp.Name
+		}
+		for _, u := range otherApp.URLs {
+			if !slices.Contains(w.URLs, u) {
+				w.URLs = append(w.URLs, u)
+			}
+		}
 	}
 
 	// Update fields with non-empty values from other
@@ -121,20 +157,10 @@ func (w *WebApplication) Merge(other Assetlike) {
 // Visit updates empty fields from another Assetlike without overwriting existing values
 func (w *WebApplication) Visit(other Assetlike) {
 	w.BaseAsset.Visit(other)
-	otherApp, ok := other.(*WebApplication)
-	if !ok {
-		return
-	}
-
-	// Only update if our fields are empty
-	if w.PrimaryURL == "" && otherApp.PrimaryURL != "" {
-		w.PrimaryURL = otherApp.PrimaryURL
-	}
-	if w.Name == "" && otherApp.Name != "" {
-		w.Name = otherApp.Name
-	}
-	if w.BurpSiteID == "" && otherApp.BurpSiteID != "" {
-		w.BurpSiteID = otherApp.BurpSiteID
+	if otherApp, ok := other.(*WebApplication); ok {
+		if otherApp.Name != "" && w.Name == "" {
+			w.Name = otherApp.Name
+		}
 	}
 }
 
@@ -152,137 +178,6 @@ func (w *WebApplication) IsHTTPS() bool {
 	return strings.HasPrefix(w.PrimaryURL, "https://")
 }
 
-// IsPublic returns true if the web application is publicly accessible
-func (w *WebApplication) IsPublic() bool {
-	return !w.IsPrivate()
-}
-
-// HasBurpSiteID returns true if the web application has a Burp Suite site ID configured
-func (w *WebApplication) HasBurpSiteID() bool {
-	return w.BurpSiteID != ""
-}
-
-// normalizeURL normalizes a URL for consistent storage and comparison.
-// It converts scheme and host to lowercase, removes default ports,
-// ensures a path exists, and strips query/fragment components.
-func normalizeURL(rawURL string) (string, error) {
-	if rawURL == "" {
-		return "", fmt.Errorf("empty URL")
-	}
-
-	parsed, err := url.Parse(rawURL)
-	if err != nil {
-		return "", fmt.Errorf("invalid URL: %w", err)
-	}
-
-	if parsed.Scheme == "" {
-		return "", fmt.Errorf("URL missing scheme")
-	}
-	if parsed.Host == "" {
-		return "", fmt.Errorf("URL missing host")
-	}
-
-	// Normalize scheme and host to lowercase
-	parsed.Scheme = strings.ToLower(parsed.Scheme)
-	parsed.Host = strings.ToLower(parsed.Host)
-
-	// Remove default ports for cleaner URLs
-	parsed.Host = removeDefaultPort(parsed.Scheme, parsed.Host)
-
-	// Ensure path exists and is normalized
-	if parsed.Path == "" {
-		parsed.Path = "/"
-	} else {
-		// Normalize path to lowercase for consistency
-		parsed.Path = strings.ToLower(parsed.Path)
-	}
-
-	// Remove query and fragment for canonical URL
-	parsed.RawQuery = ""
-	parsed.Fragment = ""
-
-	return parsed.String(), nil
-}
-
-// removeDefaultPort removes default HTTP/HTTPS ports from the host string
-func removeDefaultPort(scheme, host string) string {
-	switch scheme {
-	case "http":
-		if strings.HasSuffix(host, ":80") {
-			return strings.TrimSuffix(host, ":80")
-		}
-	case "https":
-		if strings.HasSuffix(host, ":443") {
-			return strings.TrimSuffix(host, ":443")
-		}
-	}
-	return host
-}
-
-// normalize performs URL normalization and key generation for the WebApplication
-func (w *WebApplication) normalize() error {
-	if w.PrimaryURL != "" {
-		normalizedURL, err := normalizeURL(w.PrimaryURL)
-		if err != nil {
-			return fmt.Errorf("failed to normalize PrimaryURL: %w", err)
-		}
-		w.PrimaryURL = normalizedURL
-		w.Key = w.generateKey()
-	}
-
-	// Normalize additional URLs, filtering out invalid ones
-	w.URLs = w.normalizeURLList(w.URLs)
-	return nil
-}
-
-// generateKey creates the Neo4j key for this WebApplication
-func (w *WebApplication) generateKey() string {
-	key := fmt.Sprintf("#webapplication#%s", w.PrimaryURL)
-	if len(key) > MaxKeyLength {
-		key = key[:MaxKeyLength]
-	}
-	return key
-}
-
-// normalizeURLList normalizes a list of URLs, filtering out invalid ones
-func (w *WebApplication) normalizeURLList(urls []string) []string {
-	if len(urls) == 0 {
-		return urls
-	}
-
-	normalizedURLs := make([]string, 0, len(urls))
-	seen := make(map[string]bool)
-
-	for _, u := range urls {
-		if normalized, err := normalizeURL(u); err == nil && !seen[normalized] {
-			normalizedURLs = append(normalizedURLs, normalized)
-			seen[normalized] = true
-		}
-	}
-	return normalizedURLs
-}
-
-// mergeURLs merges additional URLs without creating duplicates
-func (w *WebApplication) mergeURLs(otherURLs []string) {
-	if len(otherURLs) == 0 {
-		return
-	}
-
-	urlSet := make(map[string]bool, len(w.URLs)+len(otherURLs))
-	for _, u := range w.URLs {
-		urlSet[u] = true
-	}
-
-	for _, u := range otherURLs {
-		if !urlSet[u] {
-			w.URLs = append(w.URLs, u)
-			urlSet[u] = true
-		}
-	}
-}
-
-// NewWebApplication creates a new WebApplication with the specified primary URL and name.
-// It initializes default values and runs registry hooks for proper setup.
 func NewWebApplication(primaryURL, name string) WebApplication {
 	w := WebApplication{
 		PrimaryURL: primaryURL,
@@ -315,8 +210,4 @@ func NewWebApplicationSeed(primaryURL string) WebApplication {
 func (w *WebApplication) SeedModels() []Seedable {
 	copy := *w
 	return []Seedable{&copy}
-}
-
-func (w *WebApplication) GetDescription() string {
-	return "Represents a web application with a primary URL and associated URLs, designed for security testing and attack surface management."
 }

@@ -1,8 +1,6 @@
 package model
 
 import (
-	"encoding/json"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -73,7 +71,7 @@ func TestWebApplicationStruct(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			w := NewWebApplication(tt.primaryURL, tt.appName)
-			
+
 			assert.Equal(t, tt.appName, w.Name)
 			assert.Equal(t, tt.expectedKey, w.Key)
 			assert.Equal(t, Active, w.Status)
@@ -88,102 +86,12 @@ func TestWebApplicationStruct(t *testing.T) {
 func TestWebApplicationSeed(t *testing.T) {
 	primaryURL := "https://seed.example.com"
 	w := NewWebApplicationSeed(primaryURL)
-	
+
 	assert.Equal(t, primaryURL, w.Name)
 	assert.Equal(t, "#webapplication#https://seed.example.com/", w.Key)
 	assert.Equal(t, Pending, w.Status)
 	assert.Equal(t, SeedSource, w.Source)
 	assert.Equal(t, int64(0), w.TTL) // TTL should be 0 for seeds
-}
-
-func TestWebApplicationURLNormalization(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected string
-		hasError bool
-	}{
-		{
-			name:     "Basic HTTPS URL",
-			input:    "https://example.com",
-			expected: "https://example.com/",
-			hasError: false,
-		},
-		{
-			name:     "HTTP with default port",
-			input:    "http://example.com:80",
-			expected: "http://example.com/",
-			hasError: false,
-		},
-		{
-			name:     "HTTPS with default port",
-			input:    "https://example.com:443",
-			expected: "https://example.com/",
-			hasError: false,
-		},
-		{
-			name:     "Custom port preserved",
-			input:    "https://example.com:8080",
-			expected: "https://example.com:8080/",
-			hasError: false,
-		},
-		{
-			name:     "Query and fragment removed",
-			input:    "https://example.com/path?query=value&other=param#fragment",
-			expected: "https://example.com/path",
-			hasError: false,
-		},
-		{
-			name:     "Mixed case normalized",
-			input:    "HTTPS://EXAMPLE.COM/PATH",
-			expected: "https://example.com/path",
-			hasError: false,
-		},
-		{
-			name:     "Empty URL",
-			input:    "",
-			expected: "",
-			hasError: true,
-		},
-		{
-			name:     "No scheme",
-			input:    "example.com",
-			expected: "",
-			hasError: true,
-		},
-		{
-			name:     "No host",
-			input:    "https://",
-			expected: "",
-			hasError: true,
-		},
-		{
-			name:     "Path with trailing slash preserved",
-			input:    "https://example.com/path/",
-			expected: "https://example.com/path/",
-			hasError: false,
-		},
-		{
-			name:     "Deep path preserved",
-			input:    "https://example.com/api/v1/users/123",
-			expected: "https://example.com/api/v1/users/123",
-			hasError: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			normalized, err := normalizeURL(tt.input)
-			
-			if tt.hasError {
-				assert.Error(t, err)
-				assert.Empty(t, normalized)
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.expected, normalized)
-			}
-		})
-	}
 }
 
 func TestWebApplicationValidation(t *testing.T) {
@@ -194,22 +102,22 @@ func TestWebApplicationValidation(t *testing.T) {
 	}{
 		{
 			name:  "Valid HTTPS webapp key",
-				key:   "#webapplication#https://example.com/",
+			key:   "#webapplication#https://example.com/",
 			valid: true,
 		},
 		{
 			name:  "Valid HTTP webapp key",
-				key:   "#webapplication#http://example.com/",
+			key:   "#webapplication#http://example.com/",
 			valid: true,
 		},
 		{
 			name:  "Valid webapp key with path",
-				key:   "#webapplication#https://example.com/api/v1",
+			key:   "#webapplication#https://example.com/api/v1",
 			valid: true,
 		},
 		{
 			name:  "Valid webapp key with port",
-				key:   "#webapplication#https://example.com:8080/",
+			key:   "#webapplication#https://example.com:8080/",
 			valid: true,
 		},
 		{
@@ -224,22 +132,22 @@ func TestWebApplicationValidation(t *testing.T) {
 		},
 		{
 			name:  "Invalid key - no protocol",
-				key:   "#webapplication#example.com/",
+			key:   "#webapplication#example.com/",
 			valid: false,
 		},
 		{
 			name:  "Invalid key - query parameters",
-				key:   "#webapplication#https://example.com/?param=value",
+			key:   "#webapplication#https://example.com/?param=value",
 			valid: false,
 		},
 		{
 			name:  "Invalid key - fragment",
-				key:   "#webapplication#https://example.com/#section",
+			key:   "#webapplication#https://example.com/#section",
 			valid: false,
 		},
 		{
 			name:  "Invalid key - ftp protocol",
-				key:   "#webapplication#ftp://example.com/",
+			key:   "#webapplication#ftp://example.com/",
 			valid: false,
 		},
 	}
@@ -255,51 +163,41 @@ func TestWebApplicationValidation(t *testing.T) {
 }
 
 func TestWebApplicationKeyLength(t *testing.T) {
-	// Create a very long URL that exceeds 2048 characters
-	longHost := strings.Repeat("verylongsubdomain.", 100) + "example.com"
+	longHost := strings.Repeat("verylongsubdomain", 100) + ".example.com"
 	longURL := "https://" + longHost + "/very/long/path/that/keeps/going"
-	
+
 	w := NewWebApplication(longURL, "Long URL Test")
-	
-	// Key should be truncated to exactly 2048 characters
+
 	assert.LessOrEqual(t, len(w.Key), 2048)
 	assert.True(t, strings.HasPrefix(w.Key, "#webapplication#"))
 }
 
 func TestWebApplicationLabels(t *testing.T) {
-	// Test normal webapp labels
 	w := NewWebApplication("https://example.com", "Example")
 	labels := w.GetLabels()
-	
 	expectedLabels := []string{WebApplicationLabel, AssetLabel, TTLLabel}
 	assert.ElementsMatch(t, expectedLabels, labels)
-	
-	// Test seed webapp labels
+
 	seedApp := NewWebApplicationSeed("https://seed.example.com")
 	seedLabels := seedApp.GetLabels()
-	
 	expectedSeedLabels := []string{WebApplicationLabel, AssetLabel, TTLLabel, SeedLabel}
 	assert.ElementsMatch(t, expectedSeedLabels, seedLabels)
 }
 
 func TestWebApplicationTargetInterface(t *testing.T) {
 	w := NewWebApplication("https://app.example.com/admin", "Admin Panel")
-	
-	// Test Target interface methods
+
 	assert.Equal(t, Active, w.GetStatus())
 	assert.True(t, w.IsStatus("A"))
 	assert.False(t, w.IsStatus("P"))
-	
-	// Test WithStatus
+
 	newStatus := w.WithStatus(Pending)
 	assert.Equal(t, Pending, newStatus.GetStatus())
-	assert.Equal(t, Active, w.GetStatus()) // Original should be unchanged
-	
-	// Test Group and Identifier
+	assert.Equal(t, Active, w.GetStatus())
+
 	assert.Equal(t, "https://app.example.com", w.Group())
 	assert.Equal(t, "/admin", w.Identifier())
-	
-	// Test root path identifier
+
 	rootApp := NewWebApplication("https://example.com", "Root")
 	assert.Equal(t, "/", rootApp.Identifier())
 }
@@ -307,52 +205,39 @@ func TestWebApplicationTargetInterface(t *testing.T) {
 func TestWebApplicationAssetlikeInterface(t *testing.T) {
 	w1 := NewWebApplication("https://app.example.com", "App 1")
 	w1.URLs = []string{"https://api.example.com"}
-	
-	w2 := NewWebApplication("https://app.example.com", "App 2") 
+
+	w2 := NewWebApplication("https://app.example.com", "App 2")
 	w2.URLs = []string{"https://admin.example.com", "https://api.example.com"}
 	w2.PrimaryURL = "https://updated.example.com"
-	
-	// Test Merge
+
 	w1.Merge(&w2)
 	assert.Equal(t, "https://updated.example.com", w1.PrimaryURL)
 	assert.Contains(t, w1.URLs, "https://admin.example.com")
 	assert.Contains(t, w1.URLs, "https://api.example.com")
-	// Should not have duplicates
-	apiCount := 0
-	for _, url := range w1.URLs {
-		if url == "https://api.example.com" {
-			apiCount++
-		}
-	}
-	assert.Equal(t, 1, apiCount)
-	
-	// Test Visit
+	assert.Len(t, w1.URLs, 2)
+
 	w3 := NewWebApplication("", "")
 	w4 := NewWebApplication("https://visit.example.com", "Visit Test")
 	w3.Visit(&w4)
-	assert.Equal(t, "https://visit.example.com/", w3.PrimaryURL) // URL normalization adds trailing slash
+	assert.Equal(t, "https://visit.example.com/", w3.PrimaryURL)
 	assert.Equal(t, "Visit Test", w3.Name)
-	
-	// Test Attribute creation
+
 	attr := w1.Attribute("test", "value")
 	assert.Equal(t, "test", attr.Name)
 	assert.Equal(t, "value", attr.Value)
 }
 
 func TestWebApplicationRegistryIntegration(t *testing.T) {
-	// Test that WebApplication is properly registered
 	model, found := registry.Registry.MakeType("webapplication")
 	assert.True(t, found)
 	assert.IsType(t, &WebApplication{}, model)
-	
-	// Test that it implements Target interface
+
 	if target, ok := model.(Target); ok {
 		assert.NotNil(t, target)
 	} else {
 		t.Fatal("WebApplication should implement Target interface")
 	}
-	
-	// Test that it implements Assetlike interface
+
 	if assetlike, ok := model.(Assetlike); ok {
 		assert.NotNil(t, assetlike)
 	} else {
@@ -360,55 +245,14 @@ func TestWebApplicationRegistryIntegration(t *testing.T) {
 	}
 }
 
-func TestWebApplicationEdgeCases(t *testing.T) {
-	// Test empty URLs slice handling
-	w := NewWebApplication("https://example.com", "Test")
-	assert.NotNil(t, w.URLs)
-	assert.Empty(t, w.URLs)
-	
-	// Test URL normalization failure handling
-	w2 := WebApplication{
-		PrimaryURL: "invalid-url",
-	}
-	hooks := w2.GetHooks()
-	require.NotEmpty(t, hooks)
-	
-	// The hook should handle invalid URLs gracefully
-	err := hooks[1].Call()
-	assert.Error(t, err) // Should return error for invalid URL
-	
-	// Test merge with non-WebApplication
-	asset := NewAsset("example.com", "example.com")
-	w.Merge(&asset)
-	// Should not panic and BaseAsset merge should work
-	
-	// Test visit with non-WebApplication  
-	w.Visit(&asset)
-	// Should not panic and BaseAsset visit should work
-}
-
 func TestWebApplicationTTLBehavior(t *testing.T) {
-	// Regular webapp should have non-zero TTL
 	w1 := NewWebApplication("https://example.com", "Regular")
 	assert.NotZero(t, w1.TTL)
 	assert.Equal(t, SelfSource, w1.Source)
-	
-	// Seed webapp should have zero TTL
+
 	w2 := NewWebApplicationSeed("https://seed.example.com")
 	assert.Zero(t, w2.TTL)
 	assert.Equal(t, SeedSource, w2.Source)
-	
-	// Test that changing source after creation doesn't automatically change TTL
-	// TTL=0 is only applied during seed creation in NewWebApplicationSeed
-	w3 := NewWebApplication("https://test.example.com", "Test")
-	originalTTL := w3.TTL
-	assert.NotZero(t, originalTTL) // Should have non-zero TTL initially
-	
-	// Change to seed source - TTL should remain the same unless explicitly set
-	w3.Source = SeedSource
-	w3.Defaulted() // This doesn't change TTL for existing instances
-	assert.NotZero(t, w3.TTL) // TTL remains unchanged
-	assert.Equal(t, originalTTL, w3.TTL) // TTL should be the same
 }
 
 func TestWebApplicationDescription(t *testing.T) {
@@ -429,302 +273,41 @@ func TestWebApplicationURLsNormalization(t *testing.T) {
 			"https://valid.example.com",
 		},
 	}
-	
+
 	hooks := w.GetHooks()
 	require.NotEmpty(t, hooks)
-	
-	// Call the normalization hook
-	err := hooks[1].Call()
-	assert.NoError(t, err)
-	
-	// Check that URLs were normalized and invalid ones filtered
+
+	for _, hook := range hooks {
+		err := hook.Call()
+		assert.NoError(t, err)
+	}
+
 	expectedURLs := []string{
 		"https://api.example.com/",
 		"http://admin.example.com/",
 		"https://mixed.example.com/path",
 		"https://valid.example.com/",
 	}
-	
+
 	assert.ElementsMatch(t, expectedURLs, w.URLs)
 }
 
 func TestWebApplicationSeedModels(t *testing.T) {
 	webApp := NewWebApplicationSeed("https://app.example.com/dashboard")
-	
-	// Verify the Seedable interface is implemented
+
 	var seedable Seedable = &webApp
 	assert.NotNil(t, seedable)
-	
-	// Test SeedModels method
+
 	seedModels := webApp.SeedModels()
-	
+
 	assert.Len(t, seedModels, 1)
-	
-	// Verify it returns a copy, not the original
+
 	returnedWebApp := seedModels[0].(*WebApplication)
 	assert.NotSame(t, &webApp, returnedWebApp)
-	
-	// Verify the copy has the same data
+
 	assert.Equal(t, webApp.PrimaryURL, returnedWebApp.PrimaryURL)
 	assert.Equal(t, webApp.Name, returnedWebApp.Name)
 	assert.Equal(t, webApp.Status, returnedWebApp.Status)
 	assert.Equal(t, webApp.Source, returnedWebApp.Source)
 	assert.Equal(t, webApp.Key, returnedWebApp.Key)
-}
-
-func TestWebApplicationSeedableInterface(t *testing.T) {
-	webApp := NewWebApplicationSeed("https://example.com")
-	
-	// Test GetSource/SetSource methods (inherited from BaseAsset)
-	assert.Equal(t, SeedSource, webApp.GetSource())
-	
-	webApp.SetSource("test-source")
-	// Should remain SeedSource because seed source always wins
-	assert.Equal(t, SeedSource, webApp.GetSource())
-	
-	// Test SetOrigin (inherited from BaseAsset)
-	webApp.SetOrigin("test-origin")
-	assert.Equal(t, "test-origin", webApp.Origin)
-	
-	// Test Target interface methods
-	assert.True(t, webApp.IsStatus(Pending))
-	assert.Equal(t, "https://example.com", webApp.Group())
-	assert.Equal(t, "/", webApp.Identifier())
-}
-
-func TestWebApplicationBurpSiteIDField(t *testing.T) {
-	tests := []struct {
-		name       string
-		burpSiteID string
-		primaryURL string
-		appName    string
-	}{
-		{
-			name:       "Basic BurpSiteID",
-			burpSiteID: "abc123-def456-ghi789",
-			primaryURL: "https://app.example.com",
-			appName:    "Example App",
-		},
-		{
-			name:       "Empty BurpSiteID",
-			burpSiteID: "",
-			primaryURL: "https://app.example.com",
-			appName:    "Example App",
-		},
-		{
-			name:       "Complex BurpSiteID",
-			burpSiteID: "burp_site_123456789_abcdef",
-			primaryURL: "https://complex.example.com/path",
-			appName:    "Complex App",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			w := NewWebApplication(tt.primaryURL, tt.appName)
-			w.BurpSiteID = tt.burpSiteID
-			
-			assert.Equal(t, tt.burpSiteID, w.BurpSiteID)
-		})
-	}
-}
-
-func TestWebApplicationBurpSiteIDMerge(t *testing.T) {
-	tests := []struct {
-		name             string
-		app1BurpSiteID   string
-		app2BurpSiteID   string
-		expectedBurpSiteID string
-	}{
-		{
-			name:             "Merge with empty source",
-			app1BurpSiteID:   "original-id",
-			app2BurpSiteID:   "",
-			expectedBurpSiteID: "original-id",
-		},
-		{
-			name:             "Merge with non-empty source",
-			app1BurpSiteID:   "original-id",
-			app2BurpSiteID:   "new-id",
-			expectedBurpSiteID: "new-id",
-		},
-		{
-			name:             "Merge empty with non-empty",
-			app1BurpSiteID:   "",
-			app2BurpSiteID:   "new-id",
-			expectedBurpSiteID: "new-id",
-		},
-		{
-			name:             "Merge both empty",
-			app1BurpSiteID:   "",
-			app2BurpSiteID:   "",
-			expectedBurpSiteID: "",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			w1 := NewWebApplication("https://app1.example.com", "App 1")
-			w1.BurpSiteID = tt.app1BurpSiteID
-			
-			w2 := NewWebApplication("https://app2.example.com", "App 2")
-			w2.BurpSiteID = tt.app2BurpSiteID
-			
-			w1.Merge(&w2)
-			assert.Equal(t, tt.expectedBurpSiteID, w1.BurpSiteID)
-		})
-	}
-}
-
-func TestWebApplicationBurpSiteIDVisit(t *testing.T) {
-	tests := []struct {
-		name             string
-		app1BurpSiteID   string
-		app2BurpSiteID   string
-		expectedBurpSiteID string
-	}{
-		{
-			name:             "Visit with empty destination",
-			app1BurpSiteID:   "",
-			app2BurpSiteID:   "source-id",
-			expectedBurpSiteID: "source-id",
-		},
-		{
-			name:             "Visit with non-empty destination",
-			app1BurpSiteID:   "dest-id",
-			app2BurpSiteID:   "source-id",
-			expectedBurpSiteID: "dest-id", // Should not change
-		},
-		{
-			name:             "Visit with empty source",
-			app1BurpSiteID:   "dest-id",
-			app2BurpSiteID:   "",
-			expectedBurpSiteID: "dest-id",
-		},
-		{
-			name:             "Visit both empty",
-			app1BurpSiteID:   "",
-			app2BurpSiteID:   "",
-			expectedBurpSiteID: "",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			w1 := NewWebApplication("https://app1.example.com", "App 1")
-			w1.BurpSiteID = tt.app1BurpSiteID
-			
-			w2 := NewWebApplication("https://app2.example.com", "App 2")
-			w2.BurpSiteID = tt.app2BurpSiteID
-			
-			w1.Visit(&w2)
-			assert.Equal(t, tt.expectedBurpSiteID, w1.BurpSiteID)
-		})
-	}
-}
-
-func TestWebApplicationBurpSiteIDJSONRoundTrip(t *testing.T) {
-	original := NewWebApplication("https://example.com", "Test App")
-	original.BurpSiteID = "test-burp-site-id-123"
-	
-	// Marshal to JSON
-	jsonData, err := json.Marshal(original)
-	require.NoError(t, err)
-	
-	// Verify BurpSiteID is in JSON
-	assert.Contains(t, string(jsonData), "burp_site_id")
-	assert.Contains(t, string(jsonData), "test-burp-site-id-123")
-	
-	// Unmarshal back
-	var unmarshaled WebApplication
-	err = json.Unmarshal(jsonData, &unmarshaled)
-	require.NoError(t, err)
-	
-	// Verify BurpSiteID round-tripped correctly
-	assert.Equal(t, original.BurpSiteID, unmarshaled.BurpSiteID)
-}
-
-func TestWebApplicationBurpSiteIDStructTags(t *testing.T) {
-	webAppType := reflect.TypeOf(WebApplication{})
-	
-	// Get the BurpSiteID field
-	field, found := webAppType.FieldByName("BurpSiteID")
-	require.True(t, found, "BurpSiteID field should exist")
-	
-	// Check neo4j tag
-	neo4jTag := field.Tag.Get("neo4j")
-	assert.Equal(t, "burp_site_id", neo4jTag, "neo4j tag should be 'burp_site_id'")
-	
-	// Check json tag
-	jsonTag := field.Tag.Get("json")
-	assert.Equal(t, "burp_site_id", jsonTag, "json tag should be 'burp_site_id'")
-	
-	// Check desc tag exists (should be consistent with other fields)
-	descTag := field.Tag.Get("desc")
-	assert.NotEmpty(t, descTag, "desc tag should exist")
-	
-	// Check example tag exists
-	exampleTag := field.Tag.Get("example")
-	assert.NotEmpty(t, exampleTag, "example tag should exist")
-}
-
-func TestWebApplicationInterfaceComplianceWithBurpSiteID(t *testing.T) {
-	w := NewWebApplication("https://example.com", "Test App")
-	w.BurpSiteID = "test-id-123"
-	
-	// Test that WebApplication still implements Target interface
-	var target Target = &w
-	assert.NotNil(t, target)
-	
-	// Test that WebApplication still implements Assetlike interface
-	var assetlike Assetlike = &w
-	assert.NotNil(t, assetlike)
-	
-	// Test WithStatus maintains BurpSiteID
-	newStatusTarget := w.WithStatus(Pending)
-	newStatusWebApp, ok := newStatusTarget.(*WebApplication)
-	require.True(t, ok, "WithStatus should return a WebApplication")
-	assert.Equal(t, w.BurpSiteID, newStatusWebApp.BurpSiteID, "BurpSiteID should be preserved in WithStatus")
-}
-
-func TestWebApplicationRegistryIntegrationWithBurpSiteID(t *testing.T) {
-	// Verify the registry can still create WebApplication instances
-	model, found := registry.Registry.MakeType("webapplication")
-	require.True(t, found)
-	require.IsType(t, &WebApplication{}, model)
-	
-	// Set BurpSiteID and verify it persists through registry operations
-	webApp := model.(*WebApplication)
-	webApp.PrimaryURL = "https://registry.test.com"
-	webApp.Name = "Registry Test"
-	webApp.BurpSiteID = "registry-test-id"
-	
-	// Call registry hooks to ensure they don't interfere with BurpSiteID
-	webApp.Defaulted()
-	registry.CallHooks(webApp)
-	
-	// Verify BurpSiteID is preserved
-	assert.Equal(t, "registry-test-id", webApp.BurpSiteID)
-	
-	// Verify other fields are still properly processed
-	assert.Equal(t, "#webapplication#https://registry.test.com/", webApp.Key)
-	assert.True(t, webApp.Valid())
-}
-
-func TestWebApplicationSeedWithBurpSiteID(t *testing.T) {
-	// Test that seed creation works with BurpSiteID
-	seed := NewWebApplicationSeed("https://seed.example.com")
-	seed.BurpSiteID = "seed-burp-id"
-	
-	assert.Equal(t, "seed-burp-id", seed.BurpSiteID)
-	assert.Equal(t, SeedSource, seed.Source)
-	assert.Equal(t, Pending, seed.Status)
-	assert.Zero(t, seed.TTL)
-	
-	// Test SeedModels preserves BurpSiteID
-	seedModels := seed.SeedModels()
-	require.Len(t, seedModels, 1)
-	
-	copiedWebApp := seedModels[0].(*WebApplication)
-	assert.Equal(t, seed.BurpSiteID, copiedWebApp.BurpSiteID)
 }

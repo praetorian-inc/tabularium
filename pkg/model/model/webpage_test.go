@@ -27,18 +27,10 @@ const (
 )
 
 type webpageTestCase struct {
-	name          string
-	url           string
-	request       WebpageRequest
-	expectedURL   string
-	expectedState string
-}
-
-type stateTestCase struct {
-	name          string
-	initialState1 string
-	initialState2 string
-	expectedState string
+	name        string
+	url         string
+	request     WebpageRequest
+	expectedURL string
 }
 
 type metadataTestCase struct {
@@ -50,32 +42,28 @@ type metadataTestCase struct {
 
 var basicWebpageTestCases = []webpageTestCase{
 	{
-		name:          "basic URL",
-		url:           testBaseURL,
-		request:       WebpageRequest{RawURL: testBaseURL + "/"},
-		expectedURL:   testBaseURL + "/",
-		expectedState: Unanalyzed,
+		name:        "basic URL",
+		url:         testBaseURL,
+		request:     WebpageRequest{RawURL: testBaseURL + "/"},
+		expectedURL: testBaseURL + "/",
 	},
 	{
-		name:          "URL with path",
-		url:           testBaseURL + testPath,
-		request:       WebpageRequest{RawURL: testBaseURL + testPath},
-		expectedURL:   testBaseURL + testPath,
-		expectedState: Unanalyzed,
+		name:        "URL with path",
+		url:         testBaseURL + testPath,
+		request:     WebpageRequest{RawURL: testBaseURL + testPath},
+		expectedURL: testBaseURL + testPath,
 	},
 	{
-		name:          "URL with query parameters",
-		url:           testBaseURL + testPath + testQuery,
-		request:       WebpageRequest{RawURL: testBaseURL + testPath + testQuery},
-		expectedURL:   testBaseURL + testPath,
-		expectedState: Interesting,
+		name:        "URL with query parameters",
+		url:         testBaseURL + testPath + testQuery,
+		request:     WebpageRequest{RawURL: testBaseURL + testPath + testQuery},
+		expectedURL: testBaseURL + testPath,
 	},
 	{
-		name:          "URL with query and fragment",
-		url:           testBaseURL + testPath + testQuery + testFragment,
-		request:       WebpageRequest{RawURL: testBaseURL + testPath + testQuery + testFragment},
-		expectedURL:   testBaseURL + testPath,
-		expectedState: Interesting,
+		name:        "URL with query and fragment",
+		url:         testBaseURL + testPath + testQuery + testFragment,
+		request:     WebpageRequest{RawURL: testBaseURL + testPath + testQuery + testFragment},
+		expectedURL: testBaseURL + testPath,
 	},
 }
 
@@ -85,14 +73,14 @@ func TestWebpageConstructors(t *testing.T) {
 	for _, tc := range basicWebpageTestCases {
 		t.Run(tc.name+" (from string)", func(t *testing.T) {
 			webpage := NewWebpageFromString(tc.url, parent, WithRequests(tc.request))
-			assertWebpage(t, webpage, tc.expectedURL, tc.expectedState)
+			assertWebpage(t, webpage, tc.expectedURL)
 		})
 
 		t.Run(tc.name+" (from URL)", func(t *testing.T) {
 			parsedURL, err := url.Parse(tc.url)
 			assert.NoError(t, err)
 			webpage := NewWebpage(*parsedURL, parent, WithRequests(tc.request))
-			assertWebpage(t, webpage, tc.expectedURL, tc.expectedState)
+			assertWebpage(t, webpage, tc.expectedURL)
 		})
 	}
 }
@@ -156,14 +144,6 @@ func TestWebpageConstructorEdgeCases(t *testing.T) {
 	}
 }
 
-var stateMergingTestCases = []stateTestCase{
-	{"Interesting overwrites Unanalyzed", Unanalyzed, Interesting, Interesting},
-	{"Uninteresting overwrites Unanalyzed", Unanalyzed, Uninteresting, Uninteresting},
-	{"Interesting overwrites Uninteresting", Uninteresting, Interesting, Interesting},
-	{"Uninteresting does not overwrite Interesting", Interesting, Uninteresting, Interesting},
-	{"Unanalyzed does not overwrite Interesting", Interesting, Unanalyzed, Interesting},
-}
-
 var metadataMergingTestCases = []metadataTestCase{
 	{
 		name:             "Add new metadata",
@@ -216,17 +196,6 @@ var metadataMergingTestCases = []metadataTestCase{
 }
 
 func TestWebpageMerge(t *testing.T) {
-	t.Run("state merging", func(t *testing.T) {
-		for _, tc := range stateMergingTestCases {
-			t.Run(tc.name, func(t *testing.T) {
-				webpage1 := createTestWebpage(testBaseURL+testPath, WithState(tc.initialState1))
-				webpage2 := createTestWebpage(testBaseURL+testPath, WithState(tc.initialState2))
-				webpage1.Merge(webpage2)
-				assertWebpageState(t, webpage1, tc.expectedState)
-			})
-		}
-	})
-
 	t.Run("metadata merging", func(t *testing.T) {
 		for _, tc := range metadataMergingTestCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -388,40 +357,6 @@ func TestWebpageRequestManagement(t *testing.T) {
 		webpage1.Merge(webpage2)
 		assert.Equal(t, DefaultMaxRequestsPerWebpage, len(webpage1.Requests))
 	})
-}
-
-func TestWebpageBasicAnalysis(t *testing.T) {
-	testCases := []struct {
-		name           string
-		rawURL         string
-		initialState   string
-		expectedState  string
-		expectedParams bool
-	}{
-		{"no parameters", testBaseURL + "/page", "", Unanalyzed, false},
-		{"with parameters", testBaseURL + "/page?param=value", "", Interesting, true},
-		{"only version parameter", testBaseURL + "/page?ver=1.0", "", Unanalyzed, false},
-		{"already interesting", testBaseURL + "/page?param=value", Interesting, Interesting, true},
-		{"uninteresting to interesting", testBaseURL + "/page?param=value", Uninteresting, Interesting, true},
-		{"invalid URL", "invalid-url", "", Unanalyzed, false},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			var options []WebpageOption
-			if tc.initialState != "" {
-				options = append(options, WithState(tc.initialState))
-			}
-			options = append(options, WithRequests(WebpageRequest{RawURL: tc.rawURL}))
-
-			webpage := createTestWebpage(testBaseURL+"/page", options...)
-
-			assertWebpageState(t, webpage, tc.expectedState)
-			if tc.expectedParams {
-				assertWebpageMetadata(t, webpage, PARAMETERS_IDENTIFIED, true)
-			}
-		})
-	}
 }
 
 func TestWebpageURLParsing(t *testing.T) {
@@ -766,14 +701,12 @@ func TestWebpageConstructorOptions(t *testing.T) {
 		w.Metadata["option"] = "applied"
 		return nil
 	}
-	customStateOption := func(w *Webpage) error { w.State = Interesting; return nil }
 
-	webpage := createTestWebpage(testBaseURL+"/test", customStatusOption, customMetadataOption, customStateOption)
+	webpage := createTestWebpage(testBaseURL+"/test", customStatusOption, customMetadataOption)
 
 	assert.Equal(t, "Custom", webpage.Status)
 	assertWebpageMetadata(t, webpage, "custom", "value")
 	assertWebpageMetadata(t, webpage, "option", "applied")
-	assertWebpageState(t, webpage, Interesting)
 }
 
 func TestWebpageHooks(t *testing.T) {
@@ -790,16 +723,6 @@ func TestWebpageHooks(t *testing.T) {
 		err := registry.CallHooks(&webpage)
 		assert.NoError(t, err)
 		assert.LessOrEqual(t, len(webpage.Key), 2048)
-	})
-
-	t.Run("construction hook - basic analysis", func(t *testing.T) {
-		req := createTestRequest(testBaseURL+"/test?param=value&id=123", "GET", "")
-		webpage := createTestWebpage(testBaseURL+"/test", WithRequests(req))
-
-		err := registry.CallHooks(&webpage)
-		assert.NoError(t, err)
-		assertWebpageState(t, webpage, Interesting)
-		assertWebpageMetadata(t, webpage, PARAMETERS_IDENTIFIED, true)
 	})
 }
 
@@ -1038,15 +961,9 @@ func TestWebpageSSO(t *testing.T) {
 }
 
 // Helper functions
-func assertWebpage(t *testing.T, webpage Webpage, expectedURL, expectedState string) {
+func assertWebpage(t *testing.T, webpage Webpage, expectedURL string) {
 	t.Helper()
 	assertWebpageURL(t, webpage, expectedURL)
-	assertWebpageState(t, webpage, expectedState)
-}
-
-func assertWebpageState(t *testing.T, webpage Webpage, expectedState string) {
-	t.Helper()
-	assert.Equal(t, expectedState, webpage.State, "webpage state should match expected")
 }
 
 func assertWebpageMetadata(t *testing.T, webpage Webpage, key string, expectedValue any) {
