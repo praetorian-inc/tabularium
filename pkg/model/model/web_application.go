@@ -76,6 +76,7 @@ func (w *WebApplication) GetHooks() []registry.Hook {
 
 func (w *WebApplication) Defaulted() {
 	w.BaseAsset.Defaulted()
+	w.Class = "webapplication"
 	if w.URLs == nil {
 		w.URLs = []string{}
 	}
