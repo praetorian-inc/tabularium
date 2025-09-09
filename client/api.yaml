@@ -966,7 +966,9 @@ components:
         BaseModel:
           type: object
         cached:
-          type: object
+          items:
+            type: integer
+          type: array
         key:
           description: Unique key for the cache record.
           example: '#cache#ipv4scan#127.0.0.1'
@@ -975,6 +977,8 @@ components:
           items:
             type: string
           type: array
+        large:
+          type: boolean
         ttl:
           description: Time-to-live for the cache record (Unix timestamp).
           example: "1706353200"
@@ -989,6 +993,7 @@ components:
       - cached
       - key
       - keys
+      - large
       - ttl
       - username
       type: object
