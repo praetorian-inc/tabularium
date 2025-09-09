@@ -960,6 +960,43 @@ components:
       - key
       - visited
       type: object
+    cache:
+      description: Represents a cache line in the chariot cache
+      properties:
+        BaseModel:
+          type: object
+        cached:
+          items:
+            type: integer
+          type: array
+        key:
+          description: Unique key for the cache record.
+          example: '#cache#ipv4scan#127.0.0.1'
+          type: string
+        keys:
+          items:
+            type: string
+          type: array
+        large:
+          type: boolean
+        ttl:
+          description: Time-to-live for the cache record (Unix timestamp).
+          example: "1706353200"
+          format: int64
+          type: integer
+        username:
+          description: Chariot username associated with the account.
+          example: user@example.com
+          type: string
+      required:
+      - BaseModel
+      - cached
+      - key
+      - keys
+      - large
+      - ttl
+      - username
+      type: object
     cloudresource:
       description: ' ()'
       properties:
