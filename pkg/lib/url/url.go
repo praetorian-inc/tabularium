@@ -23,6 +23,7 @@ func Normalize(rawURL string) (string, error) {
 		return "", fmt.Errorf("URL missing host")
 	}
 
+	*parsed = FixSchemePortMismatch(*parsed)
 	*parsed = RemoveDefaultPorts(*parsed)
 	*parsed = NormalizePath(*parsed)
 	*parsed = RemoveQueryAndFragment(*parsed)
@@ -61,21 +62,13 @@ func NormalizeCasing(u url.URL) url.URL {
 }
 
 // FingerprintX sometimes returns HTTP on a 443 port
-func FixSchemePortMismatch(rawURL string) (string, error) {
-	parsed, err := url.Parse(rawURL)
-	if err != nil {
-		return "", fmt.Errorf("invalid URL: %w", err)
-	}
-
-	if parsed.Port() == "443" && parsed.Scheme == "http" {
+func FixSchemePortMismatch(u url.URL) url.URL {
+	if u.Port() == "443" && u.Scheme == "http" {
 		// HTTP scheme with HTTPS port -> change to HTTPS
-		parsed.Scheme = "https"
-	} else if parsed.Port() == "80" && parsed.Scheme == "https" {
+		u.Scheme = "https"
+	} else if u.Port() == "80" && u.Scheme == "https" {
 		// HTTPS scheme with HTTP port -> change to HTTP
-		parsed.Scheme = "http"
+		u.Scheme = "http"
 	}
-
-	*parsed = RemoveDefaultPorts(*parsed)
-
-	return parsed.String(), nil
+	return u
 }

@@ -87,6 +87,7 @@ func (w *WebApplication) GetHooks() []registry.Hook {
 // Defaulted initializes default values for WebApplication fields
 func (w *WebApplication) Defaulted() {
 	w.BaseAsset.Defaulted()
+	w.Class = "webapplication"
 	if w.URLs == nil {
 		w.URLs = make([]string, 0)
 	}
