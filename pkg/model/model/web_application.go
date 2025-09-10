@@ -11,7 +11,6 @@ import (
 )
 
 // WebApplication represents a web application as a security testing target.
-// It extends BaseAsset with web-specific properties including URLs and Burp Suite integration.
 type WebApplication struct {
 	BaseAsset
 	PrimaryURL string   `neo4j:"primary_url" json:"primary_url" desc:"The primary/canonical URL of the web application" example:"https://app.example.com"`
@@ -20,16 +19,9 @@ type WebApplication struct {
 	BurpSiteID string   `neo4j:"burp_site_id" json:"burp_site_id" desc:"Burp Suite site ID for integration with Burp Suite Enterprise" example:"abc123-def456-ghi789"`
 }
 
-const (
-	WebApplicationLabel = "WebApplication"
-	// MaxKeyLength defines the maximum length for Neo4j keys
-	MaxKeyLength = 2048
-)
+const WebApplicationLabel = "WebApplication"
 
-var (
-	// webAppKeyRegex validates the WebApplication key format
-	webAppKeyRegex = regexp.MustCompile(`^#webapplication#https?://[^?#]+$`)
-)
+var webAppKeyRegex = regexp.MustCompile(`^#webapplication#https?://[^?#]+$`)
 
 func init() {
 	registry.Registry.MustRegisterModel(&WebApplication{})
@@ -83,28 +75,21 @@ func (w *WebApplication) GetHooks() []registry.Hook {
 	}
 }
 
-// Defaulted initializes default values for WebApplication fields
 func (w *WebApplication) Defaulted() {
 	w.BaseAsset.Defaulted()
 	w.Class = "webapplication"
 	if w.URLs == nil {
 		w.URLs = make([]string, 0)
 	}
-	// BurpSiteID defaults to empty string, which is handled by Go's zero value
 }
 
-// Valid checks if the WebApplication has a properly formatted key
 func (w *WebApplication) Valid() bool {
-	return w.Key != "" && webAppKeyRegex.MatchString(w.Key)
+	return webAppKeyRegex.MatchString(w.Key)
 }
 
-// WithStatus creates a copy with the specified status, preserving all fields including BurpSiteID
 func (w *WebApplication) WithStatus(status string) Target {
 	ret := *w
 	ret.Status = status
-	// Deep copy URLs to avoid shared slice references
-	ret.URLs = make([]string, len(w.URLs))
-	copy(ret.URLs, w.URLs)
 	return &ret
 }
 
@@ -125,15 +110,11 @@ func (w *WebApplication) Identifier() string {
 	return w.PrimaryURL
 }
 
-// Merge combines data from another Assetlike, preferring non-empty values from other
 func (w *WebApplication) Merge(other Assetlike) {
 	w.BaseAsset.Merge(other)
 	if otherApp, ok := other.(*WebApplication); ok {
 		if otherApp.Name != "" {
 			w.Name = otherApp.Name
-		}
-		if otherApp.PrimaryURL != "" {
-			w.PrimaryURL = otherApp.PrimaryURL
 		}
 		for _, u := range otherApp.URLs {
 			if !slices.Contains(w.URLs, u) {
@@ -146,15 +127,11 @@ func (w *WebApplication) Merge(other Assetlike) {
 	}
 }
 
-// Visit updates empty fields from another Assetlike without overwriting existing values
 func (w *WebApplication) Visit(other Assetlike) {
 	w.BaseAsset.Visit(other)
 	if otherApp, ok := other.(*WebApplication); ok {
 		if otherApp.Name != "" && w.Name == "" {
 			w.Name = otherApp.Name
-		}
-		if otherApp.PrimaryURL != "" && w.PrimaryURL == "" {
-			w.PrimaryURL = otherApp.PrimaryURL
 		}
 		if otherApp.BurpSiteID != "" && w.BurpSiteID == "" {
 			w.BurpSiteID = otherApp.BurpSiteID
@@ -170,20 +147,12 @@ func NewWebApplication(primaryURL, name string) WebApplication {
 	w := WebApplication{
 		PrimaryURL: primaryURL,
 		Name:       name,
-		URLs:       make([]string, 0),
-		// BurpSiteID is intentionally left empty (zero value)
+		URLs:       []string{},
 	}
 
 	w.Defaulted()
 	registry.CallHooks(&w)
 
-	return w
-}
-
-// NewWebApplicationWithBurpSiteID creates a new WebApplication with a Burp Suite site ID
-func NewWebApplicationWithBurpSiteID(primaryURL, name, burpSiteID string) WebApplication {
-	w := NewWebApplication(primaryURL, name)
-	w.BurpSiteID = burpSiteID
 	return w
 }
 
