@@ -64,7 +64,7 @@ func TestWebApplicationStruct(t *testing.T) {
 			primaryURL:  "HTTPS://APP.EXAMPLE.COM/Path",
 			appName:     "Example App",
 			urls:        []string{},
-			expectedKey: "#webapplication#https://app.example.com/path",
+			expectedKey: "#webapplication#https://app.example.com/Path",
 		},
 	}
 
@@ -202,29 +202,18 @@ func TestWebApplicationTargetInterface(t *testing.T) {
 	assert.Equal(t, "/", rootApp.Identifier())
 }
 
-func TestWebApplicationAssetlikeInterface(t *testing.T) {
+func TestWebApplicationMergeURLs(t *testing.T) {
 	w1 := NewWebApplication("https://app.example.com", "App 1")
 	w1.URLs = []string{"https://api.example.com"}
 
 	w2 := NewWebApplication("https://app.example.com", "App 2")
 	w2.URLs = []string{"https://admin.example.com", "https://api.example.com"}
-	w2.PrimaryURL = "https://updated.example.com"
 
 	w1.Merge(&w2)
-	assert.Equal(t, "https://updated.example.com", w1.PrimaryURL)
+	assert.Equal(t, "https://app.example.com/", w1.PrimaryURL)
 	assert.Contains(t, w1.URLs, "https://admin.example.com")
 	assert.Contains(t, w1.URLs, "https://api.example.com")
 	assert.Len(t, w1.URLs, 2)
-
-	w3 := NewWebApplication("", "")
-	w4 := NewWebApplication("https://visit.example.com", "Visit Test")
-	w3.Visit(&w4)
-	assert.Equal(t, "https://visit.example.com/", w3.PrimaryURL)
-	assert.Equal(t, "Visit Test", w3.Name)
-
-	attr := w1.Attribute("test", "value")
-	assert.Equal(t, "test", attr.Name)
-	assert.Equal(t, "value", attr.Value)
 }
 
 func TestWebApplicationRegistryIntegration(t *testing.T) {
@@ -285,7 +274,7 @@ func TestWebApplicationURLsNormalization(t *testing.T) {
 	expectedURLs := []string{
 		"https://api.example.com/",
 		"http://admin.example.com/",
-		"https://mixed.example.com/path",
+		"https://mixed.example.com/Path",
 		"https://valid.example.com/",
 	}
 

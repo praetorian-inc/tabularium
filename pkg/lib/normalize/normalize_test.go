@@ -1,8 +1,10 @@
-package url
+package normalize
 
 import (
 	"net/url"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNormalize(t *testing.T) {
@@ -69,7 +71,7 @@ func TestNormalize(t *testing.T) {
 		{
 			name:     "mixed case normalization",
 			input:    "HTTPS://EXAMPLE.COM/Path",
-			expected: "https://example.com/path",
+			expected: "https://example.com/Path",
 			wantErr:  false,
 		},
 	}
@@ -77,13 +79,8 @@ func TestNormalize(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := Normalize(tt.input)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Normalize() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if result != tt.expected {
-				t.Errorf("Normalize() = %v, expected %v", result, tt.expected)
-			}
+			assert.Equal(t, tt.wantErr, err != nil)
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
@@ -93,56 +90,40 @@ func TestFixSchemePortMismatch(t *testing.T) {
 		name     string
 		input    string
 		expected string
-		wantErr  bool
 	}{
 		{
 			name:     "HTTP scheme with HTTPS port",
 			input:    "http://example.com:443/path",
-			expected: "https://example.com/path",
-			wantErr:  false,
+			expected: "https://example.com:443/path",
 		},
 		{
 			name:     "HTTPS scheme with HTTP port",
 			input:    "https://example.com:80/path",
-			expected: "http://example.com/path",
-			wantErr:  false,
+			expected: "http://example.com:80/path",
 		},
 		{
 			name:     "correct HTTP scheme and port",
 			input:    "http://example.com:80/path",
-			expected: "http://example.com/path",
-			wantErr:  false,
+			expected: "http://example.com:80/path",
 		},
 		{
 			name:     "correct HTTPS scheme and port",
 			input:    "https://example.com:443/path",
-			expected: "https://example.com/path",
-			wantErr:  false,
+			expected: "https://example.com:443/path",
 		},
 		{
 			name:     "custom port no change",
 			input:    "https://example.com:8443/path",
 			expected: "https://example.com:8443/path",
-			wantErr:  false,
-		},
-		{
-			name:     "invalid URL",
-			input:    "://invalid",
-			expected: "",
-			wantErr:  true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := FixSchemePortMismatch(tt.input)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("FixSchemePortMismatch() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if result != tt.expected {
-				t.Errorf("FixSchemePortMismatch() = %v, expected %v", result, tt.expected)
-			}
+			u, err := url.Parse(tt.input)
+			assert.NoError(t, err)
+			result := FixSchemePortMismatch(*u)
+			assert.Equal(t, tt.expected, result.String())
 		})
 	}
 }
@@ -183,9 +164,7 @@ func TestRemoveDefaultPorts(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := RemoveDefaultPorts(tt.input)
-			if result.String() != tt.expected.String() {
-				t.Errorf("RemoveDefaultPorts() = %v, expected %v", result, tt.expected)
-			}
+			assert.Equal(t, tt.expected.String(), result.String())
 		})
 	}
 }

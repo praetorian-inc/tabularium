@@ -5,9 +5,8 @@ import (
 	"net/url"
 	"regexp"
 	"slices"
-	"strings"
 
-	uu "github.com/praetorian-inc/tabularium/pkg/lib/url"
+	"github.com/praetorian-inc/tabularium/pkg/lib/normalize"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -57,7 +56,7 @@ func (w *WebApplication) GetHooks() []registry.Hook {
 					return fmt.Errorf("WebApplication requires non-empty PrimaryURL")
 				}
 
-				normalizedURL, err := uu.Normalize(w.PrimaryURL)
+				normalizedURL, err := normalize.Normalize(w.PrimaryURL)
 				if err != nil {
 					return fmt.Errorf("failed to normalize PrimaryURL: %w", err)
 				}
@@ -71,7 +70,7 @@ func (w *WebApplication) GetHooks() []registry.Hook {
 
 				normalizedURLs := make([]string, 0, len(w.URLs))
 				for _, u := range w.URLs {
-					if normalized, err := uu.Normalize(u); err == nil {
+					if normalized, err := normalize.Normalize(u); err == nil {
 						normalizedURLs = append(normalizedURLs, normalized)
 					}
 				}
@@ -165,21 +164,6 @@ func (w *WebApplication) Visit(other Assetlike) {
 
 func (w *WebApplication) Attribute(name, value string) Attribute {
 	return NewAttribute(name, value, w)
-}
-
-// IsHTTP returns true if the PrimaryURL uses HTTP or HTTPS protocol
-func (w *WebApplication) IsHTTP() bool {
-	return strings.HasPrefix(w.PrimaryURL, "http://") || strings.HasPrefix(w.PrimaryURL, "https://")
-}
-
-// IsHTTPS returns true if the PrimaryURL uses HTTPS protocol
-func (w *WebApplication) IsHTTPS() bool {
-	return strings.HasPrefix(w.PrimaryURL, "https://")
-}
-
-// HasBurpSiteID returns true if the WebApplication has a non-empty BurpSiteID
-func (w *WebApplication) HasBurpSiteID() bool {
-	return w.BurpSiteID != ""
 }
 
 func NewWebApplication(primaryURL, name string) WebApplication {

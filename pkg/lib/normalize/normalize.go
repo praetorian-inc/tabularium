@@ -1,4 +1,4 @@
-package url
+package normalize
 
 import (
 	"fmt"
@@ -33,10 +33,12 @@ func Normalize(rawURL string) (string, error) {
 }
 
 func RemoveDefaultPorts(u url.URL) url.URL {
-	if u.Scheme == "http" && strings.HasSuffix(u.Host, ":80") {
-		u.Host = strings.TrimSuffix(u.Host, ":80")
-	} else if u.Scheme == "https" && strings.HasSuffix(u.Host, ":443") {
-		u.Host = strings.TrimSuffix(u.Host, ":443")
+	h := u.Hostname()
+	p := u.Port()
+	if u.Scheme == "http" && p == "80" {
+		u.Host = h
+	} else if u.Scheme == "https" && p == "443" {
+		u.Host = h
 	}
 	return u
 }
@@ -57,16 +59,17 @@ func RemoveQueryAndFragment(u url.URL) url.URL {
 func NormalizeCasing(u url.URL) url.URL {
 	u.Scheme = strings.ToLower(u.Scheme)
 	u.Host = strings.ToLower(u.Host)
-	u.Path = strings.ToLower(u.Path)
 	return u
 }
 
 // FingerprintX sometimes returns HTTP on a 443 port
 func FixSchemePortMismatch(u url.URL) url.URL {
-	if u.Port() == "443" && u.Scheme == "http" {
+	s := u.Scheme
+	p := u.Port()
+	if p == "443" && s == "http" {
 		// HTTP scheme with HTTPS port -> change to HTTPS
 		u.Scheme = "https"
-	} else if u.Port() == "80" && u.Scheme == "https" {
+	} else if p == "80" && s == "https" {
 		// HTTPS scheme with HTTP port -> change to HTTP
 		u.Scheme = "http"
 	}
