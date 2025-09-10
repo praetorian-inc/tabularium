@@ -103,8 +103,7 @@ func (job *Job) Valid() bool {
 
 func (job *Job) Defaulted() {
 	job.Status = fmt.Sprintf("%s#%s", Queued, job.Source)
-	job.Config = make(map[string]string)
-	job.Secret = make(map[string]string)
+	job.initializeParameters()
 	job.Created = Now()
 	job.Updated = Now()
 	job.TTL = Future(7 * 24)
@@ -124,10 +123,20 @@ func (job *Job) GetHooks() []registry.Hook {
 						job.Key = fmt.Sprintf(template, shortenedDNS)
 					}
 				}
+				job.initializeParameters()
 				job.originalStatus = job.Status
 				return nil
 			},
 		},
+	}
+}
+
+func (job *Job) initializeParameters() {
+	if job.Config == nil {
+		job.Config = make(map[string]string)
+	}
+	if job.Secret == nil {
+		job.Secret = make(map[string]string)
 	}
 }
 
