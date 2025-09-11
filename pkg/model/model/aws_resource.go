@@ -54,6 +54,8 @@ func (a *AWSResource) GetHooks() []registry.Hook {
 			Call: func() error {
 				a.CloudResource.Key = fmt.Sprintf("#awsresource#%s#%s", a.AccountRef, a.Name)
 				a.CloudResource.Labels = []string{AWSResourceLabel}
+				a.CloudResource.IPs = a.GetIPs()
+				a.CloudResource.URLs = a.GetURLs()
 				return nil
 			},
 		},

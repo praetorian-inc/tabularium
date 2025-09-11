@@ -30,6 +30,8 @@ type CloudResource struct {
 	Key             string            `neo4j:"key" json:"key"`
 	Group           string            `neo4j:"group" json:"group"`
 	IdentifierValue string            `neo4j:"identifier" json:"identifier"`
+	IPs             []string          `neo4j:"ips" json:"ips"`
+	URLs            []string          `neo4j:"urls" json:"urls"`
 	Name            string            `neo4j:"name" json:"name"`
 	DisplayName     string            `neo4j:"displayName" json:"displayName"`
 	Provider        string            `neo4j:"provider" json:"provider"`

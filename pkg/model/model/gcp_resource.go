@@ -57,6 +57,8 @@ func (a *GCPResource) GetHooks() []registry.Hook {
 			Call: func() error {
 				a.CloudResource.Key = fmt.Sprintf("#gcpresource#%s#%s", a.AccountRef, a.Name)
 				a.CloudResource.Labels = []string{GCPResourceLabel}
+				a.CloudResource.IPs = a.GetIPs()
+				a.CloudResource.URLs = a.GetURLs()
 				return nil
 			},
 		},
