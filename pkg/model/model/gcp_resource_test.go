@@ -408,7 +408,7 @@ func TestGCPResource_GetURL(t *testing.T) {
 	}
 }
 
-func TestNewGcpResource(t *testing.T) {
+func TestNewGCPResource(t *testing.T) {
 	name := "projects/acme-project/zones/us-central1-a/instances/test-instance"
 	rtype := GCPResourceInstance
 	accountRef := "acme-project"
@@ -446,7 +446,7 @@ func TestNewGcpResource(t *testing.T) {
 	}
 
 	// Validate labels
-	expectedLabels := []string{"compute_googleapis_com_Instance", "GCPResource", "TTL", "Cloud"}
+	expectedLabels := []string{"compute_googleapis_com_Instance", "GCPResource", "TTL", "CloudResource"}
 	actualLabels := slices.Clone(gcpRes.GetLabels())
 	slices.Sort(actualLabels)
 	slices.Sort(expectedLabels)

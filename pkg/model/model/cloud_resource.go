@@ -7,18 +7,26 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/praetorian-inc/tabularium/pkg/model/beta"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
-const CloudLabel = "Cloud"
+const CloudResourceLabel = "CloudResource"
 
 var neo4jNegateLabelRegex = regexp.MustCompile(`[^a-zA-Z0-9\-_]`) // to conform with label validator
+
+func init() {
+	MustRegisterLabel(CloudResourceLabel)
+	registry.Registry.MustRegisterModel(&CloudResource{})
+
+	// register the type for properties
+	gob.Register(map[string]any{})
+	gob.Register(map[string]string{})
+	gob.Register(map[string][]string{})
+}
 
 type CloudResource struct {
 	registry.BaseModel
 	History
-	beta.Beta
 	Key          string            `neo4j:"key" json:"key"`
 	Name         string            `neo4j:"name" json:"name"`
 	DisplayName  string            `neo4j:"displayName" json:"displayName"`
@@ -56,7 +64,7 @@ func (a *CloudResource) GetHooks() []registry.Hook {
 			Call: func() error {
 				labels := append(a.Labels, resourceLabels[a.ResourceType]...)
 				labels = append(labels, a.ResourceType.String())
-				labels = append(labels, CloudLabel, TTLLabel)
+				labels = append(labels, CloudResourceLabel, TTLLabel)
 				slices.Sort(labels)
 				a.Labels = slices.Compact(labels)
 
@@ -110,16 +118,4 @@ func (c *CloudResource) GetSecret() string {
 		return *c.Secret
 	}
 	return ""
-}
-
-func init() {
-	registry.Registry.MustRegisterModel(&CloudResource{})
-	registry.Registry.MustRegisterModel(&AWSResource{})
-	registry.Registry.MustRegisterModel(&AzureResource{})
-	registry.Registry.MustRegisterModel(&GCPResource{})
-
-	// register the type for properties
-	gob.Register(map[string]any{})
-	gob.Register(map[string]string{})
-	gob.Register(map[string][]string{})
 }

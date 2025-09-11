@@ -17,7 +17,7 @@ func TestNewADObject(t *testing.T) {
 		domain            string
 		objectID          string
 		distinguishedName string
-		class             string
+		label             string
 		expectedKey       string
 		expectedClass     string
 		expectedName      string
@@ -27,7 +27,7 @@ func TestNewADObject(t *testing.T) {
 			domain:            "example.local",
 			objectID:          "S-1-5-21-123456789-123456789-123456789-1001",
 			distinguishedName: "CN=John Doe,CN=Users,DC=example,DC=local",
-			class:             "User",
+			label:             ADUserLabel,
 			expectedKey:       "#aduser#example.local#S-1-5-21-123456789-123456789-123456789-1001",
 			expectedClass:     "user",
 			expectedName:      "John Doe",
@@ -37,7 +37,7 @@ func TestNewADObject(t *testing.T) {
 			domain:            "corp.com",
 			objectID:          "S-1-5-21-123456789-123456789-123456789-1002",
 			distinguishedName: "CN=WORKSTATION01,CN=Computers,DC=corp,DC=com",
-			class:             "Computer",
+			label:             ADComputerLabel,
 			expectedKey:       "#adcomputer#corp.com#S-1-5-21-123456789-123456789-123456789-1002",
 			expectedClass:     "computer",
 			expectedName:      "WORKSTATION01",
@@ -47,7 +47,7 @@ func TestNewADObject(t *testing.T) {
 			domain:            "test.domain",
 			objectID:          "S-1-5-21-123456789-123456789-123456789-1003",
 			distinguishedName: "CN=Domain Admins,CN=Groups,DC=test,DC=domain",
-			class:             "Group",
+			label:             ADGroupLabel,
 			expectedKey:       "#adgroup#test.domain#S-1-5-21-123456789-123456789-123456789-1003",
 			expectedClass:     "group",
 			expectedName:      "Domain Admins",
@@ -57,7 +57,7 @@ func TestNewADObject(t *testing.T) {
 			domain:            "example.local",
 			objectID:          "51FB8637-28BC-4816-9A51-984160B207FA",
 			distinguishedName: "OU=Sales,DC=example,DC=local",
-			class:             "OU",
+			label:             ADOULabel,
 			expectedKey:       "#adou#example.local#51FB8637-28BC-4816-9A51-984160B207FA",
 			expectedClass:     "ou",
 			expectedName:      "",
@@ -67,7 +67,7 @@ func TestNewADObject(t *testing.T) {
 			domain:            "example.local",
 			objectID:          "S-1-5-21-123456789-123456789-123456789-1005",
 			distinguishedName: "DC=example,DC=local",
-			class:             "Domain",
+			label:             ADDomainLabel,
 			expectedKey:       "#addomain#example.local#S-1-5-21-123456789-123456789-123456789-1005",
 			expectedClass:     "domain",
 			expectedName:      "",
@@ -76,7 +76,7 @@ func TestNewADObject(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ad := NewADObject(tt.domain, tt.objectID, tt.distinguishedName, tt.class)
+			ad := NewADObject(tt.domain, tt.objectID, tt.distinguishedName, tt.label)
 
 			assert.Equal(t, tt.domain, ad.Domain, "Domain should match")
 			assert.Equal(t, tt.objectID, ad.ObjectID, "ObjectID should match")
@@ -157,7 +157,7 @@ func TestADObject_GetHooks(t *testing.T) {
 		expectedClass string
 	}{
 		{
-			name:          "hook generates correct key and class",
+			name:          "hook generates correct key and label",
 			domain:        "TEST.LOCAL",
 			objectID:      "S-1-5-21-123456789-123456789-123456789-1001",
 			label:         "ADUser",
@@ -182,7 +182,7 @@ func TestADObject_GetHooks(t *testing.T) {
 			require.NoError(t, err, "Hook should execute without error")
 
 			assert.Equal(t, tt.expectedKey, ad.Key, "Hook should generate correct key")
-			assert.Equal(t, tt.expectedClass, ad.Class, "Hook should set correct class")
+			assert.Equal(t, tt.expectedClass, ad.Class, "Hook should set correct label")
 		})
 	}
 }
@@ -371,19 +371,19 @@ func TestADObject_IsClass(t *testing.T) {
 			expected:   true,
 		},
 		{
-			name:       "different class",
+			name:       "different label",
 			label:      ADComputerLabel,
 			checkClass: "user",
 			expected:   false,
 		},
 		{
-			name:       "empty object class",
+			name:       "empty object label",
 			label:      "",
 			checkClass: "user",
 			expected:   false,
 		},
 		{
-			name:       "empty check class",
+			name:       "empty check label",
 			label:      ADUserLabel,
 			checkClass: "",
 			expected:   false,

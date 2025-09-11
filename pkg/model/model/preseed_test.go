@@ -39,7 +39,7 @@ func TestPreseedClass(t *testing.T) {
 	for _, test := range tests {
 		preseed := NewPreseed(test.name, "", "")
 		if preseed.Class() != test.want {
-			t.Errorf("unexpected class %s, expected %s", preseed.Class(), test.want)
+			t.Errorf("unexpected label %s, expected %s", preseed.Class(), test.want)
 		}
 	}
 }

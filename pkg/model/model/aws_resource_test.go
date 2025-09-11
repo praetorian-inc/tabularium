@@ -329,7 +329,7 @@ func TestNewAWSResource_Fields(t *testing.T) {
 	}
 }
 
-func TestNewAwsResource_Labels(t *testing.T) {
+func TestNewAWSResource_Labels(t *testing.T) {
 	name := "arn:aws:iam::123456789012:role/acme-admin-access"
 	rtype := AWSRole
 	accountRef := "123456789012"
@@ -340,7 +340,7 @@ func TestNewAwsResource_Labels(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	expectedLabels := []string{"Role", "Principal", "AWS_IAM_Role", "AWSResource", "TTL", "Cloud"}
+	expectedLabels := []string{"Role", "Principal", "AWS_IAM_Role", "AWSResource", "TTL", "CloudResource"}
 	actualLabels := slices.Clone(awsRes.GetLabels())
 	slices.Sort(actualLabels)
 	slices.Sort(expectedLabels)
@@ -349,7 +349,7 @@ func TestNewAwsResource_Labels(t *testing.T) {
 	}
 }
 
-func TestNewAwsResource(t *testing.T) {
+func TestNewAWSResource(t *testing.T) {
 	t.Run("successful creation with valid ARN", func(t *testing.T) {
 		name := "arn:aws:lambda:us-east-2:123456789012:function:test-function"
 		rtype := AWSLambdaFunction
@@ -388,7 +388,7 @@ func TestNewAwsResource(t *testing.T) {
 		}
 
 		// Validate labels
-		expectedLabels := []string{"AWS_Lambda_Function", "AWSResource", "TTL", "Cloud"}
+		expectedLabels := []string{"AWS_Lambda_Function", "AWSResource", "TTL", "CloudResource"}
 		actualLabels := slices.Clone(awsRes.GetLabels())
 		slices.Sort(actualLabels)
 		slices.Sort(expectedLabels)
@@ -487,7 +487,7 @@ func TestNewAwsResource(t *testing.T) {
 	})
 }
 
-func TestAwsResource_GetLabels(t *testing.T) {
+func TestAWSResource_GetLabels(t *testing.T) {
 	name := "arn:aws:ec2:us-east-1:123456789012:instance/i-0123456789abcdef0"
 	rtype := AWSEC2Instance
 	accountRef := "123456789012"
@@ -500,7 +500,7 @@ func TestAwsResource_GetLabels(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	expectedLabels := []string{"AWS_EC2_Instance", "AWSResource", "TTL", "Cloud"}
+	expectedLabels := []string{"AWS_EC2_Instance", "AWSResource", "TTL", "CloudResource"}
 	actualLabels := slices.Clone(awsRes.GetLabels())
 	slices.Sort(actualLabels)
 	slices.Sort(expectedLabels)

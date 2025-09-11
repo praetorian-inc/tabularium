@@ -9,23 +9,28 @@ import (
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
+const (
+	AzureResourceLabel = "AzureResource"
+)
+
 type AzureResource struct {
 	CloudResource
 	ResourceGroup string `neo4j:"resourceGroup" json:"resourceGroup"`
 }
 
-func NewAzureResource(name, accountRef string, rtype CloudResourceType, properties map[string]any) (AzureResource, error) {
-	key := fmt.Sprintf("#azureresource#%s#%s", accountRef, name)
+func init() {
+	MustRegisterLabel(AzureResourceLabel)
+	registry.Registry.MustRegisterModel(&AzureResource{})
+}
 
+func NewAzureResource(name, accountRef string, rtype CloudResourceType, properties map[string]any) (AzureResource, error) {
 	r := AzureResource{
 		CloudResource: CloudResource{
-			Key:          key,
 			Name:         name,
 			Provider:     "azure",
 			Properties:   properties,
 			ResourceType: CloudResourceType(rtype),
 			AccountRef:   accountRef,
-			Labels:       []string{"AzureResource"},
 		},
 	}
 
@@ -49,7 +54,18 @@ func (a *AzureResource) GetDisplayName() string {
 }
 
 func (a *AzureResource) GetHooks() []registry.Hook {
-	return a.CloudResource.GetHooks()
+	hooks := []registry.Hook{
+		{
+			Call: func() error {
+				a.CloudResource.Key = fmt.Sprintf("#azureresource#%s#%s", a.AccountRef, a.Name)
+				a.CloudResource.Labels = []string{AzureResourceLabel}
+				return nil
+			},
+		},
+	}
+
+	hooks = append(hooks, a.CloudResource.GetHooks()...)
+	return hooks
 }
 
 func (a *AzureResource) GetIPs() []string {
