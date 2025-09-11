@@ -1,6 +1,9 @@
 package model
 
 import (
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"log/slog"
 	"net/url"
 	"strings"
@@ -231,4 +234,23 @@ func TestJob_WebpageKeyCreationWithProtocol(t *testing.T) {
 			t.Errorf("HTTP and HTTPS jobs should have different keys, both got: %q", httpsJob.Key)
 		}
 	})
+}
+
+func TestJob_Parameters(t *testing.T) {
+	dummy := NewAsset("example.com", "example.com")
+	job := NewJob("test-source", &dummy)
+
+	job.Config = map[string]string{"config1": "config-value1", "config2": "config-value2"}
+	job.Secret = map[string]string{"secret1": "secret-value1", "secret2": "secret-value2"}
+
+	encoded, err := json.Marshal(job)
+	require.NoError(t, err)
+	assert.Contains(t, string(encoded), "config1")
+	assert.Contains(t, string(encoded), "config-value1")
+	assert.Contains(t, string(encoded), "config2")
+	assert.Contains(t, string(encoded), "config-value2")
+	assert.Contains(t, string(encoded), "secret1")
+	assert.Contains(t, string(encoded), "secret-value1")
+	assert.Contains(t, string(encoded), "secret2")
+	assert.Contains(t, string(encoded), "secret-value2")
 }
