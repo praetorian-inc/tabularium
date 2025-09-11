@@ -185,11 +185,11 @@ func (ad *ADObject) getADLabel() string {
 }
 
 // NewADObject creates a new ADObject with the specified domain, distinguished name, and object label
-func NewADObject(domain, objectID, distinguishedName, objectClass string) ADObject {
+func NewADObject(domain, objectID, distinguishedName, objectLabel string) ADObject {
 	ad := ADObject{
 		Domain:   domain,
 		ObjectID: objectID,
-		Label:    objectClass,
+		Label:    objectLabel,
 		ADProperties: ADProperties{
 			DistinguishedName: distinguishedName,
 		},

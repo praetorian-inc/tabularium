@@ -27,21 +27,23 @@ func init() {
 type CloudResource struct {
 	registry.BaseModel
 	History
-	Key          string            `neo4j:"key" json:"key"`
-	Name         string            `neo4j:"name" json:"name"`
-	DisplayName  string            `neo4j:"displayName" json:"displayName"`
-	Provider     string            `neo4j:"provider" json:"provider"`
-	ResourceType CloudResourceType `neo4j:"resourceType" json:"resourceType"`
-	Region       string            `neo4j:"region" json:"region"`
-	AccountRef   string            `neo4j:"accountRef" json:"accountRef"`
-	Status       string            `neo4j:"status" json:"status"`
-	Created      string            `neo4j:"created" json:"created"`
-	Visited      string            `neo4j:"visited" json:"visited"`
-	TTL          int64             `neo4j:"ttl" json:"ttl"`
-	Properties   map[string]any    `neo4j:"properties" json:"properties"`
-	Labels       []string          `neo4j:"labels" json:"labels"`
-	Secret       *string           `neo4j:"secret" json:"secret"`
-	Username     string            `neo4j:"username" json:"username"`
+	Key             string            `neo4j:"key" json:"key"`
+	Group           string            `neo4j:"group" json:"group"`
+	IdentifierValue string            `neo4j:"identifier" json:"identifier"`
+	Name            string            `neo4j:"name" json:"name"`
+	DisplayName     string            `neo4j:"displayName" json:"displayName"`
+	Provider        string            `neo4j:"provider" json:"provider"`
+	ResourceType    CloudResourceType `neo4j:"resourceType" json:"resourceType"`
+	Region          string            `neo4j:"region" json:"region"`
+	AccountRef      string            `neo4j:"accountRef" json:"accountRef"`
+	Status          string            `neo4j:"status" json:"status"`
+	Created         string            `neo4j:"created" json:"created"`
+	Visited         string            `neo4j:"visited" json:"visited"`
+	TTL             int64             `neo4j:"ttl" json:"ttl"`
+	Properties      map[string]any    `neo4j:"properties" json:"properties"`
+	Labels          []string          `neo4j:"labels" json:"labels"`
+	Secret          *string           `neo4j:"secret" json:"secret"`
+	Username        string            `neo4j:"username" json:"username"`
 }
 
 // Defaulted sets sensible default values for CloudResource
@@ -64,7 +66,7 @@ func (a *CloudResource) GetHooks() []registry.Hook {
 			Call: func() error {
 				labels := append(a.Labels, resourceLabels[a.ResourceType]...)
 				labels = append(labels, a.ResourceType.String())
-				labels = append(labels, CloudResourceLabel, TTLLabel)
+				labels = append(labels, AssetLabel, CloudResourceLabel, TTLLabel)
 				slices.Sort(labels)
 				a.Labels = slices.Compact(labels)
 
