@@ -7,6 +7,8 @@ import (
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
+const CredentialLabel = "Credential"
+
 type CredentialCategory string
 type CredentialType string
 type CredentialLifecycle string
@@ -151,7 +153,7 @@ func (c *Credential) GetCredentialID() string {
 }
 
 func (c *Credential) GetLabels() []string {
-	return []string{"Credential", string(c.Category), string(c.Type)}
+	return []string{CredentialLabel, string(c.Category), string(c.Type)}
 }
 
 func (c *Credential) Valid() bool {
