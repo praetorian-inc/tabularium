@@ -20,40 +20,40 @@ const (
 	CategoryAdHoc       CredentialCategory = "ad-hoc"          // Found during in-flight execution
 
 	// Credential Types
-	StaticCredential      CredentialType = "static-credential" // un/pw pairs
-	TokenCredential       CredentialType = "static-token"      // API key, PAT, etc.
-	AWSCredential         CredentialType = "aws"
-	GCloudCredential      CredentialType = "gcloud"
-	AzureCredential       CredentialType = "azure"
-	SSHKeyCredential      CredentialType = "ssh-key"         // SSH private key
-	JSONCredential        CredentialType = "json-credential" // Generic JSON credential format
-	AegisConfigCredential CredentialType = "aegis-config"    // Aegis config credential
+	StaticCredential                  CredentialType = "static-credential" // un/pw pairs
+	TokenCredential                   CredentialType = "static-token"      // API key, PAT, etc.
+	AWSCredential                     CredentialType = "aws"
+	GCloudCredential                  CredentialType = "gcloud"
+	AzureCredential                   CredentialType = "azure"
+	SSHKeyCredential                  CredentialType = "ssh-key"             // SSH private key
+	JSONCredential                    CredentialType = "json-credential"     // Generic JSON credential format
+	AegisConfigCredential             CredentialType = "aegis-config"        // Aegis config credential
+	BurpSuiteAuthenticationCredential CredentialType = "burp-authentication" // Internal BurpSuite instance authentication credentials
 
 	// API Keys
-	ApolloCredential                  CredentialType = "apollo_api" // Apollo.io API key
-	AgentCredential                   CredentialType = "agent"
-	MailgunCredentialGitHubPhishing   CredentialType = "mailgun_phishing_github" // Mailgun API key for GitHub phishing
-	AxoniousCredential                CredentialType = "axonious"                // Axonious API key
-	BitbucketCredential               CredentialType = "bitbucket"               // Bitbucket API key
-	BuiltWithCredential               CredentialType = "builtwith"               // Built with credentials
-	CloudflareCredential              CredentialType = "cloudflare"              // Cloudflare API key
-	DigitalOceanCredential            CredentialType = "digitalocean"            // DigitalOcean API key
-	GithubCredential                  CredentialType = "github"                  // Github API key
-	GitlabCredential                  CredentialType = "gitlab"                  // Gitlab API key
-	InsightVMCredential               CredentialType = "insight-vm"              // InsightVM credentials
-	MicrosoftDefenderCredential       CredentialType = "microsoft-defender"      // Microsoft Defender credentials
-	CrowdStrikeSpotlightCredential    CredentialType = "crowdstrike-spotlight"   // CrowdStrike Spotlight credentials
-	NessusCredential                  CredentialType = "nessus"                  // Nessus API key
-	NS1Credential                     CredentialType = "ns1"                     // NS1 API key
-	BurpSuiteCredential               CredentialType = "portswigger"             // Customer BurpSuite API key
-	BurpSuiteInternalCredential       CredentialType = "burp-internal"           // Internal BurpSuite instance API creds
-	BurpSuiteAuthenticationCredential CredentialType = "burp-authentication"     // Internal BurpSuite instance authentication credentials
-	QualysCredential                  CredentialType = "qualys"                  // Qualys credentials
-	ShodanCredential                  CredentialType = "shodan"                  // Shodan API key
-	TenableVMCredential               CredentialType = "tenable-vm"              // Tenable API key
-	WizCredential                     CredentialType = "wiz"                     // Wiz credentials
-	WhoxyCredential                   CredentialType = "whoxy"                   // Whoxy API key
-	XpanseCredential                  CredentialType = "xpanse"                  // Xpanse credentials
+	ApolloCredential                CredentialType = "apollo_api" // Apollo.io API key
+	AgentCredential                 CredentialType = "agent"
+	MailgunCredentialGitHubPhishing CredentialType = "mailgun_phishing_github" // Mailgun API key for GitHub phishing
+	AxoniousCredential              CredentialType = "axonious"                // Axonious API key
+	BitbucketCredential             CredentialType = "bitbucket"               // Bitbucket API key
+	BuiltWithCredential             CredentialType = "builtwith"               // Built with credentials
+	CloudflareCredential            CredentialType = "cloudflare"              // Cloudflare API key
+	DigitalOceanCredential          CredentialType = "digitalocean"            // DigitalOcean API key
+	GithubCredential                CredentialType = "github"                  // Github API key
+	GitlabCredential                CredentialType = "gitlab"                  // Gitlab API key
+	InsightVMCredential             CredentialType = "insight-vm"              // InsightVM credentials
+	MicrosoftDefenderCredential     CredentialType = "microsoft-defender"      // Microsoft Defender credentials
+	CrowdStrikeSpotlightCredential  CredentialType = "crowdstrike-spotlight"   // CrowdStrike Spotlight credentials
+	NessusCredential                CredentialType = "nessus"                  // Nessus API key
+	NS1Credential                   CredentialType = "ns1"                     // NS1 API key
+	BurpSuiteCredential             CredentialType = "portswigger"             // Customer BurpSuite API key
+	BurpSuiteInternalCredential     CredentialType = "burp-internal"           // Internal BurpSuite instance API creds
+	QualysCredential                CredentialType = "qualys"                  // Qualys credentials
+	ShodanCredential                CredentialType = "shodan"                  // Shodan API key
+	TenableVMCredential             CredentialType = "tenable-vm"              // Tenable API key
+	WizCredential                   CredentialType = "wiz"                     // Wiz credentials
+	WhoxyCredential                 CredentialType = "whoxy"                   // Whoxy API key
+	XpanseCredential                CredentialType = "xpanse"                  // Xpanse credentials
 
 	LegacyCloudCredential CredentialType = "legacy-cloud" // Legacy cloud credentials (AWS, GCP, Azure)
 
