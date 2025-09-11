@@ -75,6 +75,9 @@ func (a *CloudResource) GetHooks() []registry.Hook {
 					a.Labels[i] = strings.ReplaceAll(label, "/", "_")
 				}
 
+				a.Group = a.AccountRef
+				a.IdentifierValue = a.Name
+
 				return nil
 			},
 			Description: "Set labels for the resource",
