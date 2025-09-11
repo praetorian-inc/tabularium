@@ -14,8 +14,9 @@ import (
 // Wrapper allows us to unmarshal into a Model interface based on the type registry
 // Wrapper is generic, which allows us to use it for interfaces that implement Model
 type Wrapper[T Model] struct {
-	Model T      `dynamodbav:"model" json:"model"`
-	Type  string `dynamodbav:"type" json:"type"`
+	Model          T      `dynamodbav:"model" json:"model"`
+	Type           string `dynamodbav:"type" json:"type"`
+	SkipDefaulting bool   `dynamodbav:"-" json:"-"`
 }
 
 func (t Wrapper[T]) MarshalJSON() ([]byte, error) {
@@ -166,7 +167,10 @@ func (t *Wrapper[T]) fromProps(props map[string]any) error {
 	if !ok {
 		return fmt.Errorf("failed to make type %v", tipe)
 	}
-	model.Defaulted()
+
+	if !t.SkipDefaulting {
+		model.Defaulted()
+	}
 
 	t.Model, ok = model.(T)
 	if !ok {
