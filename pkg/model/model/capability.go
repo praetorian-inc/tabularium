@@ -43,6 +43,8 @@ type Capability interface {
 	CheckAffiliation(Asset) (bool, error)
 	// Integration returns whether this capability is an integration
 	Integration() bool
+	// LargeArtifact returns whether this capability should support downloading a large artifact output
+	LargeArtifact() bool
 	Lifecycle
 }
 

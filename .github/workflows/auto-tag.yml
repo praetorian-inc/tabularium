@@ -64,7 +64,7 @@ jobs:
               PRE_COUNTER=0
             else
               echo "Latest pre-release tag found: $LATEST_PRE_TAG"
-              
+         
               # Extract the base version from the existing pre-release tag
               EXISTING_BASE=$(echo "$LATEST_PRE_TAG" | sed 's/-pre-.*$//')
               echo "Existing base version in branch tag: $EXISTING_BASE"
