@@ -1632,6 +1632,15 @@ components:
       required:
       - BaseRelationship
       type: object
+    haswebpage:
+      description: Represents the relationship indicating a web application has a
+        specific webpage.
+      properties:
+        BaseRelationship:
+          type: object
+      required:
+      - BaseRelationship
+      type: object
     history:
       description: Represents a container for a list of historical event records.
       properties:
@@ -3025,6 +3034,32 @@ components:
       required:
       - BaseModel
       type: object
+    webapplication:
+      description: Represents a web application with a primary URL and associated
+        URLs, designed for security testing and attack surface management.
+      properties:
+        BaseAsset:
+          type: object
+        name:
+          description: Name of the web application
+          example: Example App
+          type: string
+        primary_url:
+          description: The primary/canonical URL of the web application
+          example: https://app.example.com
+          type: string
+        urls:
+          description: Additional URLs associated with this web application
+          example: '["https://api.example.com", "https://admin.example.com"]'
+          items:
+            type: string
+          type: array
+      required:
+      - BaseAsset
+      - name
+      - primary_url
+      - urls
+      type: object
     webpage:
       description: Represents a webpage, including its URL, status, and metadata.
       properties:
@@ -3070,11 +3105,6 @@ components:
           example: '{"okta": {"last_seen": "2023-10-27T11:00:00Z", "id": "1234567890",
             "name": "Chariot"}}'
           type: object
-        state:
-          description: Current analysis state of the webpage (e.g., Unanalyzed, Interesting,
-            Uninteresting).
-          example: Unanalyzed
-          type: string
         status:
           description: Current status of the webpage (e.g., Active, Inactive).
           example: Active
@@ -3109,7 +3139,6 @@ components:
       - private
       - source
       - sso_identified
-      - state
       - status
       - ttl
       - url
