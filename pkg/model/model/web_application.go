@@ -104,8 +104,7 @@ func (w *WebApplication) Group() string {
 }
 
 func (w *WebApplication) Identifier() string {
-	url := w.GetPrimaryURL()
-	return fmt.Sprintf("%s://%s", url.Scheme, url.Host)
+	return w.PrimaryURL
 }
 
 func (w *WebApplication) Merge(other Assetlike) {
