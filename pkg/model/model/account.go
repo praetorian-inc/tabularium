@@ -22,7 +22,7 @@ type Account struct {
 	Value    string            `dynamodbav:"value,omitempty" json:"value" desc:"The identifier for this account within the context of member." example:"01234567890"`
 	Updated  string            `dynamodbav:"updated" json:"updated" desc:"Timestamp when the account info was last updated (RFC3339)." example:"2023-10-27T10:00:00Z"`
 	TTL      int64             `dynamodbav:"ttl" json:"ttl" desc:"Time-to-live for the account record (Unix timestamp)." example:"1706353200"`
-	Config   map[string]string `dynamodbav:"-" json:"config,omitempty" desc:"Secret configuration map associated with the account." example:"{\"service_principal_token\": \"103713408v0871v\"}"`
+	Secret   map[string]string `dynamodbav:"-" json:"secret,omitempty" desc:"Secret configuration map associated with the account." example:"{\"service_principal_token\": \"103713408v0871v\"}"`
 	Settings json.RawMessage   `dynamodbav:"settings,omitempty" json:"settings,omitempty" desc:"Raw JSON message containing specific settings." example:"{\"notifications\": true}"`
 }
 
@@ -46,20 +46,20 @@ func (a *Account) GetHooks() []registry.Hook {
 	}
 }
 
-func NewAccount(name, member, value string, config map[string]string) Account {
+func NewAccount(name, member, value string, secret map[string]string) Account {
 	a := Account{
 		Name:   name,
 		Member: member,
 		Value:  value,
-		Config: config,
+		Secret: secret,
 	}
 	a.Defaulted()
 	registry.CallHooks(&a)
 	return a
 }
 
-func NewAccountWithSettings(name, member, value string, config map[string]string, settings json.RawMessage) Account {
-	account := NewAccount(name, member, value, config)
+func NewAccountWithSettings(name, member, value string, secret map[string]string, settings json.RawMessage) Account {
+	account := NewAccount(name, member, value, secret)
 	account.Settings = settings
 	return account
 }
