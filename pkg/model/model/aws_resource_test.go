@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry"
 	"net"
 	"slices"
 	"strings"
@@ -290,8 +291,10 @@ func TestAWSResource_GetIPs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			registry.CallHooks(tt.resource)
 			got := tt.resource.GetIPs()
 			assert.Equal(t, tt.want, got)
+			assert.Equal(t, got, tt.resource.IPs)
 		})
 	}
 }
