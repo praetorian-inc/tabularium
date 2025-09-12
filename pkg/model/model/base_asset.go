@@ -92,9 +92,6 @@ func (a *BaseAsset) Merge(u Assetlike) {
 	if a.History.Update(a.Status, update.Status, update.Source, update.Comment, update.History) {
 		a.Status = update.Status
 	}
-	if update.Created != "" {
-		a.Created = update.Created
-	}
 	if !a.IsStatus(Active) {
 		a.TTL = 0
 	}
