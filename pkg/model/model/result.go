@@ -12,6 +12,7 @@ type ResultContext struct {
 	Username     string            `json:"username" desc:"Username who initiated or owns the job."`
 	Source       string            `json:"source" desc:"The source or capability that generated this job."`
 	Config       map[string]string `json:"config" desc:"Configuration parameters for the job capability."`
+	Secret       map[string]string `json:"secret" desc:"Sensitive configuration parameters (credentials, tokens, keys)."`
 	Target       TargetWrapper     `json:"target" desc:"The primary target of the job."`
 	Parent       TargetWrapper     `json:"parent,omitempty" desc:"Optional parent target from which this job was spawned."`
 	Queue        string            `json:"queue,omitempty" desc:"Target queue for the job."`
