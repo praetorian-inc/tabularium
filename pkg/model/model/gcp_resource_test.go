@@ -423,30 +423,16 @@ func TestNewGCPResource(t *testing.T) {
 
 	// Validate fields
 	expectedKey := "#gcpresource#" + accountRef + "#" + name
-	if gcpRes.Key != expectedKey {
-		t.Errorf("expected Key '%s', got '%s'", expectedKey, gcpRes.Key)
-	}
-	if gcpRes.Name != name {
-		t.Errorf("expected Name '%s', got '%s'", name, gcpRes.Name)
-	}
-	if gcpRes.DisplayName != "test-instance" {
-		t.Errorf("expected DisplayName 'test-instance', got '%s'", gcpRes.DisplayName)
-	}
-	if gcpRes.Provider != "gcp" {
-		t.Errorf("expected Provider 'gcp', got '%s'", gcpRes.Provider)
-	}
-	if gcpRes.ResourceType != rtype {
-		t.Errorf("expected ResourceType '%s', got '%s'", rtype, gcpRes.ResourceType)
-	}
-	if gcpRes.AccountRef != accountRef {
-		t.Errorf("expected AccountRef '%s', got '%s'", accountRef, gcpRes.AccountRef)
-	}
-	if gcpRes.Region != "us-central1" {
-		t.Errorf("expected Region 'us-central1', got '%s'", gcpRes.Region)
-	}
+	assert.Equal(t, expectedKey, gcpRes.Key)
+	assert.Equal(t, name, gcpRes.Name)
+	assert.Equal(t, "test-instance", gcpRes.DisplayName)
+	assert.Equal(t, "gcp", gcpRes.Provider)
+	assert.Equal(t, rtype, gcpRes.ResourceType)
+	assert.Equal(t, accountRef, gcpRes.AccountRef)
+	assert.Equal(t, "us-central1", gcpRes.Region)
 
 	// Validate labels
-	expectedLabels := []string{"compute_googleapis_com_Instance", "GCPResource", "TTL", "CloudResource"}
+	expectedLabels := []string{"compute_googleapis_com_Instance", "GCPResource", "Asset", "TTL", "CloudResource"}
 	actualLabels := slices.Clone(gcpRes.GetLabels())
 	slices.Sort(actualLabels)
 	slices.Sort(expectedLabels)

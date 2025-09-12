@@ -343,7 +343,7 @@ func TestNewAWSResource_Labels(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	expectedLabels := []string{"Role", "Principal", "AWS_IAM_Role", "AWSResource", "TTL", "CloudResource"}
+	expectedLabels := []string{"Role", "Principal", "AWS_IAM_Role", "Asset", "AWSResource", "TTL", "CloudResource"}
 	actualLabels := slices.Clone(awsRes.GetLabels())
 	slices.Sort(actualLabels)
 	slices.Sort(expectedLabels)
@@ -368,30 +368,16 @@ func TestNewAWSResource(t *testing.T) {
 
 		// Validate fields
 		expectedKey := "#awsresource#" + accountRef + "#" + name
-		if awsRes.Key != expectedKey {
-			t.Errorf("expected Key '%s', got '%s'", expectedKey, awsRes.Key)
-		}
-		if awsRes.Name != name {
-			t.Errorf("expected Name '%s', got '%s'", name, awsRes.Name)
-		}
-		if awsRes.DisplayName != "function:test-function" {
-			t.Errorf("expected DisplayName 'function:test-function', got '%s'", awsRes.DisplayName)
-		}
-		if awsRes.Provider != "aws" {
-			t.Errorf("expected Provider 'aws', got '%s'", awsRes.Provider)
-		}
-		if awsRes.ResourceType != rtype {
-			t.Errorf("expected ResourceType '%s', got '%s'", rtype, awsRes.ResourceType)
-		}
-		if awsRes.Region != "us-east-2" {
-			t.Errorf("expected Region 'us-east-2', got '%s'", awsRes.Region)
-		}
-		if awsRes.AccountRef != accountRef {
-			t.Errorf("expected AccountRef '%s', got '%s'", accountRef, awsRes.AccountRef)
-		}
+		assert.Equal(t, expectedKey, awsRes.Key)
+		assert.Equal(t, name, awsRes.Name)
+		assert.Equal(t, "function:test-function", awsRes.DisplayName)
+		assert.Equal(t, "aws", awsRes.Provider)
+		assert.Equal(t, rtype, awsRes.ResourceType)
+		assert.Equal(t, "us-east-2", awsRes.Region)
+		assert.Equal(t, accountRef, awsRes.AccountRef)
 
 		// Validate labels
-		expectedLabels := []string{"AWS_Lambda_Function", "AWSResource", "TTL", "CloudResource"}
+		expectedLabels := []string{"AWS_Lambda_Function", "Asset", "AWSResource", "TTL", "CloudResource"}
 		actualLabels := slices.Clone(awsRes.GetLabels())
 		slices.Sort(actualLabels)
 		slices.Sort(expectedLabels)
@@ -400,9 +386,8 @@ func TestNewAWSResource(t *testing.T) {
 		}
 
 		// Validate properties
-		if runtime, ok := awsRes.Properties["runtime"].(string); !ok || runtime != "python3.9" {
-			t.Errorf("expected Properties[runtime] 'python3.9', got '%v'", awsRes.Properties["runtime"])
-		}
+		require.Contains(t, awsRes.Properties, "runtime")
+		assert.Equal(t, awsRes.Properties["runtime"], "python3.9")
 	})
 
 	t.Run("error on invalid ARN", func(t *testing.T) {
@@ -503,7 +488,7 @@ func TestAWSResource_GetLabels(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	expectedLabels := []string{"AWS_EC2_Instance", "AWSResource", "TTL", "CloudResource"}
+	expectedLabels := []string{"AWS_EC2_Instance", "AWSResource", "Asset", "TTL", "CloudResource"}
 	actualLabels := slices.Clone(awsRes.GetLabels())
 	slices.Sort(actualLabels)
 	slices.Sort(expectedLabels)
