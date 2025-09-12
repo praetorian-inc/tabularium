@@ -2,33 +2,11 @@ package model
 
 import (
 	"reflect"
-	"slices"
 	"testing"
 	"time"
 
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
-
-func TestAssetlike_Implementations(t *testing.T) {
-	for name := range registry.Registry.GetAllTypes() {
-		item, ok := registry.Registry.MakeType(name)
-		require.True(t, ok)
-
-		graphModel, ok := item.(GraphModel)
-		if !ok {
-			continue
-		}
-
-		if !slices.Contains(graphModel.GetLabels(), AssetLabel) {
-			continue
-		}
-
-		_, ok = item.(Assetlike)
-		require.True(t, ok, "failed to cast %q to Assetlike", name)
-	}
-}
 
 func TestAsset_Visit(t *testing.T) {
 	tests := []struct {

@@ -30,43 +30,31 @@ const (
 	ADIssuancePolicyLabel = "ADIssuancePolicy"
 )
 
-var ADLabels = map[string]string{
-	"adobject":         ADObjectLabel,
-	"aduser":           ADUserLabel,
-	"adcomputer":       ADComputerLabel,
-	"adgroup":          ADGroupLabel,
-	"adgpo":            ADGPOLabel,
-	"adou":             ADOULabel,
-	"adcontainer":      ADContainerLabel,
-	"addomain":         ADDomainLabel,
-	"adlocalgroup":     ADLocalGroupLabel,
-	"adlocaluser":      ADLocalUserLabel,
-	"adaiaca":          ADAIACALabel,
-	"adrootca":         ADRootCALabel,
-	"adenterpriseca":   ADEnterpriseCALabel,
-	"adntauthstore":    ADNTAuthStoreLabel,
-	"adcerttemplate":   ADCertTemplateLabel,
-	"adissuancepolicy": ADIssuancePolicyLabel,
-}
-
-func GetADLabel(label string) string {
-	label = strings.ToLower(label)
-	check1 := ADLabels[label]
-	if check1 != "" {
-		return check1
-	}
-
-	label = "ad" + label
-	return ADLabels[label]
+var ADLabels = []string{
+	ADObjectLabel,
+	ADUserLabel,
+	ADComputerLabel,
+	ADGroupLabel,
+	ADGPOLabel,
+	ADOULabel,
+	ADContainerLabel,
+	ADDomainLabel,
+	ADLocalGroupLabel,
+	ADLocalUserLabel,
+	ADAIACALabel,
+	ADRootCALabel,
+	ADEnterpriseCALabel,
+	ADNTAuthStoreLabel,
+	ADCertTemplateLabel,
+	ADIssuancePolicyLabel,
 }
 
 func init() {
-	labels := []string{}
 	for _, label := range ADLabels {
-		labels = append(labels, label)
+		MustRegisterLabel(label)
 	}
 
-	registry.Registry.MustRegisterModel(&ADObject{}, labels...)
+	registry.Registry.MustRegisterModel(&ADObject{}, ADLabels...)
 }
 
 var (
@@ -175,25 +163,33 @@ func (ad *ADObject) GetHooks() []registry.Hook {
 }
 
 func (ad *ADObject) getADLabel() string {
-	label := GetADLabel(ad.Label)
-	if label != "" {
-		return label
+	get := func(label string) (string, bool) {
+		for _, l := range ADLabels {
+			if strings.EqualFold(label, l) {
+				return l, true
+			}
+		}
+
+		return "", false
 	}
 
-	label = GetADLabel(ad.Alias)
-	if label != "" {
-		return label
+	if l, ok := get(ad.Label); ok {
+		return l
+	}
+
+	if l, ok := get(ad.Alias); ok {
+		return l
 	}
 
 	return ADObjectLabel
 }
 
-// NewADObject creates a new ADObject with the specified domain, distinguished name, and object class
-func NewADObject(domain, objectID, distinguishedName, objectClass string) ADObject {
+// NewADObject creates a new ADObject with the specified domain, distinguished name, and object label
+func NewADObject(domain, objectID, distinguishedName, objectLabel string) ADObject {
 	ad := ADObject{
 		Domain:   domain,
 		ObjectID: objectID,
-		Label:    objectClass,
+		Label:    objectLabel,
 		ADProperties: ADProperties{
 			DistinguishedName: distinguishedName,
 		},

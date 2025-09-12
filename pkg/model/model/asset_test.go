@@ -97,7 +97,7 @@ func TestAsset_IsClass(t *testing.T) {
 		want  bool
 	}{
 		{
-			name: "matches class prefix",
+			name: "matches class",
 			asset: Asset{
 				DNS:  "example.com",
 				Name: "example.com",

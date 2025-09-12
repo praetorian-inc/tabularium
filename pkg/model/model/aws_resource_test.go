@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry"
 	"net"
 	"slices"
 	"strings"
@@ -290,8 +291,10 @@ func TestAWSResource_GetIPs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			registry.CallHooks(tt.resource)
 			got := tt.resource.GetIPs()
 			assert.Equal(t, tt.want, got)
+			assert.Equal(t, got, tt.resource.IPs)
 		})
 	}
 }
@@ -329,7 +332,7 @@ func TestNewAWSResource_Fields(t *testing.T) {
 	}
 }
 
-func TestNewAwsResource_Labels(t *testing.T) {
+func TestNewAWSResource_Labels(t *testing.T) {
 	name := "arn:aws:iam::123456789012:role/acme-admin-access"
 	rtype := AWSRole
 	accountRef := "123456789012"
@@ -340,7 +343,7 @@ func TestNewAwsResource_Labels(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	expectedLabels := []string{"Role", "Principal", "AWS_IAM_Role", "AWSResource", "TTL", "Cloud"}
+	expectedLabels := []string{"Role", "Principal", "AWS_IAM_Role", "Asset", "AWSResource", "TTL", "CloudResource"}
 	actualLabels := slices.Clone(awsRes.GetLabels())
 	slices.Sort(actualLabels)
 	slices.Sort(expectedLabels)
@@ -349,7 +352,7 @@ func TestNewAwsResource_Labels(t *testing.T) {
 	}
 }
 
-func TestNewAwsResource(t *testing.T) {
+func TestNewAWSResource(t *testing.T) {
 	t.Run("successful creation with valid ARN", func(t *testing.T) {
 		name := "arn:aws:lambda:us-east-2:123456789012:function:test-function"
 		rtype := AWSLambdaFunction
@@ -365,30 +368,16 @@ func TestNewAwsResource(t *testing.T) {
 
 		// Validate fields
 		expectedKey := "#awsresource#" + accountRef + "#" + name
-		if awsRes.Key != expectedKey {
-			t.Errorf("expected Key '%s', got '%s'", expectedKey, awsRes.Key)
-		}
-		if awsRes.Name != name {
-			t.Errorf("expected Name '%s', got '%s'", name, awsRes.Name)
-		}
-		if awsRes.DisplayName != "function:test-function" {
-			t.Errorf("expected DisplayName 'function:test-function', got '%s'", awsRes.DisplayName)
-		}
-		if awsRes.Provider != "aws" {
-			t.Errorf("expected Provider 'aws', got '%s'", awsRes.Provider)
-		}
-		if awsRes.ResourceType != rtype {
-			t.Errorf("expected ResourceType '%s', got '%s'", rtype, awsRes.ResourceType)
-		}
-		if awsRes.Region != "us-east-2" {
-			t.Errorf("expected Region 'us-east-2', got '%s'", awsRes.Region)
-		}
-		if awsRes.AccountRef != accountRef {
-			t.Errorf("expected AccountRef '%s', got '%s'", accountRef, awsRes.AccountRef)
-		}
+		assert.Equal(t, expectedKey, awsRes.Key)
+		assert.Equal(t, name, awsRes.Name)
+		assert.Equal(t, "function:test-function", awsRes.DisplayName)
+		assert.Equal(t, "aws", awsRes.Provider)
+		assert.Equal(t, rtype, awsRes.ResourceType)
+		assert.Equal(t, "us-east-2", awsRes.Region)
+		assert.Equal(t, accountRef, awsRes.AccountRef)
 
 		// Validate labels
-		expectedLabels := []string{"AWS_Lambda_Function", "AWSResource", "TTL", "Cloud"}
+		expectedLabels := []string{"AWS_Lambda_Function", "Asset", "AWSResource", "TTL", "CloudResource"}
 		actualLabels := slices.Clone(awsRes.GetLabels())
 		slices.Sort(actualLabels)
 		slices.Sort(expectedLabels)
@@ -397,9 +386,8 @@ func TestNewAwsResource(t *testing.T) {
 		}
 
 		// Validate properties
-		if runtime, ok := awsRes.Properties["runtime"].(string); !ok || runtime != "python3.9" {
-			t.Errorf("expected Properties[runtime] 'python3.9', got '%v'", awsRes.Properties["runtime"])
-		}
+		require.Contains(t, awsRes.Properties, "runtime")
+		assert.Equal(t, awsRes.Properties["runtime"], "python3.9")
 	})
 
 	t.Run("error on invalid ARN", func(t *testing.T) {
@@ -487,7 +475,7 @@ func TestNewAwsResource(t *testing.T) {
 	})
 }
 
-func TestAwsResource_GetLabels(t *testing.T) {
+func TestAWSResource_GetLabels(t *testing.T) {
 	name := "arn:aws:ec2:us-east-1:123456789012:instance/i-0123456789abcdef0"
 	rtype := AWSEC2Instance
 	accountRef := "123456789012"
@@ -500,7 +488,7 @@ func TestAwsResource_GetLabels(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	expectedLabels := []string{"AWS_EC2_Instance", "AWSResource", "TTL", "Cloud"}
+	expectedLabels := []string{"AWS_EC2_Instance", "AWSResource", "Asset", "TTL", "CloudResource"}
 	actualLabels := slices.Clone(awsRes.GetLabels())
 	slices.Sort(actualLabels)
 	slices.Sort(expectedLabels)

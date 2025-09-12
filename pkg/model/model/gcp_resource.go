@@ -9,8 +9,17 @@ import (
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
+const (
+	GCPResourceLabel = "GCPResource"
+)
+
 type GCPResource struct {
 	CloudResource
+}
+
+func init() {
+	MustRegisterLabel(GCPResourceLabel)
+	registry.Registry.MustRegisterModel(&GCPResource{})
 }
 
 func NewGCPResource(name, accountRef string, rtype CloudResourceType, properties map[string]any) (GCPResource, error) {
@@ -24,7 +33,6 @@ func NewGCPResource(name, accountRef string, rtype CloudResourceType, properties
 			Properties:   properties,
 			ResourceType: CloudResourceType(rtype),
 			AccountRef:   accountRef,
-			Labels:       []string{"GCPResource"},
 		},
 	}
 
@@ -42,8 +50,22 @@ func (a *GCPResource) GetDisplayName() string {
 	}
 	return a.Name
 }
+
 func (a *GCPResource) GetHooks() []registry.Hook {
-	return a.CloudResource.GetHooks()
+	hooks := []registry.Hook{
+		{
+			Call: func() error {
+				a.CloudResource.Key = fmt.Sprintf("#gcpresource#%s#%s", a.AccountRef, a.Name)
+				a.CloudResource.Labels = []string{GCPResourceLabel}
+				a.CloudResource.IPs = a.GetIPs()
+				a.CloudResource.URLs = a.GetURLs()
+				return nil
+			},
+		},
+	}
+
+	hooks = append(hooks, a.CloudResource.GetHooks()...)
+	return hooks
 }
 
 func (a *GCPResource) GetRegion() string {
