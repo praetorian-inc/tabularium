@@ -116,9 +116,11 @@ func (job *Job) GetHooks() []registry.Hook {
 		{
 			Call: func() error {
 				if job.Target.Model != nil {
-					template := fmt.Sprintf("#job#%%s#%s#%s", job.Target.Model.Identifier(), job.Source)
+					group := job.Target.Model.Group()
+					identifier := job.Target.Model.Identifier()
+					template := fmt.Sprintf("#job#%%s#%s#%s", identifier, job.Source)
 					if len(template) <= 1024 {
-						shortenedDNS := job.Target.Model.Group()[:min(1024-len(template), len(job.Target.Model.Group()))]
+						shortenedDNS := group[:min(1024-len(template), len(group))]
 						job.DNS = shortenedDNS
 						job.Key = fmt.Sprintf(template, shortenedDNS)
 					}
