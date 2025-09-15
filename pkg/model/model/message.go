@@ -5,6 +5,13 @@ import (
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
+// Role constants for message actors
+const (
+	RoleUser    = "user"
+	RoleChariot = "chariot"
+	RoleSystem  = "system"
+)
+
 type Message struct {
 	registry.BaseModel
 	baseTableModel
@@ -12,11 +19,10 @@ type Message struct {
 	Key            string `dynamodbav:"key" json:"key" desc:"Unique key for the message." example:"#message#550e8400-e29b-41d4-a716-446655440000#1sB5tZfLipTVWQWHVKnDFS6kFRK"`
 	// Attributes
 	ConversationID string `dynamodbav:"conversationId" json:"conversationId" desc:"ID of the conversation this message belongs to." example:"550e8400-e29b-41d4-a716-446655440000"`
-	Role           string `dynamodbav:"role" json:"role" desc:"Role of the message sender (user, assistant, system)." example:"user"`
+	Role           string `dynamodbav:"role" json:"role" desc:"Role of the message sender (user, chariot, system)." example:"user"`
 	Content        string `dynamodbav:"content" json:"content" desc:"Content of the message." example:"Hello, how can I help you today?"`
 	Timestamp      string `dynamodbav:"timestamp" json:"timestamp" desc:"Timestamp when the message was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
 	MessageID      string `dynamodbav:"messageId" json:"messageId" desc:"KSUID for message ordering." example:"1sB5tZfLipTVWQWHVKnDFS6kFRK"`
-	Status         string `dynamodbav:"status" json:"status" desc:"Status of the message (sent, processing, completed, failed)." example:"sent"`
 	TTL            int64  `dynamodbav:"ttl" json:"ttl" desc:"Time-to-live for the message record (Unix timestamp)." example:"1706353200"`
 }
 
@@ -33,7 +39,6 @@ func (m *Message) GetDescription() string {
 }
 
 func (m *Message) Defaulted() {
-	m.Status = "sent"
 	m.Timestamp = Now()
 	m.TTL = Future(24 * 30) // 30 days
 	if m.MessageID == "" {

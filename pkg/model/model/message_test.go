@@ -24,7 +24,6 @@ func TestMessage_NewMessage(t *testing.T) {
 	assert.Equal(t, role, msg.Role)
 	assert.Equal(t, content, msg.Content)
 	assert.Equal(t, username, msg.Username)
-	assert.Equal(t, "sent", msg.Status)
 	assert.NotEmpty(t, msg.Timestamp)
 	assert.NotZero(t, msg.TTL)
 	assert.NotEmpty(t, msg.MessageID)
@@ -49,7 +48,6 @@ func TestMessage_Defaulted(t *testing.T) {
 	msg := &Message{}
 	msg.Defaulted()
 	
-	assert.Equal(t, "sent", msg.Status)
 	assert.NotEmpty(t, msg.Timestamp)
 	assert.NotZero(t, msg.TTL)
 	assert.NotEmpty(t, msg.MessageID)
@@ -371,17 +369,14 @@ func TestMessage_SecurityScenarios(t *testing.T) {
 	}
 }
 
-func TestMessage_StatusValidation(t *testing.T) {
-	validStatuses := []string{"sent", "processing", "completed", "failed"}
+func TestMessage_RoleConstants(t *testing.T) {
+	// Test that the role constants are defined correctly
+	assert.Equal(t, "user", RoleUser)
+	assert.Equal(t, "chariot", RoleChariot)
+	assert.Equal(t, "system", RoleSystem)
 	
-	for _, status := range validStatuses {
-		t.Run("status_"+status, func(t *testing.T) {
-			msg := NewMessage("conv-123", "user", "test", "user@example.com")
-			msg.Status = status
-			
-			// Status doesn't affect validity - that's application level validation
-			assert.True(t, msg.Valid())
-			assert.Equal(t, status, msg.Status)
-		})
-	}
+	// Test using role constants
+	msg := NewMessage("conv-123", RoleUser, "test", "user@example.com")
+	assert.Equal(t, RoleUser, msg.Role)
+	assert.True(t, msg.Valid())
 }

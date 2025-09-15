@@ -17,7 +17,7 @@ func TestConversation_NewConversation(t *testing.T) {
 	
 	assert.Equal(t, name, conv.Name)
 	assert.Equal(t, username, conv.Username)
-	assert.Equal(t, "active", conv.Status)
+	assert.NotEmpty(t, conv.UUID)
 	assert.NotEmpty(t, conv.Created)
 	assert.NotZero(t, conv.TTL)
 	assert.NotEmpty(t, conv.Key)
@@ -41,7 +41,6 @@ func TestConversation_Defaulted(t *testing.T) {
 	conv := &Conversation{}
 	conv.Defaulted()
 	
-	assert.Equal(t, "active", conv.Status)
 	assert.NotEmpty(t, conv.Created)
 	assert.NotZero(t, conv.TTL)
 	
