@@ -39,6 +39,7 @@ const WebApplicationLabel = "WebApplication"
 var webAppKeyRegex = regexp.MustCompile(`^#webapplication#https?://[^?#]+$`)
 
 func init() {
+	MustRegisterLabel(WebApplicationLabel)
 	registry.Registry.MustRegisterModel(&WebApplication{})
 }
 
@@ -94,7 +95,7 @@ func (w *WebApplication) Defaulted() {
 	w.BaseAsset.Defaulted()
 	w.Class = "webapplication"
 	if w.URLs == nil {
-		w.URLs = make([]string, 0)
+		w.URLs = []string{}
 	}
 }
 
