@@ -109,7 +109,6 @@ func TestTargetEvent_UnmarshalJSON(t *testing.T) {
 		assert.Equal(t, "https://example.com/", webpage.URL)
 		assert.Equal(t, "A", webpage.Status)
 		assert.Equal(t, []string{"crawler"}, webpage.Source)
-		assert.Equal(t, "interesting", webpage.State)
 		assert.Equal(t, "2023-10-27T10:00:00Z", webpage.Created)
 		assert.Equal(t, "2023-10-27T11:00:00Z", webpage.Visited)
 		assert.Equal(t, int64(123456789), webpage.TTL)
@@ -293,7 +292,6 @@ func TestTargetEvent_DynamoDBMarshaling(t *testing.T) {
 		webpage.Visited = Now()
 		webpage.TTL = 123456789
 		webpage.Source = []string{"crawler"}
-		webpage.State = Interesting
 		webpage.Metadata = map[string]any{"test": "value"}
 		webpage.DetailsFilepath = "path/to/details.json"
 
@@ -315,7 +313,6 @@ func TestTargetEvent_DynamoDBMarshaling(t *testing.T) {
 		assert.Equal(t, webpage.Status, result.Status)
 		assert.Equal(t, webpage.Source, result.Source)
 		assert.Equal(t, webpage.Parent.Model, result.Parent.Model)
-		assert.Equal(t, webpage.State, result.State)
 		assert.Equal(t, webpage.Metadata, result.Metadata)
 		assert.Equal(t, webpage.Created, result.Created)
 		assert.Equal(t, webpage.Visited, result.Visited)

@@ -32,4 +32,9 @@ func Test_GetLabel(t *testing.T) {
 	assert.Equal(t, RepositoryLabel, GetLabel("Repository"))
 	assert.Equal(t, IntegrationLabel, GetLabel("integration"))
 	assert.Equal(t, IntegrationLabel, GetLabel("Integration"))
+
+	// appsec
+	assert.Equal(t, WebpageLabel, GetLabel("webpage"))
+	assert.Equal(t, WebpageLabel, GetLabel("Webpage"))
+	assert.Equal(t, WebpageLabel, GetLabel("WebPage"))
 }
