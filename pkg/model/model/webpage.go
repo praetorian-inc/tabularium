@@ -86,7 +86,6 @@ type WebpageResponse struct {
 const WebpageLabel = "Webpage"
 
 func init() {
-	MustRegisterLabel(WebpageLabel)
 	registry.Registry.MustRegisterModel(&Webpage{})
 }
 
