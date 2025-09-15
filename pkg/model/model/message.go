@@ -5,7 +5,6 @@ import (
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
-// Role constants for message actors
 const (
 	RoleUser    = "user"
 	RoleChariot = "chariot"
@@ -17,7 +16,6 @@ type Message struct {
 	baseTableModel
 	Username       string `dynamodbav:"username" json:"username" desc:"Username who sent the message." example:"user@example.com"`
 	Key            string `dynamodbav:"key" json:"key" desc:"Unique key for the message." example:"#message#550e8400-e29b-41d4-a716-446655440000#1sB5tZfLipTVWQWHVKnDFS6kFRK"`
-	// Attributes
 	ConversationID string `dynamodbav:"conversationId" json:"conversationId" desc:"ID of the conversation this message belongs to." example:"550e8400-e29b-41d4-a716-446655440000"`
 	Role           string `dynamodbav:"role" json:"role" desc:"Role of the message sender (user, chariot, system)." example:"user"`
 	Content        string `dynamodbav:"content" json:"content" desc:"Content of the message." example:"Hello, how can I help you today?"`
@@ -40,7 +38,7 @@ func (m *Message) GetDescription() string {
 
 func (m *Message) Defaulted() {
 	m.Timestamp = Now()
-	m.TTL = Future(24 * 30) // 30 days
+	m.TTL = Future(24 * 30)
 	if m.MessageID == "" {
 		m.MessageID = ksuid.New().String()
 	}
@@ -63,7 +61,7 @@ func (m *Message) GetHooks() []registry.Hook {
 }
 
 func (m *Message) Valid() bool {
-	return m.ConversationID != "" && m.Role != "" && m.Content != "" && m.Username != ""
+	return m.ConversationID != "" && m.Role != "" && m.Content != ""
 }
 
 func NewMessage(conversationID, role, content, username string) Message {
