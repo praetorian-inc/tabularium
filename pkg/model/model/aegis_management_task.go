@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -114,8 +115,8 @@ func (amt *AegisManagementTask) GetHooks() []registry.Hook {
 		{
 			Call: func() error {
 				if amt.Key == "" && amt.Username != "" && amt.AegisManagementCapability != "" {
-					timestamp := Now()
-					amt.Key = fmt.Sprintf("#aegis-mgmt#%s#%s#%s", amt.Username, amt.AegisManagementCapability, timestamp)
+					taskID := uuid.New().String()
+					amt.Key = fmt.Sprintf("#aegis-mgmt#%s#%s#%s", amt.Username, amt.AegisManagementCapability, taskID)
 				}
 				return nil
 			},
