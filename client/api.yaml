@@ -1002,8 +1002,6 @@ components:
       properties:
         BaseModel:
           type: object
-        Beta:
-          type: object
         History:
           type: object
         accountRef:
@@ -1012,6 +1010,14 @@ components:
           type: string
         displayName:
           type: string
+        group:
+          type: string
+        identifier:
+          type: string
+        ips:
+          items:
+            type: string
+          type: array
         key:
           type: string
         labels:
@@ -1035,17 +1041,23 @@ components:
         ttl:
           format: int64
           type: integer
+        urls:
+          items:
+            type: string
+          type: array
         username:
           type: string
         visited:
           type: string
       required:
       - BaseModel
-      - Beta
       - History
       - accountRef
       - created
       - displayName
+      - group
+      - identifier
+      - ips
       - key
       - labels
       - name
@@ -1056,6 +1068,7 @@ components:
       - secret
       - status
       - ttl
+      - urls
       - username
       - visited
       type: object
