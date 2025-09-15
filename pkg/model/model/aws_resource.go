@@ -10,8 +10,18 @@ import (
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
+const (
+	AWSProvider      = "aws"
+	AWSResourceLabel = "AWSResource"
+)
+
 type AWSResource struct {
 	CloudResource
+}
+
+func init() {
+	MustRegisterLabel(AWSResourceLabel)
+	registry.Registry.MustRegisterModel(&AWSResource{})
 }
 
 // NewAWSResource creates an AWSResource from the given ARN, resource type, account reference, and properties.
@@ -21,19 +31,15 @@ func NewAWSResource(name, accountRef string, rtype CloudResourceType, properties
 		return AWSResource{}, fmt.Errorf("invalid ARN: %s", name)
 	}
 
-	key := fmt.Sprintf("#awsresource#%s#%s", accountRef, name)
-
 	r := AWSResource{
 		CloudResource: CloudResource{
-			Key:          key,
 			Name:         name,
 			DisplayName:  parsedARN.Resource,
-			Provider:     "aws",
+			Provider:     AWSProvider,
 			Properties:   properties,
 			ResourceType: CloudResourceType(rtype),
 			Region:       parsedARN.Region,
 			AccountRef:   accountRef,
-			Labels:       []string{"AWSResource"},
 		},
 	}
 
@@ -43,7 +49,20 @@ func NewAWSResource(name, accountRef string, rtype CloudResourceType, properties
 }
 
 func (a *AWSResource) GetHooks() []registry.Hook {
-	return a.CloudResource.GetHooks()
+	hooks := []registry.Hook{
+		{
+			Call: func() error {
+				a.CloudResource.Key = fmt.Sprintf("#awsresource#%s#%s", a.AccountRef, a.Name)
+				a.CloudResource.Labels = []string{AWSResourceLabel}
+				a.CloudResource.IPs = a.GetIPs()
+				a.CloudResource.URLs = a.GetURLs()
+				return nil
+			},
+		},
+	}
+
+	hooks = append(hooks, a.CloudResource.GetHooks()...)
+	return hooks
 }
 
 // WithStatus method for AWSResource to prevent type erasure

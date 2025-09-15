@@ -22,6 +22,7 @@ const WebApplicationLabel = "WebApplication"
 var webAppKeyRegex = regexp.MustCompile(`^#webapplication#https?://[^?#]+$`)
 
 func init() {
+	MustRegisterLabel(WebApplicationLabel)
 	registry.Registry.MustRegisterModel(&WebApplication{})
 }
 
