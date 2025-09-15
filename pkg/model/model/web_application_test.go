@@ -195,11 +195,12 @@ func TestWebApplicationTargetInterface(t *testing.T) {
 	assert.Equal(t, Pending, newStatus.GetStatus())
 	assert.Equal(t, Active, w.GetStatus())
 
-	assert.Equal(t, "https://app.example.com", w.Group())
-	assert.Equal(t, "/admin", w.Identifier())
+	assert.Equal(t, "https://app.example.com/admin", w.Identifier())
+	assert.Equal(t, "Admin Panel", w.Group())
 
 	rootApp := NewWebApplication("https://example.com", "Root")
-	assert.Equal(t, "/", rootApp.Identifier())
+	assert.Equal(t, "Root", rootApp.Group())
+	assert.Equal(t, "https://example.com/", rootApp.Identifier())
 }
 
 func TestWebApplicationMergeURLs(t *testing.T) {

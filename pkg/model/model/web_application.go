@@ -108,33 +108,34 @@ func (w *WebApplication) WithStatus(status string) Target {
 	return &ret
 }
 
-func (w *WebApplication) Group() string {
-	if parsed, err := url.Parse(w.PrimaryURL); err == nil {
-		return fmt.Sprintf("%s://%s", parsed.Scheme, parsed.Host)
+func (w *WebApplication) GetPrimaryURL() url.URL {
+	parsed, err := url.Parse(w.PrimaryURL)
+	if err != nil {
+		return url.URL{}
 	}
-	return w.PrimaryURL
+	return *parsed
+}
+
+func (w *WebApplication) Group() string {
+	return w.Name
 }
 
 func (w *WebApplication) Identifier() string {
-	if parsed, err := url.Parse(w.PrimaryURL); err == nil {
-		if parsed.Path == "" || parsed.Path == "/" {
-			return "/"
-		}
-		return parsed.Path
-	}
 	return w.PrimaryURL
 }
 
 func (w *WebApplication) Merge(other Assetlike) {
 	w.BaseAsset.Merge(other)
-	if otherApp, ok := other.(*WebApplication); ok {
-		if otherApp.Name != "" {
-			w.Name = otherApp.Name
-		}
-		for _, u := range otherApp.URLs {
-			if !slices.Contains(w.URLs, u) {
-				w.URLs = append(w.URLs, u)
-			}
+	otherApp, ok := other.(*WebApplication)
+	if !ok {
+		return
+	}
+	if otherApp.Name != "" {
+		w.Name = otherApp.Name
+	}
+	for _, u := range otherApp.URLs {
+		if !slices.Contains(w.URLs, u) {
+			w.URLs = append(w.URLs, u)
 		}
 		w.Burp.Override(otherApp.Burp)
 	}
@@ -142,12 +143,14 @@ func (w *WebApplication) Merge(other Assetlike) {
 
 func (w *WebApplication) Visit(other Assetlike) {
 	w.BaseAsset.Visit(other)
-	if otherApp, ok := other.(*WebApplication); ok {
-		if otherApp.Name != "" && w.Name == "" {
-			w.Name = otherApp.Name
-		}
-		w.Burp.Override(otherApp.Burp)
+	otherApp, ok := other.(*WebApplication)
+	if !ok {
+		return
 	}
+	if otherApp.Name != "" && w.Name == "" {
+		w.Name = otherApp.Name
+	}
+	w.Burp.Override(otherApp.Burp)
 }
 
 func (w *WebApplication) Attribute(name, value string) Attribute {

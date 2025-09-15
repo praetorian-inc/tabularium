@@ -40,10 +40,6 @@ components:
       properties:
         BaseModel:
           type: object
-        config:
-          description: Secret configuration map associated with the account.
-          example: '{"service_principal_token": "103713408v0871v"}'
-          type: object
         key:
           description: Unique key for the account record.
           example: '#account#name#member#value'
@@ -56,6 +52,10 @@ components:
           description: The owner of the account.
           example: chariot.customer@example.com
           type: string
+        secret:
+          description: Secret configuration map associated with the account.
+          example: '{"service_principal_token": "103713408v0871v"}'
+          type: object
         settings:
           description: Raw JSON message containing specific settings.
           example: '{"notifications": true}'
@@ -1785,6 +1785,9 @@ components:
           description: The URL of the file that contains the large output.
           example: https://s3.amazonaws.com/big_output.zip
           type: string
+        secret:
+          description: Sensitive configuration parameters (credentials, tokens, keys).
+          type: object
         source:
           description: The source or capability that generated this job.
           example: portscan
@@ -1817,6 +1820,7 @@ components:
       - created
       - dns
       - key
+      - secret
       - source
       - status
       - target

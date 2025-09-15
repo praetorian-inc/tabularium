@@ -85,49 +85,6 @@ func TestNormalize(t *testing.T) {
 	}
 }
 
-func TestFixSchemePortMismatch(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected string
-	}{
-		{
-			name:     "HTTP scheme with HTTPS port",
-			input:    "http://example.com:443/path",
-			expected: "https://example.com:443/path",
-		},
-		{
-			name:     "HTTPS scheme with HTTP port",
-			input:    "https://example.com:80/path",
-			expected: "http://example.com:80/path",
-		},
-		{
-			name:     "correct HTTP scheme and port",
-			input:    "http://example.com:80/path",
-			expected: "http://example.com:80/path",
-		},
-		{
-			name:     "correct HTTPS scheme and port",
-			input:    "https://example.com:443/path",
-			expected: "https://example.com:443/path",
-		},
-		{
-			name:     "custom port no change",
-			input:    "https://example.com:8443/path",
-			expected: "https://example.com:8443/path",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			u, err := url.Parse(tt.input)
-			assert.NoError(t, err)
-			result := FixSchemePortMismatch(*u)
-			assert.Equal(t, tt.expected, result.String())
-		})
-	}
-}
-
 func TestRemoveDefaultPorts(t *testing.T) {
 	tests := []struct {
 		name     string
