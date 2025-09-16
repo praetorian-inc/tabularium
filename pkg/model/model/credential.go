@@ -107,6 +107,7 @@ type Credential struct {
 	AccountKey   string             `neo4j:"accountKey" json:"accountKey" desc:"Key of the associated account"`
 	Category     CredentialCategory `neo4j:"category" json:"category" desc:"Category of the credential"`
 	Type         CredentialType     `neo4j:"type" json:"type" desc:"Type of credential"`
+	Format       CredentialFormat   `neo4j:"format" json:"format" desc:"Format of the credential"`
 	Created      string             `neo4j:"created" json:"created" desc:"Timestamp when the credential was created"`
 	Updated      string             `neo4j:"updated" json:"updated" desc:"Timestamp when the credential was last updated"`
 }
