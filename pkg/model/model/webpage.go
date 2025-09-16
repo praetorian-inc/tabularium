@@ -201,7 +201,7 @@ func (w *Webpage) Merge(other Webpage) {
 	w.MergeSSOIdentified(other)
 	w.MergeMetadata(other)
 	w.MergeSource(other)
-	w.MergeSourceCode(other)
+	w.MergeArtifacts(other)
 	w.MergeRequests(other.Requests...)
 }
 
