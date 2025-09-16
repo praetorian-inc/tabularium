@@ -43,16 +43,22 @@ type SSOWebpage struct {
 	OriginalProviderURL string `json:"original_provider_url" desc:"The original SSO provider URL before any redirects." example:"https://app.sso-provider.com/example"`
 }
 
+type WebpageCodeArtifact struct {
+	Key    string `json:"key" desc:"The key of the ." example:"#file#source.zip"`
+	Secret string `json:"secret" desc:"The secret id of the code artifact" example:"#file#source.zip"`
+}
+
 type Webpage struct {
 	registry.BaseModel
-	Username string   `neo4j:"username" json:"username" desc:"The username associated with this webpage, if authenticated." example:"user@example.com"`
-	Key      string   `neo4j:"key" json:"key" desc:"Unique key identifying the webpage." example:"#webpage#https://example.com#parentKey"`
-	Created  string   `neo4j:"created" json:"created" desc:"Timestamp when the webpage was first discovered (RFC3339)." example:"2023-10-27T10:00:00Z"`
-	Visited  string   `neo4j:"visited" json:"visited" desc:"Timestamp when the webpage was last visited (RFC3339)." example:"2023-10-27T11:00:00Z"`
-	TTL      int64    `neo4j:"ttl" json:"ttl" desc:"Timestamp when the webpage will be deleted from the database in Unix seconds." example:"1747636791"`
-	Status   string   `neo4j:"status" json:"status" desc:"Current status of the webpage (e.g., Active, Inactive)." example:"Active"`
-	Source   []string `neo4j:"source" json:"source" desc:"Sources that identified this webpage (e.g., seed, crawl)" example:"[\"crawl\", \"login\"]"`
-	Private  bool     `neo4j:"private" json:"private" desc:"Whether the webpage is on a public web server." example:"false"`
+	Username  string                `neo4j:"username" json:"username" desc:"The username associated with this webpage, if authenticated." example:"user@example.com"`
+	Key       string                `neo4j:"key" json:"key" desc:"Unique key identifying the webpage." example:"#webpage#https://example.com#parentKey"`
+	Created   string                `neo4j:"created" json:"created" desc:"Timestamp when the webpage was first discovered (RFC3339)." example:"2023-10-27T10:00:00Z"`
+	Visited   string                `neo4j:"visited" json:"visited" desc:"Timestamp when the webpage was last visited (RFC3339)." example:"2023-10-27T11:00:00Z"`
+	TTL       int64                 `neo4j:"ttl" json:"ttl" desc:"Timestamp when the webpage will be deleted from the database in Unix seconds." example:"1747636791"`
+	Status    string                `neo4j:"status" json:"status" desc:"Current status of the webpage (e.g., Active, Inactive)." example:"Active"`
+	Source    []string              `neo4j:"source" json:"source" desc:"Sources that identified this webpage (e.g., seed, crawl)" example:"[\"crawl\", \"login\"]"`
+	Artifacts []WebpageCodeArtifact `neo4j:"artifacts" json:"artifacts" desc:"Source code repositories or files for analysis (e.g., repositories, file keys)"`
+	Private   bool                  `neo4j:"private" json:"private" desc:"Whether the webpage is on a public web server." example:"false"`
 	History
 	// Neo4j fields
 	URL             string                `neo4j:"url" json:"url" desc:"The basic URL of the webpage." example:"https://example.com/path"`
@@ -195,6 +201,7 @@ func (w *Webpage) Merge(other Webpage) {
 	w.MergeSSOIdentified(other)
 	w.MergeMetadata(other)
 	w.MergeSource(other)
+	w.MergeSourceCode(other)
 	w.MergeRequests(other.Requests...)
 }
 
@@ -224,6 +231,7 @@ func (w *Webpage) Dehydrate() (File, Hydratable) {
 
 func (w *Webpage) Defaulted() {
 	w.Source = []string{}
+	w.Artifacts = []WebpageCodeArtifact{}
 	w.Status = Active
 	w.Created = Now()
 	w.Visited = Now()

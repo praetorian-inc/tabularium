@@ -96,6 +96,10 @@ func (w *Webpage) MergeSource(other Webpage) {
 	w.Source = mergeSlices(w.Source, other.Source)
 }
 
+func (w *Webpage) MergeSourceCode(other Webpage) {
+	w.SourceCode = mergeSlices(w.SourceCode, other.SourceCode)
+}
+
 // We merge requests preferring existing, updating in the duplicate case, then append new from other webpage
 func (w *Webpage) MergeRequests(others ...WebpageRequest) {
 	type reqKey struct {
