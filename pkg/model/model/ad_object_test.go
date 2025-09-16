@@ -1,6 +1,7 @@
 package model
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
@@ -165,12 +166,12 @@ func TestADObject_GetHooks(t *testing.T) {
 			expectedClass: "user",
 		},
 		{
-			name:          "hook handles empty values",
+			name:          "hook handles empty values - should fail",
 			domain:        "",
 			objectID:      "",
 			label:         "",
-			expectedKey:   "#adobject##",
-			expectedClass: "object",
+			expectedKey:   "",
+			expectedClass: "",
 		},
 	}
 
@@ -179,10 +180,15 @@ func TestADObject_GetHooks(t *testing.T) {
 			ad := NewADObject(tt.domain, tt.objectID, NO_DISTINGUISHED_NAME, tt.label)
 
 			err := registry.CallHooks(&ad)
-			require.NoError(t, err, "Hook should execute without error")
 
-			assert.Equal(t, tt.expectedKey, ad.Key, "Hook should generate correct key")
-			assert.Equal(t, tt.expectedClass, ad.Class, "Hook should set correct label")
+			if tt.name == "hook handles empty values - should fail" {
+				require.Error(t, err, "Hook should fail when neither ObjectID nor DN is provided")
+				assert.Contains(t, err.Error(), "requires either ObjectID or DistinguishedName")
+			} else {
+				require.NoError(t, err, "Hook should execute without error")
+				assert.Equal(t, tt.expectedKey, ad.Key, "Hook should generate correct key")
+				assert.Equal(t, tt.expectedClass, ad.Class, "Hook should set correct label")
+			}
 		})
 	}
 }
@@ -664,4 +670,510 @@ func TestADDomain_SeedModels(t *testing.T) {
 	assert.Equal(t, 1, len(seedModels))
 	assert.Equal(t, &seed, seedModels[0])
 	assert.Contains(t, seed.GetLabels(), SeedLabel)
+}
+
+// Test object creation failure when neither ObjectID nor DN is provided
+func TestADObject_CreationFailure(t *testing.T) {
+	tests := []struct {
+		name              string
+		domain            string
+		objectID          string
+		distinguishedName string
+		expectError       bool
+		description       string
+	}{
+		{
+			name:              "should fail with empty ObjectID and empty DN",
+			domain:            "example.local",
+			objectID:          "",
+			distinguishedName: "",
+			expectError:       true,
+			description:       "Object creation should fail when both ObjectID and DN are empty",
+		},
+		{
+			name:              "should fail with empty ObjectID and blank DN constant",
+			domain:            "example.local",
+			objectID:          "",
+			distinguishedName: "<blank>",
+			expectError:       true,
+			description:       "Object creation should fail when ObjectID is empty and DN is the test blank constant",
+		},
+		{
+			name:              "should succeed with ObjectID",
+			domain:            "example.local",
+			objectID:          "S-1-5-21-123456789-123456789-123456789-1001",
+			distinguishedName: "",
+			expectError:       false,
+			description:       "Object creation should succeed with ObjectID",
+		},
+		{
+			name:              "should succeed with DN",
+			domain:            "example.local",
+			objectID:          "",
+			distinguishedName: "CN=User,DC=example,DC=local",
+			expectError:       false,
+			description:       "Object creation should succeed with DN",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ad := NewADObject(tt.domain, tt.objectID, tt.distinguishedName, ADUserLabel)
+			err := registry.CallHooks(&ad)
+
+			if tt.expectError {
+				require.Error(t, err, tt.description)
+				assert.Contains(t, err.Error(), "requires either ObjectID or DistinguishedName")
+			} else {
+				require.NoError(t, err, tt.description)
+				assert.True(t, ad.Valid(), "Created object should be valid")
+			}
+		})
+	}
+}
+
+// Test DN validation (allowing DN as substitute for ObjectID)
+func TestADObject_DNValidation(t *testing.T) {
+	tests := []struct {
+		name              string
+		domain            string
+		objectID          string
+		distinguishedName string
+		valid             bool
+		description       string
+	}{
+		{
+			name:              "valid with ObjectID only",
+			domain:            "example.local",
+			objectID:          "S-1-5-21-123456789-123456789-123456789-1001",
+			distinguishedName: "",
+			valid:             true,
+			description:       "Valid with ObjectID and domain",
+		},
+		{
+			name:              "valid with DN only",
+			domain:            "example.local",
+			objectID:          "",
+			distinguishedName: "CN=User,DC=example,DC=local",
+			valid:             true,
+			description:       "Valid with DN and domain",
+		},
+		{
+			name:              "valid with both ObjectID and DN",
+			domain:            "example.local",
+			objectID:          "S-1-5-21-123456789-123456789-123456789-1001",
+			distinguishedName: "CN=User,DC=example,DC=local",
+			valid:             true,
+			description:       "Valid with both ObjectID and DN",
+		},
+		{
+			name:              "invalid with neither ObjectID nor DN",
+			domain:            "example.local",
+			objectID:          "",
+			distinguishedName: "",
+			valid:             false,
+			description:       "Invalid without ObjectID or DN",
+		},
+		{
+			name:              "invalid without domain",
+			domain:            "",
+			objectID:          "S-1-5-21-123456789-123456789-123456789-1001",
+			distinguishedName: "",
+			valid:             false,
+			description:       "Invalid without domain",
+		},
+		{
+			name:              "invalid with DN but no domain",
+			domain:            "",
+			objectID:          "",
+			distinguishedName: "CN=User,DC=example,DC=local",
+			valid:             false,
+			description:       "Invalid with DN but no domain",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ad := NewADObject(tt.domain, tt.objectID, tt.distinguishedName, ADUserLabel)
+			result := ad.Valid()
+			assert.Equal(t, tt.valid, result, tt.description)
+		})
+	}
+}
+
+// Test extractCNFromDN helper function
+func TestExtractCNFromDN(t *testing.T) {
+	tests := []struct {
+		name     string
+		dn       string
+		expected string
+	}{
+		{
+			name:     "standard DN with CN first",
+			dn:       "CN=John Doe,OU=Users,DC=example,DC=local",
+			expected: "John Doe",
+		},
+		{
+			name:     "DN with spaces around CN",
+			dn:       "CN=Test User, OU=IT, DC=example, DC=local",
+			expected: "Test User",
+		},
+		{
+			name:     "DN with lowercase cn",
+			dn:       "cn=service account,ou=Services,dc=example,dc=local",
+			expected: "service account",
+		},
+		{
+			name:     "DN with CN in middle",
+			dn:       "OU=Users,CN=Middle User,DC=example,DC=local",
+			expected: "Middle User",
+		},
+		{
+			name:     "DN without CN",
+			dn:       "OU=Organizational Unit,DC=example,DC=local",
+			expected: "",
+		},
+		{
+			name:     "empty DN",
+			dn:       "",
+			expected: "",
+		},
+		{
+			name:     "DN with special characters in CN",
+			dn:       "CN=User-Name.123,OU=Users,DC=example,DC=local",
+			expected: "User-Name.123",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := extractCNFromDN(tt.dn)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+// Test key generation for DN-based objects
+func TestADObject_DNKeyGeneration(t *testing.T) {
+	tests := []struct {
+		name              string
+		domain            string
+		objectID          string
+		distinguishedName string
+		expectedKey       string
+		description       string
+	}{
+		{
+			name:              "ObjectID takes precedence over DN",
+			domain:            "example.local",
+			objectID:          "S-1-5-21-123456789-123456789-123456789-1001",
+			distinguishedName: "CN=User,DC=example,DC=local",
+			expectedKey:       "#aduser#example.local#S-1-5-21-123456789-123456789-123456789-1001",
+			description:       "ObjectID should be used when both are present",
+		},
+		{
+			name:              "DN used when ObjectID is empty",
+			domain:            "example.local",
+			objectID:          "",
+			distinguishedName: "CN=Test User,DC=example,DC=local",
+			expectedKey:       "#aduser#example.local#Test User",
+			description:       "DN CN should be used when ObjectID is empty",
+		},
+		{
+			name:              "DN fallback for DN without CN",
+			domain:            "example.local",
+			objectID:          "",
+			distinguishedName: "OU=OrganizationalUnit,DC=example,DC=local",
+			expectedKey:       "#aduser#example.local#OU=OrganizationalUnit,DC=example,DC=local",
+			description:       "Full DN should be used when CN cannot be extracted",
+		},
+		{
+			name:              "DN truncation for long DN",
+			domain:            "example.local",
+			objectID:          "",
+			distinguishedName: "OU=Very-Long-Organizational-Unit-Name-That-Exceeds-Normal-Length-Limits-For-Testing-Purposes,DC=example,DC=local",
+			expectedKey:       "#aduser#example.local#OU=Very-Long-Organizational-Unit-Name-That-Exceeds-Normal-Length-Limits-For-Testing-Purposes,DC=exam",
+			description:       "Long DN should be truncated when used as key",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ad := NewADObject(tt.domain, tt.objectID, tt.distinguishedName, ADUserLabel)
+			assert.Equal(t, tt.expectedKey, ad.Key, tt.description)
+		})
+	}
+}
+
+// Test reconciliation functionality
+func TestADObject_Reconciliation(t *testing.T) {
+	tests := []struct {
+		name        string
+		existing    ADObject
+		visiting    ADObject
+		shouldMatch bool
+		description string
+	}{
+		{
+			name: "reconcile ObjectID+DN with DN-only",
+			existing: ADObject{
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
+				Label:    ADCertTemplateLabel,
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=UserTemplate,CN=Certificate Templates,CN=Public Key Services,CN=Services,CN=Configuration,DC=example,DC=local",
+					Name:              "UserTemplate",
+				},
+			},
+			visiting: ADObject{
+				Domain:   "example.local",
+				ObjectID: "",
+				Label:    ADCertTemplateLabel,
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=UserTemplate,CN=Certificate Templates,CN=Public Key Services,CN=Services,CN=Configuration,DC=example,DC=local",
+					Description:       "Template for user certificates",
+				},
+			},
+			shouldMatch: true,
+			description: "Objects with same domain, label, and DN should reconcile",
+		},
+		{
+			name: "reconcile DN-only with ObjectID+DN",
+			existing: ADObject{
+				Domain:   "example.local",
+				ObjectID: "",
+				Label:    ADCertTemplateLabel,
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=UserTemplate,CN=Certificate Templates,CN=Public Key Services,CN=Services,CN=Configuration,DC=example,DC=local",
+					Description:       "Template for user certificates",
+				},
+			},
+			visiting: ADObject{
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
+				Label:    ADCertTemplateLabel,
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=UserTemplate,CN=Certificate Templates,CN=Public Key Services,CN=Services,CN=Configuration,DC=example,DC=local",
+					Name:              "UserTemplate",
+				},
+			},
+			shouldMatch: true,
+			description: "Objects with same domain, label, and DN should reconcile (reverse case)",
+		},
+		{
+			name: "no reconciliation for different domains",
+			existing: ADObject{
+				Domain:   "domain1.local",
+				ObjectID: "",
+				Label:    ADCertTemplateLabel,
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=UserTemplate,CN=Certificate Templates,CN=Public Key Services,CN=Services,CN=Configuration,DC=domain1,DC=local",
+				},
+			},
+			visiting: ADObject{
+				Domain:   "domain2.local",
+				ObjectID: "",
+				Label:    ADCertTemplateLabel,
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=UserTemplate,CN=Certificate Templates,CN=Public Key Services,CN=Services,CN=Configuration,DC=domain2,DC=local",
+				},
+			},
+			shouldMatch: false,
+			description: "Objects from different domains should not reconcile",
+		},
+		{
+			name: "no reconciliation for different labels",
+			existing: ADObject{
+				Domain:   "example.local",
+				ObjectID: "",
+				Label:    ADCertTemplateLabel,
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=Template,DC=example,DC=local",
+				},
+			},
+			visiting: ADObject{
+				Domain:   "example.local",
+				ObjectID: "",
+				Label:    ADUserLabel,
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=Template,DC=example,DC=local",
+				},
+			},
+			shouldMatch: false,
+			description: "Objects with different labels should not reconcile",
+		},
+		{
+			name: "no reconciliation for different DNs",
+			existing: ADObject{
+				Domain:   "example.local",
+				ObjectID: "",
+				Label:    ADCertTemplateLabel,
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=Template1,DC=example,DC=local",
+				},
+			},
+			visiting: ADObject{
+				Domain:   "example.local",
+				ObjectID: "",
+				Label:    ADCertTemplateLabel,
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=Template2,DC=example,DC=local",
+				},
+			},
+			shouldMatch: false,
+			description: "Objects with different DNs should not reconcile",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Initialize objects
+			existing := tt.existing
+			visiting := tt.visiting
+
+			err := registry.CallHooks(&existing)
+			require.NoError(t, err)
+
+			err = registry.CallHooks(&visiting)
+			require.NoError(t, err)
+
+			// Test canReconcileWith
+			result := existing.canReconcileWith(&visiting)
+			assert.Equal(t, tt.shouldMatch, result, tt.description)
+
+			// Test actual reconciliation via Visit
+			if tt.shouldMatch {
+				originalKey := existing.Key
+				existing.Visit(&visiting)
+
+				// If existing had no ObjectID but visiting did, existing should now have ObjectID
+				if tt.existing.ObjectID == "" && tt.visiting.ObjectID != "" {
+					assert.Equal(t, tt.visiting.ObjectID, existing.ObjectID, "ObjectID should be copied during reconciliation")
+					// Key should be regenerated with ObjectID
+					expectedKey := "#" + strings.ToLower(existing.Label) + "#" + existing.Domain + "#" + existing.ObjectID
+					assert.Equal(t, expectedKey, existing.Key, "Key should be regenerated with ObjectID")
+				} else {
+					assert.Equal(t, originalKey, existing.Key, "Key should remain unchanged")
+				}
+
+				// Properties should be merged
+				if tt.visiting.Description != "" {
+					assert.Equal(t, tt.visiting.Description, existing.Description, "Description should be merged")
+				}
+				if tt.visiting.Name != "" {
+					assert.Equal(t, tt.visiting.Name, existing.Name, "Name should be merged")
+				}
+			}
+		})
+	}
+}
+
+// Test canReconcileWith method directly
+func TestADObject_CanReconcileWith(t *testing.T) {
+	tests := []struct {
+		name     string
+		obj1     ADObject
+		obj2     ADObject
+		expected bool
+	}{
+		{
+			name: "matching domain, label, and DN",
+			obj1: ADObject{
+				Domain: "example.local",
+				Label:  ADCertTemplateLabel,
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=Template,DC=example,DC=local",
+				},
+			},
+			obj2: ADObject{
+				Domain: "example.local",
+				Label:  ADCertTemplateLabel,
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=Template,DC=example,DC=local",
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "case-insensitive DN matching",
+			obj1: ADObject{
+				Domain: "example.local",
+				Label:  ADCertTemplateLabel,
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=Template,DC=example,DC=local",
+				},
+			},
+			obj2: ADObject{
+				Domain: "example.local",
+				Label:  ADCertTemplateLabel,
+				ADProperties: ADProperties{
+					DistinguishedName: "cn=template,dc=example,dc=local",
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "one with ObjectID, other with DN",
+			obj1: ADObject{
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
+				Label:    ADCertTemplateLabel,
+				ADProperties: ADProperties{
+					DistinguishedName: "",
+				},
+			},
+			obj2: ADObject{
+				Domain:   "example.local",
+				ObjectID: "",
+				Label:    ADCertTemplateLabel,
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=Template,DC=example,DC=local",
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "different domains",
+			obj1: ADObject{
+				Domain: "domain1.local",
+				Label:  ADCertTemplateLabel,
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=Template,DC=domain1,DC=local",
+				},
+			},
+			obj2: ADObject{
+				Domain: "domain2.local",
+				Label:  ADCertTemplateLabel,
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=Template,DC=domain2,DC=local",
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "different labels",
+			obj1: ADObject{
+				Domain: "example.local",
+				Label:  ADCertTemplateLabel,
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=Template,DC=example,DC=local",
+				},
+			},
+			obj2: ADObject{
+				Domain: "example.local",
+				Label:  ADUserLabel,
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=Template,DC=example,DC=local",
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.obj1.canReconcileWith(&tt.obj2)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
 }
