@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 
@@ -24,7 +25,8 @@ type Job struct {
 	Status                string            `dynamodbav:"status" json:"status" desc:"Current status of the job (e.g., JQ#portscan)." example:"JQ#portscan"`
 	TTL                   int64             `dynamodbav:"ttl" json:"ttl" desc:"Time-to-live for the job record (Unix timestamp)." example:"1706353200"`
 	Name                  string            `dynamodbav:"name,omitempty" json:"name,omitempty" desc:"The IP address this job was executed from" example:"1.2.3.4"`
-	Config                map[string]string `dynamodbav:"-" json:"config" desc:"Configuration parameters for the job capability." example:"{\"test\": \"cve-1111-2222\"}"`
+	Config                map[string]string `dynamodbav:"config" json:"config" desc:"Configuration parameters for the job capability." example:"{\"test\": \"cve-1111-2222\"}"`
+	Secret                map[string]string `dynamodbav:"-" json:"secret" desc:"Sensitive configuration parameters (credentials, tokens, keys)."`
 	LargeArtifactFileName string            `dynamodbav:"largeArtifactFileName" json:"largeArtifactFileName,omitempty" desc:"The name of the file that contains the large artifacts." example:"large_artifact.zip"`
 	S3DownloadURL         string            `dynamodbav:"s3DownloadURL" json:"s3DownloadURL,omitempty" desc:"The URL of the file that contains the large output." example:"https://s3.amazonaws.com/big_output.zip"`
 	AllowRepeat           bool              `dynamodbav:"allowRepeat" json:"allowRepeat" desc:"Indicates if repeating this job should be allowed. Used for manual jobs, or rescan jobs, that should not block other job executions." example:"false"`
@@ -101,7 +103,7 @@ func (job *Job) Valid() bool {
 
 func (job *Job) Defaulted() {
 	job.Status = fmt.Sprintf("%s#%s", Queued, job.Source)
-	job.Config = make(map[string]string)
+	job.initializeParameters()
 	job.Created = Now()
 	job.Updated = Now()
 	job.TTL = Future(7 * 24)
@@ -114,18 +116,39 @@ func (job *Job) GetHooks() []registry.Hook {
 		{
 			Call: func() error {
 				if job.Target.Model != nil {
-					template := fmt.Sprintf("#job#%%s#%s#%s", job.Target.Model.Identifier(), job.Source)
+					group := job.Target.Model.Group()
+					identifier := job.Target.Model.Identifier()
+					template := fmt.Sprintf("#job#%%s#%s#%s", identifier, job.Source)
 					if len(template) <= 1024 {
-						shortenedDNS := job.Target.Model.Group()[:min(1024-len(template), len(job.Target.Model.Group()))]
+						shortenedDNS := group[:min(1024-len(template), len(group))]
 						job.DNS = shortenedDNS
 						job.Key = fmt.Sprintf(template, shortenedDNS)
 					}
 				}
+				job.initializeParameters()
 				job.originalStatus = job.Status
 				return nil
 			},
 		},
 	}
+}
+
+func (job *Job) initializeParameters() {
+	if job.Config == nil {
+		job.Config = make(map[string]string)
+	}
+	if job.Secret == nil {
+		job.Secret = make(map[string]string)
+	}
+}
+
+// Parameters returns a combined map of the Config and Secret maps
+func (job *Job) Parameters() map[string]string {
+	params := make(map[string]string)
+	maps.Copy(params, job.Config)
+	maps.Copy(params, job.Secret)
+
+	return params
 }
 
 func (job *Job) Send(items ...registry.Model) {
@@ -187,6 +210,7 @@ func (job *Job) ToContext() ResultContext {
 		Username:     job.Username,
 		Source:       job.Source,
 		Config:       job.Config,
+		Secret:       job.Secret,
 		Target:       job.Target,
 		Parent:       job.Parent,
 		Queue:        job.Queue,
