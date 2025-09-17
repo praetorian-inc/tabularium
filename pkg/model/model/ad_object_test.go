@@ -3,6 +3,8 @@ package model
 import (
 	"testing"
 
+	"github.com/praetorian-inc/tabularium/pkg/alias"
+	"github.com/praetorian-inc/tabularium/pkg/model/filters"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -664,4 +666,143 @@ func TestADDomain_SeedModels(t *testing.T) {
 	assert.Equal(t, 1, len(seedModels))
 	assert.Equal(t, &seed, seedModels[0])
 	assert.Contains(t, seed.GetLabels(), SeedLabel)
+}
+
+// TestADObject_FromAlias tests the FromAlias method implementation
+func TestADObject_FromAlias(t *testing.T) {
+	tests := []struct {
+		name              string
+		ad                ADObject
+		expectedFilters   []filters.Filter
+		expectedNilFilter bool
+		description       string
+	}{
+		{
+			name: "object with distinguished name returns filter",
+			ad: ADObject{
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=John Doe,CN=Users,DC=example,DC=local",
+				},
+			},
+			expectedFilters: []filters.Filter{
+				filters.NewFilter("distinguishedname", filters.OperatorEqual, "CN=John Doe,CN=Users,DC=example,DC=local"),
+			},
+			expectedNilFilter: false,
+			description:       "should return a filter for DistinguishedName when it is set",
+		},
+		{
+			name: "object without distinguished name returns nil",
+			ad: ADObject{
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
+			},
+			expectedFilters:   nil,
+			expectedNilFilter: true,
+			description:       "should return nil when DistinguishedName is empty",
+		},
+		{
+			name: "ADUser with distinguished name",
+			ad: ADObject{
+				Label:    ADUserLabel,
+				Domain:   "corp.com",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1002",
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=Alice Smith,OU=IT,DC=corp,DC=com",
+				},
+			},
+			expectedFilters: []filters.Filter{
+				filters.NewFilter("distinguishedname", filters.OperatorEqual, "CN=Alice Smith,OU=IT,DC=corp,DC=com"),
+			},
+			expectedNilFilter: false,
+			description:       "ADUser should return filter for its DistinguishedName",
+		},
+		{
+			name: "ADComputer with distinguished name",
+			ad: ADObject{
+				Label:    ADComputerLabel,
+				Domain:   "test.domain",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1003",
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=WORKSTATION01,CN=Computers,DC=test,DC=domain",
+				},
+			},
+			expectedFilters: []filters.Filter{
+				filters.NewFilter("distinguishedname", filters.OperatorEqual, "CN=WORKSTATION01,CN=Computers,DC=test,DC=domain"),
+			},
+			expectedNilFilter: false,
+			description:       "ADComputer should return filter for its DistinguishedName",
+		},
+		{
+			name: "ADGroup with distinguished name",
+			ad: ADObject{
+				Label:    ADGroupLabel,
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1004",
+				ADProperties: ADProperties{
+					DistinguishedName: "CN=Domain Admins,CN=Builtin,DC=example,DC=local",
+				},
+			},
+			expectedFilters: []filters.Filter{
+				filters.NewFilter("distinguishedname", filters.OperatorEqual, "CN=Domain Admins,CN=Builtin,DC=example,DC=local"),
+			},
+			expectedNilFilter: false,
+			description:       "ADGroup should return filter for its DistinguishedName",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Ensure ADObject implements the Aliaser interface
+			var _ alias.Aliaser = &tt.ad
+
+			// Call FromAlias
+			filters := tt.ad.FromAlias()
+
+			// Check if we expected nil filters
+			if tt.expectedNilFilter {
+				assert.Nil(t, filters, tt.description)
+				return
+			}
+
+			// Check the filters match expectations
+			require.NotNil(t, filters, tt.description)
+			assert.Len(t, filters, len(tt.expectedFilters), "should return expected number of filters")
+
+			// Verify filter details
+			for i, expectedFilter := range tt.expectedFilters {
+				assert.Equal(t, expectedFilter.Field, filters[i].Field, "filter field should match")
+				assert.Equal(t, expectedFilter.Operator, filters[i].Operator, "filter operator should match")
+				assert.Equal(t, expectedFilter.Value, filters[i].Value, "filter value should match")
+				assert.Equal(t, expectedFilter.Not, filters[i].Not, "filter Not flag should match")
+			}
+		})
+	}
+}
+
+// TestADObject_FromAlias_Interface verifies that ADObject correctly implements the Aliaser interface
+func TestADObject_FromAlias_Interface(t *testing.T) {
+	// Create various ADObject types
+	objects := []ADObject{
+		NewADUser("example.local", "S-1-5-21-123456789", "CN=User,DC=example,DC=local"),
+		NewADComputer("corp.com", "S-1-5-21-987654321", "CN=Computer,DC=corp,DC=com"),
+		NewADGroup("test.domain", "S-1-5-21-111111111", "CN=Group,DC=test,DC=domain"),
+		NewADObject("example.local", "S-1-5-21-222222222", "CN=Object,DC=example,DC=local", ADObjectLabel),
+	}
+
+	for _, obj := range objects {
+		// Verify each object can be cast to Aliaser
+		aliaser, ok := interface{}(&obj).(alias.Aliaser)
+		require.True(t, ok, "ADObject should implement alias.Aliaser interface")
+
+		// Verify FromAlias returns expected results
+		aliasFilters := aliaser.FromAlias()
+		assert.NotNil(t, aliasFilters, "FromAlias should not return nil for object with DistinguishedName")
+		assert.Len(t, aliasFilters, 1, "FromAlias should return exactly one filter")
+		assert.Equal(t, "distinguishedname", aliasFilters[0].Field, "Filter should be for distinguishedname field")
+		assert.Equal(t, filters.OperatorEqual, aliasFilters[0].Operator, "Filter should use equality operator")
+		// Value is of type SliceOrValue[any], need to access it properly
+		values := aliasFilters[0].Value
+		assert.Len(t, values, 1, "Filter should have one value")
+		assert.Equal(t, obj.DistinguishedName, values[0], "Filter value should match object's DistinguishedName")
+	}
 }

@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/praetorian-inc/tabularium/pkg/alias"
+	"github.com/praetorian-inc/tabularium/pkg/model/filters"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -198,6 +200,24 @@ func NewADObject(domain, objectID, distinguishedName, objectLabel string) ADObje
 
 	return ad
 }
+
+// FromAlias implements the alias.Aliaser interface.
+// It returns filters that can be used to fetch the ADObject from the database using
+// alternative identifiers when the primary key (domain + ObjectID) is not available.
+// This method returns a filter for the DistinguishedName if it is set.
+func (ad *ADObject) FromAlias() []filters.Filter {
+	if ad.DistinguishedName == "" {
+		return nil
+	}
+
+	// Return a filter to fetch by DistinguishedName
+	return []filters.Filter{
+		filters.NewFilter("distinguishedname", filters.OperatorEqual, ad.DistinguishedName),
+	}
+}
+
+// Ensure ADObject implements the Aliaser interface
+var _ alias.Aliaser = (*ADObject)(nil)
 
 // NewADUser creates a new AD User object
 func NewADUser(domain, objectID, distinguishedName string) ADObject {
