@@ -665,3 +665,95 @@ func TestADDomain_SeedModels(t *testing.T) {
 	assert.Equal(t, &seed, seedModels[0])
 	assert.Contains(t, seed.GetLabels(), SeedLabel)
 }
+
+// Test ADObject.FromAlias() method for alias resolution
+func TestADObject_FromAlias(t *testing.T) {
+	tests := []struct {
+		name              string
+		domain            string
+		objectID          string
+		distinguishedName string
+		expectFilter      bool
+		expectedField     string
+		expectedValue     string
+	}{
+		{
+			name:              "returns filter when only DN present",
+			domain:            "",
+			objectID:          "",
+			distinguishedName: "CN=John Doe,CN=Users,DC=example,DC=local",
+			expectFilter:      true,
+			expectedField:     "distinguishedname",
+			expectedValue:     "CN=John Doe,CN=Users,DC=example,DC=local",
+		},
+		{
+			name:              "returns filter when domain missing",
+			domain:            "",
+			objectID:          "S-1-5-21-123456789",
+			distinguishedName: "CN=John Doe,CN=Users,DC=example,DC=local",
+			expectFilter:      true,
+			expectedField:     "distinguishedname",
+			expectedValue:     "CN=John Doe,CN=Users,DC=example,DC=local",
+		},
+		{
+			name:              "returns filter when objectID missing",
+			domain:            "example.local",
+			objectID:          "",
+			distinguishedName: "CN=John Doe,CN=Users,DC=example,DC=local",
+			expectFilter:      true,
+			expectedField:     "distinguishedname",
+			expectedValue:     "CN=John Doe,CN=Users,DC=example,DC=local",
+		},
+		{
+			name:              "returns nil when all fields present",
+			domain:            "example.local",
+			objectID:          "S-1-5-21-123456789",
+			distinguishedName: "CN=John Doe,CN=Users,DC=example,DC=local",
+			expectFilter:      false,
+		},
+		{
+			name:              "returns nil when DN is blank",
+			domain:            "",
+			objectID:          "",
+			distinguishedName: "<blank>",
+			expectFilter:      false,
+		},
+		{
+			name:              "returns nil when DN is empty",
+			domain:            "",
+			objectID:          "",
+			distinguishedName: "",
+			expectFilter:      false,
+		},
+		{
+			name:              "returns nil when DN empty but other fields present",
+			domain:            "example.local",
+			objectID:          "S-1-5-21-123456789",
+			distinguishedName: "",
+			expectFilter:      false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ad := &ADObject{
+				Domain:   tt.domain,
+				ObjectID: tt.objectID,
+				ADProperties: ADProperties{
+					DistinguishedName: tt.distinguishedName,
+				},
+			}
+
+			filter := ad.FromAlias()
+
+			if tt.expectFilter {
+				require.NotNil(t, filter, "Expected filter to be returned")
+				assert.Equal(t, tt.expectedField, filter.Field)
+				assert.Equal(t, "=", filter.Operator)
+				assert.Equal(t, tt.expectedValue, filter.Value[0])
+			} else {
+				assert.Nil(t, filter, "Expected no filter")
+			}
+		})
+	}
+}

@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/praetorian-inc/tabularium/pkg/model/filters"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -238,6 +239,20 @@ func NewADOU(domain, objectID, distinguishedName string) ADObject {
 // GetDescription returns a description for the ADObject model.
 func (ad *ADObject) GetDescription() string {
 	return "Represents an Active Directory object with properties and organizational unit information."
+}
+
+// FromAlias returns a single filter to find the canonical object
+// Returns nil if no alias resolution possible
+// MUST return exactly one match - multiple matches indicate error
+func (ad *ADObject) FromAlias() *filters.Filter {
+	// Only attempt resolution if we have DistinguishedName but missing full key data
+	if ad.DistinguishedName != "" && ad.DistinguishedName != "<blank>" {
+		if ad.ObjectID == "" || ad.Domain == "" {
+			filter := filters.NewFilter("distinguishedname", filters.OperatorEqual, ad.DistinguishedName)
+			return &filter
+		}
+	}
+	return nil
 }
 
 type ADProperties struct {
