@@ -13,6 +13,9 @@ type CredentialLifecycle string
 type AdditionalCredParams map[string]any
 
 const (
+	// Credential Label
+	CredentialLabel = "Credential"
+
 	// Credential Categories
 	CategoryInternal    CredentialCategory = "internal"        // Internal credentials (db password, etc.)
 	CategoryIntegration CredentialCategory = "env-integration" // Used to integrate and access client environment
@@ -143,7 +146,7 @@ func (c *Credential) GetCredentialID() string {
 }
 
 func (c *Credential) GetLabels() []string {
-	return []string{"Credential", string(c.Category), string(c.Type)}
+	return []string{CredentialLabel, string(c.Category), string(c.Type)}
 }
 
 func (c *Credential) Valid() bool {
