@@ -712,13 +712,6 @@ func TestADObject_FromAlias(t *testing.T) {
 			expectFilter:      false,
 		},
 		{
-			name:              "returns nil when DN is blank",
-			domain:            "",
-			objectID:          "",
-			distinguishedName: "<blank>",
-			expectFilter:      false,
-		},
-		{
 			name:              "returns nil when DN is empty",
 			domain:            "",
 			objectID:          "",
@@ -743,6 +736,7 @@ func TestADObject_FromAlias(t *testing.T) {
 					DistinguishedName: tt.distinguishedName,
 				},
 			}
+			registry.CallHooks(ad)
 
 			filter := ad.FromAlias()
 

@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/alias"
 	"regexp"
 	"strings"
 
@@ -63,7 +64,7 @@ var (
 
 type ADObject struct {
 	BaseAsset
-	registry.ModelAlias
+	alias.LabelAlias
 	Label    string `neo4j:"label" json:"label" desc:"Label of the object." example:"user"`
 	Domain   string `neo4j:"domain" json:"domain" desc:"AD domain this object belongs to." example:"example.local"`
 	ObjectID string `neo4j:"objectid" json:"objectid" desc:"Object identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
@@ -241,16 +242,11 @@ func (ad *ADObject) GetDescription() string {
 	return "Represents an Active Directory object with properties and organizational unit information."
 }
 
-// FromAlias returns a single filter to find the canonical object
-// Returns nil if no alias resolution possible
-// MUST return exactly one match - multiple matches indicate error
+// FromAlias returns a filter to find the canonical object
 func (ad *ADObject) FromAlias() *filters.Filter {
-	// Only attempt resolution if we have DistinguishedName but missing full key data
-	if ad.DistinguishedName != "" && ad.DistinguishedName != "<blank>" {
-		if ad.ObjectID == "" || ad.Domain == "" {
-			filter := filters.NewFilter("distinguishedname", filters.OperatorEqual, ad.DistinguishedName)
-			return &filter
-		}
+	if ad.DistinguishedName != "" && !adObjectKeyPattern.MatchString(ad.Key) {
+		filter := filters.NewFilter("distinguishedname", filters.OperatorEqual, ad.DistinguishedName)
+		return &filter
 	}
 	return nil
 }

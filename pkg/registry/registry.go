@@ -3,6 +3,7 @@ package registry
 import (
 	"encoding/gob"
 	"fmt"
+	alias2 "github.com/praetorian-inc/tabularium/pkg/alias"
 	"reflect"
 	"strings"
 )
@@ -103,8 +104,8 @@ func (r *TypeRegistry) MakeType(name string) (Model, bool) {
 	}
 
 	model := reflect.New(typ.Elem()).Interface().(Model)
-	if alias, ok := model.(Alias); ok {
-		alias.SetAlias(name)
+	if alias, ok := model.(alias2.LabelAliaser); ok {
+		alias.SetLabelAlias(name)
 	}
 
 	return model, true
