@@ -3034,6 +3034,12 @@ components:
           type: object
         WebpageDetails:
           type: object
+        artifacts:
+          description: Source code repositories or files for analysis (e.g., repositories,
+            file keys)
+          items:
+            type: object
+          type: array
         created:
           description: Timestamp when the webpage was first discovered (RFC3339).
           example: "2023-10-27T10:00:00Z"
@@ -3096,6 +3102,7 @@ components:
       - BaseModel
       - History
       - WebpageDetails
+      - artifacts
       - created
       - details_filepath
       - key
