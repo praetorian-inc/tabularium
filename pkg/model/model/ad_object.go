@@ -65,10 +65,11 @@ var (
 type ADObject struct {
 	BaseAsset
 	alias.LabelAlias
-	Label    string `neo4j:"label" json:"label" desc:"Label of the object." example:"user"`
-	Domain   string `neo4j:"domain" json:"domain" desc:"AD domain this object belongs to." example:"example.local"`
-	ObjectID string `neo4j:"objectid" json:"objectid" desc:"Object identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
-	SID      string `neo4j:"sid,omitempty" json:"sid,omitempty" desc:"Security identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
+	IsModelAliased bool   `neo4j:"-" json:"modelAliased,omitempty"`
+	Label          string `neo4j:"label" json:"label" desc:"Label of the object." example:"user"`
+	Domain         string `neo4j:"domain" json:"domain" desc:"AD domain this object belongs to." example:"example.local"`
+	ObjectID       string `neo4j:"objectid" json:"objectid" desc:"Object identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
+	SID            string `neo4j:"sid,omitempty" json:"sid,omitempty" desc:"Security identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
 	ADProperties
 }
 
@@ -242,13 +243,22 @@ func (ad *ADObject) GetDescription() string {
 	return "Represents an Active Directory object with properties and organizational unit information."
 }
 
-// FromAlias returns a filter to find the canonical object
-func (ad *ADObject) FromAlias() *filters.Filter {
-	if ad.DistinguishedName != "" && !adObjectKeyPattern.MatchString(ad.Key) {
+// FromModelAlias returns a filter to find the canonical object
+func (ad *ADObject) FromModelAlias() *filters.Filter {
+	hasDN := ad.DistinguishedName != ""
+	invalidKey := !adObjectKeyPattern.MatchString(ad.Key)
+	isAliased := ad.IsModelAliased
+
+	if hasDN && invalidKey && isAliased {
 		filter := filters.NewFilter("distinguishedname", filters.OperatorEqual, ad.DistinguishedName)
 		return &filter
 	}
+
 	return nil
+}
+
+func (ad *ADObject) WithModelAlias() {
+	ad.IsModelAliased = true
 }
 
 type ADProperties struct {

@@ -666,8 +666,8 @@ func TestADDomain_SeedModels(t *testing.T) {
 	assert.Contains(t, seed.GetLabels(), SeedLabel)
 }
 
-// Test ADObject.FromAlias() method for alias resolution
-func TestADObject_FromAlias(t *testing.T) {
+// Test ADObject.FromModelAlias() method for alias resolution
+func TestADObject_FromModelAlias(t *testing.T) {
 	tests := []struct {
 		name              string
 		domain            string
@@ -736,9 +736,10 @@ func TestADObject_FromAlias(t *testing.T) {
 					DistinguishedName: tt.distinguishedName,
 				},
 			}
+			ad.WithModelAlias()
 			registry.CallHooks(ad)
 
-			filter := ad.FromAlias()
+			filter := ad.FromModelAlias()
 
 			if tt.expectFilter {
 				require.NotNil(t, filter, "Expected filter to be returned")
