@@ -32,12 +32,9 @@ func Normalize(rawURL string) (string, error) {
 }
 
 func RemoveDefaultPorts(u url.URL) url.URL {
-	h := u.Hostname()
 	p := u.Port()
-	if u.Scheme == "http" && p == "80" {
-		u.Host = h
-	} else if u.Scheme == "https" && p == "443" {
-		u.Host = h
+	if p == "80" || p == "443" {
+		u.Host = u.Hostname()
 	}
 	return u
 }
