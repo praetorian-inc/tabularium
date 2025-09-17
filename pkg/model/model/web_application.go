@@ -10,11 +10,28 @@ import (
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
+// WebApplication represents a web application as a security testing target.
+
+type BurpSite struct {
+	ID   string `neo4j:"id" json:"id" desc:"Burp Suite site ID for integration with Burp Suite Enterprise" example:"313"`
+	Name string `neo4j:"name" json:"name" desc:"Name of the Burp Suite site usually hostname" example:"app.example.com"`
+}
+
+func (b *BurpSite) Override(other BurpSite) {
+	if other.ID != "" {
+		b.ID = other.ID
+	}
+	if other.Name != "" {
+		b.Name = other.Name
+	}
+}
+
 type WebApplication struct {
 	BaseAsset
 	PrimaryURL string   `neo4j:"primary_url" json:"primary_url" desc:"The primary/canonical URL of the web application" example:"https://app.example.com"`
 	URLs       []string `neo4j:"urls" json:"urls" desc:"Additional URLs associated with this web application" example:"[\"https://api.example.com\", \"https://admin.example.com\"]"`
 	Name       string   `neo4j:"name" json:"name" desc:"Name of the web application" example:"Example App"`
+	Burp       BurpSite `neo4j:"burp_site" json:"burp_site" desc:"Burp Suite site for integration with Burp Suite Enterprise" example:"{id: 313, name: \"app.example.com\"}"`
 }
 
 const WebApplicationLabel = "WebApplication"
@@ -121,6 +138,7 @@ func (w *WebApplication) Merge(other Assetlike) {
 		if !slices.Contains(w.URLs, u) {
 			w.URLs = append(w.URLs, u)
 		}
+		w.Burp.Override(otherApp.Burp)
 	}
 }
 
@@ -133,6 +151,7 @@ func (w *WebApplication) Visit(other Assetlike) {
 	if otherApp.Name != "" && w.Name == "" {
 		w.Name = otherApp.Name
 	}
+	w.Burp.Override(otherApp.Burp)
 }
 
 func (w *WebApplication) Attribute(name, value string) Attribute {
@@ -144,6 +163,7 @@ func NewWebApplication(primaryURL, name string) WebApplication {
 		PrimaryURL: primaryURL,
 		Name:       name,
 		URLs:       []string{},
+		Burp:       BurpSite{},
 	}
 
 	w.Defaulted()
