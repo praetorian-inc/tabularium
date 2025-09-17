@@ -106,12 +106,7 @@ func (ad *ADObject) Visit(o Assetlike) {
 		return
 	}
 
-	if ad.Key != other.Key {
-		return
-	}
-
 	ad.ADProperties.Visit(other.ADProperties)
-
 	ad.BaseAsset.Visit(other)
 }
 
