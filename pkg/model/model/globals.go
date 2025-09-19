@@ -16,6 +16,8 @@ func init() {
 	gob.Register([]any{})
 }
 
+const BURP_MODULE_FLAG = "enable_burp_module"
+
 type Notification interface {
 	Push(risk Risk)
 	CreateTicket(risk Risk, templateID string) (Attribute, error)

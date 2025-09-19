@@ -13,6 +13,7 @@ type Flag struct {
 	Username string `dynamodbav:"username" json:"username" desc:"Chariot username associated with the flag." example:"user@example.com"`
 	Key      string `dynamodbav:"key" json:"key" desc:"Unique key for the flag." example:"#flag#feature-x"`
 	Name     string `dynamodbav:"name" json:"name" desc:"Name of the feature flag." example:"feature-x"`
+	Value    string `dynamodbav:"value" json:"value" desc:"Value of the feature flag." example:"1000"`
 }
 
 func init() {
