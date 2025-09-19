@@ -200,7 +200,7 @@ type Metadata struct {
 
 	Capability    []string `neo4j:"capability,omitempty" json:"capability,omitempty" desc:"List of all capabilities that have discovered this asset." example:"[\"amazon\", \"portscan\"]"`
 	AttackSurface []string `neo4j:"attackSurface,omitempty" json:"attackSurface,omitempty" desc:"List of attack surface identifiers related to the asset." example:"[\"internal\", \"external\"]"`
-	Origin        []string `neo4j:"origin,omitempty" json:"origin,omitempty" desc:"List of originating asset classes for this entity" example:"[\"amazon\", \"ipv4\"]"`
+	Origins       []string `neo4j:"origins,omitempty" json:"origins,omitempty" desc:"List of originating asset classes for this entity" example:"[\"amazon\", \"ipv4\"]"`
 
 	CloudService string `neo4j:"cloudService,omitempty" json:"cloudService,omitempty" desc:"Name of the cloud service provider (e.g., AWS, GCP, Azure)." example:"GCP"`
 	CloudId      string `neo4j:"cloudId,omitempty" json:"cloudId,omitempty" desc:"Unique identifier within the cloud provider." example:"project-id-12345"`
@@ -237,10 +237,10 @@ func (m *Metadata) updateFields(other Metadata) {
 // visitSlices will copy over any non-empty slices from the other metadata into this metadata.
 func (m *Metadata) visitSlices(other Metadata) {
 	seen := make(map[string]bool)
-	for _, s := range append(m.Origin, other.Origin...) {
+	for _, s := range append(m.Origins, other.Origins...) {
 		seen[s] = true
 	}
-	m.Origin = slices.Collect(maps.Keys(seen))
+	m.Origins = slices.Collect(maps.Keys(seen))
 
 	seen = make(map[string]bool)
 	for _, s := range append(m.AttackSurface, other.AttackSurface...) {
@@ -258,8 +258,8 @@ func (m *Metadata) visitSlices(other Metadata) {
 // updateSlices will overwrite non-empty slices from the other metadata into this metadata.
 // updateSlices is called when manually updating an asset
 func (m *Metadata) updateSlices(other Metadata) {
-	if other.Origin != nil {
-		m.Origin = other.Origin
+	if other.Origins != nil {
+		m.Origins = other.Origins
 	}
 	if other.AttackSurface != nil {
 		m.AttackSurface = other.AttackSurface
