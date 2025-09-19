@@ -15,6 +15,7 @@ type ResultContext struct {
 	Secret       map[string]string `json:"secret" desc:"Sensitive configuration parameters (credentials, tokens, keys)."`
 	Target       TargetWrapper     `json:"target" desc:"The primary target of the job."`
 	Parent       TargetWrapper     `json:"parent,omitempty" desc:"Optional parent target from which this job was spawned."`
+	Origin       TargetWrapper     `json:"origin" desc:"The origin for this chain of jobs. Defaults to target unless set here."`
 	Queue        string            `json:"queue,omitempty" desc:"Target queue for the job."`
 	Capabilities []string          `json:"capabilities,omitempty" desc:"List of specific capabilities to run for this job."`
 }
@@ -42,6 +43,12 @@ func (rc *ResultContext) ImportVulnerabilities() bool {
 func (rc *ResultContext) GetParent() Target {
 	if rc.Parent.Model != nil {
 		return rc.Parent.Model
+	}
+	return rc.Target.Model
+}
+func (rc *ResultContext) GetOrigin() Target {
+	if rc.Origin.Model != nil {
+		return rc.Origin.Model
 	}
 	return rc.Target.Model
 }

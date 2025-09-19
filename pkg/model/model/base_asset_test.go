@@ -620,7 +620,7 @@ func TestMetadataVisit_EmptyStringsDoNotOverride(t *testing.T) {
 	assert.Equal(t, expected, base)
 }
 
-func TestMetadata_VisitSurface(t *testing.T) {
+func TestMetadata_VisitOrigin(t *testing.T) {
 	tests := []struct {
 		name   string
 		base   Metadata
@@ -628,58 +628,58 @@ func TestMetadata_VisitSurface(t *testing.T) {
 		expect Metadata
 	}{
 		{
-			name: "append new surface values",
+			name: "append new origin values",
 			base: Metadata{
 				ASNumber: "1234",
-				Surface:  []string{"a", "b"},
+				Origin:   []string{"a", "b"},
 			},
 			other: Metadata{
-				Surface: []string{"b", "c"},
+				Origin: []string{"b", "c"},
 			},
 			expect: Metadata{
 				ASNumber: "1234",
-				Surface:  []string{"a", "b", "c"},
+				Origin:   []string{"a", "b", "c"},
 			},
 		},
 		{
-			name: "empty surface values",
+			name: "empty origin values",
 			base: Metadata{
 				ASNumber: "1234",
-				Surface:  []string{},
+				Origin:   []string{},
 			},
 			other: Metadata{
-				Surface: []string{},
+				Origin: []string{},
 			},
 			expect: Metadata{
 				ASNumber: "1234",
-				Surface:  []string{},
+				Origin:   []string{},
 			},
 		},
 		{
-			name: "other surface is nil",
+			name: "other origin is nil",
 			base: Metadata{
 				ASNumber: "1234",
-				Surface:  []string{"a", "b"},
+				Origin:   []string{"a", "b"},
 			},
 			other: Metadata{
 				ASNumber: "5678",
 			},
 			expect: Metadata{
 				ASNumber: "5678",
-				Surface:  []string{"a", "b"},
+				Origin:   []string{"a", "b"},
 			},
 		},
 		{
-			name: "base surface is nil",
+			name: "base origin is nil",
 			base: Metadata{
 				ASNumber: "1234",
 			},
 			other: Metadata{
-				Surface: []string{"a", "b"},
+				Origin: []string{"a", "b"},
 			},
 			expect: Metadata{
 				ASNumber: "1234",
-				Surface:  []string{"a", "b"},
+				Origin:   []string{"a", "b"},
 			},
 		},
 		{
@@ -688,19 +688,19 @@ func TestMetadata_VisitSurface(t *testing.T) {
 				ASNumber:  "1234",
 				ASName:    "old name",
 				Registrar: "old registrar",
-				Surface:   []string{"a"},
+				Origin:    []string{"a"},
 			},
 			other: Metadata{
 				ASName:   "new name",
 				Province: "new province",
-				Surface:  []string{"b"},
+				Origin:   []string{"b"},
 			},
 			expect: Metadata{
 				ASNumber:  "1234",
 				ASName:    "new name",
 				Province:  "new province",
 				Registrar: "old registrar",
-				Surface:   []string{"a", "b"},
+				Origin:    []string{"a", "b"},
 			},
 		},
 	}
@@ -727,18 +727,18 @@ func TestMetadata_VisitSurface(t *testing.T) {
 				}
 			}
 
-			// Test surface slice specifically
+			// Test origin slice specifically
 			// Convert slices to maps for comparison since order doesn't matter
-			gotSurface := make(map[string]bool)
-			for _, s := range tt.base.Surface {
-				gotSurface[s] = true
+			gotOrigin := make(map[string]bool)
+			for _, s := range tt.base.Origin {
+				gotOrigin[s] = true
 			}
-			expectSurface := make(map[string]bool)
-			for _, s := range tt.expect.Surface {
-				expectSurface[s] = true
+			expectOrigin := make(map[string]bool)
+			for _, s := range tt.expect.Origin {
+				expectOrigin[s] = true
 			}
 
-			assert.Equal(t, expectSurface, gotSurface)
+			assert.Equal(t, expectOrigin, gotOrigin)
 		})
 	}
 }
