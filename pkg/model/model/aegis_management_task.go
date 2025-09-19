@@ -22,6 +22,7 @@ type AegisManagementTask struct {
 	AegisManagementCapability string            `dynamodbav:"aegisManagementCapability" json:"aegisManagementCapability" desc:"Name of the Aegis management capability." example:"tunnel_management"`
 	AegisClientID             string            `dynamodbav:"aegisClientId" json:"aegisClientId" desc:"Aegis client ID target for the management operation." example:"C.12345abcdef"`
 	AegisAgentID              string            `dynamodbav:"aegisAgentId,omitempty" json:"aegisAgentId,omitempty" desc:"Specific Aegis agent ID if targeting single agent." example:"agent-001"`
+	FlowID                    string            `dynamodbav:"flowId,omitempty" json:"flowId,omitempty" desc:"Velociraptor flow ID for tracking execution." example:"F.D36EN790K9V6G"`
 	Parameters                map[string]string `dynamodbav:"parameters" json:"parameters" desc:"Parameters for the Aegis management capability." example:"{\"tunnel_name\": \"my-tunnel\", \"action\": \"create\"}"`
 	Status                    string            `dynamodbav:"status" json:"status" desc:"Current status of the Aegis management task." example:"AMT_PENDING"`
 	Created                   string            `dynamodbav:"created" json:"created" desc:"Timestamp when the task was created (RFC3339)." example:"2024-01-15T10:30:00Z"`
