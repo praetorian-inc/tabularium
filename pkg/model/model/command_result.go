@@ -12,10 +12,14 @@ func init() {
 type CommandResult struct {
 	registry.BaseModel
 	Capability   string `json:"capability" desc:"The Aegis capability that was executed" example:"praetorian.aegis.Windows.ad.pingcastle"`
+	Command      string `json:"command,omitempty" desc:"The actual command that was executed" example:"adduser testuser"`
 	Success      bool   `json:"success" desc:"Whether the capability executed successfully" example:"true"`
 	ExitCode     int    `json:"exit_code" desc:"The exit code returned by the capability" example:"0"`
+	Output       string `json:"output,omitempty" desc:"Standard output from the command" example:"User added successfully"`
+	ErrorOutput  string `json:"error_output,omitempty" desc:"Error output from the command" example:"fatal: The user 'newuser123' does not exist."`
 	ErrorMessage string `json:"error_message,omitempty" desc:"Error message if the capability failed" example:"Command failed with exit code 1"`
-	Target       Target `json:"target" desc:"The target this capability was executed against"`
+	Duration     int64  `json:"duration,omitempty" desc:"Execution duration in milliseconds" example:"1500"`
+	Target       Target `json:"target,omitempty" desc:"The target this capability was executed against (optional for management capabilities)"`
 }
 
 // GetDescription returns a description for the CommandResult model
@@ -27,26 +31,29 @@ func (c *CommandResult) GetDescription() string {
 func NewCommandResult(capability string, command string, exitCode int) CommandResult {
 	return CommandResult{
 		Capability: capability,
+		Command:    command,
 		Success:    exitCode == 0,
 		ExitCode:   exitCode,
 	}
 }
 
-// SetOutput sets any output (currently unused for simple success/failure tracking)
+// SetOutput sets the standard output from the command
 func (c *CommandResult) SetOutput(output string) {
-	// No-op for simple success/failure model
+	c.Output = output
 }
 
-// SetErrorOutput sets the error message if the capability failed
+// SetErrorOutput sets the error output from the command
 func (c *CommandResult) SetErrorOutput(errorOutput string) {
+	c.ErrorOutput = errorOutput
+	// Also set ErrorMessage for backwards compatibility
 	if !c.Success && errorOutput != "" {
 		c.ErrorMessage = errorOutput
 	}
 }
 
-// SetDuration sets execution duration (currently unused for simple model)
+// SetDuration sets execution duration in milliseconds
 func (c *CommandResult) SetDuration(duration int64) {
-	// No-op for simple success/failure model
+	c.Duration = duration
 }
 
 // SetTargets sets the target for the capability result

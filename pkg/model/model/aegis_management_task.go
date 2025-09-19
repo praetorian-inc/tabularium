@@ -10,7 +10,7 @@ import (
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&AegisManagementTask{})
+	registry.Registry.MustRegisterModel(&AegisManagementTask{}, "aegis-mgmt")
 }
 
 // AegisManagementTask represents a task for Aegis infrastructure management operations
@@ -30,6 +30,7 @@ type AegisManagementTask struct {
 	Completed                 string            `dynamodbav:"completed,omitempty" json:"completed,omitempty" desc:"Timestamp when the task completed (RFC3339)." example:"2024-01-15T10:35:00Z"`
 	Result                    string            `dynamodbav:"result,omitempty" json:"result,omitempty" desc:"Result data from the Aegis management operation." example:"{\"tunnel_id\": \"tunnel-123\", \"status\": \"active\"}"`
 	ErrorMessage              string            `dynamodbav:"errorMessage,omitempty" json:"errorMessage,omitempty" desc:"Error message if the task failed." example:"Failed to create tunnel: connection timeout"`
+	CommandResult             *CommandResult    `dynamodbav:"commandResult,omitempty" json:"commandResult,omitempty" desc:"Detailed command execution result including exit code and output."`
 	Async                     bool              `dynamodbav:"async" json:"async" desc:"Whether the Aegis management task is asynchronous." example:"true"`
 	TTL                       int64             `dynamodbav:"ttl" json:"ttl" desc:"Time-to-live for the task record (Unix timestamp)." example:"1706353200"`
 }
