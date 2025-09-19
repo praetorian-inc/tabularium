@@ -163,10 +163,6 @@ func (o *Organization) IsClass(value string) bool {
 	return false
 }
 
-func (o *Organization) GetClass() string {
-	return ""
-}
-
 func (o *Organization) IsPrivate() bool {
 	return false
 }

@@ -188,10 +188,6 @@ func (w *Webpage) IsClass(value string) bool {
 	return strings.HasPrefix(w.URL, value)
 }
 
-func (w *Webpage) GetClass() string {
-	return ""
-}
-
 func (w *Webpage) WithStatus(status string) Target {
 	ret := *w
 	ret.Status = status

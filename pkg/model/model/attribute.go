@@ -103,10 +103,6 @@ func (a *Attribute) IsClass(value string) bool {
 	return strings.HasPrefix(a.Name, value)
 }
 
-func (a *Attribute) GetClass() string {
-	return a.Name
-}
-
 func (a *Attribute) GetStatus() string {
 	return a.Status
 }

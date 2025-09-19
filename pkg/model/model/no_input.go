@@ -29,7 +29,6 @@ func (n *NoInput) Group() string              { return "" }
 func (n *NoInput) Identifier() string         { return n.IdentifierValue }
 func (n *NoInput) IsStatus(string) bool       { return true }
 func (n *NoInput) IsClass(string) bool        { return false }
-func (n *NoInput) GetClass() string           { return "" }
 func (n *NoInput) IsPrivate() bool            { return false }
 func (n *NoInput) GetLabels() []string        { return []string{} }
 func (n *NoInput) Valid() bool                { return false }

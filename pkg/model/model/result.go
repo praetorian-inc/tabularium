@@ -61,10 +61,6 @@ func (rc *ResultContext) SpawnJob(source string, target Target, config map[strin
 		job.Config = config
 	}
 	job.Capabilities = rc.Capabilities
-	job.Origin = rc.Origin
-	if job.Origin.Model == nil {
-		job.Origin = TargetWrapper{Model: rc.GetParent()}
-	}
 	return job
 }
 
