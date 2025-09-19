@@ -174,6 +174,10 @@ func (p *Person) IsClass(value string) bool {
 	return false
 }
 
+func (p *Person) GetClass() string {
+	return ""
+}
+
 func (p *Person) IsPrivate() bool {
 	return false
 }

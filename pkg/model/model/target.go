@@ -78,6 +78,18 @@ type Target interface {
 	// Capabilities use this to determine if they can process a target type.
 	IsClass(string) bool
 
+	// GetClass returns the class of this object.
+	// The classification system varies by target type but enables capability matching.
+	//
+	// Examples:
+	//   - Asset: ipv4, domain
+	//   - Attribute: ssh, port
+	//   - CloudResource: ec2, s3
+	//   - Preseed: whois, edgar
+	//
+	// Capabilities use this to determine if they can process a target type.
+	GetClass() string
+
 	// IsPrivate determines if the target represents an internal/private resource.
 	// Private targets are typically excluded from external scanning capabilities
 	// unless specifically configured to include internal resources.

@@ -121,6 +121,10 @@ func (ad *ADObject) IsClass(class string) bool {
 	return strings.EqualFold(ad.Class, class) || strings.EqualFold("adobject", class)
 }
 
+func (ad *ADObject) GetClass() string {
+	return ad.Class
+}
+
 func (ad *ADObject) Attribute(name, value string) Attribute {
 	attr := NewAttribute(name, value, ad)
 	return attr

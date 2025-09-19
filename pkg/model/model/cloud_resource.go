@@ -111,6 +111,10 @@ func (c *CloudResource) IsClass(value string) bool {
 	return strings.HasPrefix(string(c.ResourceType), value)
 }
 
+func (c *CloudResource) GetClass() string {
+	return string(c.ResourceType)
+}
+
 func (c *CloudResource) IsStatus(value string) bool {
 	return strings.HasPrefix(c.Status, value)
 }

@@ -110,6 +110,10 @@ func (p *Preseed) IsClass(value string) bool {
 	return strings.HasPrefix(p.Type, value)
 }
 
+func (p *Preseed) GetClass() string {
+	return p.Type
+}
+
 func (p *Preseed) Defaulted() {
 	p.Status = Pending
 	p.Visited = Now()
