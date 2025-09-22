@@ -11,16 +11,16 @@ import (
 )
 
 type BurpMetadata struct {
-	BurpSiteID     string `neo4j:"burp_site_id" json:"burp_site_id" desc:"Burp Enterprise site identifier" example:"1234"`
-	BurpFolderID   string `neo4j:"burp_folder_id" json:"burp_folder_id" desc:"Burp Enterprise folder identifier" example:"42"`
-	BurpScheduleID string `neo4j:"burp_schedule_id" json:"burp_schedule_id" desc:"Burp Enterprise schedule identifier" example:"abcd"`
+	BurpSiteID     string `neo4j:"burp_site_id" json:"burp_site_id" dynamodbav:"burp_site_id" desc:"Burp Enterprise site identifier" example:"1234"`
+	BurpFolderID   string `neo4j:"burp_folder_id" json:"burp_folder_id" dynamodbav:"burp_folder_id" desc:"Burp Enterprise folder identifier" example:"42"`
+	BurpScheduleID string `neo4j:"burp_schedule_id" json:"burp_schedule_id" dynamodbav:"burp_schedule_id" desc:"Burp Enterprise schedule identifier" example:"abcd"`
 }
 
 type WebApplication struct {
 	BaseAsset
-	PrimaryURL string   `neo4j:"primary_url" json:"primary_url" desc:"The primary/canonical URL of the web application" example:"https://app.example.com"`
-	URLs       []string `neo4j:"urls" json:"urls" desc:"Additional URLs associated with this web application" example:"[\"https://api.example.com\", \"https://admin.example.com\"]"`
-	Name       string   `neo4j:"name" json:"name" desc:"Name of the web application" example:"Example App"`
+	PrimaryURL string   `neo4j:"primary_url" json:"primary_url" dynamodbav:"primary_url" desc:"The primary/canonical URL of the web application" example:"https://app.example.com"`
+	URLs       []string `neo4j:"urls" json:"urls" dynamodbav:"urls" desc:"Additional URLs associated with this web application" example:"[\"https://api.example.com\", \"https://admin.example.com\"]"`
+	Name       string   `neo4j:"name" json:"name" dynamodbav:"name" desc:"Name of the web application" example:"Example App"`
 	BurpMetadata
 }
 
