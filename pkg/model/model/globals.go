@@ -119,7 +119,6 @@ const (
 	Active         string = "A"
 	Frozen         string = "F"
 	FrozenRejected string = "FR"
-	SaaS           string = "S"
 
 	// asset:status (at runtime)
 	ActiveLow     string = "AL"
