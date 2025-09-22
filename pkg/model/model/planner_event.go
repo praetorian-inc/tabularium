@@ -54,17 +54,3 @@ func (p *PlannerEvent) GetHooks() []registry.Hook {
 func (p *PlannerEvent) Valid() bool {
 	return p.ConversationID != "" && p.JobKey != "" && p.Source != ""
 }
-
-func NewPlannerEvent(conversationID, jobKey, source, target, status, username string) PlannerEvent {
-	event := PlannerEvent{
-		ConversationID: conversationID,
-		JobKey:         jobKey,
-		Source:         source,
-		Target:         target,
-		Status:         status,
-		Username:       username,
-	}
-	event.Defaulted()
-	registry.CallHooks(&event)
-	return event
-}

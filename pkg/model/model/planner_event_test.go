@@ -6,24 +6,27 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
-func TestPlannerEvent_NewPlannerEvent(t *testing.T) {
-	conversationID := "550e8400-e29b-41d4-a716-446655440000"
-	jobKey := "#job#example.com#10.0.1.5#nuclei#1698422400"
-	source := "nuclei"
-	target := "#asset#example.com#10.0.1.5"
-	status := "JP"
-	username := "user@example.com"
+func TestPlannerEvent_Creation(t *testing.T) {
+	event := PlannerEvent{
+		ConversationID: "550e8400-e29b-41d4-a716-446655440000",
+		JobKey:         "#job#example.com#10.0.1.5#nuclei#1698422400",
+		Source:         "nuclei",
+		Target:         "#asset#example.com#10.0.1.5",
+		Status:         "JP",
+		Username:       "user@example.com",
+	}
+	event.Defaulted()
+	registry.CallHooks(&event)
 	
-	event := NewPlannerEvent(conversationID, jobKey, source, target, status, username)
-	
-	assert.Equal(t, conversationID, event.ConversationID)
-	assert.Equal(t, jobKey, event.JobKey)
-	assert.Equal(t, source, event.Source)
-	assert.Equal(t, target, event.Target)
-	assert.Equal(t, status, event.Status)
-	assert.Equal(t, username, event.Username)
+	assert.Equal(t, "550e8400-e29b-41d4-a716-446655440000", event.ConversationID)
+	assert.Equal(t, "#job#example.com#10.0.1.5#nuclei#1698422400", event.JobKey)
+	assert.Equal(t, "nuclei", event.Source)
+	assert.Equal(t, "#asset#example.com#10.0.1.5", event.Target)
+	assert.Equal(t, "JP", event.Status)
+	assert.Equal(t, "user@example.com", event.Username)
 	assert.NotEmpty(t, event.Key)
 	assert.NotEmpty(t, event.CompletedAt)
 	assert.NotZero(t, event.TTL)
@@ -32,7 +35,13 @@ func TestPlannerEvent_NewPlannerEvent(t *testing.T) {
 }
 
 func TestPlannerEvent_GetKey(t *testing.T) {
-	event := NewPlannerEvent("conv-id", "job-key", "source", "target", "JP", "user@example.com")
+	event := PlannerEvent{
+		ConversationID: "conv-id",
+		JobKey:         "job-key",
+	}
+	event.Defaulted()
+	registry.CallHooks(&event)
+	
 	assert.Equal(t, event.Key, event.GetKey())
 	assert.NotEmpty(t, event.GetKey())
 }
