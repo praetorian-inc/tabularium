@@ -184,6 +184,11 @@ func TestWebApplicationLabels(t *testing.T) {
 
 	expectedSeedLabels := []string{WebApplicationLabel, AssetLabel, TTLLabel, SeedLabel}
 	assert.ElementsMatch(t, expectedSeedLabels, seedLabels)
+	assert.True(t, seedApp.IsSeed())
+
+	assert.Empty(t, seedApp.BurpSiteID)
+	assert.Empty(t, seedApp.BurpFolderID)
+	assert.Empty(t, seedApp.BurpScheduleID)
 }
 
 func TestWebApplicationTargetInterface(t *testing.T) {

@@ -3,21 +3,21 @@ module github.com/praetorian-inc/tabularium
 go 1.24.6
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.36.6
-	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.18.12
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.42.4
+	github.com/aws/aws-sdk-go-v2 v1.39.0
+	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.20.10
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.50.2
 	github.com/getkin/kin-openapi v0.131.0
 	github.com/google/uuid v1.6.0
 	github.com/knqyf263/go-cpe v0.0.0-20230627041855-cb0794d06872
 	github.com/stretchr/testify v1.10.0
-	golang.org/x/net v0.42.0
-	golang.org/x/text v0.27.0
+	golang.org/x/net v0.44.0
+	golang.org/x/text v0.29.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
-	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.25.3 // indirect
-	github.com/aws/smithy-go v1.22.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.30.3 // indirect
+	github.com/aws/smithy-go v1.23.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/go-openapi/jsonpointer v0.21.1 // indirect
 	github.com/go-openapi/swag v0.23.1 // indirect
