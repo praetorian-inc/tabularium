@@ -66,7 +66,7 @@ type ADObject struct {
 	Label    string `neo4j:"label" json:"label" desc:"Label of the object." example:"user"`
 	Domain   string `neo4j:"domain" json:"domain" desc:"AD domain this object belongs to." example:"example.local"`
 	ObjectID string `neo4j:"objectid" json:"objectid" desc:"Object identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
-	SID      string `neo4j:"sid" json:"sid" desc:"Security identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
+	SID      string `neo4j:"sid" json:"sid,omitempty" desc:"Security identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
 	ADProperties
 }
 
@@ -242,48 +242,48 @@ func (ad *ADObject) GetDescription() string {
 
 type ADProperties struct {
 	// Core AD Properties
-	Name        string `neo4j:"name" json:"name" desc:"Common name of the AD object" example:"John Smith"`
-	Description string `neo4j:"description" json:"description" desc:"Descriptive text for the AD object" example:"IT Department Administrator"`
-	DisplayName string `neo4j:"displayname" json:"displayname" desc:"Display name of the AD object" example:"Smith, John (IT)"`
-	IsDeleted   bool   `neo4j:"isdeleted" json:"isdeleted" desc:"Whether the object has been deleted from AD" example:"false"`
+	Name        string `neo4j:"name" json:"name,omitempty" desc:"Common name of the AD object" example:"John Smith"`
+	Description string `neo4j:"description" json:"description,omitempty" desc:"Descriptive text for the AD object" example:"IT Department Administrator"`
+	DisplayName string `neo4j:"displayname" json:"displayname,omitempty" desc:"Display name of the AD object" example:"Smith, John (IT)"`
+	IsDeleted   bool   `neo4j:"isdeleted" json:"isdeleted,omitempty" desc:"Whether the object has been deleted from AD" example:"false"`
 
 	// Remaining properties
-	AdminCount                              bool     `neo4j:"admincount" json:"admincount" desc:"Indicates if object is protected by AdminSDHolder" example:"true"`
-	CASecurityCollected                     bool     `neo4j:"casecuritycollected" json:"casecuritycollected" desc:"Whether Certificate Authority security information has been collected" example:"true"`
-	CAName                                  string   `neo4j:"caname" json:"caname" desc:"Name of the Certificate Authority" example:"CORP-CA-01"`
-	CertChain                               []string `neo4j:"certchain" json:"certchain" desc:"Certificate chain for the certificate" example:"[\"CN=Root CA\", \"CN=Intermediate CA\", \"CN=Issuing CA\"]"`
-	CertName                                string   `neo4j:"certname" json:"certname" desc:"Common name of the certificate" example:"UserAuthentication"`
-	CertThumbprint                          string   `neo4j:"certthumbprint" json:"certthumbprint" desc:"SHA1 thumbprint of the certificate" example:"1234567890ABCDEF1234567890ABCDEF12345678"`
-	CertThumbprints                         []string `neo4j:"certthumbprints" json:"certthumbprints" desc:"List of certificate thumbprints associated with the object" example:"[\"1234567890ABCDEF1234567890ABCDEF12345678\", \"ABCDEF1234567890ABCDEF1234567890ABCDEF12\"]"`
-	HasEnrollmentAgentRestrictions          string   `neo4j:"hasenrollmentagentrestrictions" json:"hasenrollmentagentrestrictions" desc:"Whether enrollment agent restrictions are configured" example:"true"`
-	EnrollmentAgentRestrictionsCollected    bool     `neo4j:"enrollmentagentrestrictionscollected" json:"enrollmentagentrestrictionscollected" desc:"Whether enrollment agent restrictions data has been collected" example:"true"`
-	IsUserSpecifiesSanEnabled               string   `neo4j:"isuserspecifiessanenabled" json:"isuserspecifiessanenabled" desc:"Whether users can specify Subject Alternative Name in certificate requests" example:"false"`
-	IsUserSpecifiesSanEnabledCollected      bool     `neo4j:"isuserspecifiessanenabledcollected" json:"isuserspecifiessanenabledcollected" desc:"Whether SAN enablement data has been collected" example:"true"`
-	RoleSeparationEnabled                   string   `neo4j:"roleseparationenabled" json:"roleseparationenabled" desc:"Whether CA role separation is enforced" example:"true"`
-	RoleSeparationEnabledCollected          bool     `neo4j:"roleseparationenabledcollected" json:"roleseparationenabledcollected" desc:"Whether role separation data has been collected" example:"true"`
-	HasBasicConstraints                     bool     `neo4j:"hasbasicconstraints" json:"hasbasicconstraints" desc:"Whether certificate has basic constraints extension" example:"true"`
-	BasicConstraintPathLength               int      `neo4j:"basicconstraintpathlength" json:"basicconstraintpathlength" desc:"Maximum number of CA certificates in certification path" example:"2"`
-	UnresolvedPublishedTemplates            []string `neo4j:"unresolvedpublishedtemplates" json:"unresolvedpublishedtemplates" desc:"List of certificate templates that could not be resolved" example:"[\"CustomTemplate1\", \"LegacyTemplate2\"]"`
-	DNSHostname                             string   `neo4j:"dnshostname" json:"dnshostname" desc:"DNS hostname of the computer object" example:"srv01.contoso.local"`
-	CrossCertificatePair                    []string `neo4j:"crosscertificatepair" json:"crosscertificatepair" desc:"Cross-certificates for establishing trust between CAs" example:"[\"MIIDXTCCAkWgAwIBAgIJAKs...\"]"`
-	DistinguishedName                       string   `neo4j:"distinguishedname" json:"distinguishedname" desc:"Full distinguished name of the AD object" example:"CN=John Smith,OU=Users,DC=contoso,DC=local"`
-	DomainFQDN                              string   `neo4j:"domain" json:"domain" desc:"Fully qualified domain name" example:"contoso.local"`
-	DomainSID                               string   `neo4j:"domainsid" json:"domainsid" desc:"Security identifier of the domain" example:"S-1-5-21-3623811015-3361044348-30300820"`
-	Sensitive                               bool     `neo4j:"sensitive" json:"sensitive" desc:"Account is marked as sensitive and cannot be delegated" example:"true"`
-	BlocksInheritance                       bool     `neo4j:"blocksinheritance" json:"blocksinheritance" desc:"Whether GPO inheritance is blocked at this container" example:"false"`
-	IsACL                                   string   `neo4j:"isacl" json:"isacl" desc:"Whether ACL data is available for this object" example:"true"`
-	IsACLProtected                          bool     `neo4j:"isaclprotected" json:"isaclprotected" desc:"Whether ACL inheritance is disabled" example:"false"`
-	InheritanceHash                         string   `neo4j:"inheritancehash" json:"inheritancehash" desc:"Hash of the inheritance chain for GPO processing" example:"A1B2C3D4E5F6"`
-	InheritanceHashes                       string   `neo4j:"inheritancehashes" json:"inheritancehashes" desc:"Collection of inheritance hashes for the object" example:"[\"A1B2C3D4E5F6\", \"F6E5D4C3B2A1\"]"`
-	Enforced                                string   `neo4j:"enforced" json:"enforced" desc:"Whether GPO link is enforced (no override)" example:"true"`
-	Department                              string   `neo4j:"department" json:"department" desc:"Department the user belongs to" example:"Information Technology"`
-	HasCrossCertificatePair                 bool     `neo4j:"hascrosscertificatepair" json:"hascrosscertificatepair" desc:"Whether object has cross-certificate pairs" example:"false"`
-	HasSPN                                  bool     `neo4j:"hasspn" json:"hasspn" desc:"Whether object has Service Principal Names registered" example:"true"`
-	UnconstrainedDelegation                 bool     `neo4j:"unconstraineddelegation" json:"unconstraineddelegation" desc:"Account is trusted for unconstrained Kerberos delegation" example:"false"`
-	LastLogon                               int64    `neo4j:"lastlogon" json:"lastlogon" desc:"Last logon time in Windows NT time format" example:"132514789200000000"`
-	LastLogonTimestamp                      int64    `neo4j:"lastlogontimestamp" json:"lastlogontimestamp" desc:"Replicated last logon timestamp" example:"132514789200000000"`
-	IsPrimaryGroup                          string   `neo4j:"isprimarygroup" json:"isprimarygroup" desc:"Whether this is the primary group for any users" example:"true"`
-	HasLAPS                                 bool     `neo4j:"haslaps" json:"haslaps" desc:"Whether Local Administrator Password Solution is enabled" example:"true"`
+	AdminCount                              bool     `neo4j:"admincount" json:"admincount,omitempty" desc:"Indicates if object is protected by AdminSDHolder" example:"true"`
+	CASecurityCollected                     bool     `neo4j:"casecuritycollected" json:"casecuritycollected,omitempty" desc:"Whether Certificate Authority security information has been collected" example:"true"`
+	CAName                                  string   `neo4j:"caname" json:"caname,omitempty" desc:"Name of the Certificate Authority" example:"CORP-CA-01"`
+	CertChain                               []string `neo4j:"certchain" json:"certchain,omitempty" desc:"Certificate chain for the certificate" example:"[\"CN=Root CA\", \"CN=Intermediate CA\", \"CN=Issuing CA\"]"`
+	CertName                                string   `neo4j:"certname" json:"certname,omitempty" desc:"Common name of the certificate" example:"UserAuthentication"`
+	CertThumbprint                          string   `neo4j:"certthumbprint" json:"certthumbprint,omitempty" desc:"SHA1 thumbprint of the certificate" example:"1234567890ABCDEF1234567890ABCDEF12345678"`
+	CertThumbprints                         []string `neo4j:"certthumbprints" json:"certthumbprints,omitempty" desc:"List of certificate thumbprints associated with the object" example:"[\"1234567890ABCDEF1234567890ABCDEF12345678\", \"ABCDEF1234567890ABCDEF1234567890ABCDEF12\"]"`
+	HasEnrollmentAgentRestrictions          string   `neo4j:"hasenrollmentagentrestrictions" json:"hasenrollmentagentrestrictions,omitempty" desc:"Whether enrollment agent restrictions are configured" example:"true"`
+	EnrollmentAgentRestrictionsCollected    bool     `neo4j:"enrollmentagentrestrictionscollected" json:"enrollmentagentrestrictionscollected,omitempty" desc:"Whether enrollment agent restrictions data has been collected" example:"true"`
+	IsUserSpecifiesSanEnabled               string   `neo4j:"isuserspecifiessanenabled" json:"isuserspecifiessanenabled,omitempty" desc:"Whether users can specify Subject Alternative Name in certificate requests" example:"false"`
+	IsUserSpecifiesSanEnabledCollected      bool     `neo4j:"isuserspecifiessanenabledcollected" json:"isuserspecifiessanenabledcollected,omitempty" desc:"Whether SAN enablement data has been collected" example:"true"`
+	RoleSeparationEnabled                   string   `neo4j:"roleseparationenabled" json:"roleseparationenabled,omitempty" desc:"Whether CA role separation is enforced" example:"true"`
+	RoleSeparationEnabledCollected          bool     `neo4j:"roleseparationenabledcollected" json:"roleseparationenabledcollected,omitempty" desc:"Whether role separation data has been collected" example:"true"`
+	HasBasicConstraints                     bool     `neo4j:"hasbasicconstraints" json:"hasbasicconstraints,omitempty" desc:"Whether certificate has basic constraints extension" example:"true"`
+	BasicConstraintPathLength               int      `neo4j:"basicconstraintpathlength" json:"basicconstraintpathlength,omitempty" desc:"Maximum number of CA certificates in certification path" example:"2"`
+	UnresolvedPublishedTemplates            []string `neo4j:"unresolvedpublishedtemplates" json:"unresolvedpublishedtemplates,omitempty" desc:"List of certificate templates that could not be resolved" example:"[\"CustomTemplate1\", \"LegacyTemplate2\"]"`
+	DNSHostname                             string   `neo4j:"dnshostname" json:"dnshostname,omitempty" desc:"DNS hostname of the computer object" example:"srv01.contoso.local"`
+	CrossCertificatePair                    []string `neo4j:"crosscertificatepair" json:"crosscertificatepair,omitempty" desc:"Cross-certificates for establishing trust between CAs" example:"[\"MIIDXTCCAkWgAwIBAgIJAKs...\"]"`
+	DistinguishedName                       string   `neo4j:"distinguishedname" json:"distinguishedname,omitempty" desc:"Full distinguished name of the AD object" example:"CN=John Smith,OU=Users,DC=contoso,DC=local"`
+	DomainFQDN                              string   `neo4j:"domain" json:"domain,omitempty" desc:"Fully qualified domain name" example:"contoso.local"`
+	DomainSID                               string   `neo4j:"domainsid" json:"domainsid,omitempty" desc:"Security identifier of the domain" example:"S-1-5-21-3623811015-3361044348-30300820"`
+	Sensitive                               bool     `neo4j:"sensitive" json:"sensitive,omitempty" desc:"Account is marked as sensitive and cannot be delegated" example:"true"`
+	BlocksInheritance                       bool     `neo4j:"blocksinheritance" json:"blocksinheritance,omitempty" desc:"Whether GPO inheritance is blocked at this container" example:"false"`
+	IsACL                                   string   `neo4j:"isacl" json:"isacl,omitempty" desc:"Whether ACL data is available for this object" example:"true"`
+	IsACLProtected                          bool     `neo4j:"isaclprotected" json:"isaclprotected,omitempty" desc:"Whether ACL inheritance is disabled" example:"false"`
+	InheritanceHash                         string   `neo4j:"inheritancehash" json:"inheritancehash,omitempty" desc:"Hash of the inheritance chain for GPO processing" example:"A1B2C3D4E5F6"`
+	InheritanceHashes                       string   `neo4j:"inheritancehashes" json:"inheritancehashes,omitempty" desc:"Collection of inheritance hashes for the object" example:"[\"A1B2C3D4E5F6\", \"F6E5D4C3B2A1\"]"`
+	Enforced                                string   `neo4j:"enforced" json:"enforced,omitempty" desc:"Whether GPO link is enforced (no override)" example:"true"`
+	Department                              string   `neo4j:"department" json:"department,omitempty" desc:"Department the user belongs to" example:"Information Technology"`
+	HasCrossCertificatePair                 bool     `neo4j:"hascrosscertificatepair" json:"hascrosscertificatepair,omitempty" desc:"Whether object has cross-certificate pairs" example:"false"`
+	HasSPN                                  bool     `neo4j:"hasspn" json:"hasspn,omitempty" desc:"Whether object has Service Principal Names registered" example:"true"`
+	UnconstrainedDelegation                 bool     `neo4j:"unconstraineddelegation" json:"unconstraineddelegation,omitempty" desc:"Account is trusted for unconstrained Kerberos delegation" example:"false"`
+	LastLogon                               int64    `neo4j:"lastlogon" json:"lastlogon,omitempty" desc:"Last logon time in Windows NT time format" example:"132514789200000000"`
+	LastLogonTimestamp                      int64    `neo4j:"lastlogontimestamp" json:"lastlogontimestamp,omitempty" desc:"Replicated last logon timestamp" example:"132514789200000000"`
+	IsPrimaryGroup                          string   `neo4j:"isprimarygroup" json:"isprimarygroup,omitempty" desc:"Whether this is the primary group for any users" example:"true"`
+	HasLAPS                                 bool     `neo4j:"haslaps" json:"haslaps,omitempty" desc:"Whether Local Administrator Password Solution is enabled" example:"true"`
 	DontRequirePreAuth                      bool     `neo4j:"dontreqpreauth" json:"dontreqpreauth,omitempty" desc:"Kerberos pre-authentication is not required" example:"false"`
 	LogonType                               string   `neo4j:"logontype" json:"logontype,omitempty" desc:"Type of logon allowed for the account" example:"Interactive"`
 	HasURA                                  string   `neo4j:"hasura" json:"hasura,omitempty" desc:"Whether User Rights Assignments are configured" example:"true"`
