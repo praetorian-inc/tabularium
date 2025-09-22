@@ -63,10 +63,11 @@ var (
 type ADObject struct {
 	BaseAsset
 	registry.ModelAlias
-	Label    string `neo4j:"label" json:"label" desc:"Label of the object." example:"user"`
-	Domain   string `neo4j:"domain" json:"domain" desc:"AD domain this object belongs to." example:"example.local"`
-	ObjectID string `neo4j:"objectid" json:"objectid" desc:"Object identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
-	SID      string `neo4j:"sid,omitempty" json:"sid,omitempty" desc:"Security identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
+	Label           string   `neo4j:"label" json:"label" desc:"Primary label of the object." example:"ADUser"`
+	SecondaryLabels []string `neo4j:"-" json:"label" desc:"Secondary labels of the object." example:"ADLocalGroup"`
+	Domain          string   `neo4j:"domain" json:"domain" desc:"AD domain this object belongs to." example:"example.local"`
+	ObjectID        string   `neo4j:"objectid" json:"objectid" desc:"Object identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
+	SID             string   `neo4j:"sid,omitempty" json:"sid,omitempty" desc:"Security identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
 	ADProperties
 }
 
@@ -75,6 +76,7 @@ func (ad *ADObject) GetLabels() []string {
 	if ad.Label != "" {
 		labels = append(labels, ad.Label)
 	}
+	labels = append(labels, ad.SecondaryLabels...)
 	if ad.Source == SeedSource {
 		labels = append(labels, SeedLabel)
 	}
