@@ -40,6 +40,7 @@ type AegisParameter struct {
 	Default     string `json:"default,omitempty" desc:"A string representation of the default value of the parameter" example:"default-tunnel"`
 	Required    bool   `json:"required" desc:"Whether the parameter is required" example:"true"`
 	Type        string `json:"type" desc:"The type of the parameter" example:"string"`
+	Sensitive   bool   `json:"sensitive,omitempty" desc:"Whether the parameter contains sensitive information that should be handled securely" example:"false"`
 }
 
 // GetDescription returns a description for the AegisParameter model
