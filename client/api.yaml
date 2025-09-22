@@ -1796,6 +1796,9 @@ components:
           description: The IP address this job was executed from
           example: 1.2.3.4
           type: string
+        origin:
+          description: The job that originally started this chain of jobs.
+          type: object
         parent:
           description: Optional parent target from which this job was spawned.
           type: object
@@ -1838,6 +1841,7 @@ components:
       - created
       - dns
       - key
+      - origin
       - secret
       - source
       - status
@@ -2013,6 +2017,12 @@ components:
           description: Date the asset registration expires (RFC3339).
           example: "2024-09-15T00:00:00Z"
           type: string
+        origins:
+          description: List of originating asset classes for this entity
+          example: '["amazon", "ipv4"]'
+          items:
+            type: string
+          type: array
         province:
           description: Province or state associated with the asset.
           example: California
@@ -2029,12 +2039,6 @@ components:
           description: Registrar managing the asset (e.g., domain).
           example: MarkMonitor Inc.
           type: string
-        surface:
-          description: List of attack surface identifiers related to the asset.
-          example: '["web", "dns"]'
-          items:
-            type: string
-          type: array
         updated:
           description: Date the asset registration was last updated (RFC3339).
           example: "2023-09-15T10:00:00Z"
