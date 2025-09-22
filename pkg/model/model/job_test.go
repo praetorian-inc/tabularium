@@ -254,3 +254,42 @@ func TestJob_Parameters(t *testing.T) {
 	assert.Contains(t, string(encoded), "secret2")
 	assert.Contains(t, string(encoded), "secret-value2")
 }
+
+func TestJob_Conversation(t *testing.T) {
+	dummy := NewAsset("example.com", "example.com")
+	
+	tests := []struct {
+		name         string
+		conversation string
+		shouldOmit   bool
+	}{
+		{
+			name:         "conversation field with UUID",
+			conversation: "550e8400-e29b-41d4-a716-446655440000",
+			shouldOmit:   false,
+		},
+		{
+			name:         "empty conversation field omitted",
+			conversation: "",
+			shouldOmit:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			job := NewJob("test-source", &dummy)
+			job.Conversation = tt.conversation
+
+			encoded, err := json.Marshal(job)
+			require.NoError(t, err)
+			
+			if tt.shouldOmit {
+				assert.NotContains(t, string(encoded), "conversation")
+			} else {
+				assert.Contains(t, string(encoded), "conversation")
+				assert.Contains(t, string(encoded), tt.conversation)
+				assert.Equal(t, tt.conversation, job.Conversation)
+			}
+		})
+	}
+}
