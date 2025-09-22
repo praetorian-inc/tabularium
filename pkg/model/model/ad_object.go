@@ -267,7 +267,6 @@ type ADProperties struct {
 	DNSHostname                             string   `neo4j:"dnshostname" json:"dnshostname,omitempty" desc:"DNS hostname of the computer object" example:"srv01.contoso.local"`
 	CrossCertificatePair                    []string `neo4j:"crosscertificatepair" json:"crosscertificatepair,omitempty" desc:"Cross-certificates for establishing trust between CAs" example:"[\"MIIDXTCCAkWgAwIBAgIJAKs...\"]"`
 	DistinguishedName                       string   `neo4j:"distinguishedname" json:"distinguishedname,omitempty" desc:"Full distinguished name of the AD object" example:"CN=John Smith,OU=Users,DC=contoso,DC=local"`
-	DomainFQDN                              string   `neo4j:"domain" json:"domain,omitempty" desc:"Fully qualified domain name" example:"contoso.local"`
 	DomainSID                               string   `neo4j:"domainsid" json:"domainsid,omitempty" desc:"Security identifier of the domain" example:"S-1-5-21-3623811015-3361044348-30300820"`
 	Sensitive                               bool     `neo4j:"sensitive" json:"sensitive,omitempty" desc:"Account is marked as sensitive and cannot be delegated" example:"true"`
 	BlocksInheritance                       bool     `neo4j:"blocksinheritance" json:"blocksinheritance,omitempty" desc:"Whether GPO inheritance is blocked at this container" example:"false"`
@@ -372,7 +371,7 @@ type ADProperties struct {
 	HasVulnerableEndpoint                   string   `neo4j:"hasvulnerableendpoint" json:"hasvulnerableendpoint,omitempty" desc:"Whether object has vulnerable enrollment endpoints" example:"true"`
 	RequireSecuritySignature                string   `neo4j:"requiresecuritysignature" json:"requiresecuritysignature,omitempty" desc:"Whether security signature is required" example:"true"`
 	EnableSecuritySignature                 string   `neo4j:"enablesecuritysignature" json:"enablesecuritysignature,omitempty" desc:"Whether security signature is enabled" example:"true"`
-	RestrictReceivingNTLMTraffic            string   `neo4j:"restrictreceivingntmltraffic" json:"restrictreceivingntmltraffic,omitempty" desc:"Restriction policy for receiving NTLM traffic" example:"DenyAll"`
+	RestrictReceivingNTLMTraffic            string   `neo4j:"restrictreceivingntlmtraffic" json:"restrictreceivingntlmtraffic,omitempty" desc:"Restriction policy for receiving NTLM traffic" example:"DenyAll"`
 	NTLMMinServerSec                        string   `neo4j:"ntlmminserversec" json:"ntlmminserversec,omitempty" desc:"Minimum security level for NTLM SSP server" example:"537395200"`
 	NTLMMinClientSec                        string   `neo4j:"ntlmminclientsec" json:"ntlmminclientsec,omitempty" desc:"Minimum security level for NTLM SSP client" example:"537395200"`
 	LMCompatibilityLevel                    string   `neo4j:"lmcompatibilitylevel" json:"lmcompatibilitylevel,omitempty" desc:"LAN Manager authentication compatibility level" example:"5"`
