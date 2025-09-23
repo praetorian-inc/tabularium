@@ -3,7 +3,13 @@ package model
 import (
 	"log/slog"
 	"time"
+
+	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
+
+func init() {
+	registry.Registry.MustRegisterModel(&AegisAgent{})
+}
 
 // CloudflaredStatus represents the cloudflared status information
 type CloudflaredStatus struct {
@@ -17,7 +23,7 @@ type CloudflaredStatus struct {
 
 // AegisAgent represents an Aegis agent with all its information
 type AegisAgent struct {
-	BaseAsset                               // required for models
+	BaseAsset                                 // required for models
 	ClientID          string                  `json:"client_id" desc:"Unique agent identifier"`
 	LastSeenAt        int64                   `json:"last_seen_at" desc:"Unix timestamp (seconds) of last check-in"`
 	Hostname          string                  `json:"hostname" desc:"Host short name"`
