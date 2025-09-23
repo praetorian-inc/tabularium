@@ -31,8 +31,8 @@ type AegisAgent struct {
 
 // AegisNetworkInterface represents a network interface on an Aegis agent
 type AegisNetworkInterface struct {
-	Name        string   `json:"name"`
-	IPAddresses []string `json:"ip_addresses"`
+	Name        string   `json:"name" desc:"Interface name" example:"eth0"`
+	IPAddresses []string `json:"ip_addresses" desc:"Interface IP addresses" example:"[\"10.0.0.5\",\"fe80::1\"]"`
 }
 
 // AegisHealthCheckData represents health check information from an Aegis agent
