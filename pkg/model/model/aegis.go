@@ -7,12 +7,12 @@ import (
 
 // CloudflaredStatus represents the cloudflared status information
 type CloudflaredStatus struct {
-	Status          string `json:"status,omitempty"`
-	Connected       string `json:"connected,omitempty"`
-	ConnectionCount int    `json:"connection_count,omitempty"`
-	TunnelName      string `json:"tunnel_name,omitempty"`
-	Hostname        string `json:"hostname,omitempty"`
-	AuthorizedUsers string `json:"authorized_users,omitempty"`
+	Status          string `json:"status,omitempty" desc:"High-level status (e.g., connected, not_found)" example:"connected" neo4j:"status"`
+	Connected       string `json:"connected,omitempty" desc:"String flag indicating connectivity (legacy)" example:"true" neo4j:"connected"`
+	ConnectionCount int    `json:"connection_count,omitempty" desc:"Active connection count" example:"4" neo4j:"connection_count"`
+	TunnelName      string `json:"tunnel_name,omitempty" desc:"Configured Cloudflare Tunnel name" example:"corp-agent-tunnel" neo4j:"tunnel_name"`
+	Hostname        string `json:"hostname,omitempty" desc:"Cloudflare hostname for the tunnel" example:"agent.example.com" neo4j:"hostname"`
+	AuthorizedUsers string `json:"authorized_users,omitempty" desc:"Authorized users (format defined by agent)" example:"alice,bob" neo4j:"authorized_users"`
 }
 
 // AegisAgent represents an Aegis agent with all its information
