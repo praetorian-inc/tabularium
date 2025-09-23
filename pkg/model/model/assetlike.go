@@ -9,6 +9,7 @@ type Assetlike interface {
 	GetMetadata() *Metadata
 	Attribute(string, string) Attribute
 	GetBase() *BaseAsset
+	GetClass() string
 	GetSource() string
 	SetSource(string)
 	SetStatus(string)
@@ -19,7 +20,7 @@ func useGroupAndIdentifier(asset Assetlike, groupDst, identifierDst *string) reg
 		Call: func() error {
 			copyGroupAndIdentifier(asset, groupDst, identifierDst)
 			reuseGroupOrIdentifierIfSeed(asset, groupDst, identifierDst)
-			copyGroupAndIdentifier(asset, groupDst, identifierDst)  // in case the reuse function changed the values
+			copyGroupAndIdentifier(asset, groupDst, identifierDst) // in case the reuse function changed the values
 			return nil
 		},
 	}
