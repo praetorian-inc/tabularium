@@ -17,15 +17,16 @@ type CloudflaredStatus struct {
 
 // AegisAgent represents an Aegis agent with all its information
 type AegisAgent struct {
-	ClientID          string                  `json:"client_id"`
-	LastSeenAt        int64                   `json:"last_seen_at"`
-	Hostname          string                  `json:"hostname"`
-	FQDN              string                  `json:"fqdn"`
-	NetworkInterfaces []AegisNetworkInterface `json:"network_interfaces"`
-	OS                string                  `json:"os"`
-	OSVersion         string                  `json:"os_version"`
-	Architecture      string                  `json:"architecture"`
-	HealthCheck       *AegisHealthCheckData   `json:"health_check,omitempty"`
+	BaseAsset                               // required for models
+	ClientID          string                  `json:"client_id" desc:"Unique agent identifier"`
+	LastSeenAt        int64                   `json:"last_seen_at" desc:"Unix timestamp (seconds) of last check-in"`
+	Hostname          string                  `json:"hostname" desc:"Host short name"`
+	FQDN              string                  `json:"fqdn" desc:"Fully-qualified domain name"`
+	NetworkInterfaces []AegisNetworkInterface `json:"network_interfaces" desc:"Network interfaces and their IPs"`
+	OS                string                  `json:"os" desc:"Operating system"`
+	OSVersion         string                  `json:"os_version" desc:"Operating system version"`
+	Architecture      string                  `json:"architecture" desc:"CPU architecture (e.g., amd64, arm64)"`
+	HealthCheck       *AegisHealthCheckData   `json:"health_check,omitempty" desc:"Latest health check payload"`
 }
 
 // AegisNetworkInterface represents a network interface on an Aegis agent
