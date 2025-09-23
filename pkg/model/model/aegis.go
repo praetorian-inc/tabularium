@@ -37,11 +37,11 @@ type AegisNetworkInterface struct {
 
 // AegisHealthCheckData represents health check information from an Aegis agent
 type AegisHealthCheckData struct {
-	DiskSpace               int                `json:"disk_space,omitempty"`
-	Memory                  float64            `json:"memory,omitempty"`
-	VirtualizationSupported bool               `json:"virtualization_supported"`
-	CloudFlare              bool               `json:"cloudflare"`
-	CloudflaredStatus       *CloudflaredStatus `json:"cloudflared_status,omitempty"`
+	DiskSpace               int                `json:"disk_space,omitempty" desc:"Free disk space (GB)" example:"256"`
+	Memory                  float64            `json:"memory,omitempty" desc:"System memory (GB)" example:"16"`
+	VirtualizationSupported bool               `json:"virtualization_supported" desc:"Hardware virtualization support available" example:"true"`
+	CloudFlare              bool               `json:"cloudflare" desc:"Cloudflare agent installed/configured" example:"true"`
+	CloudflaredStatus       *CloudflaredStatus `json:"cloudflared_status,omitempty" desc:"Cloudflared process/tunnel status"`
 }
 
 // HasCloudflareConfigured returns true if the agent has Cloudflare tunnel configuration
