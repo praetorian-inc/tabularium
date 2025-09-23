@@ -84,14 +84,14 @@ func (a *AegisAgent) IsOnline() bool {
 		return false
 	}
 
-	// Determine if LastSeenAt is in microseconds or seconds
-	// If > 1 trillion, it's in microseconds; otherwise it's in seconds
+	// Detect unit by magnitude: seconds < 1e11, ms < 1e14, µs >= 1e14
 	var lastSeenTime time.Time
-	if a.LastSeenAt > 1000000000000 {
-		// Convert microseconds to time.Time
+	switch {
+	case a.LastSeenAt >= 100000000000000: // ≥1e14 ≈ microseconds since epoch
 		lastSeenTime = time.Unix(0, a.LastSeenAt*int64(time.Microsecond))
-	} else {
-		// Convert seconds to time.Time
+	case a.LastSeenAt >= 100000000000: // ≥1e11 ≈ milliseconds since epoch
+		lastSeenTime = time.Unix(0, a.LastSeenAt*int64(time.Millisecond))
+	default: // seconds
 		lastSeenTime = time.Unix(a.LastSeenAt, 0)
 	}
 
