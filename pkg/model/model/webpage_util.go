@@ -96,6 +96,10 @@ func (w *Webpage) MergeSource(other Webpage) {
 	w.Source = mergeSlices(w.Source, other.Source)
 }
 
+func (w *Webpage) MergeArtifacts(other Webpage) {
+	w.Artifacts = mergeSlices(w.Artifacts, other.Artifacts)
+}
+
 // We merge requests preferring existing, updating in the duplicate case, then append new from other webpage
 func (w *Webpage) MergeRequests(others ...WebpageRequest) {
 	type reqKey struct {
