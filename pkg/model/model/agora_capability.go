@@ -192,8 +192,6 @@ type AgoraCapability struct {
 	LargeArtifact bool                  `json:"largeArtifact,omitempty" desc:"If true, this capability generates large artifacts that can be stored and reviewed later" example:"false"`
 }
 
-type AgoraCapabilityOption func(*AgoraCapability)
-
 func init() {
 	registry.Registry.MustRegisterModel(&AgoraCapability{})
 }
@@ -201,10 +199,4 @@ func init() {
 // GetDescription returns a description for the AgoraCapability model.
 func (a *AgoraCapability) GetDescription() string {
 	return "Describes a single capability registered with Agora and how to execute it."
-}
-
-func AsAsync() AgoraCapabilityOption {
-	return func(agoraCap *AgoraCapability) {
-		agoraCap.Async = true
-	}
 }
