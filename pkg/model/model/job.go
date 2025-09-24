@@ -33,6 +33,7 @@ type Job struct {
 	Full                  bool              `dynamodbav:"-" json:"full,omitempty" desc:"Indicates if this is a full scan job." example:"false"`
 	Capabilities          []string          `dynamodbav:"-" json:"capabilities,omitempty" desc:"List of specific capabilities to run for this job." example:"[\"portscan\", \"nuclei\"]"`
 	Queue                 string            `dynamodbav:"-" desc:"Target queue for the job." example:"standard"`
+	Origin                TargetWrapper     `dynamodbav:"origin" json:"origin" desc:"The job that originally started this chain of jobs."`
 	Target                TargetWrapper     `dynamodbav:"target" json:"target" desc:"The primary target of the job."`
 	Parent                TargetWrapper     `dynamodbav:"parent" json:"parent,omitempty" desc:"Optional parent target from which this job was spawned."`
 	RateLimit             RateLimit         `dynamodbav:"-" json:"-"`
