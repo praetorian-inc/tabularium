@@ -14,7 +14,7 @@ type Capability interface {
 	// Parameters returns the parameters of the capability
 	Parameters() []AgoraParameter
 	// Match returns whether the attributes of the capability match this capability
-	Match() bool
+	Match() error
 	// Accepts returns whether the status of this asset allows it to be accepted by this capability
 	Accepts() bool
 	// Invoke executes the capability

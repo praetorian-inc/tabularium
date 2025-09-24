@@ -645,6 +645,328 @@ components:
       - label
       - objectid
       type: object
+    aegis-mgmt:
+      description: Represents an Aegis infrastructure management task, including its
+        status, parameters, and results.
+      properties:
+        BaseModel:
+          type: object
+        aegisAgentId:
+          description: Specific Aegis agent ID if targeting single agent.
+          example: agent-001
+          type: string
+        aegisClientId:
+          description: Aegis client ID target for the management operation.
+          example: C.12345abcdef
+          type: string
+        aegisManagementCapability:
+          description: Name of the Aegis management capability.
+          example: tunnel_management
+          type: string
+        async:
+          description: Whether the Aegis management task is asynchronous.
+          example: "true"
+          type: boolean
+        commandResult:
+          description: Detailed command execution result including exit code and output.
+          type: object
+        completed:
+          description: Timestamp when the task completed (RFC3339).
+          example: "2024-01-15T10:35:00Z"
+          type: string
+        created:
+          description: Timestamp when the task was created (RFC3339).
+          example: "2024-01-15T10:30:00Z"
+          type: string
+        errorMessage:
+          description: Error message if the task failed.
+          example: 'Failed to create tunnel: connection timeout'
+          type: string
+        flowId:
+          description: Velociraptor flow ID for tracking execution.
+          example: F.D36EN790K9V6G
+          type: string
+        key:
+          description: Unique key for the Aegis management task.
+          example: '#aegis-mgmt#user@example.com#tunnel_management#2024-01-15T10:30:00Z'
+          type: string
+        parameters:
+          description: Parameters for the Aegis management capability.
+          example: '{"tunnel_name": "my-tunnel", "action": "create"}'
+          type: object
+        result:
+          description: Result data from the Aegis management operation.
+          example: '{"tunnel_id": "tunnel-123", "status": "active"}'
+          type: string
+        started:
+          description: Timestamp when the task execution started (RFC3339).
+          example: "2024-01-15T10:31:00Z"
+          type: string
+        status:
+          description: Current status of the Aegis management task.
+          example: AMT_PENDING
+          type: string
+        ttl:
+          description: Time-to-live for the task record (Unix timestamp).
+          example: "1706353200"
+          format: int64
+          type: integer
+        updated:
+          description: Timestamp when the task was last updated (RFC3339).
+          example: "2024-01-15T10:35:00Z"
+          type: string
+        username:
+          description: Username who initiated the Aegis management task.
+          example: user@example.com
+          type: string
+      required:
+      - BaseModel
+      - aegisClientId
+      - aegisManagementCapability
+      - async
+      - created
+      - key
+      - parameters
+      - status
+      - ttl
+      - updated
+      - username
+      type: object
+    aegisagent:
+      description: Base logic for an asset.
+      properties:
+        BaseAsset:
+          type: object
+        architecture:
+          description: CPU architecture (e.g., amd64, arm64)
+          type: string
+        client_id:
+          description: Unique agent identifier
+          type: string
+        fqdn:
+          description: Fully-qualified domain name
+          type: string
+        health_check:
+          description: Latest health check payload
+          type: object
+        hostname:
+          description: Host short name
+          type: string
+        last_seen_at:
+          description: Unix timestamp (seconds) of last check-in
+          format: int64
+          type: integer
+        network_interfaces:
+          description: Network interfaces and their IPs
+          items:
+            type: object
+          type: array
+        os:
+          description: Operating system
+          type: string
+        os_version:
+          description: Operating system version
+          type: string
+      required:
+      - BaseAsset
+      - architecture
+      - client_id
+      - fqdn
+      - hostname
+      - last_seen_at
+      - network_interfaces
+      - os
+      - os_version
+      type: object
+    aegismanagement:
+      description: Describes a management capability for Aegis infrastructure operations
+        and how to execute it.
+      properties:
+        BaseModel:
+          type: object
+        async:
+          description: Indicates if this is an asynchronous management capability
+          example: "true"
+          type: boolean
+        description:
+          description: A description of the management capability suitable for human
+            or LLM use
+          example: Manages Cloudflare tunnels for secure agent connectivity
+          type: string
+        executor:
+          description: The task executor that can execute this management capability
+          example: aegis
+          type: string
+        integration:
+          description: Whether or not this management capability is an integration
+            with an external service
+          example: "false"
+          type: boolean
+        largeArtifact:
+          description: If true, this management capability generates large artifacts
+            that can be stored and reviewed later
+          example: "false"
+          type: boolean
+        name:
+          description: The name of the management capability
+          example: tunnel_management
+          type: string
+        parameters:
+          description: The parameters/options of the management capability
+          items:
+            type: object
+          type: array
+        runs_on:
+          description: The platform this management capability runs on
+          example: linux
+          type: integer
+        target:
+          description: The target of the management capability
+          example: agent
+          type: string
+        title:
+          description: The pretty name of the management capability
+          example: Cloudflare Tunnel Management
+          type: string
+        version:
+          description: The version of the management capability (major.minor.patch)
+          example: 1.0.0
+          type: string
+      required:
+      - BaseModel
+      - async
+      - description
+      - executor
+      - integration
+      - name
+      - target
+      - title
+      - version
+      type: object
+    aegismanagementtask:
+      description: Represents an Aegis infrastructure management task, including its
+        status, parameters, and results.
+      properties:
+        BaseModel:
+          type: object
+        aegisAgentId:
+          description: Specific Aegis agent ID if targeting single agent.
+          example: agent-001
+          type: string
+        aegisClientId:
+          description: Aegis client ID target for the management operation.
+          example: C.12345abcdef
+          type: string
+        aegisManagementCapability:
+          description: Name of the Aegis management capability.
+          example: tunnel_management
+          type: string
+        async:
+          description: Whether the Aegis management task is asynchronous.
+          example: "true"
+          type: boolean
+        commandResult:
+          description: Detailed command execution result including exit code and output.
+          type: object
+        completed:
+          description: Timestamp when the task completed (RFC3339).
+          example: "2024-01-15T10:35:00Z"
+          type: string
+        created:
+          description: Timestamp when the task was created (RFC3339).
+          example: "2024-01-15T10:30:00Z"
+          type: string
+        errorMessage:
+          description: Error message if the task failed.
+          example: 'Failed to create tunnel: connection timeout'
+          type: string
+        flowId:
+          description: Velociraptor flow ID for tracking execution.
+          example: F.D36EN790K9V6G
+          type: string
+        key:
+          description: Unique key for the Aegis management task.
+          example: '#aegis-mgmt#user@example.com#tunnel_management#2024-01-15T10:30:00Z'
+          type: string
+        parameters:
+          description: Parameters for the Aegis management capability.
+          example: '{"tunnel_name": "my-tunnel", "action": "create"}'
+          type: object
+        result:
+          description: Result data from the Aegis management operation.
+          example: '{"tunnel_id": "tunnel-123", "status": "active"}'
+          type: string
+        started:
+          description: Timestamp when the task execution started (RFC3339).
+          example: "2024-01-15T10:31:00Z"
+          type: string
+        status:
+          description: Current status of the Aegis management task.
+          example: AMT_PENDING
+          type: string
+        ttl:
+          description: Time-to-live for the task record (Unix timestamp).
+          example: "1706353200"
+          format: int64
+          type: integer
+        updated:
+          description: Timestamp when the task was last updated (RFC3339).
+          example: "2024-01-15T10:35:00Z"
+          type: string
+        username:
+          description: Username who initiated the Aegis management task.
+          example: user@example.com
+          type: string
+      required:
+      - BaseModel
+      - aegisClientId
+      - aegisManagementCapability
+      - async
+      - created
+      - key
+      - parameters
+      - status
+      - ttl
+      - updated
+      - username
+      type: object
+    aegisparameter:
+      description: Describes a single parameter for an Aegis management capability.
+      properties:
+        BaseModel:
+          type: object
+        default:
+          description: A string representation of the default value of the parameter
+          example: default-tunnel
+          type: string
+        description:
+          description: A description of the parameter suitable for human or LLM use
+          example: The name of the Cloudflare tunnel to manage
+          type: string
+        name:
+          description: The name of the parameter
+          example: tunnel_name
+          type: string
+        required:
+          description: Whether the parameter is required
+          example: "true"
+          type: boolean
+        sensitive:
+          description: Whether the parameter contains sensitive information that should
+            be handled securely
+          example: "false"
+          type: boolean
+        type:
+          description: The type of the parameter
+          example: string
+          type: string
+      required:
+      - BaseModel
+      - description
+      - name
+      - required
+      - type
+      type: object
     agoracapability:
       description: Describes a single capability registered with Agora and how to
         execute it.
@@ -1023,6 +1345,54 @@ components:
       - urls
       - username
       - visited
+      type: object
+    commandresult:
+      description: Represents the success/failure status of an Aegis capability execution.
+      properties:
+        BaseModel:
+          type: object
+        capability:
+          description: The Aegis capability that was executed
+          example: praetorian.aegis.Windows.ad.pingcastle
+          type: string
+        command:
+          description: The actual command that was executed
+          example: adduser testuser
+          type: string
+        duration:
+          description: Execution duration in milliseconds
+          example: "1500"
+          format: int64
+          type: integer
+        error_message:
+          description: Error message if the capability failed
+          example: Command failed with exit code 1
+          type: string
+        error_output:
+          description: Error output from the command
+          example: 'fatal: The user ''newuser123'' does not exist.'
+          type: string
+        exit_code:
+          description: The exit code returned by the capability
+          example: "0"
+          type: integer
+        output:
+          description: Standard output from the command
+          example: User added successfully
+          type: string
+        success:
+          description: Whether the capability executed successfully
+          example: "true"
+          type: boolean
+        target:
+          description: The target this capability was executed against (optional for
+            management capabilities)
+          type: object
+      required:
+      - BaseModel
+      - capability
+      - exit_code
+      - success
       type: object
     condition:
       description: Represents a specific condition or finding observed on an asset,
@@ -1752,6 +2122,9 @@ components:
           description: The IP address this job was executed from
           example: 1.2.3.4
           type: string
+        origin:
+          description: The job that originally started this chain of jobs.
+          type: object
         parent:
           description: Optional parent target from which this job was spawned.
           type: object
@@ -1794,6 +2167,7 @@ components:
       - created
       - dns
       - key
+      - origin
       - secret
       - source
       - status
@@ -1919,6 +2293,12 @@ components:
           description: Date the asset registration expires (RFC3339).
           example: "2024-09-15T00:00:00Z"
           type: string
+        origins:
+          description: List of originating asset classes for this entity
+          example: '["amazon", "ipv4"]'
+          items:
+            type: string
+          type: array
         province:
           description: Province or state associated with the asset.
           example: California
@@ -1935,12 +2315,6 @@ components:
           description: Registrar managing the asset (e.g., domain).
           example: MarkMonitor Inc.
           type: string
-        surface:
-          description: List of attack surface identifiers related to the asset.
-          example: '["web", "dns"]'
-          items:
-            type: string
-          type: array
         updated:
           description: Date the asset registration was last updated (RFC3339).
           example: "2023-09-15T10:00:00Z"
@@ -3034,6 +3408,12 @@ components:
           type: object
         WebpageDetails:
           type: object
+        artifacts:
+          description: Source code repositories or files for analysis (e.g., repositories,
+            file keys)
+          items:
+            type: object
+          type: array
         created:
           description: Timestamp when the webpage was first discovered (RFC3339).
           example: "2023-10-27T10:00:00Z"
@@ -3096,6 +3476,7 @@ components:
       - BaseModel
       - History
       - WebpageDetails
+      - artifacts
       - created
       - details_filepath
       - key
