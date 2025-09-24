@@ -23,6 +23,7 @@ func TestConversation_NewConversation(t *testing.T) {
 	assert.NotEmpty(t, conv.Key)
 	assert.True(t, strings.HasPrefix(conv.Key, "#conversation#"))
 	assert.True(t, conv.Valid())
+	assert.Empty(t, conv.Topic) // Topic is empty until set
 }
 
 func TestConversation_GetKey(t *testing.T) {
@@ -212,6 +213,43 @@ func TestConversation_SecurityScenarios(t *testing.T) {
 				assert.Equal(t, tc.username, conv.Username)
 				assert.NotEmpty(t, conv.Key)
 			}
+		})
+	}
+}
+
+func TestConversation_TopicField(t *testing.T) {
+	testCases := []struct {
+		name     string
+		topic    string
+		expected string
+	}{
+		{
+			name:     "short topic",
+			topic:    "Find all assets",
+			expected: "Find all assets",
+		},
+		{
+			name:     "long topic gets truncated",
+			topic:    strings.Repeat("a", 300),
+			expected: strings.Repeat("a", 256),
+		},
+		{
+			name:     "empty topic",
+			topic:    "",
+			expected: "",
+		},
+	}
+	
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			conv := NewConversation("Test Chat", "user@example.com")
+			conv.Topic = tc.topic
+			
+			if len(tc.topic) > 256 {
+				conv.Topic = tc.topic[:256]
+			}
+			
+			assert.Equal(t, tc.expected, conv.Topic)
 		})
 	}
 }

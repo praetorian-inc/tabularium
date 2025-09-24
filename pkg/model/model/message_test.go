@@ -374,9 +374,25 @@ func TestMessage_RoleConstants(t *testing.T) {
 	assert.Equal(t, "user", RoleUser)
 	assert.Equal(t, "chariot", RoleChariot)
 	assert.Equal(t, "system", RoleSystem)
+	assert.Equal(t, "tool call", RoleToolCall)
+	assert.Equal(t, "tool response", RoleToolResponse)
+	assert.Equal(t, "planner-output", RolePlannerOutput)
 	
 	// Test using role constants
 	msg := NewMessage("conv-123", RoleUser, "test", "user@example.com")
 	assert.Equal(t, RoleUser, msg.Role)
 	assert.True(t, msg.Valid())
+	
+	// Test tool roles
+	toolCallMsg := NewMessage("conv-123", RoleToolCall, "tool call content", "user@example.com")
+	assert.Equal(t, RoleToolCall, toolCallMsg.Role)
+	assert.True(t, toolCallMsg.Valid())
+	
+	toolResponseMsg := NewMessage("conv-123", RoleToolResponse, "tool response content", "user@example.com")
+	assert.Equal(t, RoleToolResponse, toolResponseMsg.Role)
+	assert.True(t, toolResponseMsg.Valid())
+	
+	plannerOutputMsg := NewMessage("conv-123", RolePlannerOutput, "planner output content", "user@example.com")
+	assert.Equal(t, RolePlannerOutput, plannerOutputMsg.Role)
+	assert.True(t, plannerOutputMsg.Valid())
 }
