@@ -6,11 +6,12 @@ import (
 )
 
 const (
-	RoleUser         = "user"
-	RoleChariot      = "chariot"
-	RoleSystem       = "system"
-	RoleToolCall     = "tool call"
-	RoleToolResponse = "tool response"
+	RoleUser          = "user"
+	RoleChariot       = "chariot"
+	RoleSystem        = "system"
+	RoleToolCall      = "tool call"
+	RoleToolResponse  = "tool response"
+	RolePlannerOutput = "planner-output"
 )
 
 type Message struct {

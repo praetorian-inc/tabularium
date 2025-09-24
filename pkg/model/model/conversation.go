@@ -14,6 +14,7 @@ type Conversation struct {
 	UUID     string `dynamodbav:"uuid" json:"uuid" desc:"UUID of the conversation for reference." example:"550e8400-e29b-41d4-a716-446655440000"`
 	Source   string `dynamodbav:"source" json:"source" desc:"Who started the conversation." example:"user"`
 	Created  string `dynamodbav:"created" json:"created" desc:"Timestamp when the conversation was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
+	Topic    string `dynamodbav:"topic" json:"topic" desc:"Topic extracted from first message (first 256 chars)." example:"Find all active assets in my infrastructure"`
 }
 
 func init() {
