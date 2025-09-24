@@ -11,19 +11,16 @@ import (
 
 func TestConversation_NewConversation(t *testing.T) {
 	topic := "Test Conversation"
-	username := "gladiator@praetorian.com"
 
 	conv := NewConversation(topic)
 
 	assert.Equal(t, topic, conv.Topic)
-	assert.Equal(t, username, conv.Username)
 	assert.NotEmpty(t, conv.UUID)
 	assert.NotEmpty(t, conv.Created)
 	assert.NotEmpty(t, conv.Source)
 	assert.NotEmpty(t, conv.Key)
 	assert.True(t, strings.HasPrefix(conv.Key, "#conversation#"))
 	assert.True(t, conv.Valid())
-	assert.Empty(t, conv.Topic) // Topic is empty until set
 }
 
 func TestConversation_GetKey(t *testing.T) {
@@ -58,12 +55,12 @@ func TestConversation_Hooks(t *testing.T) {
 	registry.CallHooks(conv)
 
 	assert.NotEmpty(t, conv.Key)
-	assert.True(t, strings.HasPrefix(conv.Key, "#conversation#Test Conversation#"))
+	assert.True(t, strings.HasPrefix(conv.Key, "#conversation#"))
 
 	// Verify UUID format in key (should be 36 characters with dashes)
 	keyParts := strings.Split(conv.Key, "#")
-	require.Len(t, keyParts, 4)
-	uuid := keyParts[3]
+	require.Len(t, keyParts, 3)
+	uuid := keyParts[2]
 	assert.Len(t, uuid, 36)
 	assert.Contains(t, uuid, "-")
 }
