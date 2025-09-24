@@ -47,9 +47,7 @@ func TestConversation_Defaulted(t *testing.T) {
 }
 
 func TestConversation_Hooks(t *testing.T) {
-	conv := &Conversation{
-		Username: "user@example.com",
-	}
+	conv := &Conversation{}
 
 	// Call hooks manually
 	registry.CallHooks(conv)
@@ -68,8 +66,7 @@ func TestConversation_Hooks(t *testing.T) {
 func TestConversation_Hooks_ExistingKey(t *testing.T) {
 	existingKey := "#conversation#existing#12345"
 	conv := &Conversation{
-		Key:      existingKey,
-		Username: "user@example.com",
+		Key: existingKey,
 	}
 
 	registry.CallHooks(conv)
@@ -100,15 +97,16 @@ func TestConversation_KeyGeneration_Uniqueness(t *testing.T) {
 	conv2 := NewConversation(topic)
 
 	assert.NotEqual(t, conv1.Key, conv2.Key)
-	assert.True(t, strings.HasPrefix(conv1.Key, "#conversation#"+topic+"#"))
-	assert.True(t, strings.HasPrefix(conv2.Key, "#conversation#"+topic+"#"))
+	assert.True(t, strings.HasPrefix(conv1.Key, "#conversation#"))
+	assert.True(t, strings.HasPrefix(conv2.Key, "#conversation#"))
+	assert.Equal(t, topic, conv1.Topic)
+	assert.Equal(t, topic, conv2.Topic)
 }
 
 func TestConversation_SecurityScenarios(t *testing.T) {
 	testCases := []struct {
 		name             string
 		conversationName string
-		username         string
 		expectValid      bool
 	}{
 		{
@@ -145,7 +143,6 @@ func TestConversation_SecurityScenarios(t *testing.T) {
 			assert.Equal(t, tc.expectValid, conv.Valid())
 			if tc.expectValid {
 				assert.Equal(t, tc.conversationName, conv.Topic)
-				assert.Equal(t, tc.username, conv.Username)
 				assert.NotEmpty(t, conv.Key)
 			}
 		})
