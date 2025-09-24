@@ -10,7 +10,6 @@ type Conversation struct {
 	baseTableModel
 	Username string `dynamodbav:"username" json:"username" desc:"Username who owns the conversation." example:"user@example.com"`
 	Key      string `dynamodbav:"key" json:"key" desc:"Unique key for the conversation." example:"#conversation#example-conversation#550e8400-e29b-41d4-a716-446655440000"`
-	Name     string `dynamodbav:"name" json:"name" desc:"Name of the conversation." example:"My AI Assistant Chat"`
 	UUID     string `dynamodbav:"uuid" json:"uuid" desc:"UUID of the conversation for reference." example:"550e8400-e29b-41d4-a716-446655440000"`
 	Source   string `dynamodbav:"source" json:"source" desc:"Who started the conversation." example:"user"`
 	Created  string `dynamodbav:"created" json:"created" desc:"Timestamp when the conversation was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
@@ -50,13 +49,12 @@ func (c *Conversation) GetHooks() []registry.Hook {
 }
 
 func (c *Conversation) Valid() bool {
-	return c.Name != ""
+	return c.Key != ""
 }
 
-func NewConversation(name, username string) Conversation {
+func NewConversation(topic string) Conversation {
 	conv := Conversation{
-		Name:     name,
-		Username: username,
+		Topic: topic,
 	}
 	conv.Defaulted()
 	registry.CallHooks(&conv)
