@@ -1,15 +1,18 @@
 package model
 
 type PlannerEvent struct {
-	Type           string                 `json:"type"`
-	Username       string                 `json:"username"`
-	ConversationID string                 `json:"conversationId"`
-	
+	Type string `json:"type"`
+	// Username of the tenant we're in
+	Username string `json:"username"`
+	// User that requested the job, possibly assumed in to the tenant
+	User           string `json:"user"`
+	ConversationID string `json:"conversationId"`
+
 	// Job completion event
-	JobCompletion  *PlannerJobCompletion  `json:"jobCompletion,omitempty"`
-	
+	JobCompletion *PlannerJobCompletion `json:"jobCompletion,omitempty"`
+
 	// User message event
-	UserMessage    *PlannerUserMessage    `json:"userMessage,omitempty"`
+	UserMessage *PlannerUserMessage `json:"userMessage,omitempty"`
 }
 
 type PlannerJobCompletion struct {
