@@ -3,10 +3,8 @@ package model
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -96,26 +94,6 @@ func (c *Configuration) GetKey() string {
 
 func (c *Configuration) GetDescription() string {
 	return "Represents a praetorian-only configuration setting within chariot."
-}
-
-type LimitSetting struct {
-	Count int `json:"count" desc:"The current count of the limit" example:"10"`
-	Limit int `json:"limit" desc:"The maximum limit of the limit" example:"100"`
-}
-
-func (l *LimitSetting) Increment(expectedCount int) expression.Expression {
-	condition := expression.And(
-		expression.Equal(expression.Name("value.count"), expression.Value(expectedCount)),
-		expression.LessThan(expression.Name("value.count"), expression.Name("value.limit")),
-	)
-
-	expr, err := expression.NewBuilder().
-		WithCondition(condition).
-		Build()
-	if err != nil {
-		slog.Error("failed to build condition", "error", err)
-	}
-	return expr
 }
 
 type RateLimit struct {
