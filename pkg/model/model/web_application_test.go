@@ -184,6 +184,11 @@ func TestWebApplicationLabels(t *testing.T) {
 
 	expectedSeedLabels := []string{WebApplicationLabel, AssetLabel, TTLLabel, SeedLabel}
 	assert.ElementsMatch(t, expectedSeedLabels, seedLabels)
+	assert.True(t, seedApp.IsSeed())
+
+	assert.Empty(t, seedApp.BurpSiteID)
+	assert.Empty(t, seedApp.BurpFolderID)
+	assert.Empty(t, seedApp.BurpScheduleID)
 }
 
 func TestWebApplicationTargetInterface(t *testing.T) {
@@ -217,6 +222,40 @@ func TestWebApplicationMergeURLs(t *testing.T) {
 	assert.Contains(t, w1.URLs, "https://admin.example.com")
 	assert.Contains(t, w1.URLs, "https://api.example.com")
 	assert.Len(t, w1.URLs, 2)
+}
+
+func TestWebApplicationMergeBurpMetadata(t *testing.T) {
+	w1 := NewWebApplication("https://app.example.com", "App 1")
+	w1.BurpSiteID = "old-site"
+	w1.BurpFolderID = "old-folder"
+	w1.BurpScheduleID = "old-schedule"
+
+	w2 := NewWebApplication("https://app.example.com", "App 1")
+	w2.BurpSiteID = "new-site"
+	w2.BurpScheduleID = "new-schedule"
+
+	w1.Merge(&w2)
+
+	assert.Equal(t, "new-site", w1.BurpSiteID)
+	assert.Equal(t, "old-folder", w1.BurpFolderID)
+	assert.Equal(t, "new-schedule", w1.BurpScheduleID)
+}
+
+func TestWebApplicationVisitBurpMetadata(t *testing.T) {
+	w1 := NewWebApplication("https://existing.example.com", "Existing")
+	w1.BurpSiteID = "current-site"
+	w1.BurpFolderID = "current-folder"
+	w1.BurpScheduleID = "current-schedule"
+
+	incoming := NewWebApplication("https://incoming.example.com", "Incoming")
+	incoming.BurpSiteID = "incoming-site"
+	incoming.BurpFolderID = "incoming-folder"
+
+	w1.Visit(&incoming)
+
+	assert.Equal(t, "incoming-site", w1.BurpSiteID)
+	assert.Equal(t, "incoming-folder", w1.BurpFolderID)
+	assert.Equal(t, "current-schedule", w1.BurpScheduleID)
 }
 
 func TestWebApplicationRegistryIntegration(t *testing.T) {
