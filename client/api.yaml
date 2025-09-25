@@ -3379,6 +3379,8 @@ components:
       properties:
         BaseAsset:
           type: object
+        BurpMetadata:
+          type: object
         name:
           description: Name of the web application
           example: Example App
@@ -3395,6 +3397,7 @@ components:
           type: array
       required:
       - BaseAsset
+      - BurpMetadata
       - name
       - primary_url
       - urls
