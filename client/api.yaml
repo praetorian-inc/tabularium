@@ -1466,6 +1466,46 @@ components:
       - username
       - value
       type: object
+    conversation:
+      description: Represents a conversation between a user and AI assistant with
+        running capabilities.
+      properties:
+        BaseModel:
+          type: object
+        created:
+          description: Timestamp when the conversation was created (RFC3339).
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        key:
+          description: Unique key for the conversation.
+          example: '#conversation#example-conversation#550e8400-e29b-41d4-a716-446655440000'
+          type: string
+        name:
+          description: Name of the conversation.
+          example: My AI Assistant Chat
+          type: string
+        ttl:
+          description: Time-to-live for the conversation record (Unix timestamp).
+          example: "1706353200"
+          format: int64
+          type: integer
+        username:
+          description: Username who owns the conversation.
+          example: user@example.com
+          type: string
+        uuid:
+          description: UUID of the conversation for reference.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          type: string
+      required:
+      - BaseModel
+      - created
+      - key
+      - name
+      - ttl
+      - username
+      - uuid
+      type: object
     cpe:
       description: Represents a Common Platform Enumeration (CPE) identifier, used
         for naming hardware, software, and operating systems.
@@ -2094,6 +2134,10 @@ components:
           description: Configuration parameters for the job capability.
           example: '{"test": "cve-1111-2222"}'
           type: object
+        conversation:
+          description: UUID of the conversation that initiated this job.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          type: string
         created:
           description: Timestamp when the job was created (RFC3339).
           example: "2023-10-27T10:00:00Z"
@@ -2229,6 +2273,56 @@ components:
       - status
       - username
       - visited
+      type: object
+    message:
+      description: Represents a message within a conversation, with KSUID ordering
+        for proper sequencing.
+      properties:
+        BaseModel:
+          type: object
+        content:
+          description: Content of the message.
+          example: Hello, how can I help you today?
+          type: string
+        conversationId:
+          description: ID of the conversation this message belongs to.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          type: string
+        key:
+          description: Unique key for the message.
+          example: '#message#550e8400-e29b-41d4-a716-446655440000#1sB5tZfLipTVWQWHVKnDFS6kFRK'
+          type: string
+        messageId:
+          description: KSUID for message ordering.
+          example: 1sB5tZfLipTVWQWHVKnDFS6kFRK
+          type: string
+        role:
+          description: Role of the message sender (user, chariot, system).
+          example: user
+          type: string
+        timestamp:
+          description: Timestamp when the message was created (RFC3339).
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        ttl:
+          description: Time-to-live for the message record (Unix timestamp).
+          example: "1706353200"
+          format: int64
+          type: integer
+        username:
+          description: Username who sent the message.
+          example: user@example.com
+          type: string
+      required:
+      - BaseModel
+      - content
+      - conversationId
+      - key
+      - messageId
+      - role
+      - timestamp
+      - ttl
+      - username
       type: object
     metadata:
       description: Contains metadata about an asset, including discovery information,
