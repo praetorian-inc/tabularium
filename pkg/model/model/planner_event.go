@@ -16,14 +16,14 @@ type PlannerEvent struct {
 }
 
 type PlannerJobCompletion struct {
-	JobKey      string   `json:"jobKey"`
-	Source      string   `json:"source"`
-	Target      string   `json:"target"`
-	Status      string   `json:"status"`
-	ResultKeys  []string `json:"resultKeys"`
-	TotalCount  int      `json:"totalCount"`
-	Comment     string   `json:"comment,omitempty"`
-	CompletedAt string   `json:"completedAt"`
+	JobKey      string                   `json:"jobKey"`
+	Source      string                   `json:"source"`
+	Target      string                   `json:"target"`
+	Status      string                   `json:"status"`
+	Results     []map[string]interface{} `json:"results"`
+	TotalCount  int                      `json:"totalCount"`
+	Comment     string                   `json:"comment,omitempty"`
+	CompletedAt string                   `json:"completedAt"`
 }
 
 type PlannerUserMessage struct {
