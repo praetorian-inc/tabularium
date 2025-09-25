@@ -1480,15 +1480,14 @@ components:
           description: Unique key for the conversation.
           example: '#conversation#example-conversation#550e8400-e29b-41d4-a716-446655440000'
           type: string
-        name:
-          description: Name of the conversation.
-          example: My AI Assistant Chat
+        topic:
+          description: Topic extracted from first message (first 256 chars).
+          example: Find all active assets in my infrastructure
           type: string
-        ttl:
-          description: Time-to-live for the conversation record (Unix timestamp).
-          example: "1706353200"
-          format: int64
-          type: integer
+        user:
+          description: Who started the conversation.
+          example: user@example.com
+          type: string
         username:
           description: Username who owns the conversation.
           example: user@example.com
@@ -1501,8 +1500,8 @@ components:
       - BaseModel
       - created
       - key
-      - name
-      - ttl
+      - topic
+      - user
       - username
       - uuid
       type: object
@@ -2199,6 +2198,10 @@ components:
           description: Timestamp when the job was last updated (RFC3339).
           example: "2023-10-27T10:05:00Z"
           type: string
+        user:
+          description: User who initiated this job.
+          example: user@example.com
+          type: string
         username:
           description: Username who initiated or owns the job.
           example: user@example.com
@@ -2297,12 +2300,20 @@ components:
           example: 1sB5tZfLipTVWQWHVKnDFS6kFRK
           type: string
         role:
-          description: Role of the message sender (user, chariot, system).
+          description: Role of the message sender (user, chariot, system, tool).
           example: user
           type: string
         timestamp:
           description: Timestamp when the message was created (RFC3339).
           example: "2023-10-27T10:00:00Z"
+          type: string
+        toolUseContent:
+          description: JSON serialized tool use content for assistant tool use messages.
+          example: '{"name":"query","input":{"node":{"labels":["Asset"]}}}'
+          type: string
+        toolUseId:
+          description: Tool use ID for tool result messages.
+          example: tooluse_kZJMlvQmRJ6eAyJE5GIl7Q
           type: string
         ttl:
           description: Time-to-live for the message record (Unix timestamp).
