@@ -109,6 +109,7 @@ type Credential struct {
 	Category     CredentialCategory `neo4j:"category" json:"category" desc:"Category of the credential"`
 	Type         CredentialType     `neo4j:"type" json:"type" desc:"Type of credential"`
 	Format       CredentialFormat   `neo4j:"format" json:"format" desc:"Format of the credential"`
+	Name         string             `neo4j:"name" json:"name" desc:"Pretty name or user label for the credential"`
 	Created      string             `neo4j:"created" json:"created" desc:"Timestamp when the credential was created"`
 	Updated      string             `neo4j:"updated" json:"updated" desc:"Timestamp when the credential was last updated"`
 }
@@ -136,6 +137,7 @@ func NewCredential(accountKey string, category CredentialCategory, credType Cred
 		AccountKey:   accountKey,
 		Category:     category,
 		Type:         credType,
+		Name:         fmt.Sprintf("%s %s", category, credType),
 	}
 	c.Defaulted()
 	registry.CallHooks(&c)
@@ -160,6 +162,10 @@ func (c *Credential) GetLabels() []string {
 
 func (c *Credential) Valid() bool {
 	return c.CredentialID != "" && c.Key != "" && c.Category != "" && c.Type != ""
+}
+
+func (c *Credential) SetName(name string) {
+	c.Name = name
 }
 
 func init() {
