@@ -29,4 +29,5 @@ type PlannerJobCompletion struct {
 
 type PlannerUserMessage struct {
 	Message string `json:"message"`
+	Mode    string `json:"mode,omitempty"`
 }
