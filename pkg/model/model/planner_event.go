@@ -21,6 +21,7 @@ type PlannerJobCompletion struct {
 	Target      string                   `json:"target"`
 	Status      string                   `json:"status"`
 	Results     []map[string]interface{} `json:"results"`
+	ResultKeys  []string                 `json:"resultKeys"`
 	TotalCount  int                      `json:"totalCount"`
 	Comment     string                   `json:"comment,omitempty"`
 	CompletedAt string                   `json:"completedAt"`
