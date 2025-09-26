@@ -24,6 +24,11 @@ func init() {
 	gob.Register(map[string][]string{})
 }
 
+type AssetBuilder interface {
+	NewAssets() []Asset
+	GraphModel
+}
+
 type CloudResource struct {
 	registry.BaseModel
 	History
@@ -132,7 +137,7 @@ func (c *CloudResource) Merge(other *CloudResource) {
 	c.Status = other.Status
 	c.Visited = other.Visited
 	c.TTL = other.TTL
-	
+
 	if c.Properties == nil {
 		c.Properties = make(map[string]any)
 	}
@@ -141,18 +146,18 @@ func (c *CloudResource) Merge(other *CloudResource) {
 			c.Properties[k] = v
 		}
 	}
-	
+
 	c.OriginationData.Merge(other.OriginationData)
 }
 
 func (c *CloudResource) Visit(other *CloudResource) {
 	c.Visited = other.Visited
 	c.Status = other.Status
-	
+
 	if other.TTL != 0 {
 		c.TTL = other.TTL
 	}
-	
+
 	if c.Properties == nil {
 		c.Properties = make(map[string]any)
 	}
@@ -163,6 +168,6 @@ func (c *CloudResource) Visit(other *CloudResource) {
 			}
 		}
 	}
-	
+
 	c.OriginationData.Visit(other.OriginationData)
 }

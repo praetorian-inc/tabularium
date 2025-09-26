@@ -156,34 +156,33 @@ func (a *GCPResource) NewAssets() []Asset {
 	ipSet := make(map[string]bool)
 	urlSet := make(map[string]bool)
 	domainSet := make(map[string]bool)
+
+	record := func(asset Asset) {
+		asset.CloudId = a.Name
+		asset.CloudService = a.ResourceType.String()
+		asset.CloudAccount = a.AccountRef
+		assets = append(assets, asset)
+	}
+
 	for _, ip := range a.GetIPs() {
 		if _, ok := ipSet[ip]; !ok && ip != "" {
 			ipSet[ip] = true
-			toAdd := NewAsset(ip, ip)
-			toAdd.CloudId = a.Name
-			toAdd.CloudService = a.ResourceType.String()
-			toAdd.CloudAccount = a.AccountRef
-			assets = append(assets, toAdd)
+			record(NewAsset(ip, ip))
 		}
 	}
 	for _, url := range a.GetURLs() {
 		if _, ok := urlSet[url]; !ok && url != "" {
 			urlSet[url] = true
-			toAdd := NewAsset(url, url)
-			toAdd.CloudId = a.Name
-			toAdd.CloudService = a.ResourceType.String()
-			toAdd.CloudAccount = a.AccountRef
-			assets = append(assets, toAdd)
+			record(NewAsset(url, url))
 		}
 	}
 	for _, domain := range a.GetDNS() {
 		if _, ok := domainSet[domain]; !ok && domain != "" {
+			record(NewAsset(domain, domain))
 			domainSet[domain] = true
-			toAdd := NewAsset(domain, domain)
-			toAdd.CloudId = a.Name
-			toAdd.CloudService = a.ResourceType.String()
-			toAdd.CloudAccount = a.AccountRef
-			assets = append(assets, toAdd)
+			for ip := range ipSet {
+				record(NewAsset(domain, ip))
+			}
 		}
 	}
 	return assets

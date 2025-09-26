@@ -212,9 +212,9 @@ func TestCloudResource_WithStatus_PreventTypeErasure(t *testing.T) {
 		// Additional validation: ensure we can access AWS-specific methods
 		if awsResult, ok := result.(*AWSResource); ok {
 			// Test AWS-specific functionality
-			_ = awsResult.GetIPs()   // Should not panic
-			_ = awsResult.GetDNS()   // Should not panic
-			_ = awsResult.NewAsset() // Should not panic
+			_ = awsResult.GetIPs()    // Should not panic
+			_ = awsResult.GetDNS()    // Should not panic
+			_ = awsResult.NewAssets() // Should not panic
 		} else {
 			t.Errorf("Cannot access AWS-specific methods - type was erased")
 		}
@@ -657,7 +657,7 @@ func TestCloudResource_OriginationDataMerge(t *testing.T) {
 		expectedCapability := []string{"amazon", "portscan"}
 		expectedAttackSurface := []string{"external"}
 		expectedOrigins := []string{"amazon", "ipv4"}
-		
+
 		if !reflect.DeepEqual(resource1.Capability, expectedCapability) {
 			t.Errorf("Capability merge failed: expected %v, got %v", expectedCapability, resource1.Capability)
 		}
@@ -710,7 +710,7 @@ func TestCloudResource_OriginationDataVisit(t *testing.T) {
 		if resource1.TTL != 12345 {
 			t.Errorf("Expected TTL 12345, got %d", resource1.TTL)
 		}
-		
+
 		if resource1.Properties["key1"] != "value1" {
 			t.Errorf("Existing property should be preserved")
 		}
@@ -726,19 +726,19 @@ func TestCloudResource_OriginationDataVisit(t *testing.T) {
 				}
 			}
 		}
-		
+
 		sortStringSlice(resource1.Capability)
 		sortStringSlice(resource1.AttackSurface)
 		sortStringSlice(resource1.Origins)
-		
+
 		expectedCapability := []string{"amazon", "dns", "portscan"}
 		expectedAttackSurface := []string{"external", "internal"}
 		expectedOrigins := []string{"amazon", "dns", "ipv4"}
-		
+
 		sortStringSlice(expectedCapability)
 		sortStringSlice(expectedAttackSurface)
 		sortStringSlice(expectedOrigins)
-		
+
 		if !reflect.DeepEqual(resource1.Capability, expectedCapability) {
 			t.Errorf("Capability visit failed: expected %v, got %v", expectedCapability, resource1.Capability)
 		}
@@ -763,7 +763,7 @@ func TestAWSResource_OriginationDataIntegration(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create AWSResource: %v", err)
 		}
-		
+
 		// Set some origination data
 		resource1.OriginationData = OriginationData{
 			Capability: []string{"amazon"},
@@ -779,14 +779,14 @@ func TestAWSResource_OriginationDataIntegration(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create second AWSResource: %v", err)
 		}
-		
+
 		resource2.OriginationData = OriginationData{
 			Capability: []string{"portscan"},
 			Origins:    []string{"discovery"},
 		}
 
 		resource1.Merge(&resource2)
-		
+
 		expectedCapability := []string{"portscan"}
 		if !reflect.DeepEqual(resource1.Capability, expectedCapability) {
 			t.Errorf("AWS resource merge failed: expected %v, got %v", expectedCapability, resource1.Capability)
@@ -809,7 +809,7 @@ func TestAWSResource_OriginationDataIntegration(t *testing.T) {
 		sortStringSlice(resource1.Capability)
 		expectedCapability = []string{"amazon", "portscan"}
 		sortStringSlice(expectedCapability)
-		
+
 		if !reflect.DeepEqual(resource1.Capability, expectedCapability) {
 			t.Errorf("AWS resource visit failed: expected %v, got %v", expectedCapability, resource1.Capability)
 		}

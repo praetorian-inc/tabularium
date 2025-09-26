@@ -124,7 +124,7 @@ func (a *AWSResource) Visit(otherModel any) error {
 }
 
 // Return an Asset that matches the legacy integration
-func (a *AWSResource) NewAsset() []Asset {
+func (a *AWSResource) NewAssets() []Asset {
 	assets := make([]Asset, 0)
 	dns := a.GetDNS()
 	ips := a.GetIPs()
@@ -150,6 +150,14 @@ func (a *AWSResource) NewAsset() []Asset {
 			record(NewAsset(dns, ip))
 		}
 		record(NewAsset(ip, ip))
+	}
+
+	if len(assets) == 0 {
+		identifier := a.Name // Use ARN as fallback
+		if dns != "" {
+			identifier = dns
+		}
+		record(NewAsset(identifier, identifier))
 	}
 
 	return assets
