@@ -133,42 +133,23 @@ func (a *AWSResource) NewAsset() []Asset {
 	// Extract service name from ARN (same logic as Amazon capability)
 	service := a.extractService()
 
+	record := func(asset Asset) {
+		asset.CloudId = a.Name
+		asset.CloudService = service
+		asset.CloudAccount = a.AccountRef
+		assets = append(assets, asset)
+	}
+
 	// Create assets from URLs - NewAsset(url, arn)
 	for _, url := range urls {
-		asset := NewAsset(url, a.Name)
-		asset.CloudId = a.Name
-		asset.CloudService = service
-		asset.CloudAccount = a.AccountRef
-		assets = append(assets, asset)
+		record(NewAsset(url, a.Name))
 	}
 
-	// Create assets from IPs
 	for _, ip := range ips {
-		var asset Asset
 		if dns != "" {
-			// NewAsset(dns, dns) when both DNS and IP exist - DNS takes precedence as identifier
-			asset = NewAsset(dns, dns)
-		} else {
-			// NewAsset(ip, ip) when only IP exists
-			asset = NewAsset(ip, ip)
+			record(NewAsset(dns, ip))
 		}
-		asset.CloudId = a.Name
-		asset.CloudService = service
-		asset.CloudAccount = a.AccountRef
-		assets = append(assets, asset)
-	}
-
-	// If no URLs or IPs, create a fallback asset using the ARN
-	if len(assets) == 0 {
-		identifier := a.Name // Use ARN as fallback
-		if dns != "" {
-			identifier = dns
-		}
-		asset := NewAsset(identifier, identifier)
-		asset.CloudId = a.Name
-		asset.CloudService = service
-		asset.CloudAccount = a.AccountRef
-		assets = append(assets, asset)
+		record(NewAsset(ip, ip))
 	}
 
 	return assets
