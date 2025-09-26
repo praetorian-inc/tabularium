@@ -55,6 +55,7 @@ func (a *AzureResource) GetDisplayName() string {
 func (a *AzureResource) Defaulted() {
 	a.Origins = []string{"azure"}
 	a.AttackSurface = []string{"cloud"}
+	a.CloudResource.Defaulted()
 }
 
 func (a *AzureResource) GetHooks() []registry.Hook {

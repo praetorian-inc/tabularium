@@ -45,6 +45,7 @@ func NewGCPResource(name, accountRef string, rtype CloudResourceType, properties
 func (a *GCPResource) Defaulted() {
 	a.Origins = []string{"gcp"}
 	a.AttackSurface = []string{"cloud"}
+	a.CloudResource.Defaulted()
 }
 
 func (a *GCPResource) GetDisplayName() string {
