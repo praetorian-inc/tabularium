@@ -42,6 +42,11 @@ func NewGCPResource(name, accountRef string, rtype CloudResourceType, properties
 	return r, nil
 }
 
+func (a *GCPResource) Defaulted() {
+	a.Origins = []string{"gcp"}
+	a.AttackSurface = []string{"cloud"}
+}
+
 func (a *GCPResource) GetDisplayName() string {
 	parts := strings.Split(a.Name, "/")
 	if len(parts) == 6 {

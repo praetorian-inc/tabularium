@@ -47,6 +47,11 @@ func NewAWSResource(name, accountRef string, rtype CloudResourceType, properties
 	return r, nil
 }
 
+func (a *AWSResource) Defaulted() {
+	a.Origins = []string{"amazon"}
+	a.AttackSurface = []string{"cloud"}
+}
+
 func (a *AWSResource) GetHooks() []registry.Hook {
 	hooks := []registry.Hook{
 		{

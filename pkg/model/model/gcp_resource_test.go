@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGCPResource_IsPrivate(t *testing.T) {
@@ -439,4 +440,56 @@ func TestNewGCPResource(t *testing.T) {
 	if !slices.Equal(actualLabels, expectedLabels) {
 		t.Errorf("expected labels %v, got %v", expectedLabels, actualLabels)
 	}
+	
+	// Test defaulted origination data fields
+	expectedOrigins := []string{"gcp"}
+	if !slices.Equal(gcpRes.Origins, expectedOrigins) {
+		t.Errorf("expected Origins %v, got %v", expectedOrigins, gcpRes.Origins)
+	}
+	expectedAttackSurface := []string{"cloud"}
+	if !slices.Equal(gcpRes.AttackSurface, expectedAttackSurface) {
+		t.Errorf("expected AttackSurface %v, got %v", expectedAttackSurface, gcpRes.AttackSurface)
+	}
+}
+
+func TestGCPResource_Defaulted(t *testing.T) {
+	t.Run("Defaulted sets correct Origins and AttackSurface values", func(t *testing.T) {
+		gcpRes := &GCPResource{
+			CloudResource: CloudResource{
+				Name:         "projects/test-project/zones/us-central1-a/instances/test-vm",
+				Provider:     "gcp",
+				ResourceType: GCPResourceInstance,
+				AccountRef:   "test-project",
+			},
+		}
+		
+		// Call Defaulted method directly
+		gcpRes.Defaulted()
+		
+		// Check that Origins is set to ["gcp"]
+		expectedOrigins := []string{"gcp"}
+		assert.Equal(t, expectedOrigins, gcpRes.Origins, "Origins should be set to ['gcp']")
+		
+		// Check that AttackSurface is set to ["cloud"]
+		expectedAttackSurface := []string{"cloud"}
+		assert.Equal(t, expectedAttackSurface, gcpRes.AttackSurface, "AttackSurface should be set to ['cloud']")
+	})
+	
+	t.Run("NewGCPResource calls Defaulted automatically", func(t *testing.T) {
+		name := "projects/test-project/zones/us-central1-a/instances/test-instance"
+		gcpRes, err := NewGCPResource(
+			name,
+			"test-project",
+			GCPResourceInstance,
+			map[string]any{"location": "us-central1-a"},
+		)
+		require.NoError(t, err)
+		
+		// Verify that Origins and AttackSurface were set by NewGCPResource calling Defaulted()
+		expectedOrigins := []string{"gcp"}
+		assert.Equal(t, expectedOrigins, gcpRes.Origins, "NewGCPResource should call Defaulted() which sets Origins to ['gcp']")
+		
+		expectedAttackSurface := []string{"cloud"}
+		assert.Equal(t, expectedAttackSurface, gcpRes.AttackSurface, "NewGCPResource should call Defaulted() which sets AttackSurface to ['cloud']")
+	})
 }
