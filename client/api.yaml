@@ -1292,6 +1292,8 @@ components:
           type: object
         History:
           type: object
+        OriginationData:
+          type: object
         accountRef:
           type: string
         created:
@@ -1340,6 +1342,7 @@ components:
       required:
       - BaseModel
       - History
+      - OriginationData
       - accountRef
       - created
       - displayName
@@ -2292,7 +2295,7 @@ components:
       - visited
       type: object
     message:
-      description: Represents a message within a conversation, with KSUID ordering
+      description: Represents a message within a conversation, with UUIDv7 ordering
         for proper sequencing.
       properties:
         BaseModel:
@@ -2310,8 +2313,8 @@ components:
           example: '#message#550e8400-e29b-41d4-a716-446655440000#1sB5tZfLipTVWQWHVKnDFS6kFRK'
           type: string
         messageId:
-          description: KSUID for message ordering.
-          example: 1sB5tZfLipTVWQWHVKnDFS6kFRK
+          description: UUIDv7 for message ordering.
+          example: 01234567-89ab-7def-0123-456789abcdef
           type: string
         role:
           description: Role of the message sender (user, chariot, system, tool).
@@ -2355,6 +2358,8 @@ components:
       properties:
         BaseModel:
           type: object
+        OriginationData:
+          type: object
         asname:
           description: Autonomous System name.
           example: GOOGLE
@@ -2367,18 +2372,6 @@ components:
           description: Autonomous System IP range.
           example: 172.217.0.0/16
           type: string
-        attackSurface:
-          description: List of attack surface identifiers related to the asset.
-          example: '["internal", "external"]'
-          items:
-            type: string
-          type: array
-        capability:
-          description: List of all capabilities that have discovered this asset.
-          example: '["amazon", "portscan"]'
-          items:
-            type: string
-          type: array
         city:
           description: City associated with the asset.
           example: Mountain View
@@ -2412,12 +2405,6 @@ components:
           description: Date the asset registration expires (RFC3339).
           example: "2024-09-15T00:00:00Z"
           type: string
-        origins:
-          description: List of originating asset classes for this entity
-          example: '["amazon", "ipv4"]'
-          items:
-            type: string
-          type: array
         province:
           description: Province or state associated with the asset.
           example: California
@@ -2440,6 +2427,7 @@ components:
           type: string
       required:
       - BaseModel
+      - OriginationData
       type: object
     mitretechnique:
       description: Represents a MITRE ATT&CK technique for a vulnerability.
