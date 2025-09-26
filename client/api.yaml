@@ -686,6 +686,10 @@ components:
           description: Velociraptor flow ID for tracking execution.
           example: F.D36EN790K9V6G
           type: string
+        healthCheck:
+          description: Whether to trigger a healthcheck after task completion.
+          example: "true"
+          type: boolean
         key:
           description: Unique key for the Aegis management task.
           example: '#aegis-mgmt#user@example.com#tunnel_management#2024-01-15T10:30:00Z'
@@ -725,6 +729,7 @@ components:
       - aegisManagementCapability
       - async
       - created
+      - healthCheck
       - key
       - parameters
       - status
@@ -797,6 +802,10 @@ components:
           description: The task executor that can execute this management capability
           example: aegis
           type: string
+        healthCheck:
+          description: If true, triggers a healthcheck after the management task completes
+          example: "true"
+          type: boolean
         integration:
           description: Whether or not this management capability is an integration
             with an external service
@@ -884,6 +893,10 @@ components:
           description: Velociraptor flow ID for tracking execution.
           example: F.D36EN790K9V6G
           type: string
+        healthCheck:
+          description: Whether to trigger a healthcheck after task completion.
+          example: "true"
+          type: boolean
         key:
           description: Unique key for the Aegis management task.
           example: '#aegis-mgmt#user@example.com#tunnel_management#2024-01-15T10:30:00Z'
@@ -923,6 +936,7 @@ components:
       - aegisManagementCapability
       - async
       - created
+      - healthCheck
       - key
       - parameters
       - status
