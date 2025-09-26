@@ -17,7 +17,6 @@ func TestConversation_NewConversation(t *testing.T) {
 	assert.Equal(t, topic, conv.Topic)
 	assert.NotEmpty(t, conv.UUID)
 	assert.NotEmpty(t, conv.Created)
-	assert.NotEmpty(t, conv.Source)
 	assert.NotEmpty(t, conv.Key)
 	assert.True(t, strings.HasPrefix(conv.Key, "#conversation#"))
 	assert.True(t, conv.Valid())
@@ -40,10 +39,6 @@ func TestConversation_Defaulted(t *testing.T) {
 	conv.Defaulted()
 
 	assert.NotEmpty(t, conv.Created)
-	assert.NotEmpty(t, conv.Source)
-
-	// Verify TTL is approximately 30 days from now
-	assert.NotEmpty(t, conv.Created) // Allow 60 seconds tolerance
 }
 
 func TestConversation_Hooks(t *testing.T) {

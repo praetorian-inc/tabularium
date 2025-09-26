@@ -330,6 +330,16 @@ func TestNewAWSResource_Fields(t *testing.T) {
 	if awsRes.AccountRef != accountRef {
 		t.Errorf("expected AccountRef '%s', got '%s'", accountRef, awsRes.AccountRef)
 	}
+	
+	// Test defaulted origination data fields
+	expectedOrigins := []string{"amazon"}
+	if !slices.Equal(awsRes.Origins, expectedOrigins) {
+		t.Errorf("expected Origins %v, got %v", expectedOrigins, awsRes.Origins)
+	}
+	expectedAttackSurface := []string{"cloud"}
+	if !slices.Equal(awsRes.AttackSurface, expectedAttackSurface) {
+		t.Errorf("expected AttackSurface %v, got %v", expectedAttackSurface, awsRes.AttackSurface)
+	}
 }
 
 func TestNewAWSResource_Labels(t *testing.T) {
@@ -914,3 +924,44 @@ The fix ensures:
 2. Valid Asset keys by using ARN as fallback when DNS/IP are empty
 3. Maintains backward compatibility for EC2 instances with DNS/IP
 */
+
+func TestAWSResource_Defaulted(t *testing.T) {
+	t.Run("Defaulted sets correct Origins and AttackSurface values", func(t *testing.T) {
+		awsRes := &AWSResource{
+			CloudResource: CloudResource{
+				Name:         "arn:aws:s3:::test-bucket",
+				Provider:     "aws",
+				ResourceType: AWSS3Bucket,
+				AccountRef:   "123456789012",
+			},
+		}
+		
+		// Call Defaulted method directly
+		awsRes.Defaulted()
+		
+		// Check that Origins is set to ["amazon"]
+		expectedOrigins := []string{"amazon"}
+		assert.Equal(t, expectedOrigins, awsRes.Origins, "Origins should be set to ['amazon']")
+		
+		// Check that AttackSurface is set to ["cloud"]
+		expectedAttackSurface := []string{"cloud"}
+		assert.Equal(t, expectedAttackSurface, awsRes.AttackSurface, "AttackSurface should be set to ['cloud']")
+	})
+	
+	t.Run("NewAWSResource calls Defaulted automatically", func(t *testing.T) {
+		awsRes, err := NewAWSResource(
+			"arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0",
+			"123456789012",
+			AWSEC2Instance,
+			map[string]any{"region": "us-east-1"},
+		)
+		require.NoError(t, err)
+		
+		// Verify that Origins and AttackSurface were set by NewAWSResource calling Defaulted()
+		expectedOrigins := []string{"amazon"}
+		assert.Equal(t, expectedOrigins, awsRes.Origins, "NewAWSResource should call Defaulted() which sets Origins to ['amazon']")
+		
+		expectedAttackSurface := []string{"cloud"}
+		assert.Equal(t, expectedAttackSurface, awsRes.AttackSurface, "NewAWSResource should call Defaulted() which sets AttackSurface to ['cloud']")
+	})
+}

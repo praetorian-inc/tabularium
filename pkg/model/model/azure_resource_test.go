@@ -3,9 +3,11 @@ package model
 import (
 	"fmt"
 	"net"
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // Test helper structs to override methods for complete coverage testing
@@ -504,4 +506,57 @@ func TestNewAzureResource_Fields(t *testing.T) {
 	if az.ResourceGroup != rg {
 		t.Errorf("expected ResourceGroup '%s', got '%s'", rg, az.ResourceGroup)
 	}
+	
+	// Test defaulted origination data fields
+	expectedOrigins := []string{"azure"}
+	if !slices.Equal(az.Origins, expectedOrigins) {
+		t.Errorf("expected Origins %v, got %v", expectedOrigins, az.Origins)
+	}
+	expectedAttackSurface := []string{"cloud"}
+	if !slices.Equal(az.AttackSurface, expectedAttackSurface) {
+		t.Errorf("expected AttackSurface %v, got %v", expectedAttackSurface, az.AttackSurface)
+	}
+}
+
+func TestAzureResource_Defaulted(t *testing.T) {
+	t.Run("Defaulted sets correct Origins and AttackSurface values", func(t *testing.T) {
+		azureRes := &AzureResource{
+			CloudResource: CloudResource{
+				Name:         "/subscriptions/123/resourceGroups/test/providers/Microsoft.Compute/virtualMachines/vm-test",
+				Provider:     "azure",
+				ResourceType: AzureVM,
+				AccountRef:   "123",
+			},
+		}
+		
+		// Call Defaulted method directly
+		azureRes.Defaulted()
+		
+		// Check that Origins is set to ["azure"]
+		expectedOrigins := []string{"azure"}
+		assert.Equal(t, expectedOrigins, azureRes.Origins, "Origins should be set to ['azure']")
+		
+		// Check that AttackSurface is set to ["cloud"]
+		expectedAttackSurface := []string{"cloud"}
+		assert.Equal(t, expectedAttackSurface, azureRes.AttackSurface, "AttackSurface should be set to ['cloud']")
+	})
+	
+	t.Run("NewAzureResource calls Defaulted automatically", func(t *testing.T) {
+		sub := "e7c75ba8-b0ef-4ef8-bad2-fc8c30a92c70"
+		name := fmt.Sprintf("/subscriptions/%s/resourceGroups/test/providers/Microsoft.Compute/virtualMachines/test-vm", sub)
+		azureRes, err := NewAzureResource(
+			name,
+			sub,
+			AzureVM,
+			map[string]any{"location": "eastus"},
+		)
+		require.NoError(t, err)
+		
+		// Verify that Origins and AttackSurface were set by NewAzureResource calling Defaulted()
+		expectedOrigins := []string{"azure"}
+		assert.Equal(t, expectedOrigins, azureRes.Origins, "NewAzureResource should call Defaulted() which sets Origins to ['azure']")
+		
+		expectedAttackSurface := []string{"cloud"}
+		assert.Equal(t, expectedAttackSurface, azureRes.AttackSurface, "NewAzureResource should call Defaulted() which sets AttackSurface to ['cloud']")
+	})
 }
