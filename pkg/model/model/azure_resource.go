@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	"maps"
 	"net"
 	"strings"
 
@@ -119,16 +118,7 @@ func (a *AzureResource) Merge(otherModel any) {
 	if !ok {
 		return
 	}
-	a.Status = other.Status
-	a.Visited = other.Visited
-
-	// Safely copy properties with nil checks
-	if a.Properties == nil {
-		a.Properties = make(map[string]any)
-	}
-	if other.Properties != nil {
-		maps.Copy(a.Properties, other.Properties)
-	}
+	a.CloudResource.Merge(&other.CloudResource)
 }
 
 func (a *AzureResource) Visit(otherModel any) error {
@@ -136,21 +126,7 @@ func (a *AzureResource) Visit(otherModel any) error {
 	if !ok {
 		return fmt.Errorf("expected *AzureResource, got %T", otherModel)
 	}
-	a.Visited = other.Visited
-	a.Status = other.Status
-
-	// Safely copy properties with nil checks
-	if a.Properties == nil {
-		a.Properties = make(map[string]any)
-	}
-	if other.Properties != nil {
-		maps.Copy(a.Properties, other.Properties)
-	}
-
-	// Fix TTL update logic: update if other has a valid TTL
-	if other.TTL != 0 {
-		a.TTL = other.TTL
-	}
+	a.CloudResource.Visit(&other.CloudResource)
 	return nil
 }
 func (a *AzureResource) WithStatus(status string) Target {

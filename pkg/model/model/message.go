@@ -23,7 +23,7 @@ type Message struct {
 	Role           string `dynamodbav:"role" json:"role" desc:"Role of the message sender (user, chariot, system, tool)." example:"user"`
 	Content        string `dynamodbav:"content" json:"content" desc:"Content of the message." example:"Hello, how can I help you today?"`
 	Timestamp      string `dynamodbav:"timestamp" json:"timestamp" desc:"Timestamp when the message was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
-	MessageID      string `dynamodbav:"messageId" json:"messageId" desc:"KSUID for message ordering." example:"1sB5tZfLipTVWQWHVKnDFS6kFRK"`
+	MessageID      string `dynamodbav:"messageId" json:"messageId" desc:"UUIDv7 for message ordering." example:"01234567-89ab-7def-0123-456789abcdef"`
 	TTL            int64  `dynamodbav:"ttl" json:"ttl" desc:"Time-to-live for the message record (Unix timestamp)." example:"1706353200"`
 	ToolUseID      string `dynamodbav:"toolUseId,omitempty" json:"toolUseId,omitempty" desc:"Tool use ID for tool result messages." example:"tooluse_kZJMlvQmRJ6eAyJE5GIl7Q"`
 	ToolUseContent string `dynamodbav:"toolUseContent,omitempty" json:"toolUseContent,omitempty" desc:"JSON serialized tool use content for assistant tool use messages." example:"{\"name\":\"query\",\"input\":{\"node\":{\"labels\":[\"Asset\"]}}}"`
@@ -38,7 +38,7 @@ func (m *Message) GetKey() string {
 }
 
 func (m *Message) GetDescription() string {
-	return "Represents a message within a conversation, with KSUID ordering for proper sequencing."
+	return "Represents a message within a conversation, with UUIDv7 ordering for proper sequencing."
 }
 
 func (m *Message) Defaulted() {

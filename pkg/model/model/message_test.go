@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/segmentio/ksuid"
+	"github.com/google/uuid"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -40,7 +40,7 @@ func TestMessage_GetKey(t *testing.T) {
 
 func TestMessage_GetDescription(t *testing.T) {
 	msg := &Message{}
-	expected := "Represents a message within a conversation, with KSUID ordering for proper sequencing."
+	expected := "Represents a message within a conversation, with UUIDv7 ordering for proper sequencing."
 	assert.Equal(t, expected, msg.GetDescription())
 }
 
@@ -56,9 +56,9 @@ func TestMessage_Defaulted(t *testing.T) {
 	future30Days := Future(24 * 30)
 	assert.InDelta(t, future30Days, msg.TTL, 60) // Allow 60 seconds tolerance
 	
-	// Verify KSUID format
-	_, err := ksuid.Parse(msg.MessageID)
-	assert.NoError(t, err, "MessageID should be a valid KSUID")
+	// Verify UUIDv7 format
+	_, err := uuid.Parse(msg.MessageID)
+	assert.NoError(t, err, "MessageID should be a valid UUID")
 }
 
 func TestMessage_Hooks(t *testing.T) {
@@ -77,14 +77,14 @@ func TestMessage_Hooks(t *testing.T) {
 	assert.NotEmpty(t, msg.MessageID)
 	assert.True(t, strings.HasPrefix(msg.Key, "#message#"+conversationID+"#"))
 	
-	// Verify KSUID format in key
+	// Verify UUID format in key
 	keyParts := strings.Split(msg.Key, "#")
 	require.Len(t, keyParts, 4)
 	messageIDFromKey := keyParts[3]
 	assert.Equal(t, msg.MessageID, messageIDFromKey)
 	
-	// Verify it's a valid KSUID
-	_, err := ksuid.Parse(messageIDFromKey)
+	// Verify it's a valid UUID
+	_, err := uuid.Parse(messageIDFromKey)
 	assert.NoError(t, err)
 }
 
@@ -105,7 +105,7 @@ func TestMessage_Hooks_ExistingKey(t *testing.T) {
 }
 
 func TestMessage_Hooks_ExistingMessageID(t *testing.T) {
-	existingMessageID := "1sB5tZfLipTVWQWHVKnDFS6kFRK"
+	existingMessageID := "01234567-89ab-7def-0123-456789abcdef"
 	msg := &Message{
 		ConversationID: "conv-123",
 		MessageID:      existingMessageID,
@@ -171,7 +171,7 @@ func TestMessage_Valid(t *testing.T) {
 				Role:           "user",
 				Content:        "Hello",
 			},
-			expected: false,
+			expected: true,
 		},
 		{
 			name: "empty conversation ID",
@@ -192,35 +192,35 @@ func TestMessage_Valid(t *testing.T) {
 	}
 }
 
-func TestMessage_KSUID_Ordering(t *testing.T) {
-	// Test that messages created in sequence have proper KSUID ordering
+func TestMessage_UUID_Ordering(t *testing.T) {
+	// Test that messages created in sequence have proper UUIDv7 ordering
 	conversationID := "conv-ordering-test"
 	username := "user@example.com"
 	
 	var messages []Message
-	var ksuids []ksuid.KSUID
+	var uuids []uuid.UUID
 	
 	// Create messages with small delays to ensure ordering
 	for i := 0; i < 5; i++ {
 		msg := NewMessage(conversationID, "user", "Message "+string(rune('A'+i)), username)
 		messages = append(messages, msg)
 		
-		parsed, err := ksuid.Parse(msg.MessageID)
+		parsed, err := uuid.Parse(msg.MessageID)
 		require.NoError(t, err)
-		ksuids = append(ksuids, parsed)
+		uuids = append(uuids, parsed)
 		
 		// Small delay to ensure different timestamps
 		time.Sleep(1 * time.Millisecond)
 	}
 	
-	// Verify KSUIDs are in ascending order (chronological)
-	for i := 1; i < len(ksuids); i++ {
-		assert.True(t, ksuids[i-1].Time().Before(ksuids[i].Time()) || 
-			ksuids[i-1].Time().Equal(ksuids[i].Time()),
-			"KSUID %d should be <= KSUID %d chronologically", i-1, i)
+	// Verify UUIDs are in ascending order (chronological for UUIDv7)
+	for i := 1; i < len(uuids); i++ {
+		// UUIDv7 has timestamp in most significant bits, so string comparison works
+		assert.True(t, uuids[i-1].String() <= uuids[i].String(),
+			"UUID %d should be <= UUID %d chronologically", i-1, i)
 	}
 	
-	// Test sorting by KSUID works correctly
+	// Test sorting by UUID works correctly
 	shuffled := make([]Message, len(messages))
 	copy(shuffled, messages)
 	
@@ -230,13 +230,13 @@ func TestMessage_KSUID_Ordering(t *testing.T) {
 		shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
 	}
 	
-	// Sort by MessageID (KSUID) - this should put them back in chronological order
+	// Sort by MessageID (UUID) - this should put them back in chronological order
 	sort.Slice(shuffled, func(i, j int) bool {
 		return shuffled[i].MessageID < shuffled[j].MessageID
 	})
 	
 	// Verify they're back in chronological order by comparing with original order
-	// Sort original messages by KSUID too for comparison
+	// Sort original messages by UUID too for comparison
 	originalSorted := make([]Message, len(messages))
 	copy(originalSorted, messages)
 	sort.Slice(originalSorted, func(i, j int) bool {
@@ -249,8 +249,8 @@ func TestMessage_KSUID_Ordering(t *testing.T) {
 	}
 }
 
-func TestMessage_KSUID_Uniqueness(t *testing.T) {
-	// Test that multiple messages get unique KSUIDs
+func TestMessage_UUID_Uniqueness(t *testing.T) {
+	// Test that multiple messages get unique UUIDs
 	conversationID := "conv-unique-test"
 	username := "user@example.com"
 	
@@ -268,8 +268,8 @@ func TestMessage_KSUID_Uniqueness(t *testing.T) {
 		assert.False(t, keys[msg.Key], "Key should be unique")
 		keys[msg.Key] = true
 		
-		// Verify KSUID format
-		_, err := ksuid.Parse(msg.MessageID)
+		// Verify UUID format
+		_, err := uuid.Parse(msg.MessageID)
 		assert.NoError(t, err)
 	}
 }
@@ -361,8 +361,8 @@ func TestMessage_SecurityScenarios(t *testing.T) {
 				assert.NotEmpty(t, msg.Key)
 				assert.NotEmpty(t, msg.MessageID)
 				
-				// Verify KSUID is still valid
-				_, err := ksuid.Parse(msg.MessageID)
+				// Verify UUID is still valid
+				_, err := uuid.Parse(msg.MessageID)
 				assert.NoError(t, err)
 			}
 		})

@@ -195,43 +195,57 @@ func TestMetadata_Merge(t *testing.T) {
 				ASNumber: "AS12345",
 			},
 		},
-		{
+{
 			name: "merge populated base with populated slices",
 			base: Metadata{
 				ASNumber: "AS12345",
 			},
 			other: Metadata{
-				AttackSurface: []string{"b", "c"},
+				OriginationData: OriginationData{
+					AttackSurface: []string{"b", "c"},
+				},
 			},
 			expect: Metadata{
-				ASNumber:      "AS12345",
-				AttackSurface: []string{"b", "c"},
+				ASNumber: "AS12345",
+				OriginationData: OriginationData{
+					AttackSurface: []string{"b", "c"},
+				},
 			},
 		},
 		{
 			name: "merge populated base with populated other slices",
 			base: Metadata{
-				ASNumber:      "AS12345",
-				AttackSurface: []string{"a", "b"},
+				ASNumber: "AS12345",
+				OriginationData: OriginationData{
+					AttackSurface: []string{"a", "b"},
+				},
 			},
 			other: Metadata{},
 			expect: Metadata{
-				ASNumber:      "AS12345",
-				AttackSurface: []string{"a", "b"},
+				ASNumber: "AS12345",
+				OriginationData: OriginationData{
+					AttackSurface: []string{"a", "b"},
+				},
 			},
 		},
 		{
 			name: "merge populated base with both populated slices",
 			base: Metadata{
-				ASNumber:      "AS12345",
-				AttackSurface: []string{"a", "b"},
+				ASNumber: "AS12345",
+				OriginationData: OriginationData{
+					AttackSurface: []string{"a", "b"},
+				},
 			},
 			other: Metadata{
-				AttackSurface: []string{"b", "c"},
+				OriginationData: OriginationData{
+					AttackSurface: []string{"b", "c"},
+				},
 			},
 			expect: Metadata{
-				ASNumber:      "AS12345",
-				AttackSurface: []string{"b", "c"},
+				ASNumber: "AS12345",
+				OriginationData: OriginationData{
+					AttackSurface: []string{"b", "c"},
+				},
 			},
 		},
 	}
@@ -631,42 +645,58 @@ func TestMetadata_VisitOrigin(t *testing.T) {
 			name: "append new origin values",
 			base: Metadata{
 				ASNumber: "1234",
-				Origins:  []string{"a", "b"},
+				OriginationData: OriginationData{
+					Origins: []string{"a", "b"},
+				},
 			},
 			other: Metadata{
-				Origins: []string{"b", "c"},
+				OriginationData: OriginationData{
+					Origins: []string{"b", "c"},
+				},
 			},
 			expect: Metadata{
 				ASNumber: "1234",
-				Origins:  []string{"a", "b", "c"},
+				OriginationData: OriginationData{
+					Origins: []string{"a", "b", "c"},
+				},
 			},
 		},
 		{
 			name: "empty origin values",
 			base: Metadata{
 				ASNumber: "1234",
-				Origins:  []string{},
+				OriginationData: OriginationData{
+					Origins: []string{},
+				},
 			},
 			other: Metadata{
-				Origins: []string{},
+				OriginationData: OriginationData{
+					Origins: []string{},
+				},
 			},
 			expect: Metadata{
 				ASNumber: "1234",
-				Origins:  []string{},
+				OriginationData: OriginationData{
+					Origins: []string{},
+				},
 			},
 		},
 		{
 			name: "other origin is nil",
 			base: Metadata{
 				ASNumber: "1234",
-				Origins:  []string{"a", "b"},
+				OriginationData: OriginationData{
+					Origins: []string{"a", "b"},
+				},
 			},
 			other: Metadata{
 				ASNumber: "5678",
 			},
 			expect: Metadata{
 				ASNumber: "5678",
-				Origins:  []string{"a", "b"},
+				OriginationData: OriginationData{
+					Origins: []string{"a", "b"},
+				},
 			},
 		},
 		{
@@ -675,11 +705,15 @@ func TestMetadata_VisitOrigin(t *testing.T) {
 				ASNumber: "1234",
 			},
 			other: Metadata{
-				Origins: []string{"a", "b"},
+				OriginationData: OriginationData{
+					Origins: []string{"a", "b"},
+				},
 			},
 			expect: Metadata{
 				ASNumber: "1234",
-				Origins:  []string{"a", "b"},
+				OriginationData: OriginationData{
+					Origins: []string{"a", "b"},
+				},
 			},
 		},
 		{
@@ -688,19 +722,25 @@ func TestMetadata_VisitOrigin(t *testing.T) {
 				ASNumber:  "1234",
 				ASName:    "old name",
 				Registrar: "old registrar",
-				Origins:   []string{"a"},
+				OriginationData: OriginationData{
+					Origins: []string{"a"},
+				},
 			},
 			other: Metadata{
 				ASName:   "new name",
 				Province: "new province",
-				Origins:  []string{"b"},
+				OriginationData: OriginationData{
+					Origins: []string{"b"},
+				},
 			},
 			expect: Metadata{
 				ASNumber:  "1234",
 				ASName:    "new name",
 				Province:  "new province",
 				Registrar: "old registrar",
-				Origins:   []string{"a", "b"},
+				OriginationData: OriginationData{
+					Origins: []string{"a", "b"},
+				},
 			},
 		},
 	}
@@ -730,11 +770,11 @@ func TestMetadata_VisitOrigin(t *testing.T) {
 			// Test origin slice specifically
 			// Convert slices to maps for comparison since order doesn't matter
 			gotOrigin := make(map[string]bool)
-			for _, s := range tt.base.Origins {
+			for _, s := range tt.base.OriginationData.Origins {
 				gotOrigin[s] = true
 			}
 			expectOrigin := make(map[string]bool)
-			for _, s := range tt.expect.Origins {
+			for _, s := range tt.expect.OriginationData.Origins {
 				expectOrigin[s] = true
 			}
 

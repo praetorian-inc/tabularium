@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -612,6 +613,206 @@ func TestCloudResource_TTLUpdateLogic(t *testing.T) {
 		t.Logf("   New logic: if (otherTTL != 0) { currentTTL = otherTTL }")
 		t.Logf("   Benefit: Resources with any TTL can be updated from valid sources")
 		t.Logf("   Result: TTL initialization and updates both work correctly")
+	})
+}
+
+func TestCloudResource_OriginationDataMerge(t *testing.T) {
+	t.Run("CloudResource should merge OriginationData correctly", func(t *testing.T) {
+		resource1 := &CloudResource{
+			Key:          "test1",
+			Name:         "test1",
+			Provider:     "aws",
+			ResourceType: "instance",
+			Status:       "active",
+			Properties:   map[string]any{"key1": "value1"},
+			OriginationData: OriginationData{
+				Capability:    []string{"dns"},
+				AttackSurface: []string{"internal"},
+				Origins:       []string{"dns"},
+			},
+		}
+
+		resource2 := &CloudResource{
+			Key:          "test2",
+			Name:         "test2",
+			Provider:     "aws",
+			ResourceType: "instance",
+			Status:       "updated",
+			Properties:   map[string]any{"key2": "value2"},
+			OriginationData: OriginationData{
+				Capability:    []string{"amazon", "portscan"},
+				AttackSurface: []string{"external"},
+				Origins:       []string{"amazon", "ipv4"},
+			},
+		}
+
+		resource1.Merge(resource2)
+
+		if resource1.Status != "updated" {
+			t.Errorf("Expected status 'updated', got '%s'", resource1.Status)
+		}
+		if len(resource1.Properties) != 2 {
+			t.Errorf("Properties not merged correctly, got %v", resource1.Properties)
+		}
+		expectedCapability := []string{"amazon", "portscan"}
+		expectedAttackSurface := []string{"external"}
+		expectedOrigins := []string{"amazon", "ipv4"}
+		
+		if !reflect.DeepEqual(resource1.Capability, expectedCapability) {
+			t.Errorf("Capability merge failed: expected %v, got %v", expectedCapability, resource1.Capability)
+		}
+		if !reflect.DeepEqual(resource1.AttackSurface, expectedAttackSurface) {
+			t.Errorf("AttackSurface merge failed: expected %v, got %v", expectedAttackSurface, resource1.AttackSurface)
+		}
+		if !reflect.DeepEqual(resource1.Origins, expectedOrigins) {
+			t.Errorf("Origins merge failed: expected %v, got %v", expectedOrigins, resource1.Origins)
+		}
+	})
+}
+
+func TestCloudResource_OriginationDataVisit(t *testing.T) {
+	t.Run("CloudResource should visit OriginationData correctly", func(t *testing.T) {
+		resource1 := &CloudResource{
+			Key:          "test1",
+			Name:         "test1",
+			Provider:     "aws",
+			ResourceType: "instance",
+			Status:       "active",
+			TTL:          0, // Uninitialized
+			Properties:   map[string]any{"key1": "value1"},
+			OriginationData: OriginationData{
+				Capability:    []string{"dns"},
+				AttackSurface: []string{"internal"},
+				Origins:       []string{"dns"},
+			},
+		}
+
+		resource2 := &CloudResource{
+			Key:          "test2",
+			Name:         "test2",
+			Provider:     "aws",
+			ResourceType: "instance",
+			Status:       "visited",
+			TTL:          12345,
+			Properties:   map[string]any{"key2": "value2"},
+			OriginationData: OriginationData{
+				Capability:    []string{"amazon", "portscan"},
+				AttackSurface: []string{"external"},
+				Origins:       []string{"amazon", "ipv4"},
+			},
+		}
+
+		resource1.Visit(resource2)
+
+		if resource1.Status != "visited" {
+			t.Errorf("Expected status 'visited', got '%s'", resource1.Status)
+		}
+		if resource1.TTL != 12345 {
+			t.Errorf("Expected TTL 12345, got %d", resource1.TTL)
+		}
+		
+		if resource1.Properties["key1"] != "value1" {
+			t.Errorf("Existing property should be preserved")
+		}
+		if resource1.Properties["key2"] != "value2" {
+			t.Errorf("New property should be added")
+		}
+		sortStringSlice := func(s []string) {
+			for i := range s {
+				for j := range s {
+					if i < j && s[i] > s[j] {
+						s[i], s[j] = s[j], s[i]
+					}
+				}
+			}
+		}
+		
+		sortStringSlice(resource1.Capability)
+		sortStringSlice(resource1.AttackSurface)
+		sortStringSlice(resource1.Origins)
+		
+		expectedCapability := []string{"amazon", "dns", "portscan"}
+		expectedAttackSurface := []string{"external", "internal"}
+		expectedOrigins := []string{"amazon", "dns", "ipv4"}
+		
+		sortStringSlice(expectedCapability)
+		sortStringSlice(expectedAttackSurface)
+		sortStringSlice(expectedOrigins)
+		
+		if !reflect.DeepEqual(resource1.Capability, expectedCapability) {
+			t.Errorf("Capability visit failed: expected %v, got %v", expectedCapability, resource1.Capability)
+		}
+		if !reflect.DeepEqual(resource1.AttackSurface, expectedAttackSurface) {
+			t.Errorf("AttackSurface visit failed: expected %v, got %v", expectedAttackSurface, resource1.AttackSurface)
+		}
+		if !reflect.DeepEqual(resource1.Origins, expectedOrigins) {
+			t.Errorf("Origins visit failed: expected %v, got %v", expectedOrigins, resource1.Origins)
+		}
+	})
+}
+
+func TestAWSResource_OriginationDataIntegration(t *testing.T) {
+	t.Run("AWSResource should use CloudResource OriginationData merge/visit", func(t *testing.T) {
+		// Create AWS resources with OriginationData
+		resource1, err := NewAWSResource(
+			"arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0",
+			"123456789012",
+			AWSEC2Instance,
+			map[string]any{"InstanceId": "i-1234567890abcdef0"},
+		)
+		if err != nil {
+			t.Fatalf("Failed to create AWSResource: %v", err)
+		}
+		
+		// Set some origination data
+		resource1.OriginationData = OriginationData{
+			Capability: []string{"amazon"},
+			Origins:    []string{"aws-account"},
+		}
+
+		resource2, err := NewAWSResource(
+			"arn:aws:ec2:us-east-1:123456789012:instance/i-abcdef1234567890",
+			"123456789012",
+			AWSEC2Instance,
+			map[string]any{"InstanceId": "i-abcdef1234567890"},
+		)
+		if err != nil {
+			t.Fatalf("Failed to create second AWSResource: %v", err)
+		}
+		
+		resource2.OriginationData = OriginationData{
+			Capability: []string{"portscan"},
+			Origins:    []string{"discovery"},
+		}
+
+		resource1.Merge(&resource2)
+		
+		expectedCapability := []string{"portscan"}
+		if !reflect.DeepEqual(resource1.Capability, expectedCapability) {
+			t.Errorf("AWS resource merge failed: expected %v, got %v", expectedCapability, resource1.Capability)
+		}
+
+		resource1.OriginationData.Capability = []string{"amazon"}
+		err = resource1.Visit(&resource2)
+		if err != nil {
+			t.Fatalf("Visit failed: %v", err)
+		}
+		sortStringSlice := func(s []string) {
+			for i := range s {
+				for j := range s {
+					if i < j && s[i] > s[j] {
+						s[i], s[j] = s[j], s[i]
+					}
+				}
+			}
+		}
+		sortStringSlice(resource1.Capability)
+		expectedCapability = []string{"amazon", "portscan"}
+		sortStringSlice(expectedCapability)
+		
+		if !reflect.DeepEqual(resource1.Capability, expectedCapability) {
+			t.Errorf("AWS resource visit failed: expected %v, got %v", expectedCapability, resource1.Capability)
+		}
 	})
 }
 
