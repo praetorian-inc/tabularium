@@ -686,6 +686,10 @@ components:
           description: Velociraptor flow ID for tracking execution.
           example: F.D36EN790K9V6G
           type: string
+        healthCheck:
+          description: Whether to trigger a healthcheck after task completion.
+          example: "true"
+          type: boolean
         key:
           description: Unique key for the Aegis management task.
           example: '#aegis-mgmt#user@example.com#tunnel_management#2024-01-15T10:30:00Z'
@@ -725,6 +729,7 @@ components:
       - aegisManagementCapability
       - async
       - created
+      - healthCheck
       - key
       - parameters
       - status
@@ -797,6 +802,10 @@ components:
           description: The task executor that can execute this management capability
           example: aegis
           type: string
+        healthCheck:
+          description: If true, triggers a healthcheck after the management task completes
+          example: "true"
+          type: boolean
         integration:
           description: Whether or not this management capability is an integration
             with an external service
@@ -884,6 +893,10 @@ components:
           description: Velociraptor flow ID for tracking execution.
           example: F.D36EN790K9V6G
           type: string
+        healthCheck:
+          description: Whether to trigger a healthcheck after task completion.
+          example: "true"
+          type: boolean
         key:
           description: Unique key for the Aegis management task.
           example: '#aegis-mgmt#user@example.com#tunnel_management#2024-01-15T10:30:00Z'
@@ -923,6 +936,7 @@ components:
       - aegisManagementCapability
       - async
       - created
+      - healthCheck
       - key
       - parameters
       - status
@@ -1278,6 +1292,8 @@ components:
           type: object
         History:
           type: object
+        OriginationData:
+          type: object
         accountRef:
           type: string
         created:
@@ -1326,6 +1342,7 @@ components:
       required:
       - BaseModel
       - History
+      - OriginationData
       - accountRef
       - created
       - displayName
@@ -1465,6 +1482,45 @@ components:
       - name
       - username
       - value
+      type: object
+    conversation:
+      description: Represents a conversation between a user and AI assistant with
+        running capabilities.
+      properties:
+        BaseModel:
+          type: object
+        created:
+          description: Timestamp when the conversation was created (RFC3339).
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        key:
+          description: Unique key for the conversation.
+          example: '#conversation#example-conversation#550e8400-e29b-41d4-a716-446655440000'
+          type: string
+        topic:
+          description: Topic extracted from first message (first 256 chars).
+          example: Find all active assets in my infrastructure
+          type: string
+        user:
+          description: Who started the conversation.
+          example: user@example.com
+          type: string
+        username:
+          description: Username who owns the conversation.
+          example: user@example.com
+          type: string
+        uuid:
+          description: UUID of the conversation for reference.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          type: string
+      required:
+      - BaseModel
+      - created
+      - key
+      - topic
+      - user
+      - username
+      - uuid
       type: object
     cpe:
       description: Represents a Common Platform Enumeration (CPE) identifier, used
@@ -2094,6 +2150,10 @@ components:
           description: Configuration parameters for the job capability.
           example: '{"test": "cve-1111-2222"}'
           type: object
+        conversation:
+          description: UUID of the conversation that initiated this job.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          type: string
         created:
           description: Timestamp when the job was created (RFC3339).
           example: "2023-10-27T10:00:00Z"
@@ -2154,6 +2214,10 @@ components:
         updated:
           description: Timestamp when the job was last updated (RFC3339).
           example: "2023-10-27T10:05:00Z"
+          type: string
+        user:
+          description: User who initiated this job.
+          example: user@example.com
           type: string
         username:
           description: Username who initiated or owns the job.
@@ -2230,11 +2294,71 @@ components:
       - username
       - visited
       type: object
+    message:
+      description: Represents a message within a conversation, with UUIDv7 ordering
+        for proper sequencing.
+      properties:
+        BaseModel:
+          type: object
+        content:
+          description: Content of the message.
+          example: Hello, how can I help you today?
+          type: string
+        conversationId:
+          description: ID of the conversation this message belongs to.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          type: string
+        key:
+          description: Unique key for the message.
+          example: '#message#550e8400-e29b-41d4-a716-446655440000#1sB5tZfLipTVWQWHVKnDFS6kFRK'
+          type: string
+        messageId:
+          description: UUIDv7 for message ordering.
+          example: 01234567-89ab-7def-0123-456789abcdef
+          type: string
+        role:
+          description: Role of the message sender (user, chariot, system, tool).
+          example: user
+          type: string
+        timestamp:
+          description: Timestamp when the message was created (RFC3339).
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        toolUseContent:
+          description: JSON serialized tool use content for assistant tool use messages.
+          example: '{"name":"query","input":{"node":{"labels":["Asset"]}}}'
+          type: string
+        toolUseId:
+          description: Tool use ID for tool result messages.
+          example: tooluse_kZJMlvQmRJ6eAyJE5GIl7Q
+          type: string
+        ttl:
+          description: Time-to-live for the message record (Unix timestamp).
+          example: "1706353200"
+          format: int64
+          type: integer
+        username:
+          description: Username who sent the message.
+          example: user@example.com
+          type: string
+      required:
+      - BaseModel
+      - content
+      - conversationId
+      - key
+      - messageId
+      - role
+      - timestamp
+      - ttl
+      - username
+      type: object
     metadata:
       description: Contains metadata about an asset, including discovery information,
         relationships, and attributes.
       properties:
         BaseModel:
+          type: object
+        OriginationData:
           type: object
         asname:
           description: Autonomous System name.
@@ -2248,18 +2372,6 @@ components:
           description: Autonomous System IP range.
           example: 172.217.0.0/16
           type: string
-        attackSurface:
-          description: List of attack surface identifiers related to the asset.
-          example: '["internal", "external"]'
-          items:
-            type: string
-          type: array
-        capability:
-          description: List of all capabilities that have discovered this asset.
-          example: '["amazon", "portscan"]'
-          items:
-            type: string
-          type: array
         city:
           description: City associated with the asset.
           example: Mountain View
@@ -2293,12 +2405,6 @@ components:
           description: Date the asset registration expires (RFC3339).
           example: "2024-09-15T00:00:00Z"
           type: string
-        origins:
-          description: List of originating asset classes for this entity
-          example: '["amazon", "ipv4"]'
-          items:
-            type: string
-          type: array
         province:
           description: Province or state associated with the asset.
           example: California
@@ -2321,6 +2427,7 @@ components:
           type: string
       required:
       - BaseModel
+      - OriginationData
       type: object
     mitretechnique:
       description: Represents a MITRE ATT&CK technique for a vulnerability.
@@ -3379,6 +3486,8 @@ components:
       properties:
         BaseAsset:
           type: object
+        BurpMetadata:
+          type: object
         name:
           description: Name of the web application
           example: Example App
@@ -3395,6 +3504,7 @@ components:
           type: array
       required:
       - BaseAsset
+      - BurpMetadata
       - name
       - primary_url
       - urls
