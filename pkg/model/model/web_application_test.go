@@ -14,56 +14,48 @@ func TestWebApplicationStruct(t *testing.T) {
 		name        string
 		primaryURL  string
 		appName     string
-		urls        []string
 		expectedKey string
 	}{
 		{
 			name:        "Basic HTTPS URL",
 			primaryURL:  "https://app.example.com",
 			appName:     "Example App",
-			urls:        []string{},
 			expectedKey: "#webapplication#https://app.example.com/",
 		},
 		{
 			name:        "HTTP URL with default port",
 			primaryURL:  "http://app.example.com:80",
 			appName:     "Example App",
-			urls:        []string{},
 			expectedKey: "#webapplication#http://app.example.com/",
 		},
 		{
 			name:        "HTTPS URL with default port",
 			primaryURL:  "https://app.example.com:443",
 			appName:     "Example App",
-			urls:        []string{},
 			expectedKey: "#webapplication#https://app.example.com/",
 		},
 		{
 			name:        "URL with custom port",
 			primaryURL:  "https://app.example.com:8443",
 			appName:     "Example App",
-			urls:        []string{},
 			expectedKey: "#webapplication#https://app.example.com:8443/",
 		},
 		{
 			name:        "URL with path",
 			primaryURL:  "https://app.example.com/admin",
 			appName:     "Admin Panel",
-			urls:        []string{},
 			expectedKey: "#webapplication#https://app.example.com/admin",
 		},
 		{
 			name:        "URL with query and fragment",
 			primaryURL:  "https://app.example.com/path?param=value#fragment",
 			appName:     "Example App",
-			urls:        []string{},
 			expectedKey: "#webapplication#https://app.example.com/path",
 		},
 		{
 			name:        "Mixed case URL",
 			primaryURL:  "HTTPS://APP.EXAMPLE.COM/Path",
 			appName:     "Example App",
-			urls:        []string{},
 			expectedKey: "#webapplication#https://app.example.com/Path",
 		},
 	}
@@ -210,18 +202,20 @@ func TestWebApplicationTargetInterface(t *testing.T) {
 	assert.Equal(t, "https://example.com/", rootApp.Identifier())
 }
 
-func TestWebApplicationMergeURLs(t *testing.T) {
+func TestWebApplicationMergeBurpDefinition(t *testing.T) {
 	w1 := NewWebApplication("https://app.example.com", "App 1")
-	w1.URLs = []string{"https://api.example.com"}
+	w1.BurpDefinition = &BurpSeedDefinition{}
 
 	w2 := NewWebApplication("https://app.example.com", "App 2")
-	w2.URLs = []string{"https://admin.example.com", "https://api.example.com"}
+	w2.BurpDefinition = &BurpSeedDefinition{
+		Type:  BurpDefinitionTypeParsed,
+		Value: "definition-json",
+	}
 
 	w1.Merge(&w2)
-	assert.Equal(t, "https://app.example.com/", w1.PrimaryURL)
-	assert.Contains(t, w1.URLs, "https://admin.example.com")
-	assert.Contains(t, w1.URLs, "https://api.example.com")
-	assert.Len(t, w1.URLs, 2)
+	require.NotNil(t, w1.BurpDefinition)
+	assert.Equal(t, BurpDefinitionTypeParsed, w1.BurpDefinition.Type)
+	assert.Equal(t, "definition-json", w1.BurpDefinition.Value)
 }
 
 func TestWebApplicationMergeBurpMetadata(t *testing.T) {
@@ -258,6 +252,20 @@ func TestWebApplicationVisitBurpMetadata(t *testing.T) {
 	assert.Equal(t, "current-schedule", w1.BurpScheduleID)
 }
 
+func TestWebApplicationVisitBurpDefinition(t *testing.T) {
+	current := NewWebApplication("https://existing.example.com", "Existing")
+	current.BurpDefinition = nil
+
+	incoming := NewWebApplication("https://incoming.example.com", "Incoming")
+	incoming.BurpDefinition = &BurpSeedDefinition{Type: BurpDefinitionTypeURL, Value: "https://api.example.com/openapi.json"}
+
+	current.Visit(&incoming)
+
+	require.NotNil(t, current.BurpDefinition)
+	assert.Equal(t, BurpDefinitionTypeURL, current.BurpDefinition.Type)
+	assert.Equal(t, "https://api.example.com/openapi.json", current.BurpDefinition.Value)
+}
+
 func TestWebApplicationRegistryIntegration(t *testing.T) {
 	model, found := registry.Registry.MakeType("webapplication")
 	assert.True(t, found)
@@ -291,36 +299,6 @@ func TestWebApplicationDescription(t *testing.T) {
 	description := w.GetDescription()
 	assert.NotEmpty(t, description)
 	assert.Contains(t, strings.ToLower(description), "web application")
-}
-
-func TestWebApplicationURLsNormalization(t *testing.T) {
-	w := WebApplication{
-		PrimaryURL: "https://example.com",
-		URLs: []string{
-			"https://api.example.com:443",
-			"http://admin.example.com:80",
-			"https://MIXED.EXAMPLE.COM/Path?query=1#frag",
-			"invalid-url", // This should be filtered out
-			"https://valid.example.com",
-		},
-	}
-
-	hooks := w.GetHooks()
-	require.NotEmpty(t, hooks)
-
-	for _, hook := range hooks {
-		err := hook.Call()
-		assert.NoError(t, err)
-	}
-
-	expectedURLs := []string{
-		"https://api.example.com/",
-		"http://admin.example.com/",
-		"https://mixed.example.com/Path",
-		"https://valid.example.com/",
-	}
-
-	assert.ElementsMatch(t, expectedURLs, w.URLs)
 }
 
 func TestWebApplicationSeedModels(t *testing.T) {

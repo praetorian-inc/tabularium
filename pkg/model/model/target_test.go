@@ -290,7 +290,10 @@ func TestTargetEvent_DynamoDBMarshaling(t *testing.T) {
 		webapplication.Visited = Now()
 		webapplication.TTL = 123456789
 		webapplication.Source = "seed"
-		webapplication.URLs = []string{"https://example.com/api", "https://example.com/admin"}
+		webapplication.BurpDefinition = &BurpSeedDefinition{
+			Type:  BurpDefinitionTypeParsed,
+			Value: `{"file_based_api_definition":{"filename":"openapi.json"}}`,
+		}
 		webapplication.BurpSiteID = "1234"
 		webapplication.BurpFolderID = "42"
 		webapplication.BurpScheduleID = "abcd"
@@ -309,7 +312,9 @@ func TestTargetEvent_DynamoDBMarshaling(t *testing.T) {
 		assert.Equal(t, webapplication.Key, result.Key)
 		assert.Equal(t, webapplication.Username, result.Username)
 		assert.Equal(t, webapplication.PrimaryURL, result.PrimaryURL)
-		assert.Equal(t, webapplication.URLs, result.URLs)
+		if webapplication.BurpDefinition != nil {
+			assert.Nil(t, result.BurpDefinition)
+		}
 		assert.Equal(t, webapplication.Status, result.Status)
 		assert.Equal(t, webapplication.Source, result.Source)
 		assert.Equal(t, webapplication.BurpSiteID, result.BurpSiteID)

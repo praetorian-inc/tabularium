@@ -18,10 +18,22 @@ type BurpMetadata struct {
 
 type WebApplication struct {
 	BaseAsset
-	PrimaryURL string   `neo4j:"primary_url" json:"primary_url" dynamodbav:"primary_url" desc:"The primary/canonical URL of the web application" example:"https://app.example.com"`
-	URLs       []string `neo4j:"urls" json:"urls" dynamodbav:"urls" desc:"Additional URLs associated with this web application" example:"[\"https://api.example.com\", \"https://admin.example.com\"]"`
-	Name       string   `neo4j:"name" json:"name" dynamodbav:"name" desc:"Name of the web application" example:"Example App"`
+	PrimaryURL string `neo4j:"primary_url" json:"primary_url" dynamodbav:"primary_url" desc:"The primary/canonical URL of the web application" example:"https://app.example.com"`
+	Name       string `neo4j:"name" json:"name" dynamodbav:"name" desc:"Name of the web application" example:"Example App"`
 	BurpMetadata
+	BurpDefinition *BurpSeedDefinition `neo4j:"-" json:"burp_definition,omitempty" dynamodbav:"-" desc:"Temporary Burp API definition details used during seed creation"`
+}
+
+const (
+	BurpDefinitionTypeRaw    = "raw"
+	BurpDefinitionTypeParsed = "parsed"
+	BurpDefinitionTypeURL    = "url"
+)
+
+type BurpSeedDefinition struct {
+	Type     string `json:"type,omitempty" neo4j:"-" dynamodbav:"-" desc:"Indicates how the Burp definition value should be interpreted" example:"parsed"`
+	Value    string `json:"value,omitempty" neo4j:"-" dynamodbav:"-" desc:"Definition data passed to Burp (base64 contents, JSON payload, or URL)"`
+	Filename string `json:"filename,omitempty" neo4j:"-" dynamodbav:"-" desc:"Filename supplied when uploading a raw API definition" example:"openapi.yaml"`
 }
 
 const WebApplicationLabel = "WebApplication"
@@ -66,14 +78,6 @@ func (w *WebApplication) GetHooks() []registry.Hook {
 				}
 				w.Key = key
 
-				normalizedURLs := make([]string, 0, len(w.URLs))
-				for _, u := range w.URLs {
-					if normalized, err := normalize.Normalize(u); err == nil {
-						normalizedURLs = append(normalizedURLs, normalized)
-					}
-				}
-				w.URLs = normalizedURLs
-
 				return nil
 			},
 		},
@@ -84,9 +88,6 @@ func (w *WebApplication) GetHooks() []registry.Hook {
 func (w *WebApplication) Defaulted() {
 	w.BaseAsset.Defaulted()
 	w.Class = "webapplication"
-	if w.URLs == nil {
-		w.URLs = []string{}
-	}
 }
 
 func (w *WebApplication) Valid() bool {
@@ -128,11 +129,6 @@ func (w *WebApplication) Merge(other Assetlike) {
 	if otherApp.Name != "" {
 		w.Name = otherApp.Name
 	}
-	for _, u := range otherApp.URLs {
-		if !slices.Contains(w.URLs, u) {
-			w.URLs = append(w.URLs, u)
-		}
-	}
 	if otherApp.BurpSiteID != "" {
 		w.BurpSiteID = otherApp.BurpSiteID
 	}
@@ -141,6 +137,9 @@ func (w *WebApplication) Merge(other Assetlike) {
 	}
 	if otherApp.BurpScheduleID != "" {
 		w.BurpScheduleID = otherApp.BurpScheduleID
+	}
+	if otherApp.BurpDefinition != nil {
+		w.BurpDefinition = otherApp.BurpDefinition
 	}
 }
 
@@ -162,6 +161,9 @@ func (w *WebApplication) Visit(other Assetlike) {
 	if otherApp.BurpScheduleID != "" {
 		w.BurpScheduleID = otherApp.BurpScheduleID
 	}
+	if otherApp.BurpDefinition != nil && w.BurpDefinition == nil {
+		w.BurpDefinition = otherApp.BurpDefinition
+	}
 }
 
 func (w *WebApplication) Attribute(name, value string) Attribute {
@@ -172,7 +174,6 @@ func NewWebApplication(primaryURL, name string) WebApplication {
 	w := WebApplication{
 		PrimaryURL: primaryURL,
 		Name:       name,
-		URLs:       []string{},
 	}
 
 	w.Defaulted()
