@@ -1603,8 +1603,14 @@ components:
         credentialId:
           description: UUID for the credential
           type: string
+        format:
+          description: Format of the credential
+          type: string
         key:
           description: Key of the credential (#credential#category#type#credentialId)
+          type: string
+        name:
+          description: Pretty name or user label for the credential
           type: string
         type:
           description: Type of credential
@@ -1621,7 +1627,9 @@ components:
       - category
       - created
       - credentialId
+      - format
       - key
+      - name
       - type
       - updated
       - username
