@@ -92,6 +92,14 @@ func (c *Configuration) GetKey() string {
 	return c.Key
 }
 
+func (c *Configuration) Valid() error {
+	validator := configurationValidators[c.Name]
+	if validator == nil {
+		return nil
+	}
+	return validator(c.Value)
+}
+
 func (c *Configuration) GetDescription() string {
 	return "Represents a praetorian-only configuration setting within chariot."
 }
