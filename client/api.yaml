@@ -3259,6 +3259,8 @@ components:
           type: object
         History:
           type: object
+        Tags:
+          type: object
         comment:
           description: User-provided comment about the technology record.
           example: Found on main web server
@@ -3301,6 +3303,7 @@ components:
       - AliasCPE
       - BaseModel
       - History
+      - Tags
       - cpe
       - created
       - key
