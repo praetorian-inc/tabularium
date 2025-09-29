@@ -175,13 +175,11 @@ func TestWebApplicationKeyLength(t *testing.T) {
 func TestWebApplicationLabels(t *testing.T) {
 	w := NewWebApplication("https://example.com", "Example")
 	labels := w.GetLabels()
-
 	expectedLabels := []string{WebApplicationLabel, AssetLabel, TTLLabel}
 	assert.ElementsMatch(t, expectedLabels, labels)
 
 	seedApp := NewWebApplicationSeed("https://seed.example.com")
 	seedLabels := seedApp.GetLabels()
-
 	expectedSeedLabels := []string{WebApplicationLabel, AssetLabel, TTLLabel, SeedLabel}
 	assert.ElementsMatch(t, expectedSeedLabels, seedLabels)
 	assert.True(t, seedApp.IsSeed())

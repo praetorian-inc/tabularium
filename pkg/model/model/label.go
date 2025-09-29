@@ -37,6 +37,5 @@ func GetLabel(label string) string {
 	if ok {
 		return registered
 	}
-
 	return cases.Title(language.English).String(lowercase)
 }
