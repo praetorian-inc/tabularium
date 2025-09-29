@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	"maps"
 	"net"
 	"strings"
 
@@ -46,6 +45,12 @@ func NewAWSResource(name, accountRef string, rtype CloudResourceType, properties
 	r.Defaulted()
 	registry.CallHooks(&r)
 	return r, nil
+}
+
+func (a *AWSResource) Defaulted() {
+	a.Origins = []string{"amazon"}
+	a.AttackSurface = []string{"cloud"}
+	a.CloudResource.Defaulted()
 }
 
 func (a *AWSResource) GetHooks() []registry.Hook {
@@ -101,22 +106,12 @@ func (a *AWSResource) GetDNS() string {
 
 func (a *AWSResource) Group() string { return "awsresource" }
 
-// Insertable interface methods
 func (a *AWSResource) Merge(otherModel any) {
 	other, ok := otherModel.(*AWSResource)
 	if !ok {
 		return
 	}
-	a.Status = other.Status
-	a.Visited = other.Visited
-
-	// Safely copy properties with nil checks
-	if a.Properties == nil {
-		a.Properties = make(map[string]any)
-	}
-	if other.Properties != nil {
-		maps.Copy(a.Properties, other.Properties)
-	}
+	a.CloudResource.Merge(&other.CloudResource)
 }
 
 func (a *AWSResource) Visit(otherModel any) error {
@@ -124,26 +119,12 @@ func (a *AWSResource) Visit(otherModel any) error {
 	if !ok {
 		return fmt.Errorf("expected *AWSResource, got %T", otherModel)
 	}
-	a.Visited = other.Visited
-	a.Status = other.Status
-
-	// Safely copy properties with nil checks
-	if a.Properties == nil {
-		a.Properties = make(map[string]any)
-	}
-	if other.Properties != nil {
-		maps.Copy(a.Properties, other.Properties)
-	}
-
-	// Fix TTL update logic: update if other has a valid TTL
-	if other.TTL != 0 {
-		a.TTL = other.TTL
-	}
+	a.CloudResource.Visit(&other.CloudResource)
 	return nil
 }
 
 // Return an Asset that matches the legacy integration
-func (a *AWSResource) NewAsset() []Asset {
+func (a *AWSResource) NewAssets() []Asset {
 	assets := make([]Asset, 0)
 	dns := a.GetDNS()
 	ips := a.GetIPs()
@@ -152,42 +133,31 @@ func (a *AWSResource) NewAsset() []Asset {
 	// Extract service name from ARN (same logic as Amazon capability)
 	service := a.extractService()
 
+	record := func(asset Asset) {
+		asset.CloudId = a.Name
+		asset.CloudService = service
+		asset.CloudAccount = a.AccountRef
+		assets = append(assets, asset)
+	}
+
 	// Create assets from URLs - NewAsset(url, arn)
 	for _, url := range urls {
-		asset := NewAsset(url, a.Name)
-		asset.CloudId = a.Name
-		asset.CloudService = service
-		asset.CloudAccount = a.AccountRef
-		assets = append(assets, asset)
+		record(NewAsset(url, a.Name))
 	}
 
-	// Create assets from IPs
 	for _, ip := range ips {
-		var asset Asset
 		if dns != "" {
-			// NewAsset(dns, dns) when both DNS and IP exist - DNS takes precedence as identifier
-			asset = NewAsset(dns, dns)
-		} else {
-			// NewAsset(ip, ip) when only IP exists
-			asset = NewAsset(ip, ip)
+			record(NewAsset(dns, ip))
 		}
-		asset.CloudId = a.Name
-		asset.CloudService = service
-		asset.CloudAccount = a.AccountRef
-		assets = append(assets, asset)
+		record(NewAsset(ip, ip))
 	}
 
-	// If no URLs or IPs, create a fallback asset using the ARN
 	if len(assets) == 0 {
 		identifier := a.Name // Use ARN as fallback
 		if dns != "" {
 			identifier = dns
 		}
-		asset := NewAsset(identifier, identifier)
-		asset.CloudId = a.Name
-		asset.CloudService = service
-		asset.CloudAccount = a.AccountRef
-		assets = append(assets, asset)
+		record(NewAsset(identifier, identifier))
 	}
 
 	return assets

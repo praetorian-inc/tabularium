@@ -29,6 +29,7 @@ type BaseAsset struct {
 	History
 	MLProperties
 	Metadata
+	Tags
 }
 
 func init() {
@@ -99,6 +100,7 @@ func (a *BaseAsset) Merge(u Assetlike) {
 		a.Origin = update.Origin
 	}
 	a.Metadata.Merge(update.Metadata)
+	a.Tags.Merge(update.Tags)
 }
 
 func (a *BaseAsset) Visit(o Assetlike) {
@@ -119,6 +121,7 @@ func (a *BaseAsset) Visit(o Assetlike) {
 
 	a.Secret = other.Secret
 	a.Metadata.Visit(other.Metadata)
+	a.Tags.Visit(other.Tags)
 }
 
 func (a *BaseAsset) System() bool {
@@ -198,24 +201,59 @@ type Metadata struct {
 	Registrar  string `neo4j:"registrar,omitempty" json:"registrar,omitempty" desc:"Registrar managing the asset (e.g., domain)." example:"MarkMonitor Inc."`
 	Email      string `neo4j:"email,omitempty" json:"email,omitempty" desc:"Optional contact email associated with the seed." example:"contact@example.com"`
 
-	Capability    []string `neo4j:"capability,omitempty" json:"capability,omitempty" desc:"List of all capabilities that have discovered this asset." example:"[\"amazon\", \"portscan\"]"`
-	AttackSurface []string `neo4j:"attackSurface,omitempty" json:"attackSurface,omitempty" desc:"List of attack surface identifiers related to the asset." example:"[\"internal\", \"external\"]"`
-	Origins       []string `neo4j:"origins,omitempty" json:"origins,omitempty" desc:"List of originating asset classes for this entity" example:"[\"amazon\", \"ipv4\"]"`
-
 	CloudService string `neo4j:"cloudService,omitempty" json:"cloudService,omitempty" desc:"Name of the cloud service provider (e.g., AWS, GCP, Azure)." example:"GCP"`
 	CloudId      string `neo4j:"cloudId,omitempty" json:"cloudId,omitempty" desc:"Unique identifier within the cloud provider." example:"project-id-12345"`
 	CloudRoot    string `neo4j:"cloudRoot,omitempty" json:"cloudRoot,omitempty" desc:"Root identifier for the cloud environment (e.g., organization ID)." example:"organizations/1234567890"`
 	CloudAccount string `neo4j:"cloudAccount,omitempty" json:"cloudAccount,omitempty" desc:"Specific account identifier within the cloud provider." example:"billing-account-id"`
+	OriginationData
+}
+
+type OriginationData struct {
+	Capability    []string `neo4j:"capability,omitempty" json:"capability,omitempty" desc:"List of all capabilities that have discovered this asset." example:"[\"amazon\", \"portscan\"]"`
+	AttackSurface []string `neo4j:"attackSurface,omitempty" json:"attackSurface,omitempty" desc:"List of attack surface identifiers related to the asset." example:"[\"internal\", \"external\"]"`
+	Origins       []string `neo4j:"origins,omitempty" json:"origins,omitempty" desc:"List of originating asset classes for this entity" example:"[\"amazon\", \"ipv4\"]"`
+}
+
+func (o *OriginationData) Merge(other OriginationData) {
+	if other.Origins != nil {
+		o.Origins = other.Origins
+	}
+	if other.AttackSurface != nil {
+		o.AttackSurface = other.AttackSurface
+	}
+	if other.Capability != nil {
+		o.Capability = other.Capability
+	}
+}
+
+func (o *OriginationData) Visit(other OriginationData) {
+	seen := make(map[string]bool)
+	for _, s := range append(o.Origins, other.Origins...) {
+		seen[s] = true
+	}
+	o.Origins = slices.Collect(maps.Keys(seen))
+
+	seen = make(map[string]bool)
+	for _, s := range append(o.AttackSurface, other.AttackSurface...) {
+		seen[s] = true
+	}
+	o.AttackSurface = slices.Collect(maps.Keys(seen))
+
+	seen = make(map[string]bool)
+	for _, s := range append(o.Capability, other.Capability...) {
+		seen[s] = true
+	}
+	o.Capability = slices.Collect(maps.Keys(seen))
 }
 
 func (m *Metadata) Merge(other Metadata) {
 	m.updateFields(other)
-	m.updateSlices(other)
+	m.OriginationData.Merge(other.OriginationData)
 }
 
 func (m *Metadata) Visit(other Metadata) {
 	m.updateFields(other)
-	m.visitSlices(other)
+	m.OriginationData.Visit(other.OriginationData)
 }
 
 // updateFields will copy over any non-empty fields from the other metadata into this metadata.
@@ -231,41 +269,6 @@ func (m *Metadata) updateFields(other Metadata) {
 		if field.Kind() == reflect.String && otherField.String() != "" {
 			field.SetString(otherField.String())
 		}
-	}
-}
-
-// visitSlices will copy over any non-empty slices from the other metadata into this metadata.
-func (m *Metadata) visitSlices(other Metadata) {
-	seen := make(map[string]bool)
-	for _, s := range append(m.Origins, other.Origins...) {
-		seen[s] = true
-	}
-	m.Origins = slices.Collect(maps.Keys(seen))
-
-	seen = make(map[string]bool)
-	for _, s := range append(m.AttackSurface, other.AttackSurface...) {
-		seen[s] = true
-	}
-	m.AttackSurface = slices.Collect(maps.Keys(seen))
-
-	seen = make(map[string]bool)
-	for _, s := range append(m.Capability, other.Capability...) {
-		seen[s] = true
-	}
-	m.Capability = slices.Collect(maps.Keys(seen))
-}
-
-// updateSlices will overwrite non-empty slices from the other metadata into this metadata.
-// updateSlices is called when manually updating an asset
-func (m *Metadata) updateSlices(other Metadata) {
-	if other.Origins != nil {
-		m.Origins = other.Origins
-	}
-	if other.AttackSurface != nil {
-		m.AttackSurface = other.AttackSurface
-	}
-	if other.Capability != nil {
-		m.Capability = other.Capability
 	}
 }
 

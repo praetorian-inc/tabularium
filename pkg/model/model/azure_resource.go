@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	"maps"
 	"net"
 	"strings"
 
@@ -53,6 +52,12 @@ func (a *AzureResource) GetDisplayName() string {
 	return a.Name
 }
 
+func (a *AzureResource) Defaulted() {
+	a.Origins = []string{"azure"}
+	a.AttackSurface = []string{"cloud"}
+	a.CloudResource.Defaulted()
+}
+
 func (a *AzureResource) GetHooks() []registry.Hook {
 	hooks := []registry.Hook{
 		{
@@ -68,6 +73,34 @@ func (a *AzureResource) GetHooks() []registry.Hook {
 
 	hooks = append(hooks, a.CloudResource.GetHooks()...)
 	return hooks
+}
+
+func (a *AzureResource) NewAssets() []Asset {
+	assets := []Asset{}
+	ipSet := make(map[string]bool)
+	urlSet := make(map[string]bool)
+
+	record := func(asset Asset) {
+		asset.CloudId = a.Name
+		asset.CloudService = a.ResourceType.String()
+		asset.CloudAccount = a.AccountRef
+		assets = append(assets, asset)
+	}
+
+	for _, ip := range a.GetIPs() {
+		if _, ok := ipSet[ip]; !ok && ip != "" {
+			ipSet[ip] = true
+			record(NewAsset(ip, ip))
+		}
+	}
+	for _, url := range a.GetURLs() {
+		if _, ok := urlSet[url]; !ok && url != "" {
+			urlSet[url] = true
+			record(NewAsset(url, url))
+		}
+	}
+
+	return assets
 }
 
 func (a *AzureResource) GetIPs() []string {
@@ -119,16 +152,7 @@ func (a *AzureResource) Merge(otherModel any) {
 	if !ok {
 		return
 	}
-	a.Status = other.Status
-	a.Visited = other.Visited
-
-	// Safely copy properties with nil checks
-	if a.Properties == nil {
-		a.Properties = make(map[string]any)
-	}
-	if other.Properties != nil {
-		maps.Copy(a.Properties, other.Properties)
-	}
+	a.CloudResource.Merge(&other.CloudResource)
 }
 
 func (a *AzureResource) Visit(otherModel any) error {
@@ -136,21 +160,7 @@ func (a *AzureResource) Visit(otherModel any) error {
 	if !ok {
 		return fmt.Errorf("expected *AzureResource, got %T", otherModel)
 	}
-	a.Visited = other.Visited
-	a.Status = other.Status
-
-	// Safely copy properties with nil checks
-	if a.Properties == nil {
-		a.Properties = make(map[string]any)
-	}
-	if other.Properties != nil {
-		maps.Copy(a.Properties, other.Properties)
-	}
-
-	// Fix TTL update logic: update if other has a valid TTL
-	if other.TTL != 0 {
-		a.TTL = other.TTL
-	}
+	a.CloudResource.Visit(&other.CloudResource)
 	return nil
 }
 func (a *AzureResource) WithStatus(status string) Target {

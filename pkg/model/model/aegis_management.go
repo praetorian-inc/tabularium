@@ -23,6 +23,7 @@ type AegisManagement struct {
 	Integration   bool             `json:"integration" desc:"Whether or not this management capability is an integration with an external service" example:"false"`
 	Parameters    []AegisParameter `json:"parameters,omitempty" desc:"The parameters/options of the management capability"`
 	Async         bool             `json:"async" desc:"Indicates if this is an asynchronous management capability" example:"true"`
+	HealthCheck   bool             `json:"healthCheck,omitempty" desc:"If true, triggers a healthcheck after the management task completes" example:"true"`
 	LargeArtifact bool             `json:"largeArtifact,omitempty" desc:"If true, this management capability generates large artifacts that can be stored and reviewed later" example:"false"`
 }
 

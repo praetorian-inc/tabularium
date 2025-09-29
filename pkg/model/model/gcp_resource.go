@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	"maps"
 	"net"
 	"strings"
 
@@ -41,6 +40,12 @@ func NewGCPResource(name, accountRef string, rtype CloudResourceType, properties
 	r.Defaulted()
 	registry.CallHooks(&r)
 	return r, nil
+}
+
+func (a *GCPResource) Defaulted() {
+	a.Origins = []string{"gcp"}
+	a.AttackSurface = []string{"cloud"}
+	a.CloudResource.Defaulted()
 }
 
 func (a *GCPResource) GetDisplayName() string {
@@ -87,22 +92,12 @@ func (a *GCPResource) GetRegion() string {
 
 func (a *GCPResource) Group() string { return "gcpresource" }
 
-// Insertable interface methods
 func (a *GCPResource) Merge(otherModel any) {
 	other, ok := otherModel.(*GCPResource)
 	if !ok {
 		return
 	}
-	a.Status = other.Status
-	a.Visited = other.Visited
-
-	// Safely copy properties with nil checks
-	if a.Properties == nil {
-		a.Properties = make(map[string]any)
-	}
-	if other.Properties != nil {
-		maps.Copy(a.Properties, other.Properties)
-	}
+	a.CloudResource.Merge(&other.CloudResource)
 }
 
 func (a *GCPResource) Visit(otherModel any) error {
@@ -110,21 +105,7 @@ func (a *GCPResource) Visit(otherModel any) error {
 	if !ok {
 		return fmt.Errorf("expected *GCPResource, got %T", otherModel)
 	}
-	a.Visited = other.Visited
-	a.Status = other.Status
-
-	// Safely copy properties with nil checks
-	if a.Properties == nil {
-		a.Properties = make(map[string]any)
-	}
-	if other.Properties != nil {
-		maps.Copy(a.Properties, other.Properties)
-	}
-
-	// Fix TTL update logic: update if other has a valid TTL
-	if other.TTL != 0 {
-		a.TTL = other.TTL
-	}
+	a.CloudResource.Visit(&other.CloudResource)
 	return nil
 }
 
@@ -175,34 +156,33 @@ func (a *GCPResource) NewAssets() []Asset {
 	ipSet := make(map[string]bool)
 	urlSet := make(map[string]bool)
 	domainSet := make(map[string]bool)
+
+	record := func(asset Asset) {
+		asset.CloudId = a.Name
+		asset.CloudService = a.ResourceType.String()
+		asset.CloudAccount = a.AccountRef
+		assets = append(assets, asset)
+	}
+
 	for _, ip := range a.GetIPs() {
 		if _, ok := ipSet[ip]; !ok && ip != "" {
 			ipSet[ip] = true
-			toAdd := NewAsset(ip, ip)
-			toAdd.CloudId = a.Name
-			toAdd.CloudService = a.ResourceType.String()
-			toAdd.CloudAccount = a.AccountRef
-			assets = append(assets, toAdd)
+			record(NewAsset(ip, ip))
 		}
 	}
 	for _, url := range a.GetURLs() {
 		if _, ok := urlSet[url]; !ok && url != "" {
 			urlSet[url] = true
-			toAdd := NewAsset(url, url)
-			toAdd.CloudId = a.Name
-			toAdd.CloudService = a.ResourceType.String()
-			toAdd.CloudAccount = a.AccountRef
-			assets = append(assets, toAdd)
+			record(NewAsset(url, url))
 		}
 	}
 	for _, domain := range a.GetDNS() {
 		if _, ok := domainSet[domain]; !ok && domain != "" {
+			record(NewAsset(domain, domain))
 			domainSet[domain] = true
-			toAdd := NewAsset(domain, domain)
-			toAdd.CloudId = a.Name
-			toAdd.CloudService = a.ResourceType.String()
-			toAdd.CloudAccount = a.AccountRef
-			assets = append(assets, toAdd)
+			for ip := range ipSet {
+				record(NewAsset(domain, ip))
+			}
 		}
 	}
 	return assets

@@ -24,6 +24,11 @@ func init() {
 	gob.Register(map[string][]string{})
 }
 
+type AssetBuilder interface {
+	NewAssets() []Asset
+	GraphModel
+}
+
 type CloudResource struct {
 	registry.BaseModel
 	History
@@ -46,6 +51,7 @@ type CloudResource struct {
 	Labels          []string          `neo4j:"labels" json:"labels"`
 	Secret          *string           `neo4j:"secret" json:"secret"`
 	Username        string            `neo4j:"username" json:"username"`
+	OriginationData
 }
 
 // Defaulted sets sensible default values for CloudResource
@@ -125,4 +131,42 @@ func (c *CloudResource) GetSecret() string {
 		return *c.Secret
 	}
 	return ""
+}
+
+func (c *CloudResource) Merge(other *CloudResource) {
+	c.Status = other.Status
+	c.Visited = other.Visited
+	c.TTL = other.TTL
+
+	if c.Properties == nil {
+		c.Properties = make(map[string]any)
+	}
+	if other.Properties != nil {
+		for k, v := range other.Properties {
+			c.Properties[k] = v
+		}
+	}
+
+	c.OriginationData.Merge(other.OriginationData)
+}
+
+func (c *CloudResource) Visit(other *CloudResource) {
+	c.Visited = other.Visited
+	c.Status = other.Status
+
+	if other.TTL != 0 {
+		c.TTL = other.TTL
+	}
+
+	if c.Properties == nil {
+		c.Properties = make(map[string]any)
+	}
+	if other.Properties != nil {
+		for k, v := range other.Properties {
+			if _, exists := c.Properties[k]; !exists {
+				c.Properties[k] = v
+			}
+		}
+	}
+	c.OriginationData.Visit(other.OriginationData)
 }
