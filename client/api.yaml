@@ -2991,6 +2991,8 @@ components:
           type: object
         MLProperties:
           type: object
+        Tags:
+          type: object
         beta:
           description: Whether the risk is in beta.
           example: "true"
@@ -3052,6 +3054,7 @@ components:
       - BaseModel
       - History
       - MLProperties
+      - Tags
       - beta
       - created
       - dns
