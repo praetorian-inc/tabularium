@@ -15,6 +15,7 @@ func TestAsset_Visit(t *testing.T) {
 		otherAsset BaseAsset
 		wantStatus string
 		wantOrigin string
+		wantTags   []string
 		wantTTL    bool
 	}{
 		{
@@ -127,6 +128,16 @@ func TestAsset_Visit(t *testing.T) {
 			},
 			wantOrigin: "existing",
 		},
+		{
+			name: "tags become unique set",
+			baseAsset: BaseAsset{
+				Tags: Tags{Tags: []string{"tag1", "tag2"}},
+			},
+			otherAsset: BaseAsset{
+				Tags: Tags{Tags: []string{"tag1", "tag3"}},
+			},
+			wantTags: []string{"tag1", "tag2", "tag3"},
+		},
 	}
 
 	for _, tt := range tests {
@@ -159,8 +170,34 @@ func TestAsset_Visit(t *testing.T) {
 			if tt.wantOrigin != "" && result.Origin != tt.wantOrigin {
 				t.Errorf("Visit() origin = %v, want %v", result.Origin, tt.wantOrigin)
 			}
+
+			assert.Equal(t, tt.wantTags, result.Tags.Tags)
 		})
 	}
+}
+
+func TestBaseAsset_TagsMerge(t *testing.T) {
+	t.Run("when specified, tags are overwritten", func(t *testing.T) {
+		original := Asset{BaseAsset: BaseAsset{Tags: Tags{Tags: []string{"tag1", "tag2"}}}}
+		update := Asset{BaseAsset: BaseAsset{Tags: Tags{Tags: []string{"tag2", "tag3"}}}}
+		original.Merge(&update)
+		assert.Equal(t, update.Tags, original.Tags)
+	})
+
+	t.Run("when specified empty, tags are empty", func(t *testing.T) {
+		original := Asset{BaseAsset: BaseAsset{Tags: Tags{Tags: []string{"tag1", "tag2"}}}}
+		update := Asset{BaseAsset: BaseAsset{Tags: Tags{Tags: []string{}}}}
+		original.Merge(&update)
+		assert.Equal(t, update.Tags, original.Tags)
+	})
+
+	t.Run("when unspecified, tags are preserved", func(t *testing.T) {
+		tags := Tags{Tags: []string{"tag1", "tag2"}}
+		original := Asset{BaseAsset: BaseAsset{Tags: tags}}
+		update := Asset{BaseAsset: BaseAsset{}}
+		original.Merge(&update)
+		assert.Equal(t, tags, original.Tags)
+	})
 }
 
 func TestMetadata_Merge(t *testing.T) {
@@ -195,7 +232,7 @@ func TestMetadata_Merge(t *testing.T) {
 				ASNumber: "AS12345",
 			},
 		},
-{
+		{
 			name: "merge populated base with populated slices",
 			base: Metadata{
 				ASNumber: "AS12345",

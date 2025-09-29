@@ -220,3 +220,44 @@ func TestRisk_IsBeta(t *testing.T) {
 	risk = NewRisk(&betaAsset, "test", TriageInfo)
 	assert.True(t, risk.Beta)
 }
+
+func TestRisk_TagsVist(t *testing.T) {
+	t.Run("tags become a unique set", func(t *testing.T) {
+		original := Risk{Tags: Tags{Tags: []string{"tag1", "tag2"}}}
+		update := Risk{Tags: Tags{Tags: []string{"tag2", "tag3"}}}
+		original.Visit(update)
+		assert.Equal(t, []string{"tag1", "tag2", "tag3"}, original.Tags.Tags)
+	})
+
+	t.Run("when specified empty, original tags are preserved", func(t *testing.T) {
+		tags := []string{"tag1", "tag2"}
+		original := Risk{Tags: Tags{Tags: tags}}
+		update := Risk{Tags: Tags{Tags: []string{}}}
+		original.Visit(update)
+		assert.Equal(t, tags, original.Tags.Tags)
+	})
+}
+
+func TestRisk_TagsMerge(t *testing.T) {
+	t.Run("when specified, tags are overwritten", func(t *testing.T) {
+		original := Risk{Tags: Tags{Tags: []string{"tag1", "tag2"}}}
+		update := Risk{Tags: Tags{Tags: []string{"tag2", "tag3"}}}
+		original.Merge(update)
+		assert.Equal(t, update.Tags, original.Tags)
+	})
+
+	t.Run("when specified empty, tags are empty", func(t *testing.T) {
+		original := Risk{Tags: Tags{Tags: []string{"tag1", "tag2"}}}
+		update := Risk{Tags: Tags{Tags: []string{}}}
+		original.Merge(update)
+		assert.Equal(t, update.Tags, original.Tags)
+	})
+
+	t.Run("when unspecified, tags are preserved", func(t *testing.T) {
+		tags := Tags{Tags: []string{"tag1", "tag2"}}
+		original := Risk{Tags: tags}
+		update := Risk{}
+		original.Merge(update)
+		assert.Equal(t, tags, original.Tags)
+	})
+}
