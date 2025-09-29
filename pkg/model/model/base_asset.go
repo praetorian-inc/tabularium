@@ -29,6 +29,7 @@ type BaseAsset struct {
 	History
 	MLProperties
 	Metadata
+	Tags
 }
 
 func init() {
@@ -99,6 +100,7 @@ func (a *BaseAsset) Merge(u Assetlike) {
 		a.Origin = update.Origin
 	}
 	a.Metadata.Merge(update.Metadata)
+	a.Tags.Merge(update.Tags)
 }
 
 func (a *BaseAsset) Visit(o Assetlike) {
@@ -119,6 +121,7 @@ func (a *BaseAsset) Visit(o Assetlike) {
 
 	a.Secret = other.Secret
 	a.Metadata.Visit(other.Metadata)
+	a.Tags.Visit(other.Tags)
 }
 
 func (a *BaseAsset) System() bool {
@@ -268,7 +271,6 @@ func (m *Metadata) updateFields(other Metadata) {
 		}
 	}
 }
-
 
 // GetDescription returns a description for the Metadata model.
 func (m *Metadata) GetDescription() string {
