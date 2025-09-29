@@ -200,3 +200,11 @@ func init() {
 func (a *AgoraCapability) GetDescription() string {
 	return "Describes a single capability registered with Agora and how to execute it."
 }
+
+type AgoraCapabilityOpt func(*AgoraCapability)
+
+func WithAsync(async bool) AgoraCapabilityOpt {
+	return func(a *AgoraCapability) {
+		a.Async = async
+	}
+}
