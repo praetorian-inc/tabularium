@@ -30,6 +30,7 @@ type Technology struct {
 	Created string `neo4j:"created" json:"created" desc:"Timestamp when the technology record was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
 	Visited string `neo4j:"visited" json:"visited" desc:"Timestamp when the technology was last visited or confirmed (RFC3339)." example:"2023-10-27T11:00:00Z"`
 	History
+	Tags
 }
 
 const TechnologyLabel = "Technology"
@@ -60,6 +61,7 @@ func (t *Technology) Visit(other Technology) {
 
 func (t *Technology) Merge(update Technology) {
 	t.History.Update("", "", update.Source, update.Comment, update.History)
+	t.Tags.Merge(update.Tags)
 }
 
 func (t *Technology) Proof(bits []byte, asset *Asset, transportProtocol, port string) File {
