@@ -506,7 +506,7 @@ func TestAWSResource_GetLabels(t *testing.T) {
 	}
 }
 
-func TestAWSResource_NewAsset(t *testing.T) {
+func TestAWSResource_NewAssets(t *testing.T) {
 	t.Run("EC2 instance with DNS and IP", func(t *testing.T) {
 		awsResource, err := NewAWSResource(
 			"arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0",
@@ -520,7 +520,7 @@ func TestAWSResource_NewAsset(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		assets := awsResource.NewAsset()
+		assets := awsResource.NewAssets()
 
 		if len(assets) != 4 {
 			t.Errorf("Expected 4 assets got %d", len(assets))
@@ -551,7 +551,7 @@ func TestAWSResource_NewAsset(t *testing.T) {
 			t.Fatalf("Failed to create AWSResource: %v", err)
 		}
 
-		assets := awsResource.NewAsset()
+		assets := awsResource.NewAssets()
 
 		// Should create 1 asset for the IP
 		if len(assets) != 1 {
@@ -585,7 +585,7 @@ func TestAWSResource_NewAsset(t *testing.T) {
 			t.Fatalf("Failed to create AWSResource: %v", err)
 		}
 
-		assets := awsResource.NewAsset()
+		assets := awsResource.NewAssets()
 
 		if len(assets) != 4 {
 			t.Errorf("Expected 4 assets (two for each IP), got %d", len(assets))
@@ -629,7 +629,7 @@ func TestAWSResource_NewAsset(t *testing.T) {
 			t.Fatalf("Failed to create AWSResource: %v", err)
 		}
 
-		assets := awsResource.NewAsset()
+		assets := awsResource.NewAssets()
 
 		if len(assets) != 4 {
 			t.Errorf("Expected 4 assets (two for each IP), got %d", len(assets))

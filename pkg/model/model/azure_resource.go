@@ -75,6 +75,34 @@ func (a *AzureResource) GetHooks() []registry.Hook {
 	return hooks
 }
 
+func (a *AzureResource) NewAssets() []Asset {
+	assets := []Asset{}
+	ipSet := make(map[string]bool)
+	urlSet := make(map[string]bool)
+
+	record := func(asset Asset) {
+		asset.CloudId = a.Name
+		asset.CloudService = a.ResourceType.String()
+		asset.CloudAccount = a.AccountRef
+		assets = append(assets, asset)
+	}
+
+	for _, ip := range a.GetIPs() {
+		if _, ok := ipSet[ip]; !ok && ip != "" {
+			ipSet[ip] = true
+			record(NewAsset(ip, ip))
+		}
+	}
+	for _, url := range a.GetURLs() {
+		if _, ok := urlSet[url]; !ok && url != "" {
+			urlSet[url] = true
+			record(NewAsset(url, url))
+		}
+	}
+
+	return assets
+}
+
 func (a *AzureResource) GetIPs() []string {
 	ips := make([]string, 0)
 
