@@ -224,7 +224,7 @@ func (w *WebApplication) SeedModels() []Seedable {
 // Hydrate returns the S3 filepath and a function to populate WebApplicationDetails
 func (w *WebApplication) Hydrate() (path string, hydrate func([]byte) error) {
 	hydrate = func(fileContents []byte) error {
-		if err := json.Unmarshal(fileContents, &w.WebApplicationDetails); err != nil {
+		if err := json.Unmarshal(fileContents, &w.WebApplicationDetails.ApiDefinitionContent); err != nil {
 			return fmt.Errorf("failed to hydrate WebApplication details: %w", err)
 		}
 		return nil
@@ -237,7 +237,7 @@ func (w *WebApplication) Dehydrate() (File, Hydratable) {
 	dehydratedApp := *w
 
 	// Create S3 file with API definition content
-	bytes, err := json.Marshal(w.WebApplicationDetails)
+	bytes, err := json.Marshal(w.WebApplicationDetails.ApiDefinitionContent)
 	if err != nil {
 		// Log warning but continue with empty file
 		bytes = []byte("{}")
