@@ -104,9 +104,15 @@ components:
           example: example.local
           type: string
         label:
-          description: Label of the object.
-          example: user
+          description: Primary label of the object.
+          example: ADUser
           type: string
+        labels:
+          description: Secondary labels of the object.
+          example: ADLocalGroup
+          items:
+            type: string
+          type: array
         objectid:
           description: Object identifier.
           example: S-1-5-21-123456789-123456789-123456789-1001
@@ -121,6 +127,7 @@ components:
       - ModelAlias
       - domain
       - label
+      - labels
       - objectid
       type: object
     adcerttemplate:
@@ -138,9 +145,15 @@ components:
           example: example.local
           type: string
         label:
-          description: Label of the object.
-          example: user
+          description: Primary label of the object.
+          example: ADUser
           type: string
+        labels:
+          description: Secondary labels of the object.
+          example: ADLocalGroup
+          items:
+            type: string
+          type: array
         objectid:
           description: Object identifier.
           example: S-1-5-21-123456789-123456789-123456789-1001
@@ -155,6 +168,7 @@ components:
       - ModelAlias
       - domain
       - label
+      - labels
       - objectid
       type: object
     adcomputer:
@@ -172,9 +186,15 @@ components:
           example: example.local
           type: string
         label:
-          description: Label of the object.
-          example: user
+          description: Primary label of the object.
+          example: ADUser
           type: string
+        labels:
+          description: Secondary labels of the object.
+          example: ADLocalGroup
+          items:
+            type: string
+          type: array
         objectid:
           description: Object identifier.
           example: S-1-5-21-123456789-123456789-123456789-1001
@@ -189,6 +209,7 @@ components:
       - ModelAlias
       - domain
       - label
+      - labels
       - objectid
       type: object
     adcontainer:
@@ -206,9 +227,15 @@ components:
           example: example.local
           type: string
         label:
-          description: Label of the object.
-          example: user
+          description: Primary label of the object.
+          example: ADUser
           type: string
+        labels:
+          description: Secondary labels of the object.
+          example: ADLocalGroup
+          items:
+            type: string
+          type: array
         objectid:
           description: Object identifier.
           example: S-1-5-21-123456789-123456789-123456789-1001
@@ -223,6 +250,7 @@ components:
       - ModelAlias
       - domain
       - label
+      - labels
       - objectid
       type: object
     addomain:
@@ -240,9 +268,15 @@ components:
           example: example.local
           type: string
         label:
-          description: Label of the object.
-          example: user
+          description: Primary label of the object.
+          example: ADUser
           type: string
+        labels:
+          description: Secondary labels of the object.
+          example: ADLocalGroup
+          items:
+            type: string
+          type: array
         objectid:
           description: Object identifier.
           example: S-1-5-21-123456789-123456789-123456789-1001
@@ -257,6 +291,7 @@ components:
       - ModelAlias
       - domain
       - label
+      - labels
       - objectid
       type: object
     adenterpriseca:
@@ -274,9 +309,15 @@ components:
           example: example.local
           type: string
         label:
-          description: Label of the object.
-          example: user
+          description: Primary label of the object.
+          example: ADUser
           type: string
+        labels:
+          description: Secondary labels of the object.
+          example: ADLocalGroup
+          items:
+            type: string
+          type: array
         objectid:
           description: Object identifier.
           example: S-1-5-21-123456789-123456789-123456789-1001
@@ -291,6 +332,7 @@ components:
       - ModelAlias
       - domain
       - label
+      - labels
       - objectid
       type: object
     adgpo:
@@ -308,9 +350,15 @@ components:
           example: example.local
           type: string
         label:
-          description: Label of the object.
-          example: user
+          description: Primary label of the object.
+          example: ADUser
           type: string
+        labels:
+          description: Secondary labels of the object.
+          example: ADLocalGroup
+          items:
+            type: string
+          type: array
         objectid:
           description: Object identifier.
           example: S-1-5-21-123456789-123456789-123456789-1001
@@ -325,6 +373,7 @@ components:
       - ModelAlias
       - domain
       - label
+      - labels
       - objectid
       type: object
     adgroup:
@@ -342,9 +391,15 @@ components:
           example: example.local
           type: string
         label:
-          description: Label of the object.
-          example: user
+          description: Primary label of the object.
+          example: ADUser
           type: string
+        labels:
+          description: Secondary labels of the object.
+          example: ADLocalGroup
+          items:
+            type: string
+          type: array
         objectid:
           description: Object identifier.
           example: S-1-5-21-123456789-123456789-123456789-1001
@@ -359,6 +414,7 @@ components:
       - ModelAlias
       - domain
       - label
+      - labels
       - objectid
       type: object
     adissuancepolicy:
@@ -376,9 +432,15 @@ components:
           example: example.local
           type: string
         label:
-          description: Label of the object.
-          example: user
+          description: Primary label of the object.
+          example: ADUser
           type: string
+        labels:
+          description: Secondary labels of the object.
+          example: ADLocalGroup
+          items:
+            type: string
+          type: array
         objectid:
           description: Object identifier.
           example: S-1-5-21-123456789-123456789-123456789-1001
@@ -393,6 +455,7 @@ components:
       - ModelAlias
       - domain
       - label
+      - labels
       - objectid
       type: object
     adlocalgroup:
@@ -410,9 +473,15 @@ components:
           example: example.local
           type: string
         label:
-          description: Label of the object.
-          example: user
+          description: Primary label of the object.
+          example: ADUser
           type: string
+        labels:
+          description: Secondary labels of the object.
+          example: ADLocalGroup
+          items:
+            type: string
+          type: array
         objectid:
           description: Object identifier.
           example: S-1-5-21-123456789-123456789-123456789-1001
@@ -427,6 +496,7 @@ components:
       - ModelAlias
       - domain
       - label
+      - labels
       - objectid
       type: object
     adlocaluser:
@@ -444,9 +514,15 @@ components:
           example: example.local
           type: string
         label:
-          description: Label of the object.
-          example: user
+          description: Primary label of the object.
+          example: ADUser
           type: string
+        labels:
+          description: Secondary labels of the object.
+          example: ADLocalGroup
+          items:
+            type: string
+          type: array
         objectid:
           description: Object identifier.
           example: S-1-5-21-123456789-123456789-123456789-1001
@@ -461,6 +537,7 @@ components:
       - ModelAlias
       - domain
       - label
+      - labels
       - objectid
       type: object
     adntauthstore:
@@ -478,9 +555,15 @@ components:
           example: example.local
           type: string
         label:
-          description: Label of the object.
-          example: user
+          description: Primary label of the object.
+          example: ADUser
           type: string
+        labels:
+          description: Secondary labels of the object.
+          example: ADLocalGroup
+          items:
+            type: string
+          type: array
         objectid:
           description: Object identifier.
           example: S-1-5-21-123456789-123456789-123456789-1001
@@ -495,6 +578,7 @@ components:
       - ModelAlias
       - domain
       - label
+      - labels
       - objectid
       type: object
     adobject:
@@ -512,9 +596,15 @@ components:
           example: example.local
           type: string
         label:
-          description: Label of the object.
-          example: user
+          description: Primary label of the object.
+          example: ADUser
           type: string
+        labels:
+          description: Secondary labels of the object.
+          example: ADLocalGroup
+          items:
+            type: string
+          type: array
         objectid:
           description: Object identifier.
           example: S-1-5-21-123456789-123456789-123456789-1001
@@ -529,6 +619,7 @@ components:
       - ModelAlias
       - domain
       - label
+      - labels
       - objectid
       type: object
     adou:
@@ -546,9 +637,15 @@ components:
           example: example.local
           type: string
         label:
-          description: Label of the object.
-          example: user
+          description: Primary label of the object.
+          example: ADUser
           type: string
+        labels:
+          description: Secondary labels of the object.
+          example: ADLocalGroup
+          items:
+            type: string
+          type: array
         objectid:
           description: Object identifier.
           example: S-1-5-21-123456789-123456789-123456789-1001
@@ -563,6 +660,7 @@ components:
       - ModelAlias
       - domain
       - label
+      - labels
       - objectid
       type: object
     adrelationship:
@@ -592,9 +690,15 @@ components:
           example: example.local
           type: string
         label:
-          description: Label of the object.
-          example: user
+          description: Primary label of the object.
+          example: ADUser
           type: string
+        labels:
+          description: Secondary labels of the object.
+          example: ADLocalGroup
+          items:
+            type: string
+          type: array
         objectid:
           description: Object identifier.
           example: S-1-5-21-123456789-123456789-123456789-1001
@@ -609,6 +713,7 @@ components:
       - ModelAlias
       - domain
       - label
+      - labels
       - objectid
       type: object
     aduser:
@@ -626,9 +731,15 @@ components:
           example: example.local
           type: string
         label:
-          description: Label of the object.
-          example: user
+          description: Primary label of the object.
+          example: ADUser
           type: string
+        labels:
+          description: Secondary labels of the object.
+          example: ADLocalGroup
+          items:
+            type: string
+          type: array
         objectid:
           description: Object identifier.
           example: S-1-5-21-123456789-123456789-123456789-1001
@@ -643,6 +754,7 @@ components:
       - ModelAlias
       - domain
       - label
+      - labels
       - objectid
       type: object
     aegis-mgmt:
