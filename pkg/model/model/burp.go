@@ -1,5 +1,10 @@
 package model
 
+type BurpDastCredentials struct {
+	BurpURL string `json:"url"`
+	Token   string `json:"token"`
+}
+
 type EnabledEndpoint struct {
 	ID string `json:"id"`
 }

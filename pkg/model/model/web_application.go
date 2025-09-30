@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"regexp"
 	"slices"
-	"time"
 
 	"github.com/praetorian-inc/tabularium/pkg/lib/normalize"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
@@ -22,10 +21,9 @@ type BurpMetadata struct {
 	ApiDefinitionContentPath string `neo4j:"api_definition_content_path" json:"api_definition_content_path" dynamodbav:"api_definition_content_path" desc:"S3 path to API definition content for large files" example:"webapplication/user@example.com/api-definition-1234567890.json"`
 }
 
-// WebApplicationDetails contains large API definition content stored in S3
+// We wrap it so its still easy to marshal/unmarshal
 type WebApplicationDetails struct {
 	ApiDefinitionContent APIDefinitionResult `json:"api_definition_content" desc:"Full parsed content of the API definition file (OpenAPI/Swagger/Postman)"`
-	Populated            bool                `json:"populated" desc:"Whether the API definition content has been populated"`
 }
 
 type WebApplicationForGob WebApplication
@@ -245,9 +243,7 @@ func (w *WebApplication) Dehydrate() (File, Hydratable) {
 		bytes = []byte("{}")
 	}
 
-	filename := fmt.Sprintf("webapplication/%s/api-definition-%d.json",
-		w.Username,
-		time.Now().UnixNano())
+	filename := fmt.Sprintf("webapplication/%s/api-definition.json", w.Key)
 
 	detailsFile := NewFile(filename)
 	detailsFile.Bytes = bytes
@@ -282,4 +278,8 @@ func (w *WebApplication) GobDecode(data []byte) error {
 
 	*w = WebApplication(temp)
 	return nil
+}
+
+func (w *WebApplication) IsWebService() bool {
+	return w.ApiDefinitionContentPath != ""
 }
