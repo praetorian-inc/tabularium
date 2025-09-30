@@ -32,25 +32,27 @@ type AssetBuilder interface {
 type CloudResource struct {
 	registry.BaseModel
 	History
-	Key             string            `neo4j:"key" json:"key"`
-	Group           string            `neo4j:"group" json:"group"`
-	IdentifierValue string            `neo4j:"identifier" json:"identifier"`
-	IPs             []string          `neo4j:"ips" json:"ips"`
-	URLs            []string          `neo4j:"urls" json:"urls"`
-	Name            string            `neo4j:"name" json:"name"`
-	DisplayName     string            `neo4j:"displayName" json:"displayName"`
-	Provider        string            `neo4j:"provider" json:"provider"`
-	ResourceType    CloudResourceType `neo4j:"resourceType" json:"resourceType"`
-	Region          string            `neo4j:"region" json:"region"`
-	AccountRef      string            `neo4j:"accountRef" json:"accountRef"`
-	Status          string            `neo4j:"status" json:"status"`
-	Created         string            `neo4j:"created" json:"created"`
-	Visited         string            `neo4j:"visited" json:"visited"`
-	TTL             int64             `neo4j:"ttl" json:"ttl"`
-	Properties      map[string]any    `neo4j:"properties" json:"properties"`
-	Labels          []string          `neo4j:"labels" json:"labels"`
-	Secret          *string           `neo4j:"secret" json:"secret"`
-	Username        string            `neo4j:"username" json:"username"`
+	Key               string            `neo4j:"key" json:"key"`
+	Group             string            `neo4j:"group" json:"group"`
+	IdentifierValue   string            `neo4j:"identifier" json:"identifier"`
+	IPs               []string          `neo4j:"ips" json:"ips"`
+	URLs              []string          `neo4j:"urls" json:"urls"`
+	Name              string            `neo4j:"name" json:"name"`
+	DisplayName       string            `neo4j:"displayName" json:"displayName"`
+	Provider          string            `neo4j:"provider" json:"provider"`
+	ResourceType      CloudResourceType `neo4j:"resourceType" json:"resourceType"`
+	Region            string            `neo4j:"region" json:"region"`
+	AccountRef        string            `neo4j:"accountRef" json:"accountRef"`
+	Status            string            `neo4j:"status" json:"status"`
+	Created           string            `neo4j:"created" json:"created"`
+	Visited           string            `neo4j:"visited" json:"visited"`
+	TTL               int64             `neo4j:"ttl" json:"ttl"`
+	Properties        map[string]any    `neo4j:"properties" json:"properties"`
+	Labels            []string          `neo4j:"labels" json:"labels"`
+	Secret            *string           `neo4j:"secret" json:"secret"`
+	Username          string            `neo4j:"username" json:"username"`
+	OrgPolicyFileName string            `neo4j:"orgPolicyFile" json:"orgPolicyFile"`
+	OrgPolicy         []byte            `neo4j:"-" json:"orgPolicy"`
 	OriginationData
 }
 
@@ -131,6 +133,20 @@ func (c *CloudResource) GetSecret() string {
 		return *c.Secret
 	}
 	return ""
+}
+
+func (c *CloudResource) Hydrate() (path string, hydrate func([]byte) error) {
+	return c.OrgPolicyFileName, func(fileContents []byte) error {
+		c.OrgPolicy = fileContents
+		return nil
+	}
+}
+
+func (c *CloudResource) Dehydrate() (File, Hydratable) {
+	orgPolicy := NewFile(c.OrgPolicyFileName)
+	orgPolicy.Bytes = c.OrgPolicy
+	c.OrgPolicy = nil
+	return orgPolicy, c
 }
 
 func (c *CloudResource) Merge(other *CloudResource) {
