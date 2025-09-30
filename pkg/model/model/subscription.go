@@ -8,21 +8,23 @@ import (
 type Subscription map[string]any
 
 func (sub Subscription) Within(t time.Time) bool {
-	startDate, endDate := &time.Time{}, &time.Time{}
+	var startDate, endDate *time.Time
 
 	if start, ok := sub["startDate"].(string); ok {
-		t, _ = time.Parse("2006-01-02", start)
-		startDate = &t
+		if parsed, err := time.Parse("2006-01-02", start); err == nil {
+			startDate = &parsed
+		}
 	}
 
-	afterStart := startDate == nil || t.After(*startDate)
+	afterStart := startDate == nil || t.After(*startDate) || t.Equal(*startDate)
 
 	if end, ok := sub["endDate"].(string); ok {
-		t, _ = time.Parse("2006-01-02", end)
-		endDate = &t
+		if parsed, err := time.Parse("2006-01-02", end); err == nil {
+			endDate = &parsed
+		}
 	}
 
-	beforeEnd := endDate == nil || t.Before(*endDate)
+	beforeEnd := endDate == nil || t.Before(*endDate) || t.Equal(*endDate)
 
 	return afterStart && beforeEnd
 }
