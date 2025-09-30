@@ -24,7 +24,8 @@ type BurpMetadata struct {
 
 // WebApplicationDetails contains large API definition content stored in S3
 type WebApplicationDetails struct {
-	ApiDefinitionContent map[string]any `json:"api_definition_content" desc:"Full parsed content of the API definition file (OpenAPI/Swagger/Postman)"`
+	ApiDefinitionContent APIDefinitionResult `json:"api_definition_content" desc:"Full parsed content of the API definition file (OpenAPI/Swagger/Postman)"`
+	Populated            bool                `json:"populated" desc:"Whether the API definition content has been populated"`
 }
 
 type WebApplicationForGob WebApplication
