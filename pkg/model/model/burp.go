@@ -1,6 +1,9 @@
 package model
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 type BurpDastCredentials struct {
 	BurpURL string `json:"url"`
@@ -37,7 +40,10 @@ func (r *APIDefinitionResult) GetAPIAuthenticationLabel() string {
 	return "Unknown"
 }
 
-func (r *APIDefinitionResult) ToGraphQLInput() []map[string]any {
+func (r *APIDefinitionResult) ToGraphQLInput() ([]map[string]any, error) {
+	if r.FileBasedDefinition == nil && r.URLBasedDefinition == nil {
+		return nil, fmt.Errorf("no API definition found")
+	}
 	definitions := make([]map[string]any, 0, 1)
 
 	apiDef := make(map[string]any)
@@ -46,16 +52,19 @@ func (r *APIDefinitionResult) ToGraphQLInput() []map[string]any {
 
 	if len(r.Authentications) > 0 {
 		for _, auth := range r.Authentications {
-			typ := auth["__typename"].(string)
-			delete(auth, "__typename")
+			typ, ok := auth["type"].(string)
+			if !ok {
+				return nil, fmt.Errorf("no type found in authentication")
+			}
 			delete(auth, "type")
-			if strings.HasPrefix(typ, "ApiBasic") {
+			typ = strings.ToLower(typ)
+			if strings.HasPrefix(typ, "apibasic") {
 				authentications["basic_authentication"] = auth
 			}
-			if strings.HasPrefix(typ, "ApiKey") {
+			if strings.HasPrefix(typ, "apikey") {
 				authentications["api_key_authentication"] = auth
 			}
-			if strings.HasPrefix(typ, "ApiBearerToken") {
+			if strings.HasPrefix(typ, "bearertoken") {
 				authentications["bearer_token_authentication"] = auth
 			}
 		}
@@ -93,5 +102,5 @@ func (r *APIDefinitionResult) ToGraphQLInput() []map[string]any {
 	}
 
 	definitions = append(definitions, apiDef)
-	return definitions
+	return definitions, nil
 }
