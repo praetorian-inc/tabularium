@@ -1,20 +1,39 @@
 package model
 
 import (
+	"bytes"
+	"encoding/gob"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"regexp"
 	"slices"
+	"time"
 
 	"github.com/praetorian-inc/tabularium/pkg/lib/normalize"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 type BurpMetadata struct {
-	BurpSiteID     string `neo4j:"burp_site_id" json:"burp_site_id" dynamodbav:"burp_site_id" desc:"Burp Enterprise site identifier" example:"18865"`
-	BurpFolderID   string `neo4j:"burp_folder_id" json:"burp_folder_id" dynamodbav:"burp_folder_id" desc:"Burp Enterprise folder identifier" example:"17519"`
-	BurpScheduleID string `neo4j:"burp_schedule_id" json:"burp_schedule_id" dynamodbav:"burp_schedule_id" desc:"Burp Enterprise schedule identifier" example:"45934"`
+	BurpSiteID               string `neo4j:"burp_site_id" json:"burp_site_id" dynamodbav:"burp_site_id" desc:"Burp Enterprise site identifier" example:"18865"`
+	BurpFolderID             string `neo4j:"burp_folder_id" json:"burp_folder_id" dynamodbav:"burp_folder_id" desc:"Burp Enterprise folder identifier" example:"17519"`
+	BurpScheduleID           string `neo4j:"burp_schedule_id" json:"burp_schedule_id" dynamodbav:"burp_schedule_id" desc:"Burp Enterprise schedule identifier" example:"45934"`
+	ApiDefinitionURL         string `json:"api_definition_url" dynamodbav:"api_definition_url" desc:"URL to OpenAPI/Swagger specification" example:"https://api.example.com/openapi.json"`
+	ApiDefinitionFile        string `json:"api_definition_file" dynamodbav:"api_definition_file" desc:"Filename of the API definition" example:"openapi.yaml"`
+	ApiDefinitionContentPath string `neo4j:"api_definition_content_path" json:"api_definition_content_path" dynamodbav:"api_definition_content_path" desc:"S3 path to API definition content for large files" example:"webapplication/user@example.com/api-definition-1234567890.json"`
+	ApiAuthScheme            string `json:"api_auth_scheme" dynamodbav:"api_auth_scheme" desc:"Authentication scheme for API (BearerToken, ApiKey, Basic)" example:"BearerToken"`
+	ApiEndpointsCount        int    `json:"api_endpoints_count" dynamodbav:"api_endpoints_count" desc:"Number of enabled API endpoints" example:"25"`
 }
+
+// WebApplicationDetails contains large API definition content stored in S3
+type WebApplicationDetails struct {
+	ApiDefinitionContent string   `json:"api_definition_content" desc:"Full content of the API definition file (OpenAPI/Swagger/Postman)"`
+	ApiVersion           string   `json:"api_version" desc:"API version from definition"`
+	ApiTitle             string   `json:"api_title" desc:"API title from definition"`
+	ApiEndpoints         []string `json:"api_endpoints" desc:"List of endpoint paths"`
+}
+
+type WebApplicationForGob WebApplication
 
 type WebApplication struct {
 	BaseAsset
@@ -22,6 +41,9 @@ type WebApplication struct {
 	URLs       []string `neo4j:"urls" json:"urls" dynamodbav:"urls" desc:"Additional URLs associated with this web application" example:"[\"https://api.example.com\", \"https://admin.example.com\"]"`
 	Name       string   `neo4j:"name" json:"name" dynamodbav:"name" desc:"Name of the web application" example:"Example App"`
 	BurpMetadata
+
+	// S3-stored details (not saved to Neo4j/DynamoDB)
+	WebApplicationDetails `neo4j:"-" json:"-" dynamodbav:"-"`
 }
 
 const WebApplicationLabel = "WebApplication"
@@ -133,6 +155,9 @@ func (w *WebApplication) Merge(other Assetlike) {
 			w.URLs = append(w.URLs, u)
 		}
 	}
+	if otherApp.Source != "" {
+		w.Source = otherApp.Source
+	}
 	if otherApp.BurpSiteID != "" {
 		w.BurpSiteID = otherApp.BurpSiteID
 	}
@@ -141,6 +166,9 @@ func (w *WebApplication) Merge(other Assetlike) {
 	}
 	if otherApp.BurpScheduleID != "" {
 		w.BurpScheduleID = otherApp.BurpScheduleID
+	}
+	if otherApp.ApiDefinitionContentPath != "" {
+		w.ApiDefinitionContentPath = otherApp.ApiDefinitionContentPath
 	}
 }
 
@@ -161,6 +189,21 @@ func (w *WebApplication) Visit(other Assetlike) {
 	}
 	if otherApp.BurpScheduleID != "" {
 		w.BurpScheduleID = otherApp.BurpScheduleID
+	}
+	if otherApp.ApiDefinitionURL != "" {
+		w.ApiDefinitionURL = otherApp.ApiDefinitionURL
+	}
+	if otherApp.ApiDefinitionFile != "" {
+		w.ApiDefinitionFile = otherApp.ApiDefinitionFile
+	}
+	if otherApp.ApiDefinitionContentPath != "" {
+		w.ApiDefinitionContentPath = otherApp.ApiDefinitionContentPath
+	}
+	if otherApp.ApiAuthScheme != "" {
+		w.ApiAuthScheme = otherApp.ApiAuthScheme
+	}
+	if otherApp.ApiEndpointsCount > 0 {
+		w.ApiEndpointsCount = otherApp.ApiEndpointsCount
 	}
 }
 
@@ -192,4 +235,65 @@ func NewWebApplicationSeed(primaryURL string) WebApplication {
 func (w *WebApplication) SeedModels() []Seedable {
 	copy := *w
 	return []Seedable{&copy}
+}
+
+// Hydrate returns the S3 filepath and a function to populate WebApplicationDetails
+func (w *WebApplication) Hydrate() (path string, hydrate func([]byte) error) {
+	hydrate = func(fileContents []byte) error {
+		if err := json.Unmarshal(fileContents, &w.WebApplicationDetails); err != nil {
+			return fmt.Errorf("failed to hydrate WebApplication details: %w", err)
+		}
+		return nil
+	}
+	return w.ApiDefinitionContentPath, hydrate
+}
+
+// Dehydrate creates an S3 file with WebApplicationDetails and returns lightweight model
+func (w *WebApplication) Dehydrate() (File, Hydratable) {
+	dehydratedApp := *w
+
+	// Create S3 file with API definition content
+	bytes, err := json.Marshal(w.WebApplicationDetails)
+	if err != nil {
+		// Log warning but continue with empty file
+		bytes = []byte("{}")
+	}
+
+	filename := fmt.Sprintf("webapplication/%s/api-definition-%d.json",
+		w.Username,
+		time.Now().UnixNano())
+
+	detailsFile := NewFile(filename)
+	detailsFile.Bytes = bytes
+
+	// Store filepath reference
+	dehydratedApp.ApiDefinitionContentPath = detailsFile.Name
+
+	// Clear large content from model
+	dehydratedApp.WebApplicationDetails = WebApplicationDetails{}
+
+	return detailsFile, &dehydratedApp
+}
+
+// GobEncode ensures WebApplicationDetails is always empty during serialization
+func (w WebApplication) GobEncode() ([]byte, error) {
+	temp := WebApplicationForGob(w)
+	temp.WebApplicationDetails = WebApplicationDetails{}
+
+	var buf bytes.Buffer
+	encoder := gob.NewEncoder(&buf)
+	err := encoder.Encode(temp)
+	return buf.Bytes(), err
+}
+
+func (w *WebApplication) GobDecode(data []byte) error {
+	var temp WebApplicationForGob
+
+	decoder := gob.NewDecoder(bytes.NewReader(data))
+	if err := decoder.Decode(&temp); err != nil {
+		return err
+	}
+
+	*w = WebApplication(temp)
+	return nil
 }
