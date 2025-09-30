@@ -10,7 +10,7 @@ import (
 func TestExampleSubscriptionData(t *testing.T) {
 	// This is the exact JSON data provided by the user
 	jsonData := `{
-		"username": "chariot+alteryx@praetorian.com",
+		"username": "chariot+example@praetorian.com",
 		"key": "#setting#subscription",
 		"last_modified": "2025-09-29T14:55:36.862508315Z",
 		"name": "subscription",
