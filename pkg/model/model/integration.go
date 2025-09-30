@@ -33,11 +33,6 @@ func (i *Integration) Valid() bool {
 	return integrationKey.MatchString(i.Key)
 }
 
-func (i *Integration) Attribute(name, value string) Attribute {
-	attr := NewAttribute(name, value, i)
-	return attr
-}
-
 func (i *Integration) Identifier() string {
 	return i.Value
 }

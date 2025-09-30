@@ -63,10 +63,11 @@ var (
 type ADObject struct {
 	BaseAsset
 	registry.ModelAlias
-	Label    string `neo4j:"label" json:"label" desc:"Label of the object." example:"user"`
-	Domain   string `neo4j:"domain" json:"domain" desc:"AD domain this object belongs to." example:"example.local"`
-	ObjectID string `neo4j:"objectid" json:"objectid" desc:"Object identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
-	SID      string `neo4j:"sid" json:"sid,omitempty" desc:"Security identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
+	Label           string   `neo4j:"label" json:"label" desc:"Primary label of the object." example:"ADUser"`
+	SecondaryLabels []string `neo4j:"-" json:"labels" desc:"Secondary labels of the object." example:"ADLocalGroup"`
+	Domain          string   `neo4j:"domain" json:"domain" desc:"AD domain this object belongs to." example:"example.local"`
+	ObjectID        string   `neo4j:"objectid" json:"objectid" desc:"Object identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
+	SID             string   `neo4j:"sid" json:"sid,omitempty" desc:"Security identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
 	ADProperties
 }
 
@@ -75,6 +76,7 @@ func (ad *ADObject) GetLabels() []string {
 	if ad.Label != "" {
 		labels = append(labels, ad.Label)
 	}
+	labels = append(labels, ad.SecondaryLabels...)
 	if ad.Source == SeedSource {
 		labels = append(labels, SeedLabel)
 	}
@@ -255,9 +257,9 @@ type ADProperties struct {
 	CertName                                string   `neo4j:"certname" json:"certname,omitempty" desc:"Common name of the certificate" example:"UserAuthentication"`
 	CertThumbprint                          string   `neo4j:"certthumbprint" json:"certthumbprint,omitempty" desc:"SHA1 thumbprint of the certificate" example:"1234567890ABCDEF1234567890ABCDEF12345678"`
 	CertThumbprints                         []string `neo4j:"certthumbprints" json:"certthumbprints,omitempty" desc:"List of certificate thumbprints associated with the object" example:"[\"1234567890ABCDEF1234567890ABCDEF12345678\", \"ABCDEF1234567890ABCDEF1234567890ABCDEF12\"]"`
-	HasEnrollmentAgentRestrictions          string   `neo4j:"hasenrollmentagentrestrictions" json:"hasenrollmentagentrestrictions,omitempty" desc:"Whether enrollment agent restrictions are configured" example:"true"`
+	HasEnrollmentAgentRestrictions          bool     `neo4j:"hasenrollmentagentrestrictions" json:"hasenrollmentagentrestrictions,omitempty" desc:"Whether enrollment agent restrictions are configured" example:"true"`
 	EnrollmentAgentRestrictionsCollected    bool     `neo4j:"enrollmentagentrestrictionscollected" json:"enrollmentagentrestrictionscollected,omitempty" desc:"Whether enrollment agent restrictions data has been collected" example:"true"`
-	IsUserSpecifiesSanEnabled               string   `neo4j:"isuserspecifiessanenabled" json:"isuserspecifiessanenabled,omitempty" desc:"Whether users can specify Subject Alternative Name in certificate requests" example:"false"`
+	IsUserSpecifiesSanEnabled               bool     `neo4j:"isuserspecifiessanenabled" json:"isuserspecifiessanenabled,omitempty" desc:"Whether users can specify Subject Alternative Name in certificate requests" example:"false"`
 	IsUserSpecifiesSanEnabledCollected      bool     `neo4j:"isuserspecifiessanenabledcollected" json:"isuserspecifiessanenabledcollected,omitempty" desc:"Whether SAN enablement data has been collected" example:"true"`
 	RoleSeparationEnabled                   string   `neo4j:"roleseparationenabled" json:"roleseparationenabled,omitempty" desc:"Whether CA role separation is enforced" example:"true"`
 	RoleSeparationEnabledCollected          bool     `neo4j:"roleseparationenabledcollected" json:"roleseparationenabledcollected,omitempty" desc:"Whether role separation data has been collected" example:"true"`
@@ -273,7 +275,7 @@ type ADProperties struct {
 	IsACL                                   string   `neo4j:"isacl" json:"isacl,omitempty" desc:"Whether ACL data is available for this object" example:"true"`
 	IsACLProtected                          bool     `neo4j:"isaclprotected" json:"isaclprotected,omitempty" desc:"Whether ACL inheritance is disabled" example:"false"`
 	InheritanceHash                         string   `neo4j:"inheritancehash" json:"inheritancehash,omitempty" desc:"Hash of the inheritance chain for GPO processing" example:"A1B2C3D4E5F6"`
-	InheritanceHashes                       string   `neo4j:"inheritancehashes" json:"inheritancehashes,omitempty" desc:"Collection of inheritance hashes for the object" example:"[\"A1B2C3D4E5F6\", \"F6E5D4C3B2A1\"]"`
+	InheritanceHashes                       []string `neo4j:"inheritancehashes" json:"inheritancehashes,omitempty" desc:"Collection of inheritance hashes for the object" example:"[\"A1B2C3D4E5F6\", \"F6E5D4C3B2A1\"]"`
 	Enforced                                string   `neo4j:"enforced" json:"enforced,omitempty" desc:"Whether GPO link is enforced (no override)" example:"true"`
 	Department                              string   `neo4j:"department" json:"department,omitempty" desc:"Department the user belongs to" example:"Information Technology"`
 	HasCrossCertificatePair                 bool     `neo4j:"hascrosscertificatepair" json:"hascrosscertificatepair,omitempty" desc:"Whether object has cross-certificate pairs" example:"false"`
@@ -285,7 +287,7 @@ type ADProperties struct {
 	HasLAPS                                 bool     `neo4j:"haslaps" json:"haslaps,omitempty" desc:"Whether Local Administrator Password Solution is enabled" example:"true"`
 	DontRequirePreAuth                      bool     `neo4j:"dontreqpreauth" json:"dontreqpreauth,omitempty" desc:"Kerberos pre-authentication is not required" example:"false"`
 	LogonType                               string   `neo4j:"logontype" json:"logontype,omitempty" desc:"Type of logon allowed for the account" example:"Interactive"`
-	HasURA                                  string   `neo4j:"hasura" json:"hasura,omitempty" desc:"Whether User Rights Assignments are configured" example:"true"`
+	HasURA                                  bool     `neo4j:"hasura" json:"hasura,omitempty" desc:"Whether User Rights Assignments are configured" example:"true"`
 	PasswordNeverExpires                    bool     `neo4j:"pwdneverexpires" json:"pwdneverexpires,omitempty" desc:"Password is set to never expire" example:"false"`
 	PasswordNotRequired                     bool     `neo4j:"passwordnotreqd" json:"passwordnotreqd,omitempty" desc:"No password is required for the account" example:"false"`
 	FunctionalLevel                         string   `neo4j:"functionallevel" json:"functionallevel,omitempty" desc:"Domain or forest functional level" example:"2016"`
@@ -293,9 +295,9 @@ type ADProperties struct {
 	SpoofSIDHistoryBlocked                  string   `neo4j:"spoofsidhistoryblocked" json:"spoofsidhistoryblocked,omitempty" desc:"Whether SID history spoofing is blocked" example:"true"`
 	TrustedToAuth                           bool     `neo4j:"trustedtoauth" json:"trustedtoauth,omitempty" desc:"Account is trusted for constrained delegation with protocol transition" example:"false"`
 	SAMAccountName                          string   `neo4j:"samaccountname" json:"samaccountname,omitempty" desc:"Pre-Windows 2000 logon name" example:"jsmith"`
-	CertificateMappingMethodsRaw            string   `neo4j:"certificatemappingmethodsraw" json:"certificatemappingmethodsraw,omitempty" desc:"Raw certificate mapping methods value" example:"0x1F"`
-	CertificateMappingMethods               string   `neo4j:"certificatemappingmethods" json:"certificatemappingmethods,omitempty" desc:"Certificate to account mapping methods" example:"Subject,Issuer,SAN"`
-	StrongCertificateBindingEnforcementRaw  string   `neo4j:"strongcertificatebindingenforcementraw" json:"strongcertificatebindingenforcementraw,omitempty" desc:"Raw strong certificate binding enforcement value" example:"2"`
+	CertificateMappingMethodsRaw            int      `neo4j:"certificatemappingmethodsraw" json:"certificatemappingmethodsraw,omitempty" desc:"Raw certificate mapping methods value" example:"0x1F"`
+	CertificateMappingMethods               []string `neo4j:"certificatemappingmethods" json:"certificatemappingmethods,omitempty" desc:"Certificate to account mapping methods" example:"Subject,Issuer,SAN"`
+	StrongCertificateBindingEnforcementRaw  int      `neo4j:"strongcertificatebindingenforcementraw" json:"strongcertificatebindingenforcementraw,omitempty" desc:"Raw strong certificate binding enforcement value" example:"2"`
 	StrongCertificateBindingEnforcement     string   `neo4j:"strongcertificatebindingenforcement" json:"strongcertificatebindingenforcement,omitempty" desc:"Level of strong certificate binding enforcement" example:"Full"`
 	EKUs                                    []string `neo4j:"ekus" json:"ekus,omitempty" desc:"Extended Key Usage OIDs for certificates" example:"[\"1.3.6.1.5.5.7.3.2\", \"1.3.6.1.5.5.7.3.4\"]"`
 	SubjectAltRequireUPN                    bool     `neo4j:"subjectaltrequireupn" json:"subjectaltrequireupn,omitempty" desc:"Certificate requires UPN in Subject Alternative Name" example:"true"`
@@ -368,12 +370,12 @@ type ADProperties struct {
 	IsReadOnlyDC                            bool     `neo4j:"isreadonlydc" json:"isreadonlydc,omitempty" desc:"Whether computer is a Read-Only Domain Controller" example:"false"`
 	HTTPEnrollmentEndpoints                 string   `neo4j:"httpenrollmentendpoints" json:"httpenrollmentendpoints,omitempty" desc:"List of HTTP certificate enrollment endpoints" example:"[\"http://ca1.contoso.local/certsrv\", \"http://ca2.contoso.local/certsrv\"]"`
 	HTTPSEnrollmentEndpoints                string   `neo4j:"httpsenrollmentendpoints" json:"httpsenrollmentendpoints,omitempty" desc:"List of HTTPS certificate enrollment endpoints" example:"[\"https://ca1.contoso.local/certsrv\", \"https://ca2.contoso.local/certsrv\"]"`
-	HasVulnerableEndpoint                   string   `neo4j:"hasvulnerableendpoint" json:"hasvulnerableendpoint,omitempty" desc:"Whether object has vulnerable enrollment endpoints" example:"true"`
-	RequireSecuritySignature                string   `neo4j:"requiresecuritysignature" json:"requiresecuritysignature,omitempty" desc:"Whether security signature is required" example:"true"`
-	EnableSecuritySignature                 string   `neo4j:"enablesecuritysignature" json:"enablesecuritysignature,omitempty" desc:"Whether security signature is enabled" example:"true"`
-	RestrictReceivingNTLMTraffic            string   `neo4j:"restrictreceivingntlmtraffic" json:"restrictreceivingntlmtraffic,omitempty" desc:"Restriction policy for receiving NTLM traffic" example:"DenyAll"`
-	NTLMMinServerSec                        string   `neo4j:"ntlmminserversec" json:"ntlmminserversec,omitempty" desc:"Minimum security level for NTLM SSP server" example:"537395200"`
-	NTLMMinClientSec                        string   `neo4j:"ntlmminclientsec" json:"ntlmminclientsec,omitempty" desc:"Minimum security level for NTLM SSP client" example:"537395200"`
+	HasVulnerableEndpoint                   bool     `neo4j:"hasvulnerableendpoint" json:"hasvulnerableendpoint,omitempty" desc:"Whether object has vulnerable enrollment endpoints" example:"true"`
+	RequireSecuritySignature                bool     `neo4j:"requiresecuritysignature" json:"requiresecuritysignature,omitempty" desc:"Whether security signature is required" example:"true"`
+	EnableSecuritySignature                 bool     `neo4j:"enablesecuritysignature" json:"enablesecuritysignature,omitempty" desc:"Whether security signature is enabled" example:"true"`
+	RestrictReceivingNTLMTraffic            bool     `neo4j:"restrictreceivingntmltraffic" json:"restrictreceivingntmltraffic,omitempty" desc:"Restriction policy for receiving NTLM traffic" example:"DenyAll"`
+	NTLMMinServerSec                        int      `neo4j:"ntlmminserversec" json:"ntlmminserversec,omitempty" desc:"Minimum security level for NTLM SSP server" example:"537395200"`
+	NTLMMinClientSec                        int      `neo4j:"ntlmminclientsec" json:"ntlmminclientsec,omitempty" desc:"Minimum security level for NTLM SSP client" example:"537395200"`
 	LMCompatibilityLevel                    string   `neo4j:"lmcompatibilitylevel" json:"lmcompatibilitylevel,omitempty" desc:"LAN Manager authentication compatibility level" example:"5"`
 	UseMachineID                            string   `neo4j:"usemachineid" json:"usemachineid,omitempty" desc:"Whether to use machine identity for authentication" example:"true"`
 	ClientAllowedNTLMServers                string   `neo4j:"clientallowedntlmservers" json:"clientallowedntlmservers,omitempty" desc:"List of servers allowed to use NTLM authentication" example:"*.contoso.local"`

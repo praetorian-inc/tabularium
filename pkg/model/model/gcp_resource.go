@@ -22,15 +22,12 @@ func init() {
 }
 
 func NewGCPResource(name, accountRef string, rtype CloudResourceType, properties map[string]any) (GCPResource, error) {
-	key := fmt.Sprintf("#gcpresource#%s#%s", accountRef, name)
-
 	r := GCPResource{
 		CloudResource: CloudResource{
-			Key:          key,
 			Name:         name,
 			Provider:     "gcp",
 			Properties:   properties,
-			ResourceType: CloudResourceType(rtype),
+			ResourceType: rtype,
 			AccountRef:   accountRef,
 		},
 	}
@@ -46,6 +43,7 @@ func (a *GCPResource) Defaulted() {
 	a.Origins = []string{"gcp"}
 	a.AttackSurface = []string{"cloud"}
 	a.CloudResource.Defaulted()
+	a.BaseAsset.Defaulted()
 }
 
 func (a *GCPResource) GetDisplayName() string {
@@ -58,6 +56,7 @@ func (a *GCPResource) GetDisplayName() string {
 
 func (a *GCPResource) GetHooks() []registry.Hook {
 	hooks := []registry.Hook{
+		useGroupAndIdentifier(a, &a.AccountRef, &a.Name),
 		{
 			Call: func() error {
 				a.CloudResource.Key = fmt.Sprintf("#gcpresource#%s#%s", a.AccountRef, a.Name)
@@ -67,6 +66,7 @@ func (a *GCPResource) GetHooks() []registry.Hook {
 				return nil
 			},
 		},
+		setGroupAndIdentifier(a, &a.AccountRef, &a.Name),
 	}
 
 	hooks = append(hooks, a.CloudResource.GetHooks()...)
@@ -90,23 +90,32 @@ func (a *GCPResource) GetRegion() string {
 	return ""
 }
 
-func (a *GCPResource) Group() string { return "gcpresource" }
+func (a *GCPResource) Group() string {
+	return a.AccountRef
+}
 
-func (a *GCPResource) Merge(otherModel any) {
-	other, ok := otherModel.(*GCPResource)
+func (a *GCPResource) Identifier() string {
+	return a.Name
+}
+
+func (a *GCPResource) Visit(other Assetlike) {
+	otherResource, ok := other.(*GCPResource)
 	if !ok {
 		return
 	}
-	a.CloudResource.Merge(&other.CloudResource)
+
+	a.CloudResource.Visit(&otherResource.CloudResource)
+	a.BaseAsset.Visit(otherResource)
 }
 
-func (a *GCPResource) Visit(otherModel any) error {
-	other, ok := otherModel.(*GCPResource)
+func (a *GCPResource) Merge(other Assetlike) {
+	otherResource, ok := other.(*GCPResource)
 	if !ok {
-		return fmt.Errorf("expected *GCPResource, got %T", otherModel)
+		return
 	}
-	a.CloudResource.Visit(&other.CloudResource)
-	return nil
+
+	a.CloudResource.Merge(&otherResource.CloudResource)
+	a.BaseAsset.Merge(otherResource)
 }
 
 func (a *GCPResource) WithStatus(status string) Target {

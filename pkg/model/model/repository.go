@@ -36,11 +36,6 @@ func (r *Repository) Valid() bool {
 	return repository.MatchString(r.URL) && repositoryKey.MatchString(r.Key)
 }
 
-func (r *Repository) Attribute(name, value string) Attribute {
-	attr := NewAttribute(name, value, r)
-	return attr
-}
-
 func (r *Repository) Identifier() string {
 	return r.Name
 }

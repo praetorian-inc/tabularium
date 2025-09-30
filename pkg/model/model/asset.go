@@ -190,11 +190,6 @@ func (a *Asset) SetSource(source string) {
 	a.Class = a.GetClass()
 }
 
-func (a *Asset) Attribute(name, value string) Attribute {
-	attr := NewAttribute(name, value, a)
-	return attr
-}
-
 func (a *Asset) GetHooks() []registry.Hook {
 	return []registry.Hook{
 		useGroupAndIdentifier(a, &a.DNS, &a.Name),
