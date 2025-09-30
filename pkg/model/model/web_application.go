@@ -19,18 +19,12 @@ type BurpMetadata struct {
 	BurpFolderID             string `neo4j:"burp_folder_id" json:"burp_folder_id" dynamodbav:"burp_folder_id" desc:"Burp Enterprise folder identifier" example:"17519"`
 	BurpScheduleID           string `neo4j:"burp_schedule_id" json:"burp_schedule_id" dynamodbav:"burp_schedule_id" desc:"Burp Enterprise schedule identifier" example:"45934"`
 	ApiDefinitionURL         string `json:"api_definition_url" dynamodbav:"api_definition_url" desc:"URL to OpenAPI/Swagger specification" example:"https://api.example.com/openapi.json"`
-	ApiDefinitionFile        string `json:"api_definition_file" dynamodbav:"api_definition_file" desc:"Filename of the API definition" example:"openapi.yaml"`
 	ApiDefinitionContentPath string `neo4j:"api_definition_content_path" json:"api_definition_content_path" dynamodbav:"api_definition_content_path" desc:"S3 path to API definition content for large files" example:"webapplication/user@example.com/api-definition-1234567890.json"`
-	ApiAuthScheme            string `json:"api_auth_scheme" dynamodbav:"api_auth_scheme" desc:"Authentication scheme for API (BearerToken, ApiKey, Basic)" example:"BearerToken"`
-	ApiEndpointsCount        int    `json:"api_endpoints_count" dynamodbav:"api_endpoints_count" desc:"Number of enabled API endpoints" example:"25"`
 }
 
 // WebApplicationDetails contains large API definition content stored in S3
 type WebApplicationDetails struct {
-	ApiDefinitionContent string   `json:"api_definition_content" desc:"Full content of the API definition file (OpenAPI/Swagger/Postman)"`
-	ApiVersion           string   `json:"api_version" desc:"API version from definition"`
-	ApiTitle             string   `json:"api_title" desc:"API title from definition"`
-	ApiEndpoints         []string `json:"api_endpoints" desc:"List of endpoint paths"`
+	ApiDefinitionContent map[string]any `json:"api_definition_content" desc:"Full parsed content of the API definition file (OpenAPI/Swagger/Postman)"`
 }
 
 type WebApplicationForGob WebApplication
@@ -193,17 +187,8 @@ func (w *WebApplication) Visit(other Assetlike) {
 	if otherApp.ApiDefinitionURL != "" {
 		w.ApiDefinitionURL = otherApp.ApiDefinitionURL
 	}
-	if otherApp.ApiDefinitionFile != "" {
-		w.ApiDefinitionFile = otherApp.ApiDefinitionFile
-	}
 	if otherApp.ApiDefinitionContentPath != "" {
 		w.ApiDefinitionContentPath = otherApp.ApiDefinitionContentPath
-	}
-	if otherApp.ApiAuthScheme != "" {
-		w.ApiAuthScheme = otherApp.ApiAuthScheme
-	}
-	if otherApp.ApiEndpointsCount > 0 {
-		w.ApiEndpointsCount = otherApp.ApiEndpointsCount
 	}
 }
 
