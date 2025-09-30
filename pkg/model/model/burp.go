@@ -30,6 +30,13 @@ type APIDefinitionResult struct {
 	Credentials     []map[string]any `json:"credentials,omitempty"`
 }
 
+func (r *APIDefinitionResult) GetAPIAuthenticationLabel() string {
+	for _, auth := range r.Authentications {
+		return auth["label"].(string)
+	}
+	return "Unknown"
+}
+
 func (r *APIDefinitionResult) ToGraphQLInput() []map[string]any {
 	definitions := make([]map[string]any, 0, 1)
 
