@@ -41,6 +41,10 @@ func (i *Integration) Group() string {
 	return i.Name
 }
 
+func (i *Integration) Attribute(name, value string) Attribute {
+	return NewAttribute(name, value, i)
+}
+
 func (i *Integration) WithStatus(status string) Target {
 	ret := *i
 	ret.Status = status

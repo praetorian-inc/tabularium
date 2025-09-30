@@ -52,6 +52,10 @@ func (r *Repository) IsPrivate() bool {
 	return false
 }
 
+func (r *Repository) Attribute(name, value string) Attribute {
+	return NewAttribute(name, value, r)
+}
+
 func (r *Repository) WithStatus(status string) Target {
 	ret := *r
 	ret.Status = status
