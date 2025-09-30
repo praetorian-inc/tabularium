@@ -1,11 +1,5 @@
 package model
 
-import (
-	"fmt"
-	"slices"
-	"strings"
-)
-
-var configurationValidator = map[string]func(value any) error{
+var configurationValidators = map[string]func(value any) error{
 	"subscription": subscriptionValidator,
 }
