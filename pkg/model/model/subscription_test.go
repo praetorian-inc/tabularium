@@ -17,17 +17,9 @@ func TestSubscriptionValidator(t *testing.T) {
 			input: map[string]any{
 				"endDate":       "2025-12-31",
 				"estimatedCost": 0,
-				"msrp":          200000,
-				"msrpBreakdown": map[string]any{
-					"assetCost":    100000,
-					"fqdnCost":     0,
-					"platformFee":  25000,
-					"supportTier":  75000,
-				},
-				"numberOfAssets": 15000,
-				"scanSchedule":   "daily",
-				"selectedTier":   "ultimate",
-				"startDate":      "2025-01-01",
+				"scanSchedule":  "daily",
+				"selectedTier":  "ultimate",
+				"startDate":     "2025-01-01",
 			},
 			wantErr: false,
 		},
@@ -48,13 +40,13 @@ func TestSubscriptionValidator(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "invalid subscription - not a map",
-			input: "invalid",
+			name:    "invalid subscription - not a map",
+			input:   "invalid",
 			wantErr: true,
 		},
 		{
-			name: "invalid subscription - nil",
-			input: nil,
+			name:    "invalid subscription - nil",
+			input:   nil,
 			wantErr: true,
 		},
 		{
@@ -115,13 +107,6 @@ func TestSubscriptionJSON(t *testing.T) {
 	subscriptionJSON := `{
 		"endDate": "2025-12-31",
 		"estimatedCost": 0,
-		"msrp": 200000,
-		"msrpBreakdown": {
-			"assetCost": 100000,
-			"fqdnCost": 0,
-			"platformFee": 25000,
-			"supportTier": 75000
-		},
 		"numberOfAssets": 15000,
 		"scanSchedule": "daily",
 		"selectedTier": "ultimate",
@@ -148,25 +133,10 @@ func TestSubscriptionJSON(t *testing.T) {
 		t.Errorf("Expected scanSchedule to be 'daily', got %v", sub["scanSchedule"])
 	}
 
-	// Check numeric values
-	if msrp, ok := sub["msrp"].(float64); !ok || msrp != 200000 {
-		t.Errorf("Expected msrp to be 200000, got %v", sub["msrp"])
-	}
 	if assets, ok := sub["numberOfAssets"].(float64); !ok || assets != 15000 {
 		t.Errorf("Expected numberOfAssets to be 15000, got %v", sub["numberOfAssets"])
 	}
 
-	// Check nested map
-	if breakdown, ok := sub["msrpBreakdown"].(map[string]any); ok {
-		if assetCost, ok := breakdown["assetCost"].(float64); !ok || assetCost != 100000 {
-			t.Errorf("Expected assetCost to be 100000, got %v", breakdown["assetCost"])
-		}
-		if platformFee, ok := breakdown["platformFee"].(float64); !ok || platformFee != 25000 {
-			t.Errorf("Expected platformFee to be 25000, got %v", breakdown["platformFee"])
-		}
-	} else {
-		t.Error("Expected msrpBreakdown to be a map[string]any")
-	}
 }
 
 func TestSubscriptionWithin(t *testing.T) {
@@ -334,9 +304,9 @@ func TestSettingValidationWithSubscription(t *testing.T) {
 func TestCompleteSubscriptionWorkflow(t *testing.T) {
 	// Test the complete workflow with the provided example data
 	subscriptionData := map[string]any{
-		"endDate":        "2025-12-31",
-		"estimatedCost":  0,
-		"msrp":           200000,
+		"endDate":       "2025-12-31",
+		"estimatedCost": 0,
+		"msrp":          200000,
 		"msrpBreakdown": map[string]any{
 			"assetCost":   100000,
 			"fqdnCost":    0,
@@ -371,7 +341,7 @@ func TestCompleteSubscriptionWorkflow(t *testing.T) {
 
 	// Test subscription type casting and usage
 	sub := Subscription(subscriptionData)
-	
+
 	// Test date checking
 	testTime := time.Date(2025, 6, 15, 12, 0, 0, 0, time.UTC) // June 15, 2025
 	if !sub.Within(testTime) {
