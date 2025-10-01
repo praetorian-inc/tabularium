@@ -1,6 +1,13 @@
 package model
 
-import "strings"
+import (
+	"github.com/praetorian-inc/tabularium/pkg/registry"
+	"strings"
+)
+
+func init() {
+	registry.Registry.MustRegisterModel(&IamRelationship{})
+}
 
 type IamRelationship struct {
 	*BaseRelationship
@@ -15,5 +22,6 @@ func NewIamRelationship(source, target GraphModel, label string) *IamRelationshi
 }
 
 func (ir *IamRelationship) Label() string {
-	return strings.ToUpper(neo4jNegateLabelRegex.ReplaceAllString(ir.Permission, "_"))
+	sanitized := specialCharRegex.ReplaceAllString(ir.Permission, "_")
+	return strings.ToUpper(sanitized)
 }
