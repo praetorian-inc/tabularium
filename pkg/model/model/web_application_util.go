@@ -1,63 +1,33 @@
 package model
 
-// Authentication type constants - GraphQL __typename format
-// These are what Burp returns in parse_api_definition and what CreateSite expects
-const (
-	AuthTypeBasic       = "ApiBasicAuthenticationWithoutCredentials"
-	AuthTypeAPIKey      = "ApiKeyAuthenticationWithoutCredentials"
-	AuthTypeBearerToken = "ApiBearerTokenAuthenticationWithoutCredentials"
-	AuthTypeUnsupported = "ApiUnsupportedAuthenticationWithoutCredentials"
+import (
+	"fmt"
+
+	"github.com/google/uuid"
 )
 
-// Credential type constants - GraphQL __typename format
+type BurpAuthType string
+
 const (
-	CredentialTypeBasic       = "ApiBasicAuthenticationCredentials"
-	CredentialTypeAPIKey      = "ApiKeyAuthenticationCredentials"
-	CredentialTypeBearerToken = "ApiBearerTokenAuthenticationCredentials"
+	FieldBasicAuth       BurpAuthType = "basic_authentication"
+	FieldAPIKeyAuth      BurpAuthType = "api_key_authentication"
+	FieldBearerTokenAuth BurpAuthType = "bearer_token_authentication"
 )
 
-// GraphQL field names for authentication union types
+type BurpAPIDestination string
+
 const (
-	FieldBasicAuth       = "basic_authentication"
-	FieldAPIKeyAuth      = "api_key_authentication"
-	FieldBearerTokenAuth = "bearer_token_authentication"
+	DestinationHeader BurpAPIDestination = "header"
+	DestinationQuery  BurpAPIDestination = "query"
+	DestinationCookie BurpAPIDestination = "cookie"
 )
 
-// API destination constants - MUST BE LOWERCASE (Burp API requirement)
+type BurpAPIRequestMethod string
+
 const (
-	DestinationHeader = "header"
-	DestinationQuery  = "query"
-	DestinationCookie = "cookie"
+	RequestMethodGet  BurpAPIRequestMethod = "get"
+	RequestMethodPost BurpAPIRequestMethod = "post"
 )
-
-// Request method constants - MUST BE LOWERCASE (Burp API requirement)
-const (
-	RequestMethodGet  = "get"
-	RequestMethodPost = "post"
-)
-
-// GetFieldNameForType maps __typename to GraphQL field name
-// This allows conversion from Burp parse response to GraphQL CreateSite format
-func GetFieldNameForType(typename string) string {
-	switch typename {
-	case AuthTypeBasic, CredentialTypeBasic:
-		return FieldBasicAuth
-	case AuthTypeAPIKey, CredentialTypeAPIKey:
-		return FieldAPIKeyAuth
-	case AuthTypeBearerToken, CredentialTypeBearerToken:
-		return FieldBearerTokenAuth
-	default:
-		return ""
-	}
-}
-
-// IsCredentialType checks if typename represents credentials (with values)
-// as opposed to authentication schemes (structure only)
-func IsCredentialType(typename string) bool {
-	return typename == CredentialTypeBasic ||
-		typename == CredentialTypeAPIKey ||
-		typename == CredentialTypeBearerToken
-}
 
 type BurpDastCredentials struct {
 	BurpURL string `json:"url"`
@@ -82,39 +52,31 @@ type APIDefinitionResult struct {
 	FileBasedDefinition *FileBasedAPIDefinition `json:"file_based_definition,omitempty"`
 	URLBasedDefinition  *URLBasedAPIDefinition  `json:"url_based_definition,omitempty"`
 
-	PrimaryURL      string           `json:"primary_url"`
-	Authentications []map[string]any `json:"authentications"`
-	Credentials     []map[string]any `json:"credentials"`
+	PrimaryURL string `json:"primary_url"`
+}
+
+func (r *APIDefinitionResult) TemporaryFilePath() string {
+	return fmt.Sprintf("webapplication/temporary/%s.json", uuid.New().String())
 }
 
 // See here: https://portswigger.net/burp/extensibility/dast/graphql-api/apidefinitioninput.html
 func (r *APIDefinitionResult) ToAPIDefinitionArray() []map[string]any {
 	apiDef := make(map[string]any)
 
-	// ensure non-nil slices
-	auths := r.Authentications
-	if auths == nil {
-		auths = []map[string]any{}
-	}
-	creds := r.Credentials
-	if creds == nil {
-		creds = []map[string]any{}
-	}
-
 	if r.FileBasedDefinition != nil {
 		fileBasedDef := map[string]any{
 			"filename":          r.FileBasedDefinition.Filename,
 			"contents":          r.FileBasedDefinition.Contents,
 			"enabled_endpoints": r.FileBasedDefinition.EnabledEndpoints,
-			"authentications":   auths,
-			"credentials":       creds,
+			"authentications":   []map[string]any{},
+			"credentials":       []map[string]any{},
 		}
 
 		apiDef["file_based_api_definition"] = fileBasedDef
 	} else if r.URLBasedDefinition != nil {
 		urlBasedDef := map[string]any{
 			"url":             r.URLBasedDefinition.URL,
-			"authentications": auths,
+			"authentications": []map[string]any{},
 		}
 		apiDef["url_based_api_definition"] = urlBasedDef
 	}
