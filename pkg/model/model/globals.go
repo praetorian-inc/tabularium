@@ -89,9 +89,9 @@ type AgentSendable interface {
 }
 
 type Hydratable interface {
-	HydratableFilepath() string
 	Hydrate([]byte) error
-	HydratableFile() File
+	HydratableFilepath() string
+	HydratedFile() File
 	Dehydrate() Hydratable
 }
 

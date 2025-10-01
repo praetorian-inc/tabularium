@@ -214,7 +214,7 @@ func (w *Webpage) Hydrate(data []byte) error {
 	return json.Unmarshal(data, &w)
 }
 
-func (w *Webpage) HydratableFile() File {
+func (w *Webpage) HydratedFile() File {
 	if len(w.WebpageDetails.Requests) > DefaultMaxRequestsPerWebpage {
 		w.WebpageDetails.Requests = w.WebpageDetails.Requests[:DefaultMaxRequestsPerWebpage]
 	}

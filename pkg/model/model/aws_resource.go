@@ -16,8 +16,7 @@ const (
 
 type AWSResource struct {
 	CloudResource
-	OrgPolicyFileName string `neo4j:"orgPolicyFile" json:"orgPolicyFile"`
-	OrgPolicy         []byte `neo4j:"-" json:"orgPolicy"`
+	OrgPolicy []byte `neo4j:"-" json:"orgPolicy"`
 }
 
 func init() {
@@ -84,7 +83,14 @@ func (a *AWSResource) WithStatus(status string) Target {
 }
 
 func (c *AWSResource) HydratableFilepath() string {
-	return c.OrgPolicyFileName
+	if c.OrgPolicy == nil {
+		return ""
+	}
+	return c.GetOrgPolicyFilename()
+}
+
+func (a *AWSResource) GetOrgPolicyFilename() string {
+	return fmt.Sprintf("awsresource/%s/%s/org-policies.json", a.AccountRef, RemoveReservedCharacters(a.Identifier()))
 }
 
 func (c *AWSResource) Hydrate(data []byte) error {
@@ -92,19 +98,21 @@ func (c *AWSResource) Hydrate(data []byte) error {
 	return nil
 }
 
-func (c *AWSResource) HydratableFile() File {
-	file := NewFile(c.HydratableFilepath())
+func (c *AWSResource) HydratedFile() File {
+	filepath := c.HydratableFilepath()
+	if filepath == "" {
+		return File{}
+	}
+
+	file := NewFile(filepath)
 	file.Bytes = c.OrgPolicy
 	return file
 }
 
 func (c *AWSResource) Dehydrate() Hydratable {
-	c.OrgPolicy = nil
-	return c
-}
-
-func (a *AWSResource) GetOrgPolicyFilename() string {
-	return fmt.Sprintf("awsresource/%s/%s/org-policies.json", a.AccountRef, RemoveReservedCharacters(a.Identifier()))
+	dehydrated := *c
+	dehydrated.OrgPolicy = nil
+	return &dehydrated
 }
 
 func (a *AWSResource) Visit(other Assetlike) {

@@ -440,7 +440,7 @@ func TestWebpageHydrationAndDehydration(t *testing.T) {
 		expectedDetails := createTestWebpageDetails("0")
 		webpage.WebpageDetails = expectedDetails
 
-		detailsFile := webpage.HydratableFile()
+		detailsFile := webpage.HydratedFile()
 		dehydratedWebpage := webpage.Dehydrate()
 		detailsPath := webpage.HydratableFilepath()
 
@@ -483,7 +483,7 @@ func TestWebpageHydrationAndDehydration(t *testing.T) {
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				webpage := tc.setupFunc()
-				file := webpage.HydratableFile()
+				file := webpage.HydratedFile()
 				dehydrated := webpage.Dehydrate()
 
 				assert.NotEmpty(t, file.Bytes)
