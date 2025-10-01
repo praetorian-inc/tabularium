@@ -69,7 +69,7 @@ type Webpage struct {
 	// S3 fields
 	WebpageDetails
 	// Not Saved but useful for internal processing
-	Parent GraphModelWrapper `neo4j:"-" json:"parent" desc:"The parent entity from which this webpage was discovered. Only used for creating a relationship"`
+	Parent *WebApplication `neo4j:"-" json:"parent" desc:"The parent entity from which this webpage was discovered. Only used for creating a relationship. Pointer for easy reference"`
 }
 
 type WebpageDetails struct {
@@ -199,6 +199,9 @@ func (w *Webpage) Merge(other Webpage) {
 	if other.DetailsFilepath != "" {
 		w.DetailsFilepath = other.DetailsFilepath
 	}
+	if other.Parent != nil {
+		w.Parent = other.Parent
+	}
 	w.MergeSSOIdentified(other)
 	w.MergeMetadata(other)
 	w.MergeSource(other)
@@ -258,12 +261,10 @@ func (w *Webpage) GetHooks() []registry.Hook {
 		},
 		{
 			Call: func() error {
-				if w.Parent.Model == nil {
+				if w.Parent == nil {
 					return nil
 				}
-				if target, ok := w.Parent.Model.(Target); ok {
-					w.Private = target.IsPrivate()
-				}
+				w.Private = w.Parent.IsPrivate()
 				return nil
 			},
 			Description: "Determine if the webpage parent is a public server",
@@ -271,7 +272,7 @@ func (w *Webpage) GetHooks() []registry.Hook {
 	}
 }
 
-func NewWebpageFromString(urlString string, parent GraphModel, options ...WebpageOption) Webpage {
+func NewWebpageFromString(urlString string, parent *WebApplication, options ...WebpageOption) Webpage {
 	url, err := url.Parse(urlString)
 	if err != nil {
 		return Webpage{}
@@ -279,16 +280,14 @@ func NewWebpageFromString(urlString string, parent GraphModel, options ...Webpag
 	return NewWebpage(*url, parent, options...)
 }
 
-func NewWebpage(url url.URL, parent GraphModel, options ...WebpageOption) Webpage {
+func NewWebpage(url url.URL, parent *WebApplication, options ...WebpageOption) Webpage {
 	if url.Path == "" {
 		url.Path = DEFAULT_URL_PATH
 	}
 	url = normalize.RemoveDefaultPorts(url)
 	urlString := fmt.Sprintf("%s://%s%s", url.Scheme, url.Host, url.Path)
 	w := Webpage{URL: urlString}
-	if parent != nil {
-		w.Parent = NewGraphModelWrapper(parent)
-	}
+	w.Parent = parent
 	w.Defaulted()
 	// We run hooks twice to ensure construction and analysis are run
 	registry.CallHooks(&w)
@@ -299,6 +298,17 @@ func NewWebpage(url url.URL, parent GraphModel, options ...WebpageOption) Webpag
 
 	registry.CallHooks(&w)
 	return w
+}
+
+func (w *Webpage) CreateParent() *WebApplication {
+	parsedURL, err := url.Parse(w.URL)
+	if err != nil {
+		return nil
+	}
+
+	baseURL := fmt.Sprintf("%s://%s", parsedURL.Scheme, parsedURL.Host)
+	webapp := NewWebApplication(baseURL, baseURL)
+	return &webapp
 }
 
 func (w *Webpage) AddSSOProvider(provider string, ssoData SSOWebpage) {
