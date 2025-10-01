@@ -64,7 +64,7 @@ func TestFile_HydrateAndDehydrate(t *testing.T) {
 		err := file.Hydrate([]byte("hello"))
 		require.Nil(t, err)
 
-		hydratedFile := file.HydratableFile()
+		hydratedFile := file.HydratedFile()
 		assert.Equal(t, string(hydratedFile.Bytes), "hello")
 
 		dehydratedFile := file.Dehydrate()

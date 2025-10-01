@@ -124,7 +124,7 @@ func (hv *HasVulnerability) Hydrate(data []byte) error {
 	return nil
 }
 
-func (hv *HasVulnerability) HydratableFile() File {
+func (hv *HasVulnerability) HydratedFile() File {
 	fileCopy := hv.Attachment
 	return fileCopy
 }

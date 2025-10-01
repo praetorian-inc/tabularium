@@ -124,7 +124,7 @@ func (f *File) Hydrate(data []byte) error {
 	return nil
 }
 
-func (f *File) HydratableFile() File {
+func (f *File) HydratedFile() File {
 	return *f
 }
 
