@@ -206,28 +206,29 @@ func (w *Webpage) Merge(other Webpage) {
 	w.MergeRequests(other.Requests...)
 }
 
-func (w *Webpage) Hydrate() (path string, hydrate func([]byte) error) {
-	hydrate = func(fileContents []byte) error {
-		if err := json.Unmarshal(fileContents, &w); err != nil {
-			return err
-		}
-		return nil
-	}
-	return w.DetailsFilepath, hydrate
+func (w *Webpage) HydratableFilepath() string {
+	return w.DetailsFilepath
 }
 
-func (w *Webpage) Dehydrate() (File, Hydratable) {
-	dehydratedWebpage := *w
-	if len(dehydratedWebpage.Requests) > DefaultMaxRequestsPerWebpage {
-		dehydratedWebpage.Requests = dehydratedWebpage.Requests[:DefaultMaxRequestsPerWebpage]
+func (w *Webpage) Hydrate(data []byte) error {
+	return json.Unmarshal(data, &w)
+}
+
+func (w *Webpage) HydratedFile() File {
+	if len(w.WebpageDetails.Requests) > DefaultMaxRequestsPerWebpage {
+		w.WebpageDetails.Requests = w.WebpageDetails.Requests[:DefaultMaxRequestsPerWebpage]
 	}
 
-	detailsFile := w.GetDetailsFile(dehydratedWebpage.WebpageDetails)
-	dehydratedWebpage.DetailsFilepath = detailsFile.Name
+	detailsFile := w.GetDetailsFile(w.WebpageDetails)
+	w.DetailsFilepath = detailsFile.Name
 
+	return detailsFile
+}
+
+func (w *Webpage) Dehydrate() Hydratable {
+	dehydratedWebpage := *w
 	dehydratedWebpage.WebpageDetails = WebpageDetails{}
-
-	return detailsFile, &dehydratedWebpage
+	return &dehydratedWebpage
 }
 
 func (w *Webpage) Defaulted() {

@@ -3,7 +3,7 @@ package model
 import "slices"
 
 type Tags struct {
-	Tags []string `json:"tags,omitempty" neo4j:"tags,omitempty"`
+	Tags []string `json:"tags,omitempty" neo4j:"tags"`
 }
 
 func (t *Tags) Merge(other Tags) {

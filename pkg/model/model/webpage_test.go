@@ -440,12 +440,13 @@ func TestWebpageHydrationAndDehydration(t *testing.T) {
 		expectedDetails := createTestWebpageDetails("0")
 		webpage.WebpageDetails = expectedDetails
 
-		detailsFile, dehydratedWebpage := webpage.Dehydrate()
-		detailsPath, hydrate := dehydratedWebpage.Hydrate()
+		detailsFile := webpage.HydratedFile()
+		dehydratedWebpage := webpage.Dehydrate()
+		detailsPath := webpage.HydratableFilepath()
 
 		assert.True(t, strings.HasPrefix(detailsPath, "webpage/example.com/443/"+RemoveReservedCharacters(testBaseURL+testPath)+"/details"))
 
-		err := hydrate(detailsFile.Bytes)
+		err := dehydratedWebpage.Hydrate(detailsFile.Bytes)
 		assert.NoError(t, err)
 		assert.Equal(t, expectedDetails, dehydratedWebpage.(*Webpage).WebpageDetails)
 
@@ -482,7 +483,8 @@ func TestWebpageHydrationAndDehydration(t *testing.T) {
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				webpage := tc.setupFunc()
-				file, dehydrated := webpage.Dehydrate()
+				file := webpage.HydratedFile()
+				dehydrated := webpage.Dehydrate()
 
 				assert.NotEmpty(t, file.Bytes)
 				assert.Equal(t, 0, len(dehydrated.(*Webpage).Requests))
