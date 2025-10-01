@@ -89,8 +89,10 @@ type AgentSendable interface {
 }
 
 type Hydratable interface {
-	Hydrate() (path string, hydrate func([]byte) error)
-	Dehydrate() (File, Hydratable)
+	HydratableFilepath() string
+	Hydrate([]byte) error
+	HydratableFile() File
+	Dehydrate() Hydratable
 }
 
 type HydratableTarget interface {

@@ -115,13 +115,19 @@ func (f *File) GetDescription() string {
 	return "Represents a file system entity, including its path and potential content hash."
 }
 
-func (f *File) Hydrate() (string, func([]byte) error) {
-	return f.Name, func(data []byte) error {
-		f.Bytes = data
-		return nil
-	}
+func (f *File) HydratableFilepath() string {
+	return f.Name
 }
 
-func (f *File) Dehydrate() (File, Hydratable) {
-	return *f, nil
+func (f *File) Hydrate(data []byte) error {
+	f.Bytes = data
+	return nil
+}
+
+func (f *File) HydratableFile() File {
+	return *f
+}
+
+func (f *File) Dehydrate() Hydratable {
+	return nil
 }

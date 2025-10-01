@@ -83,19 +83,24 @@ func (a *AWSResource) WithStatus(status string) Target {
 	return &ret
 }
 
-func (c *AWSResource) Hydrate() (path string, hydrate func([]byte) error) {
-	return c.OrgPolicyFileName, func(fileContents []byte) error {
-		c.OrgPolicy = fileContents
-		return nil
-	}
+func (c *AWSResource) HydratableFilepath() string {
+	return c.OrgPolicyFileName
 }
 
-func (c *AWSResource) Dehydrate() (File, Hydratable) {
-	c.OrgPolicyFileName = c.GetOrgPolicyFilename()
-	orgPolicy := NewFile(c.OrgPolicyFileName)
-	orgPolicy.Bytes = c.OrgPolicy
+func (c *AWSResource) Hydrate(data []byte) error {
+	c.OrgPolicy = data
+	return nil
+}
+
+func (c *AWSResource) HydratableFile() File {
+	file := NewFile(c.HydratableFilepath())
+	file.Bytes = c.OrgPolicy
+	return file
+}
+
+func (c *AWSResource) Dehydrate() Hydratable {
 	c.OrgPolicy = nil
-	return orgPolicy, c
+	return c
 }
 
 func (a *AWSResource) GetOrgPolicyFilename() string {
