@@ -83,35 +83,38 @@ type APIDefinitionResult struct {
 	URLBasedDefinition  *URLBasedAPIDefinition  `json:"url_based_definition,omitempty"`
 
 	PrimaryURL      string           `json:"primary_url"`
-	Authentications []map[string]any `json:"authentications,omitempty"`
-	Credentials     []map[string]any `json:"credentials,omitempty"`
+	Authentications []map[string]any `json:"authentications"`
+	Credentials     []map[string]any `json:"credentials"`
 }
 
+// See here: https://portswigger.net/burp/extensibility/dast/graphql-api/apidefinitioninput.html
 func (r *APIDefinitionResult) ToAPIDefinitionArray() []map[string]any {
 	apiDef := make(map[string]any)
+
+	// ensure non-nil slices
+	auths := r.Authentications
+	if auths == nil {
+		auths = []map[string]any{}
+	}
+	creds := r.Credentials
+	if creds == nil {
+		creds = []map[string]any{}
+	}
 
 	if r.FileBasedDefinition != nil {
 		fileBasedDef := map[string]any{
 			"filename":          r.FileBasedDefinition.Filename,
 			"contents":          r.FileBasedDefinition.Contents,
 			"enabled_endpoints": r.FileBasedDefinition.EnabledEndpoints,
+			"authentications":   auths,
+			"credentials":       creds,
 		}
-		if len(r.Authentications) > 0 {
-			fileBasedDef["authentications"] = r.Authentications
-		}
-		if len(r.Credentials) > 0 {
-			fileBasedDef["credentials"] = r.Credentials
-		}
+
 		apiDef["file_based_api_definition"] = fileBasedDef
 	} else if r.URLBasedDefinition != nil {
 		urlBasedDef := map[string]any{
-			"url": r.URLBasedDefinition.URL,
-		}
-		if len(r.Authentications) > 0 {
-			urlBasedDef["authentications"] = r.Authentications
-		}
-		if len(r.Credentials) > 0 {
-			urlBasedDef["credentials"] = r.Credentials
+			"url":             r.URLBasedDefinition.URL,
+			"authentications": auths,
 		}
 		apiDef["url_based_api_definition"] = urlBasedDef
 	}
