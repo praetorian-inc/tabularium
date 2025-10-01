@@ -49,9 +49,9 @@ type APIDefinitionResult struct {
 	PrimaryURL string `json:"primary_url"`
 }
 
-func (r *APIDefinitionResult) HydratableFilePath() string {
+func (r *APIDefinitionResult) HydratableFilepath() string {
 	dummyApp := NewWebApplication(r.PrimaryURL, r.PrimaryURL)
-	return dummyApp.HydratableFilePath()
+	return dummyApp.HydratableFilepath()
 }
 
 // See here: https://portswigger.net/burp/extensibility/dast/graphql-api/apidefinitioninput.html

@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"regexp"
 	"slices"
@@ -206,8 +207,46 @@ func (w *WebApplication) Attribute(name, value string) Attribute {
 	return NewAttribute(name, value, w)
 }
 
-func (w *WebApplication) HydratableFilePath() string {
+func (w *WebApplication) HydratableFilepath() string {
+	if w.ApiDefinitionContentPath != "" {
+		return w.ApiDefinitionContentPath
+	}
 	return fmt.Sprintf("webapplication/%s/api-definition.json", w.PrimaryURL)
+}
+
+func (w *WebApplication) Hydrate(data []byte) error {
+	if len(data) == 0 {
+		w.WebApplicationDetails = WebApplicationDetails{}
+		return nil
+	}
+
+	if err := json.Unmarshal(data, &w.WebApplicationDetails.ApiDefinitionContent); err != nil {
+		return fmt.Errorf("failed to hydrate WebApplication details: %w", err)
+	}
+
+	return nil
+}
+
+func (w *WebApplication) HydratedFile() File {
+	bytes, err := json.Marshal(w.WebApplicationDetails.ApiDefinitionContent)
+	if err != nil {
+		slog.Error("failed to marshal WebApplicationDetails.ApiDefinitionContent", "error", err)
+		bytes = []byte("{}")
+	}
+
+	filename := w.HydratableFilepath()
+	detailsFile := NewFile(filename)
+	detailsFile.Bytes = bytes
+
+	w.ApiDefinitionContentPath = filename
+
+	return detailsFile
+}
+
+func (w *WebApplication) Dehydrate() Hydratable {
+	dehydratedApp := *w
+	dehydratedApp.WebApplicationDetails = WebApplicationDetails{}
+	return &dehydratedApp
 }
 
 func (w *WebApplication) IsWebService() bool {
@@ -238,34 +277,6 @@ func NewWebApplicationSeed(primaryURL string) WebApplication {
 func (w *WebApplication) SeedModels() []Seedable {
 	copy := *w
 	return []Seedable{&copy}
-}
-
-func (w *WebApplication) Hydrate() (path string, hydrate func([]byte) error) {
-	hydrate = func(fileContents []byte) error {
-		if err := json.Unmarshal(fileContents, &w.WebApplicationDetails.ApiDefinitionContent); err != nil {
-			return fmt.Errorf("failed to hydrate WebApplication details: %w", err)
-		}
-		return nil
-	}
-	return w.ApiDefinitionContentPath, hydrate
-}
-
-func (w *WebApplication) Dehydrate() (File, Hydratable) {
-	dehydratedApp := *w
-
-	bytes, err := json.Marshal(w.WebApplicationDetails.ApiDefinitionContent)
-	if err != nil {
-		bytes = []byte("{}")
-	}
-
-	filename := w.HydratableFilePath()
-
-	detailsFile := NewFile(filename)
-	detailsFile.Bytes = bytes
-
-	dehydratedApp.ApiDefinitionContentPath = detailsFile.Name
-	dehydratedApp.WebApplicationDetails = WebApplicationDetails{}
-	return detailsFile, &dehydratedApp
 }
 
 func (w WebApplication) GobEncode() ([]byte, error) {
