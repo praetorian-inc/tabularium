@@ -33,17 +33,16 @@ func (i *Integration) Valid() bool {
 	return integrationKey.MatchString(i.Key)
 }
 
-func (i *Integration) Attribute(name, value string) Attribute {
-	attr := NewAttribute(name, value, i)
-	return attr
-}
-
 func (i *Integration) Identifier() string {
 	return i.Value
 }
 
 func (i *Integration) Group() string {
 	return i.Name
+}
+
+func (i *Integration) Attribute(name, value string) Attribute {
+	return NewAttribute(name, value, i)
 }
 
 func (i *Integration) WithStatus(status string) Target {

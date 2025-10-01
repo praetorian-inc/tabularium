@@ -28,7 +28,7 @@ func NewAzureResource(name, accountRef string, rtype CloudResourceType, properti
 			Name:         name,
 			Provider:     "azure",
 			Properties:   properties,
-			ResourceType: CloudResourceType(rtype),
+			ResourceType: rtype,
 			AccountRef:   accountRef,
 		},
 	}
@@ -56,10 +56,12 @@ func (a *AzureResource) Defaulted() {
 	a.Origins = []string{"azure"}
 	a.AttackSurface = []string{"cloud"}
 	a.CloudResource.Defaulted()
+	a.BaseAsset.Defaulted()
 }
 
 func (a *AzureResource) GetHooks() []registry.Hook {
 	hooks := []registry.Hook{
+		useGroupAndIdentifier(a, &a.AccountRef, &a.Name),
 		{
 			Call: func() error {
 				a.CloudResource.Key = fmt.Sprintf("#azureresource#%s#%s", a.AccountRef, a.Name)
@@ -69,6 +71,7 @@ func (a *AzureResource) GetHooks() []registry.Hook {
 				return nil
 			},
 		},
+		setGroupAndIdentifier(a, &a.AccountRef, &a.Name),
 	}
 
 	hooks = append(hooks, a.CloudResource.GetHooks()...)
@@ -145,24 +148,34 @@ func (a *AzureResource) GetURLs() []string {
 	return []string{}
 }
 
-func (a *AzureResource) Group() string { return "azureresource" }
-
-func (a *AzureResource) Merge(otherModel any) {
-	other, ok := otherModel.(*AzureResource)
+func (a *AzureResource) Visit(other Assetlike) {
+	otherResource, ok := other.(*AzureResource)
 	if !ok {
 		return
 	}
-	a.CloudResource.Merge(&other.CloudResource)
+
+	a.CloudResource.Visit(&otherResource.CloudResource)
+	a.BaseAsset.Visit(otherResource)
 }
 
-func (a *AzureResource) Visit(otherModel any) error {
-	other, ok := otherModel.(*AzureResource)
+func (a *AzureResource) Merge(other Assetlike) {
+	otherResource, ok := other.(*AzureResource)
 	if !ok {
-		return fmt.Errorf("expected *AzureResource, got %T", otherModel)
+		return
 	}
-	a.CloudResource.Visit(&other.CloudResource)
-	return nil
+
+	a.CloudResource.Merge(&otherResource.CloudResource)
+	a.BaseAsset.Merge(otherResource)
 }
+
+func (a *AzureResource) Group() string {
+	return a.AccountRef
+}
+
+func (a *AzureResource) Identifier() string {
+	return a.Name
+}
+
 func (a *AzureResource) WithStatus(status string) Target {
 	ret := *a
 	ret.Status = status

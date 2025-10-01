@@ -16,6 +16,7 @@ const (
 
 type AWSResource struct {
 	CloudResource
+	OrgPolicy []byte `neo4j:"-" json:"orgPolicy"`
 }
 
 func init() {
@@ -36,7 +37,7 @@ func NewAWSResource(name, accountRef string, rtype CloudResourceType, properties
 			DisplayName:  parsedARN.Resource,
 			Provider:     AWSProvider,
 			Properties:   properties,
-			ResourceType: CloudResourceType(rtype),
+			ResourceType: rtype,
 			Region:       parsedARN.Region,
 			AccountRef:   accountRef,
 		},
@@ -51,10 +52,12 @@ func (a *AWSResource) Defaulted() {
 	a.Origins = []string{"amazon"}
 	a.AttackSurface = []string{"cloud"}
 	a.CloudResource.Defaulted()
+	a.BaseAsset.Defaulted()
 }
 
 func (a *AWSResource) GetHooks() []registry.Hook {
 	hooks := []registry.Hook{
+		useGroupAndIdentifier(a, &a.AccountRef, &a.Name),
 		{
 			Call: func() error {
 				a.CloudResource.Key = fmt.Sprintf("#awsresource#%s#%s", a.AccountRef, a.Name)
@@ -64,6 +67,7 @@ func (a *AWSResource) GetHooks() []registry.Hook {
 				return nil
 			},
 		},
+		setGroupAndIdentifier(a, &a.AccountRef, &a.Name),
 	}
 
 	hooks = append(hooks, a.CloudResource.GetHooks()...)
@@ -76,6 +80,59 @@ func (a *AWSResource) WithStatus(status string) Target {
 	ret := *a // Copy the full AWSResource, not just CloudResource
 	ret.Status = status
 	return &ret
+}
+
+func (c *AWSResource) HydratableFilepath() string {
+	if c.OrgPolicy == nil {
+		return ""
+	}
+	return c.GetOrgPolicyFilename()
+}
+
+func (a *AWSResource) GetOrgPolicyFilename() string {
+	return fmt.Sprintf("awsresource/%s/%s/org-policies.json", a.AccountRef, RemoveReservedCharacters(a.Identifier()))
+}
+
+func (c *AWSResource) Hydrate(data []byte) error {
+	c.OrgPolicy = data
+	return nil
+}
+
+func (c *AWSResource) HydratedFile() File {
+	filepath := c.HydratableFilepath()
+	if filepath == "" {
+		return File{}
+	}
+
+	file := NewFile(filepath)
+	file.Bytes = c.OrgPolicy
+	return file
+}
+
+func (c *AWSResource) Dehydrate() Hydratable {
+	dehydrated := *c
+	dehydrated.OrgPolicy = nil
+	return &dehydrated
+}
+
+func (a *AWSResource) Visit(other Assetlike) {
+	otherResource, ok := other.(*AWSResource)
+	if !ok {
+		return
+	}
+
+	a.CloudResource.Visit(&otherResource.CloudResource)
+	a.BaseAsset.Visit(otherResource)
+}
+
+func (a *AWSResource) Merge(other Assetlike) {
+	otherResource, ok := other.(*AWSResource)
+	if !ok {
+		return
+	}
+
+	a.CloudResource.Merge(&otherResource.CloudResource)
+	a.BaseAsset.Merge(otherResource)
 }
 
 func (a *AWSResource) GetIPs() []string {
@@ -104,23 +161,12 @@ func (a *AWSResource) GetDNS() string {
 	return ""
 }
 
-func (a *AWSResource) Group() string { return "awsresource" }
-
-func (a *AWSResource) Merge(otherModel any) {
-	other, ok := otherModel.(*AWSResource)
-	if !ok {
-		return
-	}
-	a.CloudResource.Merge(&other.CloudResource)
+func (a *AWSResource) Group() string {
+	return a.AccountRef
 }
 
-func (a *AWSResource) Visit(otherModel any) error {
-	other, ok := otherModel.(*AWSResource)
-	if !ok {
-		return fmt.Errorf("expected *AWSResource, got %T", otherModel)
-	}
-	a.CloudResource.Visit(&other.CloudResource)
-	return nil
+func (a *AWSResource) Identifier() string {
+	return a.Name
 }
 
 // Return an Asset that matches the legacy integration
