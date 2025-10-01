@@ -28,7 +28,7 @@ func NewAzureResource(name, accountRef string, rtype CloudResourceType, properti
 			Name:         name,
 			Provider:     "azure",
 			Properties:   properties,
-			ResourceType: CloudResourceType(rtype),
+			ResourceType: rtype,
 			AccountRef:   accountRef,
 		},
 	}

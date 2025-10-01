@@ -95,6 +95,8 @@ type Hydratable interface {
 	Dehydrate() Hydratable
 }
 
+const SKIP_HYDRATION = ""
+
 type HydratableTarget interface {
 	Hydratable
 	Target

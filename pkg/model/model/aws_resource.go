@@ -84,7 +84,7 @@ func (a *AWSResource) WithStatus(status string) Target {
 
 func (c *AWSResource) HydratableFilepath() string {
 	if c.OrgPolicy == nil {
-		return ""
+		return SKIP_HYDRATION
 	}
 	return c.GetOrgPolicyFilename()
 }
