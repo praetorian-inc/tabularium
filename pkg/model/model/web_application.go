@@ -239,11 +239,10 @@ func (w *WebApplication) Dehydrate() (File, Hydratable) {
 	// Create S3 file with API definition content
 	bytes, err := json.Marshal(w.WebApplicationDetails.ApiDefinitionContent)
 	if err != nil {
-		// Log warning but continue with empty file
 		bytes = []byte("{}")
 	}
 
-	filename := fmt.Sprintf("webapplication/%s/api-definition.json", w.Key)
+	filename := w.HydratableFilePath()
 
 	detailsFile := NewFile(filename)
 	detailsFile.Bytes = bytes
@@ -278,6 +277,10 @@ func (w *WebApplication) GobDecode(data []byte) error {
 
 	*w = WebApplication(temp)
 	return nil
+}
+
+func (w *WebApplication) HydratableFilePath() string {
+	return fmt.Sprintf("webapplication/%s/api-definition.json", w.PrimaryURL)
 }
 
 func (w *WebApplication) IsWebService() bool {

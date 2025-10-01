@@ -1,11 +1,5 @@
 package model
 
-import (
-	"fmt"
-
-	"github.com/google/uuid"
-)
-
 type BurpAuthType string
 
 const (
@@ -55,8 +49,9 @@ type APIDefinitionResult struct {
 	PrimaryURL string `json:"primary_url"`
 }
 
-func (r *APIDefinitionResult) TemporaryFilePath() string {
-	return fmt.Sprintf("webapplication/temporary/%s.json", uuid.New().String())
+func (r *APIDefinitionResult) HydratableFilePath() string {
+	dummyApp := NewWebApplication(r.PrimaryURL, r.PrimaryURL)
+	return dummyApp.HydratableFilePath()
 }
 
 // See here: https://portswigger.net/burp/extensibility/dast/graphql-api/apidefinitioninput.html
