@@ -2188,6 +2188,18 @@ components:
       required:
       - BaseModel
       type: object
+    iamrelationship:
+      description: Represents the base structure for all graph relationships, containing
+        source, target, and metadata.
+      properties:
+        BaseRelationship:
+          type: object
+        permission:
+          type: string
+      required:
+      - BaseRelationship
+      - permission
+      type: object
     instanceof:
       description: Represents an 'instance of' relationship (e.g., a process is an
         instance of a software package).
@@ -3642,7 +3654,7 @@ components:
           type: object
         parent:
           description: The parent entity from which this webpage was discovered. Only
-            used for creating a relationship
+            used for creating a relationship. Pointer for easy reference
           type: object
         private:
           description: Whether the webpage is on a public web server.

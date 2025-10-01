@@ -161,7 +161,7 @@ func TestTargetEvent_Interface(t *testing.T) {
 	asset := NewAsset("example.com", "1.2.3.4")
 	attribute := asset.Attribute("https", "443")
 	preseed := NewPreseed("whois+company", "Chariot Systems", "Chariot Systems")
-	webpage := NewWebpageFromString("https://example.com/", &attribute)
+	webpage := NewWebpageFromString("https://example.com/", nil)
 
 	testTargetInterface(t, "Asset", &asset)
 	testTargetInterface(t, "Attribute", &attribute)
@@ -318,9 +318,7 @@ func TestTargetEvent_DynamoDBMarshaling(t *testing.T) {
 	})
 
 	t.Run("marshal and unmarshal webpage", func(t *testing.T) {
-		asset := NewAsset("example.com", "1.2.3.4")
-		attribute := NewAttribute("https", "443", &asset)
-		webpage := NewWebpageFromString("https://example.com/", &attribute)
+		webpage := NewWebpageFromString("https://example.com/", nil)
 		webpage.Username = "test@example.com"
 		webpage.Status = "A"
 		webpage.Created = Now()
@@ -347,7 +345,7 @@ func TestTargetEvent_DynamoDBMarshaling(t *testing.T) {
 		assert.Equal(t, webpage.URL, result.URL)
 		assert.Equal(t, webpage.Status, result.Status)
 		assert.Equal(t, webpage.Source, result.Source)
-		assert.Equal(t, webpage.Parent.Model, result.Parent.Model)
+		assert.Equal(t, webpage.Parent, result.Parent)
 		assert.Equal(t, webpage.Metadata, result.Metadata)
 		assert.Equal(t, webpage.Created, result.Created)
 		assert.Equal(t, webpage.Visited, result.Visited)
