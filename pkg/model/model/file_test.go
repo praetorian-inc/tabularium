@@ -52,3 +52,22 @@ func TestFile_UnmarshalJSON_Raw(t *testing.T) {
 	assert.Equal(t, "test.txt", file.Name)
 	assert.Equal(t, []byte("test"), []byte(file.Bytes), "expected 'test' but got %q", string(file.Bytes))
 }
+
+func TestFile_HydrateAndDehydrate(t *testing.T) {
+	t.Run("basic hydration and dehydration", func(t *testing.T) {
+		file := NewFile("/dir/test.txt")
+		require.Empty(t, file.Bytes)
+
+		filepath := file.HydratableFilepath()
+		assert.Equal(t, filepath, "/dir/test.txt")
+
+		err := file.Hydrate([]byte("hello"))
+		require.Nil(t, err)
+
+		hydratedFile := file.HydratableFile()
+		assert.Equal(t, string(hydratedFile.Bytes), "hello")
+
+		dehydratedFile := file.Dehydrate()
+		assert.Nil(t, dehydratedFile)
+	})
+}
