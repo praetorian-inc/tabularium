@@ -14,6 +14,7 @@ import (
 )
 
 type BurpMetadata struct {
+	BurpType                 string `neo4j:"burp_type" json:"burp_type" dynamodbav:"burp_type" desc:"Burp type" example:"enterprise"`
 	BurpSiteID               string `neo4j:"burp_site_id" json:"burp_site_id" dynamodbav:"burp_site_id" desc:"Burp Enterprise site identifier" example:"18865"`
 	BurpFolderID             string `neo4j:"burp_folder_id" json:"burp_folder_id" dynamodbav:"burp_folder_id" desc:"Burp Enterprise folder identifier" example:"17519"`
 	BurpScheduleID           string `neo4j:"burp_schedule_id" json:"burp_schedule_id" dynamodbav:"burp_schedule_id" desc:"Burp Enterprise schedule identifier" example:"45934"`
@@ -93,6 +94,16 @@ func (w *WebApplication) GetHooks() []registry.Hook {
 			},
 		},
 		setGroupAndIdentifier(w, &w.Name, &w.PrimaryURL),
+		{
+			Call: func() error {
+				if w.IsWebService() {
+					w.BurpType = "webservice"
+				} else {
+					w.BurpType = "webapplication"
+				}
+				return nil
+			},
+		},
 	}
 }
 
@@ -195,6 +206,14 @@ func (w *WebApplication) Attribute(name, value string) Attribute {
 	return NewAttribute(name, value, w)
 }
 
+func (w *WebApplication) HydratableFilePath() string {
+	return fmt.Sprintf("webapplication/%s/api-definition.json", w.PrimaryURL)
+}
+
+func (w *WebApplication) IsWebService() bool {
+	return w.ApiDefinitionContentPath != ""
+}
+
 func NewWebApplication(primaryURL, name string) WebApplication {
 	w := WebApplication{
 		PrimaryURL: primaryURL,
@@ -221,7 +240,6 @@ func (w *WebApplication) SeedModels() []Seedable {
 	return []Seedable{&copy}
 }
 
-// Hydrate returns the S3 filepath and a function to populate WebApplicationDetails
 func (w *WebApplication) Hydrate() (path string, hydrate func([]byte) error) {
 	hydrate = func(fileContents []byte) error {
 		if err := json.Unmarshal(fileContents, &w.WebApplicationDetails.ApiDefinitionContent); err != nil {
@@ -232,11 +250,9 @@ func (w *WebApplication) Hydrate() (path string, hydrate func([]byte) error) {
 	return w.ApiDefinitionContentPath, hydrate
 }
 
-// Dehydrate creates an S3 file with WebApplicationDetails and returns lightweight model
 func (w *WebApplication) Dehydrate() (File, Hydratable) {
 	dehydratedApp := *w
 
-	// Create S3 file with API definition content
 	bytes, err := json.Marshal(w.WebApplicationDetails.ApiDefinitionContent)
 	if err != nil {
 		bytes = []byte("{}")
@@ -247,16 +263,11 @@ func (w *WebApplication) Dehydrate() (File, Hydratable) {
 	detailsFile := NewFile(filename)
 	detailsFile.Bytes = bytes
 
-	// Store filepath reference
 	dehydratedApp.ApiDefinitionContentPath = detailsFile.Name
-
-	// Clear large content from model
 	dehydratedApp.WebApplicationDetails = WebApplicationDetails{}
-
 	return detailsFile, &dehydratedApp
 }
 
-// GobEncode ensures WebApplicationDetails is always empty during serialization
 func (w WebApplication) GobEncode() ([]byte, error) {
 	temp := WebApplicationForGob(w)
 	temp.WebApplicationDetails = WebApplicationDetails{}
@@ -277,12 +288,4 @@ func (w *WebApplication) GobDecode(data []byte) error {
 
 	*w = WebApplication(temp)
 	return nil
-}
-
-func (w *WebApplication) HydratableFilePath() string {
-	return fmt.Sprintf("webapplication/%s/api-definition.json", w.PrimaryURL)
-}
-
-func (w *WebApplication) IsWebService() bool {
-	return w.ApiDefinitionContentPath != ""
 }
