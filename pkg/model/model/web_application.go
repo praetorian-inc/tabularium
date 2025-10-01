@@ -18,6 +18,7 @@ type BurpMetadata struct {
 
 type WebApplication struct {
 	BaseAsset
+	PromotableEmbed
 	PrimaryURL string   `neo4j:"primary_url" json:"primary_url" dynamodbav:"primary_url" desc:"The primary/canonical URL of the web application" example:"https://app.example.com"`
 	URLs       []string `neo4j:"urls" json:"urls" dynamodbav:"urls" desc:"Additional URLs associated with this web application" example:"[\"https://api.example.com\", \"https://admin.example.com\"]"`
 	Name       string   `neo4j:"name" json:"name" dynamodbav:"name" desc:"Name of the web application" example:"Example App"`
@@ -125,6 +126,11 @@ func (w *WebApplication) Merge(other Assetlike) {
 	if !ok {
 		return
 	}
+
+	if w.Source != SeedSource && otherApp.Source == SeedSource {
+		w.pendingPromotion = SeedLabel
+	}
+
 	if otherApp.Name != "" {
 		w.Name = otherApp.Name
 	}

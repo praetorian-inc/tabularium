@@ -298,7 +298,7 @@ func TestWebApplicationURLsNormalization(t *testing.T) {
 			"https://api.example.com:443",
 			"http://admin.example.com:80",
 			"https://MIXED.EXAMPLE.COM/Path?query=1#frag",
-			"invalid-url", // This should be filtered out
+			"invalid-url",
 			"https://valid.example.com",
 		},
 	}
@@ -339,4 +339,101 @@ func TestWebApplicationSeedModels(t *testing.T) {
 	assert.Equal(t, webApp.Status, returnedWebApp.Status)
 	assert.Equal(t, webApp.Source, returnedWebApp.Source)
 	assert.Equal(t, webApp.Key, returnedWebApp.Key)
+}
+
+func TestWebApplicationSeedPromotion(t *testing.T) {
+	tests := []struct {
+		name              string
+		existingSource    string
+		incomingSource    string
+		expectPromotion   bool
+		expectedPromotion string
+	}{
+		{
+			name:              "Promotion from self to seed",
+			existingSource:    SelfSource,
+			incomingSource:    SeedSource,
+			expectPromotion:   true,
+			expectedPromotion: SeedLabel,
+		},
+		{
+			name:              "No promotion - both self source",
+			existingSource:    SelfSource,
+			incomingSource:    SelfSource,
+			expectPromotion:   false,
+			expectedPromotion: NO_PENDING_PROMOTION,
+		},
+		{
+			name:              "No promotion - both seed source",
+			existingSource:    SeedSource,
+			incomingSource:    SeedSource,
+			expectPromotion:   false,
+			expectedPromotion: NO_PENDING_PROMOTION,
+		},
+		{
+			name:              "No promotion - seed to self (downgrade)",
+			existingSource:    SeedSource,
+			incomingSource:    SelfSource,
+			expectPromotion:   false,
+			expectedPromotion: NO_PENDING_PROMOTION,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			existing := NewWebApplication("https://test.example.com", "Test App")
+			existing.Source = tt.existingSource
+
+			incoming := NewWebApplication("https://test.example.com", "Test App")
+			incoming.Source = tt.incomingSource
+
+			existing.Merge(&incoming)
+
+			if tt.expectPromotion {
+				pendingPromotion, required := PendingPromotion(&existing)
+				assert.Equal(t, tt.expectedPromotion, pendingPromotion,
+					"Expected pending promotion to be set")
+				assert.True(t, required,
+					"PendingPromotion should return true")
+			} else {
+				pendingPromotion, required := PendingPromotion(&existing)
+				assert.Equal(t, tt.expectedPromotion, pendingPromotion,
+					"Expected no pending promotion")
+				assert.False(t, required,
+					"HasPendingPromotion should return false")
+			}
+		})
+	}
+}
+
+func TestWebApplicationPromotableInterface(t *testing.T) {
+	webapp := NewWebApplication("https://example.com", "Test")
+	var _ Promotable = &webapp
+
+	pendingPromotion, required := PendingPromotion(&webapp)
+	assert.Equal(t, NO_PENDING_PROMOTION, pendingPromotion)
+	assert.False(t, required)
+
+	webapp.pendingPromotion = SeedLabel
+	pendingPromotion, required = PendingPromotion(&webapp)
+	assert.Equal(t, SeedLabel, pendingPromotion)
+	assert.True(t, required)
+}
+
+func TestWebApplicationMergeName(t *testing.T) {
+	w1 := NewWebApplication("https://app.example.com", "Original Name")
+	w2 := NewWebApplication("https://app.example.com", "Updated Name")
+
+	w1.Merge(&w2)
+
+	assert.Equal(t, "Updated Name", w1.Name)
+}
+
+func TestWebApplicationMergeEmptyName(t *testing.T) {
+	w1 := NewWebApplication("https://app.example.com", "Original Name")
+	w2 := NewWebApplication("https://app.example.com", "")
+
+	w1.Merge(&w2)
+
+	assert.Equal(t, "Original Name", w1.Name)
 }
