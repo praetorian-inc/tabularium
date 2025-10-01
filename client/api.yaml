@@ -3654,7 +3654,7 @@ components:
           type: object
         parent:
           description: The parent entity from which this webpage was discovered. Only
-            used for creating a relationship
+            used for creating a relationship. Pointer for easy reference
           type: object
         private:
           description: Whether the webpage is on a public web server.
