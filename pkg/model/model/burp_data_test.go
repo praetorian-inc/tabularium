@@ -643,7 +643,7 @@ func TestBurpIssuesData_GetIssuesByBaseURL(t *testing.T) {
 		},
 	}
 
-	issuesByURL := burpData.GetIssuesByBaseURL()
+	issuesByURL := burpData.GetIssuesByURL()
 	assert.Equal(t, 2, len(issuesByURL))
 
 	// Check that issues for same base URL are grouped together
