@@ -347,7 +347,7 @@ func TestWebApplicationHydrationLifecycle(t *testing.T) {
 	primaryURL := "https://api.example.com"
 	w := NewWebApplication(primaryURL, "Example App")
 
-	expectedPath := fmt.Sprintf("webapplication/%s/api-definition.json", w.PrimaryURL)
+	expectedPath := fmt.Sprintf("webapplication/%s/api-definition.json", RemoveReservedCharacters(w.PrimaryURL))
 	assert.Equal(t, expectedPath, w.HydratableFilepath())
 
 	originalContent := APIDefinitionResult{

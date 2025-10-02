@@ -208,10 +208,7 @@ func (w *WebApplication) Attribute(name, value string) Attribute {
 }
 
 func (w *WebApplication) HydratableFilepath() string {
-	if w.ApiDefinitionContentPath != "" {
-		return w.ApiDefinitionContentPath
-	}
-	return fmt.Sprintf("webapplication/%s/api-definition.json", w.PrimaryURL)
+	return fmt.Sprintf("webapplication/%s/api-definition.json", RemoveReservedCharacters(w.PrimaryURL))
 }
 
 func (w *WebApplication) Hydrate(data []byte) error {
