@@ -288,7 +288,6 @@ func NewWebApplication(primaryURL, name string) WebApplication {
 		PrimaryURL: primaryURL,
 		Name:       name,
 		URLs:       []string{},
-		Burp:       BurpSite{},
 	}
 
 	w.Defaulted()

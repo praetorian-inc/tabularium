@@ -7,8 +7,6 @@ import (
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
-const CredentialLabel = "Credential"
-
 type CredentialCategory string
 type CredentialType string
 type CredentialLifecycle string
