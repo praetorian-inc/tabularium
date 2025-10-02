@@ -149,6 +149,10 @@ func (w *WebApplication) IsSeed() bool {
 	return slices.Contains(w.GetLabels(), SeedLabel)
 }
 
+func (w *WebApplication) IsPrivate() bool {
+	return false
+}
+
 func (w *WebApplication) Merge(other Assetlike) {
 	w.BaseAsset.Merge(other)
 	otherApp, ok := other.(*WebApplication)
