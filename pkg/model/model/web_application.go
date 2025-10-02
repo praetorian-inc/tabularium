@@ -127,8 +127,10 @@ func (w *WebApplication) Merge(other Assetlike) {
 		return
 	}
 
+	// This invokes Relabeling the Node (see GetLabels)
 	if w.Source != SeedSource && otherApp.Source == SeedSource {
 		w.PendingLabelAddition = SeedLabel
+		w.Source = SeedSource
 	}
 
 	if otherApp.Name != "" {
