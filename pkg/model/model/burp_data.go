@@ -27,37 +27,37 @@ type BurpHTTPEntry struct {
 	ResponseMessageID int  `json:"-"`
 	ResponseInScope   bool `json:"-"`
 
-	WasRequestIntercepted                bool   `json:"wasRequestIntercepted"`
-	WasResponseIntercepted               bool   `json:"wasResponseIntercepted"`
-	WasRequestModified                   bool   `json:"wasRequestModified"`
-	WasResponseModified                  bool   `json:"wasResponseModified"`
-	WasModifiedRequestBodyBase64Encoded  bool   `json:"wasModifiedRequestBodyBase64Encoded"`
-	WasModifiedResponseBodyBase64Encoded bool   `json:"wasModifiedResponseBodyBase64Encoded"`
-	WasRequestBodyBase64Encoded          bool   `json:"wasRequestBodyBase64Encoded"`
-	WasResponseBodyBase64Encoded         bool   `json:"wasResponseBodyBase64Encoded"`
-	ToolSource                           string `json:"toolSource"`
-	Note                                 string `json:"notes"`
+	WasRequestIntercepted                bool   `json:"wasRequestIntercepted" desc:"Was the request intercepted?" example:"true"`
+	WasResponseIntercepted               bool   `json:"wasResponseIntercepted" desc:"Was the response intercepted?" example:"true"`
+	WasRequestModified                   bool   `json:"wasRequestModified" desc:"Was the request modified?" example:"true"`
+	WasResponseModified                  bool   `json:"wasResponseModified" desc:"Was the response modified?" example:"true"`
+	WasModifiedRequestBodyBase64Encoded  bool   `json:"wasModifiedRequestBodyBase64Encoded" desc:"Was the request body base64 encoded?" example:"true"`
+	WasModifiedResponseBodyBase64Encoded bool   `json:"wasModifiedResponseBodyBase64Encoded" desc:"Was the response body base64 encoded?" example:"true"`
+	WasRequestBodyBase64Encoded          bool   `json:"wasRequestBodyBase64Encoded" desc:"Was the request body base64 encoded?" example:"true"`
+	WasResponseBodyBase64Encoded         bool   `json:"wasResponseBodyBase64Encoded" desc:"Was the response body base64 encoded?" example:"true"`
+	ToolSource                           string `json:"toolSource" desc:"The tool source of the entry." example:"Repeater"`
+	Note                                 string `json:"notes" desc:"The notes of the entry." example:"This is a note about the entry."`
 }
 
 // BurpRawRequestData represents the raw HTTP request structure from Burp Suite JSON for unmarshaling
 type BurpRawRequestData struct {
-	Body      string              `json:"body"`
-	MessageID int                 `json:"messageId"`
-	InScope   bool                `json:"inScope"`
-	Method    string              `json:"method"`
-	Path      string              `json:"path"`
-	URL       string              `json:"url"`
-	Headers   []map[string]string `json:"headers"`
+	Body      string              `json:"body" desc:"The body of the request." example:"This is the body of the request."`
+	MessageID int                 `json:"messageId" desc:"The message ID of the request." example:"123"`
+	InScope   bool                `json:"inScope" desc:"Is the request in scope?" example:"true"`
+	Method    string              `json:"method" desc:"The method of the request." example:"GET"`
+	Path      string              `json:"path" desc:"The path of the request." example:"/api/login"`
+	URL       string              `json:"url" desc:"The URL of the request." example:"https://example.com/api/login"`
+	Headers   []map[string]string `json:"headers" desc:"The headers of the request."`
 }
 
 // BurpRawResponseData represents the raw HTTP response structure from Burp Suite JSON for unmarshaling
 type BurpRawResponseData struct {
-	Body      string              `json:"body"`
-	MessageID int                 `json:"messageId"`
-	InScope   bool                `json:"inScope"`
-	Method    string              `json:"method"`
-	Path      string              `json:"path"`
-	Headers   []map[string]string `json:"headers"`
+	Body      string              `json:"body" desc:"The body of the response." example:"This is the body of the response."`
+	MessageID int                 `json:"messageId" desc:"The message ID of the response." example:"123"`
+	InScope   bool                `json:"inScope" desc:"Is the response in scope?" example:"true"`
+	Method    string              `json:"method" desc:"The method of the response." example:"GET"`
+	Path      string              `json:"path" desc:"The path of the response." example:"/api/login"`
+	Headers   []map[string]string `json:"headers" desc:"The headers of the response."`
 }
 
 // BurpHTTPEntryRaw is used for JSON unmarshaling of the raw Burp data
@@ -66,15 +66,15 @@ type BurpHTTPEntryRaw struct {
 	OriginalResponse                     *BurpRawResponseData `json:"originalResponse"`
 	ModifiedRequest                      *BurpRawRequestData  `json:"modifiedRequest"`
 	ModifiedResponse                     *BurpRawResponseData `json:"modifiedResponse"`
-	WasRequestIntercepted                bool                 `json:"wasRequestIntercepted"`
-	WasResponseIntercepted               bool                 `json:"wasResponseIntercepted"`
-	WasRequestModified                   bool                 `json:"wasRequestModified"`
-	WasResponseModified                  bool                 `json:"wasResponseModified"`
-	WasModifiedRequestBodyBase64Encoded  bool                 `json:"wasModifiedRequestBodyBase64Encoded"`
-	WasModifiedResponseBodyBase64Encoded bool                 `json:"wasModifiedResponseBodyBase64Encoded"`
-	WasRequestBodyBase64Encoded          bool                 `json:"wasRequestBodyBase64Encoded"`
-	WasResponseBodyBase64Encoded         bool                 `json:"wasResponseBodyBase64Encoded"`
-	ToolSource                           string               `json:"toolSource"`
+	WasRequestIntercepted                bool                 `json:"wasRequestIntercepted" desc:"Was the request intercepted?" example:"true"`
+	WasResponseIntercepted               bool                 `json:"wasResponseIntercepted" desc:"Was the response intercepted?" example:"true"`
+	WasRequestModified                   bool                 `json:"wasRequestModified" desc:"Was the request modified?" example:"true"`
+	WasResponseModified                  bool                 `json:"wasResponseModified" desc:"Was the response modified?" example:"true"`
+	WasModifiedRequestBodyBase64Encoded  bool                 `json:"wasModifiedRequestBodyBase64Encoded" desc:"Was the request body base64 encoded?" example:"true"`
+	WasModifiedResponseBodyBase64Encoded bool                 `json:"wasModifiedResponseBodyBase64Encoded" desc:"Was the response body base64 encoded?" example:"true"`
+	WasRequestBodyBase64Encoded          bool                 `json:"wasRequestBodyBase64Encoded" desc:"Was the request body base64 encoded?" example:"true"`
+	WasResponseBodyBase64Encoded         bool                 `json:"wasResponseBodyBase64Encoded" desc:"Was the response body base64 encoded?" example:"true"`
+	ToolSource                           string               `json:"toolSource" desc:"The tool source of the entry." example:"Repeater"`
 }
 
 // UnmarshalJSON custom unmarshaling for BurpHTTPEntry
@@ -278,14 +278,14 @@ type BurpIssuesData struct {
 
 // BurpIssueEntry represents a single security issue found by Burp Suite
 type BurpIssueEntry struct {
-	BaseURL                  string                    `json:"baseUrl"`
+	BaseURL                  string                    `json:"baseUrl" desc:"The base URL of the issue." example:"https://example.com"`
 	CollaboratorInteractions []CollaboratorInteraction `json:"collaboratorInteractions"`
-	Confidence               string                    `json:"confidence"`
-	Severity                 string                    `json:"severity"`
-	Requests                 []BurpRawRequestData      `json:"requests"`
-	Responses                []BurpRawResponseData     `json:"responses"`
-	Name                     string                    `json:"name"`
-	Detail                   string                    `json:"detail"`
+	Confidence               string                    `json:"confidence" desc:"The confidence of the issue." example:"CERTAIN"`
+	Severity                 string                    `json:"severity" desc:"The severity of the issue." example:"High"`
+	Requests                 []BurpRawRequestData      `json:"requests" desc:"The requests of the issue."`
+	Responses                []BurpRawResponseData     `json:"responses" desc:"The responses of the issue."`
+	Name                     string                    `json:"name" desc:"The name of the issue." example:"SQL Injection"`
+	Detail                   string                    `json:"detail" desc:"The detail of the issue." example:"SQL Injection vulnerability detected."`
 
 	// Processed requests and responses using existing structures
 	ProcessedRequests  []WebpageRequest  `json:"-"`
@@ -294,25 +294,25 @@ type BurpIssueEntry struct {
 
 // CollaboratorInteraction represents interactions with Burp Collaborator
 type CollaboratorInteraction struct {
-	Type        string `json:"type"`
-	Protocol    string `json:"protocol"`
-	LookupType  string `json:"lookupType"`
-	Interaction string `json:"interaction"`
-	RawDetail   string `json:"rawDetail"`
+	Type        string `json:"type" desc:"The type of the collaborator interaction." example:"DNS"`
+	Protocol    string `json:"protocol" desc:"The protocol of the collaborator interaction." example:"UDP"`
+	LookupType  string `json:"lookupType" desc:"The lookup type of the collaborator interaction." example:"A"`
+	Interaction string `json:"interaction" desc:"The interaction of the collaborator interaction." example:"test.collaborator.net"`
+	RawDetail   string `json:"rawDetail" desc:"The raw detail of the collaborator interaction." example:"DNS lookup details"`
 }
 
 // UnmarshalJSON custom unmarshaling for BurpIssueEntry
 func (e *BurpIssueEntry) UnmarshalJSON(data []byte) error {
 	// Define a temporary struct that matches the JSON structure exactly
 	var raw struct {
-		BaseURL                  string                    `json:"baseUrl"`
+		BaseURL                  string                    `json:"baseUrl" desc:"The base URL of the issue." example:"https://example.com"`
 		CollaboratorInteractions []CollaboratorInteraction `json:"collaboratorInteractions"`
-		Confidence               string                    `json:"confidence"`
-		Severity                 string                    `json:"severity"`
-		Requests                 []BurpRawRequestData      `json:"requests"`
-		Responses                []BurpRawResponseData     `json:"responses"`
-		Name                     string                    `json:"name"`
-		Detail                   string                    `json:"detail"`
+		Confidence               string                    `json:"confidence" desc:"The confidence of the issue." example:"CERTAIN"`
+		Severity                 string                    `json:"severity" desc:"The severity of the issue." example:"High"`
+		Requests                 []BurpRawRequestData      `json:"requests" desc:"The requests of the issue."`
+		Responses                []BurpRawResponseData     `json:"responses" desc:"The responses of the issue."`
+		Name                     string                    `json:"name" desc:"The name of the issue." example:"SQL Injection"`
+		Detail                   string                    `json:"detail" desc:"The detail of the issue." example:"SQL Injection vulnerability detected."`
 	}
 
 	if err := json.Unmarshal(data, &raw); err != nil {
