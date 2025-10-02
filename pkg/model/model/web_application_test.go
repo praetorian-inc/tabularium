@@ -361,21 +361,21 @@ func TestWebApplicationSeedPromotion(t *testing.T) {
 			existingSource:    SelfSource,
 			incomingSource:    SelfSource,
 			expectPromotion:   false,
-			expectedPromotion: NO_PENDING_PROMOTION,
+			expectedPromotion: NO_PENDING_LABEL_ADDITION,
 		},
 		{
 			name:              "No promotion - both seed source",
 			existingSource:    SeedSource,
 			incomingSource:    SeedSource,
 			expectPromotion:   false,
-			expectedPromotion: NO_PENDING_PROMOTION,
+			expectedPromotion: NO_PENDING_LABEL_ADDITION,
 		},
 		{
 			name:              "No promotion - seed to self (downgrade)",
 			existingSource:    SeedSource,
 			incomingSource:    SelfSource,
 			expectPromotion:   false,
-			expectedPromotion: NO_PENDING_PROMOTION,
+			expectedPromotion: NO_PENDING_LABEL_ADDITION,
 		},
 	}
 
@@ -390,13 +390,13 @@ func TestWebApplicationSeedPromotion(t *testing.T) {
 			existing.Merge(&incoming)
 
 			if tt.expectPromotion {
-				pendingPromotion, required := PendingPromotion(&existing)
+				pendingPromotion, required := PendingLabelAddition(&existing)
 				assert.Equal(t, tt.expectedPromotion, pendingPromotion,
 					"Expected pending promotion to be set")
 				assert.True(t, required,
 					"PendingPromotion should return true")
 			} else {
-				pendingPromotion, required := PendingPromotion(&existing)
+				pendingPromotion, required := PendingLabelAddition(&existing)
 				assert.Equal(t, tt.expectedPromotion, pendingPromotion,
 					"Expected no pending promotion")
 				assert.False(t, required,
@@ -406,16 +406,16 @@ func TestWebApplicationSeedPromotion(t *testing.T) {
 	}
 }
 
-func TestWebApplicationPromotableInterface(t *testing.T) {
+func TestWebApplicationRelabelableInterface(t *testing.T) {
 	webapp := NewWebApplication("https://example.com", "Test")
-	var _ Promotable = &webapp
+	var _ Relabelable = &webapp
 
-	pendingPromotion, required := PendingPromotion(&webapp)
-	assert.Equal(t, NO_PENDING_PROMOTION, pendingPromotion)
+	pendingPromotion, required := PendingLabelAddition(&webapp)
+	assert.Equal(t, NO_PENDING_LABEL_ADDITION, pendingPromotion)
 	assert.False(t, required)
 
-	webapp.pendingPromotion = SeedLabel
-	pendingPromotion, required = PendingPromotion(&webapp)
+	webapp.PendingLabelAddition = SeedLabel
+	pendingPromotion, required = PendingLabelAddition(&webapp)
 	assert.Equal(t, SeedLabel, pendingPromotion)
 	assert.True(t, required)
 }
