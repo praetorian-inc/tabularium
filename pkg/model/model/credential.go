@@ -63,9 +63,10 @@ const (
 	LegacyCloudCredential CredentialType = "legacy-cloud" // Legacy cloud credentials (AWS, GCP, Azure)
 
 	// Credential Formats for capabilities to use (and advertise)
-	CredentialFormatEnv   CredentialFormat = "env"   // things like tokens can be release into env vars for caps to use
-	CredentialFormatFile  CredentialFormat = "file"  // credentials requested as files to be stored at a specific location
-	CredentialFormatToken CredentialFormat = "token" // returned in a struct for direct use by caps
+	CredentialFormatEnv     CredentialFormat = "env"      // things like tokens can be release into env vars for caps to use
+	CredentialFormatFile    CredentialFormat = "file"     // credentials requested as files to be stored at a specific location
+	CredentialFormatToken   CredentialFormat = "token"    // returned in a struct for direct use by caps
+	CredentialFormatAPIAuth CredentialFormat = "api-auth" // API authentication credentials
 
 	// Credential Lifecycles
 	CredentialLifecycleStatic    CredentialLifecycle = "static"
@@ -110,6 +111,8 @@ type Credential struct {
 	AccountKey   string             `neo4j:"accountKey" json:"accountKey" desc:"Key of the associated account"`
 	Category     CredentialCategory `neo4j:"category" json:"category" desc:"Category of the credential"`
 	Type         CredentialType     `neo4j:"type" json:"type" desc:"Type of credential"`
+	Format       CredentialFormat   `neo4j:"format" json:"format" desc:"Format of the credential"`
+	Name         string             `neo4j:"name" json:"name" desc:"Pretty name or user label for the credential"`
 	Created      string             `neo4j:"created" json:"created" desc:"Timestamp when the credential was created"`
 	Updated      string             `neo4j:"updated" json:"updated" desc:"Timestamp when the credential was last updated"`
 }
@@ -137,6 +140,7 @@ func NewCredential(accountKey string, category CredentialCategory, credType Cred
 		AccountKey:   accountKey,
 		Category:     category,
 		Type:         credType,
+		Name:         fmt.Sprintf("%s %s", category, credType),
 	}
 	c.Defaulted()
 	registry.CallHooks(&c)
@@ -161,6 +165,10 @@ func (c *Credential) GetLabels() []string {
 
 func (c *Credential) Valid() bool {
 	return c.CredentialID != "" && c.Key != "" && c.Category != "" && c.Type != ""
+}
+
+func (c *Credential) SetName(name string) {
+	c.Name = name
 }
 
 func init() {

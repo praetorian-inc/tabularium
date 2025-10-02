@@ -161,7 +161,7 @@ func TestTargetEvent_Interface(t *testing.T) {
 	asset := NewAsset("example.com", "1.2.3.4")
 	attribute := asset.Attribute("https", "443")
 	preseed := NewPreseed("whois+company", "Chariot Systems", "Chariot Systems")
-	webpage := NewWebpageFromString("https://example.com/", &attribute)
+	webpage := NewWebpageFromString("https://example.com/", nil)
 
 	testTargetInterface(t, "Asset", &asset)
 	testTargetInterface(t, "Attribute", &attribute)
@@ -282,10 +282,43 @@ func TestTargetEvent_DynamoDBMarshaling(t *testing.T) {
 		assert.Equal(t, preseed.Capability, result.Capability)
 	})
 
+	t.Run("marshal and unmarshal webapplication", func(t *testing.T) {
+		webapplication := NewWebApplication("https://example.com/", "Example App")
+		webapplication.Username = "test@example.com"
+		webapplication.Status = "A"
+		webapplication.Created = Now()
+		webapplication.Visited = Now()
+		webapplication.TTL = 123456789
+		webapplication.Source = "seed"
+		webapplication.URLs = []string{"https://example.com/api", "https://example.com/admin"}
+		webapplication.BurpSiteID = "1234"
+		webapplication.BurpFolderID = "42"
+		webapplication.BurpScheduleID = "abcd"
+
+		original := TargetWrapper{Model: &webapplication}
+
+		av, err := attributevalue.Marshal(original)
+		require.NoError(t, err)
+
+		var unmarshaled TargetWrapper
+		err = attributevalue.Unmarshal(av, &unmarshaled)
+		require.NoError(t, err)
+
+		result, ok := unmarshaled.Model.(*WebApplication)
+		require.True(t, ok)
+		assert.Equal(t, webapplication.Key, result.Key)
+		assert.Equal(t, webapplication.Username, result.Username)
+		assert.Equal(t, webapplication.PrimaryURL, result.PrimaryURL)
+		assert.Equal(t, webapplication.URLs, result.URLs)
+		assert.Equal(t, webapplication.Status, result.Status)
+		assert.Equal(t, webapplication.Source, result.Source)
+		assert.Equal(t, webapplication.BurpSiteID, result.BurpSiteID)
+		assert.Equal(t, webapplication.BurpFolderID, result.BurpFolderID)
+		assert.Equal(t, webapplication.BurpScheduleID, result.BurpScheduleID)
+	})
+
 	t.Run("marshal and unmarshal webpage", func(t *testing.T) {
-		asset := NewAsset("example.com", "1.2.3.4")
-		attribute := NewAttribute("https", "443", &asset)
-		webpage := NewWebpageFromString("https://example.com/", &attribute)
+		webpage := NewWebpageFromString("https://example.com/", nil)
 		webpage.Username = "test@example.com"
 		webpage.Status = "A"
 		webpage.Created = Now()
@@ -312,7 +345,7 @@ func TestTargetEvent_DynamoDBMarshaling(t *testing.T) {
 		assert.Equal(t, webpage.URL, result.URL)
 		assert.Equal(t, webpage.Status, result.Status)
 		assert.Equal(t, webpage.Source, result.Source)
-		assert.Equal(t, webpage.Parent.Model, result.Parent.Model)
+		assert.Equal(t, webpage.Parent, result.Parent)
 		assert.Equal(t, webpage.Metadata, result.Metadata)
 		assert.Equal(t, webpage.Created, result.Created)
 		assert.Equal(t, webpage.Visited, result.Visited)

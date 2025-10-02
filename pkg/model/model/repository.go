@@ -36,11 +36,6 @@ func (r *Repository) Valid() bool {
 	return repository.MatchString(r.URL) && repositoryKey.MatchString(r.Key)
 }
 
-func (r *Repository) Attribute(name, value string) Attribute {
-	attr := NewAttribute(name, value, r)
-	return attr
-}
-
 func (r *Repository) Identifier() string {
 	return r.Name
 }
@@ -55,6 +50,10 @@ func (r *Repository) IsClass(value string) bool {
 
 func (r *Repository) IsPrivate() bool {
 	return false
+}
+
+func (r *Repository) Attribute(name, value string) Attribute {
+	return NewAttribute(name, value, r)
 }
 
 func (r *Repository) WithStatus(status string) Target {

@@ -191,8 +191,7 @@ func (a *Asset) SetSource(source string) {
 }
 
 func (a *Asset) Attribute(name, value string) Attribute {
-	attr := NewAttribute(name, value, a)
-	return attr
+	return NewAttribute(name, value, a)
 }
 
 func (a *Asset) GetHooks() []registry.Hook {
@@ -203,6 +202,10 @@ func (a *Asset) GetHooks() []registry.Hook {
 				a.Key = strings.ToLower(fmt.Sprintf("#asset#%s#%s", a.DNS, a.Name))
 				a.Class = a.GetClass()
 				a.Private = a.IsPrivate()
+				if a.Private && (a.IsClass("ip") || a.IsClass("cidr")) {
+					a.ASName = "Non-Routable"
+					a.ASNumber = "0"
+				}
 				return nil
 			},
 		},

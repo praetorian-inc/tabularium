@@ -36,6 +36,7 @@ type Risk struct {
 	Target     Target `neo4j:"-" json:"-"` // Internal use, not in schema
 	History
 	MLProperties
+	Tags
 }
 
 func init() {
@@ -113,6 +114,7 @@ func (r *Risk) Merge(update Risk) {
 	if update.ProofSufficient != nil {
 		r.ProofSufficient = update.ProofSufficient
 	}
+	r.Tags.Merge(update.Tags)
 }
 
 func (r *Risk) Visit(n Risk) {
@@ -127,6 +129,7 @@ func (r *Risk) Visit(n Risk) {
 	}
 
 	r.Comment = n.Comment
+	r.Tags.Visit(n.Tags)
 }
 
 func (r *Risk) SetSeverity(state string) {
