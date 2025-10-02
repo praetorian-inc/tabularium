@@ -64,7 +64,6 @@ func (r *APIDefinitionResult) ToAPIDefinitionArray() []map[string]any {
 			"contents":          r.FileBasedDefinition.Contents,
 			"enabled_endpoints": r.FileBasedDefinition.EnabledEndpoints,
 			"authentications":   []map[string]any{},
-			"credentials":       []map[string]any{},
 		}
 
 		apiDef["file_based_api_definition"] = fileBasedDef
