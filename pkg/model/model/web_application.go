@@ -193,21 +193,6 @@ func (w *WebApplication) Merge(other Assetlike) {
 	if otherApp.ApiDefinitionContentPath != "" {
 		w.ApiDefinitionContentPath = otherApp.ApiDefinitionContentPath
 	}
-	if otherApp.Source != "" {
-		w.Source = otherApp.Source
-	}
-	if otherApp.BurpSiteID != "" {
-		w.BurpSiteID = otherApp.BurpSiteID
-	}
-	if otherApp.BurpFolderID != "" {
-		w.BurpFolderID = otherApp.BurpFolderID
-	}
-	if otherApp.BurpScheduleID != "" {
-		w.BurpScheduleID = otherApp.BurpScheduleID
-	}
-	if otherApp.ApiDefinitionContentPath != "" {
-		w.ApiDefinitionContentPath = otherApp.ApiDefinitionContentPath
-	}
 }
 
 func (w *WebApplication) Visit(other Assetlike) {
