@@ -51,7 +51,7 @@ type APIDefinitionResult struct {
 
 func (r *APIDefinitionResult) HydratableFilepath() string {
 	dummyApp := NewWebApplication(r.PrimaryURL, r.PrimaryURL)
-	return dummyApp.HydratableFilepath()
+	return dummyApp.GetHydratableFilepath()
 }
 
 // See here: https://portswigger.net/burp/extensibility/dast/graphql-api/apidefinitioninput.html
