@@ -12,7 +12,7 @@ import (
 
 const CloudResourceLabel = "CloudResource"
 
-var neo4jNegateLabelRegex = regexp.MustCompile(`[^a-zA-Z0-9\-_]`) // to conform with label validator
+var specialCharRegex = regexp.MustCompile(`[^a-zA-Z0-9\-_]`) // to conform with label validator
 
 func init() {
 	MustRegisterLabel(CloudResourceLabel)
@@ -89,7 +89,7 @@ func (c *CloudResource) GetKey() string {
 func (c *CloudResource) GetLabels() []string {
 	labels := make([]string, len(c.Labels))
 	for i, label := range c.Labels {
-		labels[i] = neo4jNegateLabelRegex.ReplaceAllString(label, "_")
+		labels[i] = specialCharRegex.ReplaceAllString(label, "_")
 	}
 	return labels
 }
