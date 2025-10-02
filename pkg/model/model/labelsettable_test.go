@@ -20,7 +20,7 @@ func (m *mockRelabelableModel) Valid() bool {
 	return true
 }
 
-func TestRelabelableEmbed_GetPendingLabelAddition(t *testing.T) {
+func TestLabelSettableEmbed_GetPendingLabelAddition(t *testing.T) {
 	tests := []struct {
 		name           string
 		pendingLabel   string
@@ -103,7 +103,7 @@ func TestHasPendingLabelAddition(t *testing.T) {
 	}
 }
 
-func TestRelabelableInterface(t *testing.T) {
+func TestLabelSettableInterface(t *testing.T) {
 	var _ LabelSettable = &mockRelabelableModel{}
 
 	model := &mockRelabelableModel{
