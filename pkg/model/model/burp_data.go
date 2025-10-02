@@ -293,18 +293,8 @@ type CollaboratorInteraction struct {
 
 // UnmarshalJSON custom unmarshaling for BurpIssueEntry
 func (e *BurpIssueEntry) UnmarshalJSON(data []byte) error {
-	// Define a temporary struct that matches the JSON structure exactly
-	var raw struct {
-		BaseURL                  string                    `json:"baseUrl" desc:"The base URL of the issue." example:"https://example.com"`
-		CollaboratorInteractions []CollaboratorInteraction `json:"collaboratorInteractions"`
-		Confidence               string                    `json:"confidence" desc:"The confidence of the issue." example:"CERTAIN"`
-		Severity                 string                    `json:"severity" desc:"The severity of the issue." example:"High"`
-		Requests                 []BurpRawRequestData      `json:"requests" desc:"The requests of the issue."`
-		Responses                []BurpRawResponseData     `json:"responses" desc:"The responses of the issue."`
-		Name                     string                    `json:"name" desc:"The name of the issue." example:"SQL Injection"`
-		Detail                   string                    `json:"detail" desc:"The detail of the issue." example:"SQL Injection vulnerability detected."`
-	}
-
+	type _BurpIssueEntry BurpIssueEntry
+	var raw _BurpIssueEntry
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
 	}
