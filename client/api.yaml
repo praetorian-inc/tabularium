@@ -3600,6 +3600,8 @@ components:
           type: object
         BurpMetadata:
           type: object
+        LabelSettableEmbed:
+          type: object
         name:
           description: Name of the web application
           example: Example App
@@ -3617,6 +3619,7 @@ components:
       required:
       - BaseAsset
       - BurpMetadata
+      - LabelSettableEmbed
       - name
       - primary_url
       - urls
