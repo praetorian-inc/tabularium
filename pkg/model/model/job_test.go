@@ -175,8 +175,6 @@ func TestJob_GetParent(t *testing.T) {
 }
 
 func TestJob_WebpageKeyCreationWithProtocol(t *testing.T) {
-	parent := NewAsset("example", "com")
-
 	tests := []struct {
 		name        string
 		url         string
@@ -210,7 +208,7 @@ func TestJob_WebpageKeyCreationWithProtocol(t *testing.T) {
 				t.Fatalf("Failed to parse URL: %v", err)
 			}
 
-			webpage := NewWebpage(*parsedURL, &parent)
+			webpage := NewWebpage(*parsedURL, nil)
 			job := NewJob(tt.source, &webpage)
 
 			if job.Key != tt.expectedKey {
@@ -224,8 +222,8 @@ func TestJob_WebpageKeyCreationWithProtocol(t *testing.T) {
 		httpsURL, _ := url.Parse("https://example.com/path")
 		httpURL, _ := url.Parse("http://example.com/path")
 
-		httpsWebpage := NewWebpage(*httpsURL, &parent)
-		httpWebpage := NewWebpage(*httpURL, &parent)
+		httpsWebpage := NewWebpage(*httpsURL, nil)
+		httpWebpage := NewWebpage(*httpURL, nil)
 
 		httpsJob := NewJob("test-source", &httpsWebpage)
 		httpJob := NewJob("test-source", &httpWebpage)

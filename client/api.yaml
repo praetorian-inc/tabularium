@@ -1310,8 +1310,13 @@ components:
       properties:
         CloudResource:
           type: object
+        orgPolicy:
+          items:
+            type: integer
+          type: array
       required:
       - CloudResource
+      - orgPolicy
       type: object
     azureresource:
       description: ' ()'
@@ -1400,28 +1405,18 @@ components:
     cloudresource:
       description: ' ()'
       properties:
-        BaseModel:
-          type: object
-        History:
+        BaseAsset:
           type: object
         OriginationData:
           type: object
         accountRef:
           type: string
-        created:
-          type: string
         displayName:
-          type: string
-        group:
-          type: string
-        identifier:
           type: string
         ips:
           items:
             type: string
           type: array
-        key:
-          type: string
         labels:
           items:
             type: string
@@ -1436,44 +1431,23 @@ components:
           type: string
         resourceType:
           type: string
-        secret:
-          type: string
-        status:
-          type: string
-        ttl:
-          format: int64
-          type: integer
         urls:
           items:
             type: string
           type: array
-        username:
-          type: string
-        visited:
-          type: string
       required:
-      - BaseModel
-      - History
+      - BaseAsset
       - OriginationData
       - accountRef
-      - created
       - displayName
-      - group
-      - identifier
       - ips
-      - key
       - labels
       - name
       - properties
       - provider
       - region
       - resourceType
-      - secret
-      - status
-      - ttl
       - urls
-      - username
-      - visited
       type: object
     commandresult:
       description: Represents the success/failure status of an Aegis capability execution.
@@ -2213,6 +2187,18 @@ components:
           type: string
       required:
       - BaseModel
+      type: object
+    iamrelationship:
+      description: Represents the base structure for all graph relationships, containing
+        source, target, and metadata.
+      properties:
+        BaseRelationship:
+          type: object
+        permission:
+          type: string
+      required:
+      - BaseRelationship
+      - permission
       type: object
     instanceof:
       description: Represents an 'instance of' relationship (e.g., a process is an
@@ -3668,7 +3654,7 @@ components:
           type: object
         parent:
           description: The parent entity from which this webpage was discovered. Only
-            used for creating a relationship
+            used for creating a relationship. Pointer for easy reference
           type: object
         private:
           description: Whether the webpage is on a public web server.

@@ -2,10 +2,11 @@ package model
 
 import (
 	"fmt"
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 	"net"
 	"slices"
 	"testing"
+
+	"github.com/praetorian-inc/tabularium/pkg/registry"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -698,4 +699,30 @@ func TestAWSResource_Defaulted(t *testing.T) {
 		expectedAttackSurface := []string{"cloud"}
 		assert.Equal(t, expectedAttackSurface, awsRes.AttackSurface, "NewAWSResource should call Defaulted() which sets AttackSurface to ['cloud']")
 	})
+}
+
+func TestAWSResource_HydrateDehydrate(t *testing.T) {
+	resource, err := NewAWSResource("arn:aws:organizations::992382775570:account/o-a6zw2rb1jz/992382775570", "992382775570", AWSAccount, nil)
+	require.NoError(t, err)
+
+	gotFilepath := resource.HydratableFilepath()
+	assert.Equal(t, gotFilepath, "")
+
+	err = resource.Hydrate([]byte(`{"dummy": "test policy"}`))
+	require.NoError(t, err)
+
+	gotFilepath = resource.HydratableFilepath()
+	expectedFilepath := "awsresource/992382775570/arn_aws_organizations__992382775570_account_o-a6zw2rb1jz_992382775570/org-policies.json"
+	assert.Equal(t, gotFilepath, expectedFilepath)
+
+	expectedFile := NewFile(expectedFilepath)
+	expectedFile.Bytes = []byte(`{"dummy": "test policy"}`)
+	gotFile := resource.HydratedFile()
+	assert.Equal(t, expectedFile.Key, gotFile.Key)
+	assert.Equal(t, expectedFile.Name, gotFile.Name)
+	assert.Equal(t, expectedFile.Bytes, gotFile.Bytes)
+
+	dehydrated, ok := resource.Dehydrate().(*AWSResource)
+	require.True(t, ok, "object is not *AWSResource: %T", resource)
+	assert.Nil(t, dehydrated.OrgPolicy)
 }

@@ -191,8 +191,7 @@ func (a *Asset) SetSource(source string) {
 }
 
 func (a *Asset) Attribute(name, value string) Attribute {
-	attr := NewAttribute(name, value, a)
-	return attr
+	return NewAttribute(name, value, a)
 }
 
 func (a *Asset) GetHooks() []registry.Hook {
