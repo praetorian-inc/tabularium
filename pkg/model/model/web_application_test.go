@@ -408,7 +408,7 @@ func TestWebApplicationSeedPromotion(t *testing.T) {
 
 func TestWebApplicationRelabelableInterface(t *testing.T) {
 	webapp := NewWebApplication("https://example.com", "Test")
-	var _ Relabelable = &webapp
+	var _ LabelSettable = &webapp
 
 	pendingPromotion, required := PendingLabelAddition(&webapp)
 	assert.Equal(t, NO_PENDING_LABEL_ADDITION, pendingPromotion)

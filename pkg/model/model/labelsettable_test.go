@@ -9,7 +9,7 @@ import (
 // Mock implementation for testing
 type mockRelabelableModel struct {
 	BaseAsset
-	RelabelableEmbed
+	LabelSettableEmbed
 }
 
 func (m *mockRelabelableModel) GetLabels() []string {
@@ -45,7 +45,7 @@ func TestRelabelableEmbed_GetPendingLabelAddition(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			embed := RelabelableEmbed{
+			embed := LabelSettableEmbed{
 				PendingLabelAddition: tt.pendingLabel,
 			}
 			assert.Equal(t, tt.expectedResult, embed.GetPendingLabelAddition())
@@ -64,7 +64,7 @@ func TestHasPendingLabelAddition(t *testing.T) {
 			name: "Model with pending label addition",
 			model: &mockRelabelableModel{
 				BaseAsset: BaseAsset{Key: "test-key"},
-				RelabelableEmbed: RelabelableEmbed{
+				LabelSettableEmbed: LabelSettableEmbed{
 					PendingLabelAddition: SeedLabel,
 				},
 			},
@@ -75,7 +75,7 @@ func TestHasPendingLabelAddition(t *testing.T) {
 			name: "Model without pending label addition",
 			model: &mockRelabelableModel{
 				BaseAsset: BaseAsset{Key: "test-key"},
-				RelabelableEmbed: RelabelableEmbed{
+				LabelSettableEmbed: LabelSettableEmbed{
 					PendingLabelAddition: NO_PENDING_LABEL_ADDITION,
 				},
 			},
@@ -104,11 +104,11 @@ func TestHasPendingLabelAddition(t *testing.T) {
 }
 
 func TestRelabelableInterface(t *testing.T) {
-	var _ Relabelable = &mockRelabelableModel{}
+	var _ LabelSettable = &mockRelabelableModel{}
 
 	model := &mockRelabelableModel{
 		BaseAsset: BaseAsset{Key: "test-key"},
-		RelabelableEmbed: RelabelableEmbed{
+		LabelSettableEmbed: LabelSettableEmbed{
 			PendingLabelAddition: SeedLabel,
 		},
 	}
