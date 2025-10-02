@@ -726,3 +726,16 @@ func TestAWSResource_HydrateDehydrate(t *testing.T) {
 	require.True(t, ok, "object is not *AWSResource: %T", resource)
 	assert.Nil(t, dehydrated.OrgPolicy)
 }
+
+func TestAWSResource_Visit(t *testing.T) {
+	existing, err := NewAWSResource("arn:aws:organizations::992382775570:account/o-a6zw2rb1jz/992382775570", "992382775570", AWSAccount, nil)
+	require.NoError(t, err)
+
+	other, err := NewAWSResource("arn:aws:organizations::992382775570:account/o-a6zw2rb1jz/992382775570", "992382775570", AWSAccount, nil)
+	other.OrgPolicyName = "other-file"
+	require.NoError(t, err)
+
+	existing.Merge(&other)
+
+	assert.Equal(t, existing.OrgPolicyName, "other-file")
+}
