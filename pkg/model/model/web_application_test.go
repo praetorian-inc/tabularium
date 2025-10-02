@@ -1,6 +1,8 @@
 package model
 
 import (
+	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -339,4 +341,62 @@ func TestWebApplicationSeedModels(t *testing.T) {
 	assert.Equal(t, webApp.Status, returnedWebApp.Status)
 	assert.Equal(t, webApp.Source, returnedWebApp.Source)
 	assert.Equal(t, webApp.Key, returnedWebApp.Key)
+}
+
+func TestWebApplicationHydrationLifecycle(t *testing.T) {
+	primaryURL := "https://api.example.com"
+	w := NewWebApplication(primaryURL, "Example App")
+
+	expectedPath := fmt.Sprintf("webapplication/%s/api-definition.json", RemoveReservedCharacters(w.PrimaryURL))
+	assert.Equal(t, expectedPath, w.HydratableFilepath())
+
+	originalContent := APIDefinitionResult{
+		PrimaryURL: w.PrimaryURL,
+		FileBasedDefinition: &FileBasedAPIDefinition{
+			Filename:         "openapi.json",
+			Contents:         "{}",
+			EnabledEndpoints: []EnabledEndpoint{{ID: "endpoint-1"}},
+		},
+	}
+
+	w.WebApplicationDetails.ApiDefinitionContent = originalContent
+
+	file := w.HydratedFile()
+	assert.Equal(t, expectedPath, file.Name)
+	assert.Equal(t, expectedPath, w.ApiDefinitionContentPath)
+
+	var parsed APIDefinitionResult
+	require.NoError(t, json.Unmarshal(file.Bytes, &parsed))
+	assert.Equal(t, originalContent, parsed)
+
+	dehydrated := w.Dehydrate()
+	dehydratedApp, ok := dehydrated.(*WebApplication)
+	require.True(t, ok)
+	assert.Equal(t, expectedPath, dehydratedApp.ApiDefinitionContentPath)
+	assert.Empty(t, dehydratedApp.WebApplicationDetails.ApiDefinitionContent)
+
+	rehydrated := NewWebApplication(primaryURL, "Rehydrated")
+	rehydrated.ApiDefinitionContentPath = dehydratedApp.ApiDefinitionContentPath
+	require.NoError(t, rehydrated.Hydrate(file.Bytes))
+	assert.Equal(t, originalContent, rehydrated.WebApplicationDetails.ApiDefinitionContent)
+}
+
+func TestWebApplicationGobEncodeDecode(t *testing.T) {
+	original := NewWebApplication("https://gob.example.com", "Gob Example")
+	original.URLs = []string{"https://gob.example.com/api"}
+	original.ApiDefinitionContentPath = original.HydratableFilepath()
+	original.WebApplicationDetails.ApiDefinitionContent = APIDefinitionResult{PrimaryURL: original.PrimaryURL}
+
+	data, err := original.GobEncode()
+	require.NoError(t, err)
+
+	assert.NotEmpty(t, original.WebApplicationDetails.ApiDefinitionContent)
+
+	var decoded WebApplication
+	require.NoError(t, decoded.GobDecode(data))
+
+	assert.Equal(t, original.PrimaryURL, decoded.PrimaryURL)
+	assert.Equal(t, original.URLs, decoded.URLs)
+	assert.Equal(t, original.ApiDefinitionContentPath, decoded.ApiDefinitionContentPath)
+	assert.Empty(t, decoded.WebApplicationDetails.ApiDefinitionContent)
 }
