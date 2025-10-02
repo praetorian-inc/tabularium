@@ -74,7 +74,7 @@ func TestRisk_MergePriority(t *testing.T) {
 func TestRiskConstructors(t *testing.T) {
 	testAsset := NewAsset("example.com", "Example Asset")
 	testAttribute := NewAttribute("test", "test", &testAsset)
-	testWebpage := NewWebpageFromString("https://gladiator.systems", &testAttribute)
+	testWebpage := NewWebpageFromString("https://gladiator.systems", nil)
 	tests := []struct {
 		name         string
 		target       Target

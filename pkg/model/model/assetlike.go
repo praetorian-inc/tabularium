@@ -7,7 +7,6 @@ type Assetlike interface {
 	Merge(Assetlike)
 	Visit(Assetlike)
 	GetMetadata() *Metadata
-	Attribute(string, string) Attribute
 	GetBase() *BaseAsset
 	GetClass() string
 	GetSource() string

@@ -12,7 +12,7 @@ import (
 
 const CloudResourceLabel = "CloudResource"
 
-var neo4jNegateLabelRegex = regexp.MustCompile(`[^a-zA-Z0-9\-_]`) // to conform with label validator
+var specialCharRegex = regexp.MustCompile(`[^a-zA-Z0-9\-_]`) // to conform with label validator
 
 func init() {
 	MustRegisterLabel(CloudResourceLabel)
@@ -30,27 +30,17 @@ type AssetBuilder interface {
 }
 
 type CloudResource struct {
-	registry.BaseModel
-	History
-	Key             string            `neo4j:"key" json:"key"`
-	Group           string            `neo4j:"group" json:"group"`
-	IdentifierValue string            `neo4j:"identifier" json:"identifier"`
-	IPs             []string          `neo4j:"ips" json:"ips"`
-	URLs            []string          `neo4j:"urls" json:"urls"`
-	Name            string            `neo4j:"name" json:"name"`
-	DisplayName     string            `neo4j:"displayName" json:"displayName"`
-	Provider        string            `neo4j:"provider" json:"provider"`
-	ResourceType    CloudResourceType `neo4j:"resourceType" json:"resourceType"`
-	Region          string            `neo4j:"region" json:"region"`
-	AccountRef      string            `neo4j:"accountRef" json:"accountRef"`
-	Status          string            `neo4j:"status" json:"status"`
-	Created         string            `neo4j:"created" json:"created"`
-	Visited         string            `neo4j:"visited" json:"visited"`
-	TTL             int64             `neo4j:"ttl" json:"ttl"`
-	Properties      map[string]any    `neo4j:"properties" json:"properties"`
-	Labels          []string          `neo4j:"labels" json:"labels"`
-	Secret          *string           `neo4j:"secret" json:"secret"`
-	Username        string            `neo4j:"username" json:"username"`
+	IPs          []string          `neo4j:"ips" json:"ips"`
+	URLs         []string          `neo4j:"urls" json:"urls"`
+	Name         string            `neo4j:"name" json:"name"`
+	DisplayName  string            `neo4j:"displayName" json:"displayName"`
+	Provider     string            `neo4j:"provider" json:"provider"`
+	ResourceType CloudResourceType `neo4j:"resourceType" json:"resourceType"`
+	Region       string            `neo4j:"region" json:"region"`
+	AccountRef   string            `neo4j:"accountRef" json:"accountRef"`
+	Properties   map[string]any    `neo4j:"properties" json:"properties"`
+	Labels       []string          `neo4j:"labels" json:"labels"`
+	BaseAsset
 	OriginationData
 }
 
@@ -83,8 +73,7 @@ func (a *CloudResource) GetHooks() []registry.Hook {
 					a.Labels[i] = strings.ReplaceAll(label, "/", "_")
 				}
 
-				a.Group = a.AccountRef
-				a.IdentifierValue = a.Name
+				a.Class = string(a.ResourceType)
 
 				return nil
 			},
@@ -100,21 +89,13 @@ func (c *CloudResource) GetKey() string {
 func (c *CloudResource) GetLabels() []string {
 	labels := make([]string, len(c.Labels))
 	for i, label := range c.Labels {
-		labels[i] = neo4jNegateLabelRegex.ReplaceAllString(label, "_")
+		labels[i] = specialCharRegex.ReplaceAllString(label, "_")
 	}
 	return labels
 }
 
 func (c *CloudResource) GetStatus() string {
 	return c.Status
-}
-
-func (c *CloudResource) Identifier() string {
-	return c.Name
-}
-
-func (c *CloudResource) IsClass(value string) bool {
-	return strings.HasPrefix(string(c.ResourceType), value)
 }
 
 func (c *CloudResource) IsStatus(value string) bool {
