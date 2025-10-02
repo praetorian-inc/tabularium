@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strings"
 )
 
@@ -180,23 +181,12 @@ func (b *BurpHTTPData) ExtractBaseURLs() []string {
 
 // ExtractBaseURL extracts the base URL from a full URL
 func ExtractBaseURL(fullURL string) string {
-	if fullURL == "" {
+	url_parsed, err := url.Parse(fullURL)
+	if err != nil {
 		return ""
 	}
 
-	// Find the position of the third slash (after scheme://)
-	schemeEnd := strings.Index(fullURL, "://")
-	if schemeEnd == -1 {
-		return ""
-	}
-
-	pathStart := strings.Index(fullURL[schemeEnd+3:], "/")
-	if pathStart == -1 {
-		// No path, the entire URL is the base
-		return fullURL
-	}
-
-	return fullURL[:schemeEnd+3+pathStart]
+	return fmt.Sprintf("%s://%s", url_parsed.Scheme, url_parsed.Host)
 }
 
 // ParseBurpHTTPData parses JSON bytes into BurpHTTPData
