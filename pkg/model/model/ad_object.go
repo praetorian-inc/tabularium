@@ -383,6 +383,8 @@ type ADProperties struct {
 	GroupScope                              string   `neo4j:"groupscope" json:"groupscope,omitempty" desc:"Scope of the AD group" example:"Global"`
 	NetBIOS                                 string   `neo4j:"netbios" json:"netbios,omitempty" desc:"NetBIOS name of the domain" example:"CONTOSO"`
 	AdminSDHolderProtected                  string   `neo4j:"adminsdholderprotected" json:"adminsdholderprotected,omitempty" desc:"Whether object is protected by AdminSDHolder process" example:"true"`
+	ServicePrincipalNames                   []string `neo4j:"serviceprincipalnames" json:"serviceprincipalnames,omitempty" desc:"The service principal name(s) associated with this account" example:"WSMAN/database"`
+	OperatingSystem                         string   `neo4j:"operatingsystem" json:"operatingsystem,omitempty" desc:"The operating system associated with this computer" example:"Windows Server 2019 SE"`
 }
 
 func (ad *ADProperties) Visit(other ADProperties) {
