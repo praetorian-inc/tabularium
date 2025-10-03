@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+const BURP_COURIER_SOURCE = "burp-courier"
+
 // BurpHTTPData represents the top-level structure of Burp Suite HTTP export data
 type BurpHTTPData struct {
 	Metadata BurpMetadata             `json:"metadata"`
