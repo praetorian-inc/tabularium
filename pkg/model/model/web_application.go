@@ -11,6 +11,7 @@ import (
 	"slices"
 
 	"github.com/praetorian-inc/tabularium/pkg/lib/normalize"
+	"github.com/praetorian-inc/tabularium/pkg/model/attacksurface"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -120,6 +121,7 @@ func (w *WebApplication) GetHooks() []registry.Hook {
 func (w *WebApplication) Defaulted() {
 	w.BaseAsset.Defaulted()
 	w.Class = "webapplication"
+	w.AttackSurface = []string{string(attacksurface.Application)}
 	if w.URLs == nil {
 		w.URLs = []string{}
 	}
@@ -153,6 +155,10 @@ func (w *WebApplication) Identifier() string {
 
 func (w *WebApplication) IsSeed() bool {
 	return slices.Contains(w.GetLabels(), SeedLabel)
+}
+
+func (w *WebApplication) IsPrivate() bool {
+	return false
 }
 
 func (w *WebApplication) Merge(other Assetlike) {
