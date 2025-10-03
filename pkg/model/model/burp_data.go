@@ -55,12 +55,13 @@ type BurpRawRequestData struct {
 
 // BurpRawResponseData represents the raw HTTP response structure from Burp Suite JSON for unmarshaling
 type BurpRawResponseData struct {
-	Body      string              `json:"body" desc:"The body of the response." example:"This is the body of the response."`
-	MessageID int                 `json:"messageId" desc:"The message ID of the response." example:"123"`
-	InScope   bool                `json:"inScope" desc:"Is the response in scope?" example:"true"`
-	Method    string              `json:"method" desc:"The method of the response." example:"GET"`
-	Path      string              `json:"path" desc:"The path of the response." example:"/api/login"`
-	Headers   []map[string]string `json:"headers" desc:"The headers of the response."`
+	Body       string              `json:"body" desc:"The body of the response." example:"This is the body of the response."`
+	MessageID  int                 `json:"messageId" desc:"The message ID of the response." example:"123"`
+	InScope    bool                `json:"inScope" desc:"Is the response in scope?" example:"true"`
+	Method     string              `json:"method" desc:"The method of the response." example:"GET"`
+	Path       string              `json:"path" desc:"The path of the response." example:"/api/login"`
+	Headers    []map[string]string `json:"headers" desc:"The headers of the response."`
+	StatusCode int                 `json:"statusCode" desc:"The status code of the response." example:"200"`
 }
 
 // BurpHTTPEntryRaw is used for JSON unmarshaling of the raw Burp data
@@ -353,9 +354,7 @@ func convertRawRequestToWebpageRequest(raw *BurpRawRequestData) (WebpageRequest,
 	}, nil
 }
 
-// convertRawResponseToWebpageResponse converts BurpRawResponseData to WebpageResponse (standalone function)
 func convertRawResponseToWebpageResponse(raw *BurpRawResponseData) WebpageResponse {
-	// Convert headers format from Burp's []map[string]string to map[string][]string
 	headers := make(map[string][]string)
 	for _, header := range raw.Headers {
 		for key, value := range header {
@@ -363,9 +362,10 @@ func convertRawResponseToWebpageResponse(raw *BurpRawResponseData) WebpageRespon
 		}
 	}
 
-	// Extract status code from headers or default to 200
-	statusCode := 200
-	// Note: Burp Suite data doesn't typically include status code directly in the provided format
+	statusCode := raw.StatusCode
+	if statusCode == 0 {
+		statusCode = 200 // fallback
+	}
 
 	return WebpageResponse{
 		StatusCode: statusCode,
