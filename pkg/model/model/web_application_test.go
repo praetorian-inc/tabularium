@@ -445,6 +445,13 @@ func TestWebApplicationHydrationLifecycle(t *testing.T) {
 	w := NewWebApplication(primaryURL, "Example App")
 
 	expectedPath := fmt.Sprintf("webapplication/%s/api-definition.json", RemoveReservedCharacters(w.PrimaryURL))
+	assert.Equal(t, expectedPath, w.GetHydratableFilepath())
+
+	assert.False(t, w.IsWebService())
+	assert.Equal(t, SKIP_HYDRATION, w.HydratableFilepath())
+
+	w.ApiDefinitionContentPath = expectedPath
+	assert.True(t, w.IsWebService())
 	assert.Equal(t, expectedPath, w.HydratableFilepath())
 
 	originalContent := APIDefinitionResult{
