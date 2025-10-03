@@ -200,7 +200,25 @@ func (w *WebApplication) Merge(other Assetlike) {
 
 func (w *WebApplication) Visit(other Assetlike) {
 	w.BaseAsset.Visit(other)
-	w.Merge(other)
+	otherApp, ok := other.(*WebApplication)
+	if !ok {
+		return
+	}
+	if otherApp.Name != "" {
+		w.Name = otherApp.Name
+	}
+	if otherApp.BurpSiteID != "" {
+		w.BurpSiteID = otherApp.BurpSiteID
+	}
+	if otherApp.BurpFolderID != "" {
+		w.BurpFolderID = otherApp.BurpFolderID
+	}
+	if otherApp.BurpScheduleID != "" {
+		w.BurpScheduleID = otherApp.BurpScheduleID
+	}
+	if otherApp.ApiDefinitionContentPath != "" {
+		w.ApiDefinitionContentPath = otherApp.ApiDefinitionContentPath
+	}
 }
 
 func (w *WebApplication) Attribute(name, value string) Attribute {
