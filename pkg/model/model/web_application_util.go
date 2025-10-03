@@ -51,7 +51,7 @@ type APIDefinitionResult struct {
 
 func (r *APIDefinitionResult) HydratableFilepath() string {
 	dummyApp := NewWebApplication(r.PrimaryURL, r.PrimaryURL)
-	return dummyApp.HydratableFilepath()
+	return dummyApp.GetHydratableFilepath()
 }
 
 // See here: https://portswigger.net/burp/extensibility/dast/graphql-api/apidefinitioninput.html
@@ -64,7 +64,6 @@ func (r *APIDefinitionResult) ToAPIDefinitionArray() []map[string]any {
 			"contents":          r.FileBasedDefinition.Contents,
 			"enabled_endpoints": r.FileBasedDefinition.EnabledEndpoints,
 			"authentications":   []map[string]any{},
-			"credentials":       []map[string]any{},
 		}
 
 		apiDef["file_based_api_definition"] = fileBasedDef

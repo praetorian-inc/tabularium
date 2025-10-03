@@ -224,8 +224,15 @@ func (w *WebApplication) Attribute(name, value string) Attribute {
 	return NewAttribute(name, value, w)
 }
 
-func (w *WebApplication) HydratableFilepath() string {
+func (w *WebApplication) GetHydratableFilepath() string {
 	return fmt.Sprintf("webapplication/%s/api-definition.json", RemoveReservedCharacters(w.PrimaryURL))
+}
+
+func (w *WebApplication) HydratableFilepath() string {
+	if !w.IsWebService() {
+		return SKIP_HYDRATION
+	}
+	return w.GetHydratableFilepath()
 }
 
 func (w *WebApplication) Hydrate(data []byte) error {
