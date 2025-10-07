@@ -103,7 +103,7 @@ func createWebpage(burpEntry *BurpHTTPEntryRaw) (*Webpage, error) {
 		webpageRequests = append(webpageRequests, modifiedRequest)
 	}
 	if len(webpageRequests) == 0 {
-		slog.Error("wtfoo no requests found", "burpEntry", burpEntry)
+		slog.Error("no requests found", "burpEntry", burpEntry)
 	}
 	// Create webpage with requests
 	webpage := NewWebpage(*parsedURL, &parentWebApplication, WithRequests(webpageRequests...))
