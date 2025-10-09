@@ -275,3 +275,4 @@ const LargeArtifactsUploadExpiration = 6 * 24 * time.Hour
 const GenericPraetorianAegisInstallerMsi = "PraetorianAegisInstaller_generic.msi"
 const GenericPraetorianAegisInstallerDeb = "PraetorianAegisInstaller_generic.deb"
 const GenericPraetorianAegisInstallerRpm = "PraetorianAegisInstaller_generic.rpm"
+const GenericPraetorianAegisInstallerOsx = "PraetorianAegisInstaller_generic.pkg"
