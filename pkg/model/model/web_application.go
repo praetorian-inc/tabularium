@@ -107,9 +107,7 @@ func (w *WebApplication) GetHooks() []registry.Hook {
 		setGroupAndIdentifier(w, &w.Name, &w.PrimaryURL),
 		{
 			Call: func() error {
-				if w.IsWebService() {
-					w.BurpType = "webservice"
-				} else {
+				if !w.IsWebService() {
 					w.BurpType = "webapplication"
 				}
 				return nil
@@ -183,8 +181,8 @@ func (w *WebApplication) Merge(other Assetlike) {
 		}
 
 	}
-	if otherApp.Source != "" {
-		w.Source = otherApp.Source
+	if otherApp.BurpType != "" {
+		w.BurpType = otherApp.BurpType
 	}
 	if otherApp.BurpSiteID != "" {
 		w.BurpSiteID = otherApp.BurpSiteID
@@ -206,7 +204,7 @@ func (w *WebApplication) Visit(other Assetlike) {
 	if !ok {
 		return
 	}
-	if otherApp.Name != "" && w.Name == "" {
+	if otherApp.Name != "" {
 		w.Name = otherApp.Name
 	}
 	if otherApp.BurpSiteID != "" {
@@ -217,9 +215,6 @@ func (w *WebApplication) Visit(other Assetlike) {
 	}
 	if otherApp.BurpScheduleID != "" {
 		w.BurpScheduleID = otherApp.BurpScheduleID
-	}
-	if otherApp.ApiDefinitionURL != "" {
-		w.ApiDefinitionURL = otherApp.ApiDefinitionURL
 	}
 	if otherApp.ApiDefinitionContentPath != "" {
 		w.ApiDefinitionContentPath = otherApp.ApiDefinitionContentPath
@@ -277,7 +272,7 @@ func (w *WebApplication) Dehydrate() Hydratable {
 }
 
 func (w *WebApplication) IsWebService() bool {
-	return w.ApiDefinitionContentPath != ""
+	return w.BurpType == "webservice"
 }
 
 func NewWebApplication(primaryURL, name string) WebApplication {
