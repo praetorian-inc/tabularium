@@ -247,6 +247,7 @@ type BurpIssueEntry struct {
 	Responses                []BurpRawResponseData     `json:"responses" desc:"The responses of the issue."`
 	Name                     string                    `json:"name" desc:"The name of the issue." example:"SQL Injection"`
 	Detail                   string                    `json:"detail" desc:"The detail of the issue." example:"SQL Injection vulnerability detected."`
+	Remediation              string                    `json:"remediation" desc:"The remediation of the issue." example:"SQL Injection can be fixed by using parameterized queries."`
 
 	// Processed requests and responses using existing structures
 	ProcessedRequests  []WebpageRequest  `json:"-"`
@@ -279,7 +280,7 @@ func (e *BurpIssueEntry) UnmarshalJSON(data []byte) error {
 	e.Responses = raw.Responses
 	e.Name = raw.Name
 	e.Detail = raw.Detail
-
+	e.Remediation = raw.Remediation
 	// Convert requests to WebpageRequest format
 	e.ProcessedRequests = make([]WebpageRequest, len(raw.Requests))
 	for i, req := range raw.Requests {
