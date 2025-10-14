@@ -29,6 +29,7 @@ func init() {
 	registry.Registry.MustRegisterModel(&HasVulnerability{})
 	registry.Registry.MustRegisterModel(&InstanceOf{})
 	registry.Registry.MustRegisterModel(&HasAttribute{})
+	registry.Registry.MustRegisterModel(&HasPort{})
 	registry.Registry.MustRegisterModel(&HasTechnology{})
 	registry.Registry.MustRegisterModel(&HasCredential{})
 	registry.Registry.MustRegisterModel(&HasWebpage{})
@@ -174,6 +175,27 @@ func NewHasAttribute(source, target GraphModel) GraphRelationship {
 
 func (a HasAttribute) Label() string {
 	return HasAttributeLabel
+}
+
+const HasPortLabel = "HAS_PORT"
+
+// GetDescription returns a description for the HasPort relationship model.
+func (hp *HasPort) GetDescription() string {
+	return "Represents the relationship indicating an asset has an open port."
+}
+
+type HasPort struct {
+	*BaseRelationship
+}
+
+func NewHasPort(source, target GraphModel) GraphRelationship {
+	return &HasPort{
+		BaseRelationship: NewBaseRelationship(source, target, HasPortLabel),
+	}
+}
+
+func (hp HasPort) Label() string {
+	return HasPortLabel
 }
 
 const HasTechnologyLabel = "HAS_TECHNOLOGY"
