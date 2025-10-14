@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	"net"
 	"strings"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
@@ -200,23 +199,5 @@ func (a *GCPResource) NewAssets() []Asset {
 // TODO: worth revisiting logic; currently properties only include public
 // IsPrivate determines if this GCP resource is private based on its IP/URL
 func (a *GCPResource) IsPrivate() bool {
-	// Check if resource has any public IP addresses
-	if ips := a.GetIPs(); len(ips) > 0 {
-		for _, ip := range ips {
-			if ip != "" {
-				parsedIP := net.ParseIP(ip)
-				if parsedIP != nil && !parsedIP.IsPrivate() {
-					return false // Has at least one public IP = not private
-				}
-			}
-		}
-	}
-
-	// Check if resource has a public URL/endpoint
-	if url := a.GetURLs(); len(url) > 0 {
-		return false // Has public URL = not private
-	}
-
-	// No public IPs or URL = assume private
-	return true
+	return false
 }
