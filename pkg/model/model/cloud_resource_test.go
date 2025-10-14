@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -22,7 +23,7 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Set initial status
-		original.Status = "A"
+		original.BaseAsset.Status = "A"
 
 		// Call WithStatus
 		result := original.WithStatus("AH")
@@ -34,8 +35,8 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Verify the status was updated
-		if awsResult.Status != "AH" {
-			t.Errorf("Status not updated, got %s, expected AH", awsResult.Status)
+		if awsResult.BaseAsset.Status != "AH" {
+			t.Errorf("Status not updated, got %s, expected AH", awsResult.BaseAsset.Status)
 		}
 
 		// Verify other AWS-specific fields are preserved
@@ -44,8 +45,8 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Verify the original wasn't modified
-		if original.Status != "A" {
-			t.Errorf("Original status was modified, got %s, expected A", original.Status)
+		if original.BaseAsset.Status != "A" {
+			t.Errorf("Original status was modified, got %s, expected A", original.BaseAsset.Status)
 		}
 	})
 
@@ -67,7 +68,7 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Set initial status
-		original.Status = "A"
+		original.BaseAsset.Status = "A"
 
 		// Call WithStatus
 		result := original.WithStatus("AL")
@@ -79,8 +80,8 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Verify the status was updated
-		if azureResult.Status != "AL" {
-			t.Errorf("Status not updated, got %s, expected AL", azureResult.Status)
+		if azureResult.BaseAsset.Status != "AL" {
+			t.Errorf("Status not updated, got %s, expected AL", azureResult.BaseAsset.Status)
 		}
 
 		// Verify Azure-specific fields are preserved
@@ -89,8 +90,8 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Verify the original wasn't modified
-		if original.Status != "A" {
-			t.Errorf("Original status was modified, got %s, expected A", original.Status)
+		if original.BaseAsset.Status != "A" {
+			t.Errorf("Original status was modified, got %s, expected A", original.BaseAsset.Status)
 		}
 	})
 
@@ -110,7 +111,7 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Set initial status
-		original.Status = "A"
+		original.BaseAsset.Status = "A"
 
 		// Call WithStatus
 		result := original.WithStatus("AP")
@@ -122,8 +123,8 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Verify the status was updated
-		if gcpResult.Status != "AP" {
-			t.Errorf("Status not updated, got %s, expected AP", gcpResult.Status)
+		if gcpResult.BaseAsset.Status != "AP" {
+			t.Errorf("Status not updated, got %s, expected AP", gcpResult.BaseAsset.Status)
 		}
 
 		// Verify GCP-specific fields are preserved
@@ -132,8 +133,8 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Verify the original wasn't modified
-		if original.Status != "A" {
-			t.Errorf("Original status was modified, got %s, expected A", original.Status)
+		if original.BaseAsset.Status != "A" {
+			t.Errorf("Original status was modified, got %s, expected A", original.BaseAsset.Status)
 		}
 	})
 
@@ -211,9 +212,9 @@ func TestCloudResource_WithStatus_PreventTypeErasure(t *testing.T) {
 		// Additional validation: ensure we can access AWS-specific methods
 		if awsResult, ok := result.(*AWSResource); ok {
 			// Test AWS-specific functionality
-			_ = awsResult.GetIPs()   // Should not panic
-			_ = awsResult.GetDNS()   // Should not panic
-			_ = awsResult.NewAsset() // Should not panic
+			_ = awsResult.GetIPs()    // Should not panic
+			_ = awsResult.GetDNS()    // Should not panic
+			_ = awsResult.NewAssets() // Should not panic
 		} else {
 			t.Errorf("Cannot access AWS-specific methods - type was erased")
 		}
@@ -225,23 +226,27 @@ func TestCloudResource_NilPropertiesHandling(t *testing.T) {
 		// Create AWS resources with nil Properties (bypassing constructor)
 		resource1 := &AWSResource{
 			CloudResource: CloudResource{
-				Key:          "test1",
 				Name:         "test1",
 				Provider:     "aws",
 				ResourceType: AWSEC2Instance,
-				Status:       "active",
 				Properties:   nil, // Intentionally nil
+				BaseAsset: BaseAsset{
+					Key:    "test1",
+					Status: "active",
+				},
 			},
 		}
 
 		resource2 := &AWSResource{
 			CloudResource: CloudResource{
-				Key:          "test2",
 				Name:         "test2",
 				Provider:     "aws",
 				ResourceType: AWSEC2Instance,
-				Status:       "updated",
 				Properties:   map[string]any{"key": "value"},
+				BaseAsset: BaseAsset{
+					Key:    "test2",
+					Status: "updated",
+				},
 			},
 		}
 
@@ -249,8 +254,8 @@ func TestCloudResource_NilPropertiesHandling(t *testing.T) {
 		resource1.Merge(resource2)
 
 		// Verify merge worked
-		if resource1.Status != "updated" {
-			t.Errorf("Expected status 'updated', got '%s'", resource1.Status)
+		if resource1.BaseAsset.Status != "updated" {
+			t.Errorf("Expected status 'updated', got '%s'", resource1.BaseAsset.Status)
 		}
 		if resource1.Properties == nil {
 			t.Errorf("Properties should be initialized")
@@ -263,35 +268,36 @@ func TestCloudResource_NilPropertiesHandling(t *testing.T) {
 	t.Run("AWS Visit with nil properties should not panic", func(t *testing.T) {
 		resource1 := &AWSResource{
 			CloudResource: CloudResource{
-				Key:          "test1",
 				Name:         "test1",
 				Provider:     "aws",
 				ResourceType: AWSEC2Instance,
-				Status:       "active",
 				Properties:   nil, // Intentionally nil
+				BaseAsset: BaseAsset{
+					Key:    "test1",
+					Status: "active",
+				},
 			},
 		}
 
 		resource2 := &AWSResource{
 			CloudResource: CloudResource{
-				Key:          "test2",
 				Name:         "test2",
 				Provider:     "aws",
 				ResourceType: AWSEC2Instance,
-				Status:       "visited",
 				Properties:   map[string]any{"visited": true},
+				BaseAsset: BaseAsset{
+					Key:    "test2",
+					Status: "visited",
+				},
 			},
 		}
 
 		// This should not panic
-		err := resource1.Visit(resource2)
-		if err != nil {
-			t.Fatalf("Visit failed: %v", err)
-		}
+		resource1.Visit(resource2)
 
 		// Verify visit worked
-		if resource1.Status != "visited" {
-			t.Errorf("Expected status 'visited', got '%s'", resource1.Status)
+		if resource1.BaseAsset.Status != "visited" {
+			t.Errorf("Expected status 'visited', got '%s'", resource1.BaseAsset.Status)
 		}
 		if resource1.Properties == nil {
 			t.Errorf("Properties should be initialized")
@@ -304,23 +310,27 @@ func TestCloudResource_NilPropertiesHandling(t *testing.T) {
 	t.Run("Azure Merge with nil properties should not panic", func(t *testing.T) {
 		resource1 := &AzureResource{
 			CloudResource: CloudResource{
-				Key:          "test1",
 				Name:         "test1",
 				Provider:     "azure",
 				ResourceType: AzureVM,
-				Status:       "active",
 				Properties:   nil, // Intentionally nil
+				BaseAsset: BaseAsset{
+					Key:    "test1",
+					Status: "active",
+				},
 			},
 		}
 
 		resource2 := &AzureResource{
 			CloudResource: CloudResource{
-				Key:          "test2",
 				Name:         "test2",
 				Provider:     "azure",
 				ResourceType: AzureVM,
-				Status:       "updated",
 				Properties:   map[string]any{"location": "eastus"},
+				BaseAsset: BaseAsset{
+					Key:    "test2",
+					Status: "updated",
+				},
 			},
 		}
 
@@ -328,8 +338,8 @@ func TestCloudResource_NilPropertiesHandling(t *testing.T) {
 		resource1.Merge(resource2)
 
 		// Verify merge worked
-		if resource1.Status != "updated" {
-			t.Errorf("Expected status 'updated', got '%s'", resource1.Status)
+		if resource1.BaseAsset.Status != "updated" {
+			t.Errorf("Expected status 'updated', got '%s'", resource1.BaseAsset.Status)
 		}
 		if resource1.Properties == nil {
 			t.Errorf("Properties should be initialized")
@@ -342,35 +352,36 @@ func TestCloudResource_NilPropertiesHandling(t *testing.T) {
 	t.Run("GCP Visit with nil properties should not panic", func(t *testing.T) {
 		resource1 := &GCPResource{
 			CloudResource: CloudResource{
-				Key:          "test1",
 				Name:         "test1",
 				Provider:     "gcp",
 				ResourceType: GCPResourceInstance,
-				Status:       "active",
 				Properties:   nil, // Intentionally nil
+				BaseAsset: BaseAsset{
+					Key:    "test1",
+					Status: "active",
+				},
 			},
 		}
 
 		resource2 := &GCPResource{
 			CloudResource: CloudResource{
-				Key:          "test2",
 				Name:         "test2",
 				Provider:     "gcp",
 				ResourceType: GCPResourceInstance,
-				Status:       "visited",
 				Properties:   map[string]any{"zone": "us-central1-a"},
+				BaseAsset: BaseAsset{
+					Key:    "test2",
+					Status: "visited",
+				},
 			},
 		}
 
 		// This should not panic
-		err := resource1.Visit(resource2)
-		if err != nil {
-			t.Fatalf("Visit failed: %v", err)
-		}
+		resource1.Visit(resource2)
 
 		// Verify visit worked
-		if resource1.Status != "visited" {
-			t.Errorf("Expected status 'visited', got '%s'", resource1.Status)
+		if resource1.BaseAsset.Status != "visited" {
+			t.Errorf("Expected status 'visited', got '%s'", resource1.BaseAsset.Status)
 		}
 		if resource1.Properties == nil {
 			t.Errorf("Properties should be initialized")
@@ -383,23 +394,27 @@ func TestCloudResource_NilPropertiesHandling(t *testing.T) {
 	t.Run("Merge with both nil properties should not panic", func(t *testing.T) {
 		resource1 := &AWSResource{
 			CloudResource: CloudResource{
-				Key:          "test1",
 				Name:         "test1",
 				Provider:     "aws",
 				ResourceType: AWSEC2Instance,
-				Status:       "active",
 				Properties:   nil, // Intentionally nil
+				BaseAsset: BaseAsset{
+					Key:    "test1",
+					Status: "active",
+				},
 			},
 		}
 
 		resource2 := &AWSResource{
 			CloudResource: CloudResource{
-				Key:          "test2",
 				Name:         "test2",
 				Provider:     "aws",
 				ResourceType: AWSEC2Instance,
-				Status:       "updated",
 				Properties:   nil, // Also nil
+				BaseAsset: BaseAsset{
+					Key:    "test2",
+					Status: "updated",
+				},
 			},
 		}
 
@@ -407,8 +422,8 @@ func TestCloudResource_NilPropertiesHandling(t *testing.T) {
 		resource1.Merge(resource2)
 
 		// Verify merge worked and Properties was initialized
-		if resource1.Status != "updated" {
-			t.Errorf("Expected status 'updated', got '%s'", resource1.Status)
+		if resource1.BaseAsset.Status != "updated" {
+			t.Errorf("Expected status 'updated', got '%s'", resource1.BaseAsset.Status)
 		}
 		if resource1.Properties == nil {
 			t.Errorf("Properties should be initialized even when source is nil")
@@ -418,35 +433,36 @@ func TestCloudResource_NilPropertiesHandling(t *testing.T) {
 	t.Run("Visit with source nil properties should not panic", func(t *testing.T) {
 		resource1 := &AzureResource{
 			CloudResource: CloudResource{
-				Key:          "test1",
 				Name:         "test1",
 				Provider:     "azure",
 				ResourceType: AzureVM,
-				Status:       "active",
 				Properties:   map[string]any{"existing": "value"},
+				BaseAsset: BaseAsset{
+					Key:    "test1",
+					Status: "active",
+				},
 			},
 		}
 
 		resource2 := &AzureResource{
 			CloudResource: CloudResource{
-				Key:          "test2",
 				Name:         "test2",
 				Provider:     "azure",
 				ResourceType: AzureVM,
-				Status:       "visited",
 				Properties:   nil, // Source has nil properties
+				BaseAsset: BaseAsset{
+					Key:    "test2",
+					Status: "visited",
+				},
 			},
 		}
 
 		// This should not panic
-		err := resource1.Visit(resource2)
-		if err != nil {
-			t.Fatalf("Visit failed: %v", err)
-		}
+		resource1.Visit(resource2)
 
 		// Verify visit worked and existing properties preserved
-		if resource1.Status != "visited" {
-			t.Errorf("Expected status 'visited', got '%s'", resource1.Status)
+		if resource1.BaseAsset.Status != "visited" {
+			t.Errorf("Expected status 'visited', got '%s'", resource1.BaseAsset.Status)
 		}
 		if resource1.Properties == nil {
 			t.Errorf("Properties should not be nil")
@@ -462,66 +478,61 @@ func TestCloudResource_TTLUpdateLogic(t *testing.T) {
 		// Test case 1: Uninitialized TTL (0) should be updated
 		resource1 := &AWSResource{
 			CloudResource: CloudResource{
-				Key:          "test1",
 				Name:         "test1",
 				Provider:     "aws",
 				ResourceType: AWSEC2Instance,
-				Status:       "active",
 				Properties:   map[string]any{},
-				TTL:          0, // Uninitialized
+				BaseAsset: BaseAsset{
+					Key:    "test1",
+					Status: "active",
+					TTL:    0, // Uninitialized
+				},
 			},
 		}
 
 		resource2 := &AWSResource{
 			CloudResource: CloudResource{
-				Key:          "test2",
 				Name:         "test2",
 				Provider:     "aws",
 				ResourceType: AWSEC2Instance,
-				Status:       "visited",
 				Properties:   map[string]any{},
-				TTL:          12345, // Valid TTL
+				BaseAsset: BaseAsset{
+					Key:    "test2",
+					Status: "visited",
+					TTL:    12345, // Valid TTL
+				},
 			},
 		}
 
 		// Visit should update TTL from 0 to 12345
-		err := resource1.Visit(resource2)
-		if err != nil {
-			t.Fatalf("Visit failed: %v", err)
-		}
+		resource1.Visit(resource2)
 
-		if resource1.TTL != 12345 {
-			t.Errorf("❌ TTL update failed: expected 12345, got %d", resource1.TTL)
+		if resource1.BaseAsset.TTL != 12345 {
+			t.Errorf("❌ TTL update failed: expected 12345, got %d", resource1.BaseAsset.TTL)
 		} else {
-			t.Logf("✅ TTL update worked: uninitialized TTL (0) updated to %d", resource1.TTL)
+			t.Logf("✅ TTL update worked: uninitialized TTL (0) updated to %d", resource1.BaseAsset.TTL)
 		}
 
 		// Test case 2: Existing TTL should be updated with newer TTL
-		resource1.TTL = 9999  // Set existing TTL
-		resource2.TTL = 54321 // New TTL
+		resource1.BaseAsset.TTL = 9999  // Set existing TTL
+		resource2.BaseAsset.TTL = 54321 // New TTL
 
-		err = resource1.Visit(resource2)
-		if err != nil {
-			t.Fatalf("Visit failed: %v", err)
-		}
+		resource1.Visit(resource2)
 
-		if resource1.TTL != 54321 {
-			t.Errorf("❌ TTL update failed: expected 54321, got %d", resource1.TTL)
+		if resource1.BaseAsset.TTL != 54321 {
+			t.Errorf("❌ TTL update failed: expected 54321, got %d", resource1.BaseAsset.TTL)
 		} else {
-			t.Logf("✅ TTL update worked: existing TTL updated from 9999 to %d", resource1.TTL)
+			t.Logf("✅ TTL update worked: existing TTL updated from 9999 to %d", resource1.BaseAsset.TTL)
 		}
 
 		// Test case 3: TTL should NOT be updated when source has zero TTL
-		resource1.TTL = 7777 // Valid existing TTL
-		resource2.TTL = 0    // Zero TTL (uninitialized)
+		resource1.BaseAsset.TTL = 7777 // Valid existing TTL
+		resource2.BaseAsset.TTL = 0    // Zero TTL (uninitialized)
 
-		err = resource1.Visit(resource2)
-		if err != nil {
-			t.Fatalf("Visit failed: %v", err)
-		}
+		resource1.Visit(resource2)
 
-		if resource1.TTL != 7777 {
-			t.Errorf("❌ TTL preservation failed: expected 7777, got %d", resource1.TTL)
+		if resource1.BaseAsset.TTL != 7777 {
+			t.Errorf("❌ TTL preservation failed: expected 7777, got %d", resource1.BaseAsset.TTL)
 		} else {
 			t.Logf("✅ TTL preservation worked: existing TTL preserved when source has zero TTL")
 		}
@@ -530,74 +541,76 @@ func TestCloudResource_TTLUpdateLogic(t *testing.T) {
 	t.Run("Azure TTL update logic should work correctly", func(t *testing.T) {
 		resource1 := &AzureResource{
 			CloudResource: CloudResource{
-				Key:          "test1",
 				Name:         "test1",
 				Provider:     "azure",
 				ResourceType: AzureVM,
-				Status:       "active",
 				Properties:   map[string]any{},
-				TTL:          0, // Uninitialized
+				BaseAsset: BaseAsset{
+					Key:    "test1",
+					Status: "active",
+					TTL:    0, // Uninitialized
+				},
 			},
 		}
 
 		resource2 := &AzureResource{
 			CloudResource: CloudResource{
-				Key:          "test2",
 				Name:         "test2",
 				Provider:     "azure",
 				ResourceType: AzureVM,
-				Status:       "visited",
 				Properties:   map[string]any{},
-				TTL:          98765, // Valid TTL
+				BaseAsset: BaseAsset{
+					Key:    "test2",
+					Status: "visited",
+					TTL:    98765, // Valid TTL
+				},
 			},
 		}
 
-		err := resource1.Visit(resource2)
-		if err != nil {
-			t.Fatalf("Visit failed: %v", err)
-		}
+		resource1.Visit(resource2)
 
-		if resource1.TTL != 98765 {
-			t.Errorf("❌ Azure TTL update failed: expected 98765, got %d", resource1.TTL)
+		if resource1.BaseAsset.TTL != 98765 {
+			t.Errorf("❌ Azure TTL update failed: expected 98765, got %d", resource1.BaseAsset.TTL)
 		} else {
-			t.Logf("✅ Azure TTL update worked: uninitialized TTL updated to %d", resource1.TTL)
+			t.Logf("✅ Azure TTL update worked: uninitialized TTL updated to %d", resource1.BaseAsset.TTL)
 		}
 	})
 
 	t.Run("GCP TTL update logic should work correctly", func(t *testing.T) {
 		resource1 := &GCPResource{
 			CloudResource: CloudResource{
-				Key:          "test1",
 				Name:         "test1",
 				Provider:     "gcp",
 				ResourceType: GCPResourceInstance,
-				Status:       "active",
 				Properties:   map[string]any{},
-				TTL:          0, // Uninitialized
+				BaseAsset: BaseAsset{
+					Key:    "test1",
+					Status: "active",
+					TTL:    0, // Uninitialized
+				},
 			},
 		}
 
 		resource2 := &GCPResource{
 			CloudResource: CloudResource{
-				Key:          "test2",
 				Name:         "test2",
 				Provider:     "gcp",
 				ResourceType: GCPResourceInstance,
-				Status:       "visited",
 				Properties:   map[string]any{},
-				TTL:          11111, // Valid TTL
+				BaseAsset: BaseAsset{
+					Key:    "test2",
+					Status: "visited",
+					TTL:    11111, // Valid TTL
+				},
 			},
 		}
 
-		err := resource1.Visit(resource2)
-		if err != nil {
-			t.Fatalf("Visit failed: %v", err)
-		}
+		resource1.Visit(resource2)
 
-		if resource1.TTL != 11111 {
-			t.Errorf("❌ GCP TTL update failed: expected 11111, got %d", resource1.TTL)
+		if resource1.BaseAsset.TTL != 11111 {
+			t.Errorf("❌ GCP TTL update failed: expected 11111, got %d", resource1.BaseAsset.TTL)
 		} else {
-			t.Logf("✅ GCP TTL update worked: uninitialized TTL updated to %d", resource1.TTL)
+			t.Logf("✅ GCP TTL update worked: uninitialized TTL updated to %d", resource1.BaseAsset.TTL)
 		}
 	})
 
@@ -612,6 +625,211 @@ func TestCloudResource_TTLUpdateLogic(t *testing.T) {
 		t.Logf("   New logic: if (otherTTL != 0) { currentTTL = otherTTL }")
 		t.Logf("   Benefit: Resources with any TTL can be updated from valid sources")
 		t.Logf("   Result: TTL initialization and updates both work correctly")
+	})
+}
+
+func TestCloudResource_OriginationDataMerge(t *testing.T) {
+	t.Run("CloudResource should merge OriginationData correctly", func(t *testing.T) {
+		resource1 := &CloudResource{
+			Name:         "test1",
+			Provider:     "aws",
+			ResourceType: "instance",
+			Properties:   map[string]any{"key1": "value1"},
+			BaseAsset: BaseAsset{
+				Key:    "test1",
+				Status: "active",
+			},
+			OriginationData: OriginationData{
+				Capability:    []string{"dns"},
+				AttackSurface: []string{"internal"},
+				Origins:       []string{"dns"},
+			},
+		}
+
+		resource2 := &CloudResource{
+			Name:         "test2",
+			Provider:     "aws",
+			ResourceType: "instance",
+			Properties:   map[string]any{"key2": "value2"},
+			BaseAsset: BaseAsset{
+				Key:    "test2",
+				Status: "updated",
+			},
+			OriginationData: OriginationData{
+				Capability:    []string{"amazon", "portscan"},
+				AttackSurface: []string{"external"},
+				Origins:       []string{"amazon", "ipv4"},
+			},
+		}
+
+		resource1.Merge(resource2)
+
+		if resource1.BaseAsset.Status != "updated" {
+			t.Errorf("Expected status 'updated', got '%s'", resource1.BaseAsset.Status)
+		}
+		if len(resource1.Properties) != 2 {
+			t.Errorf("Properties not merged correctly, got %v", resource1.Properties)
+		}
+		expectedCapability := []string{"amazon", "portscan"}
+		expectedAttackSurface := []string{"external"}
+		expectedOrigins := []string{"amazon", "ipv4"}
+
+		if !reflect.DeepEqual(resource1.Capability, expectedCapability) {
+			t.Errorf("Capability merge failed: expected %v, got %v", expectedCapability, resource1.Capability)
+		}
+		if !reflect.DeepEqual(resource1.AttackSurface, expectedAttackSurface) {
+			t.Errorf("AttackSurface merge failed: expected %v, got %v", expectedAttackSurface, resource1.AttackSurface)
+		}
+		if !reflect.DeepEqual(resource1.Origins, expectedOrigins) {
+			t.Errorf("Origins merge failed: expected %v, got %v", expectedOrigins, resource1.Origins)
+		}
+	})
+}
+
+func TestCloudResource_OriginationDataVisit(t *testing.T) {
+	t.Run("CloudResource should visit OriginationData correctly", func(t *testing.T) {
+		resource1 := &CloudResource{
+			Name:         "test1",
+			Provider:     "aws",
+			ResourceType: "instance",
+			Properties:   map[string]any{"key1": "value1"},
+			BaseAsset: BaseAsset{
+				Key:    "test1",
+				Status: "active",
+				TTL:    0, // Uninitialized
+			},
+			OriginationData: OriginationData{
+				Capability:    []string{"dns"},
+				AttackSurface: []string{"internal"},
+				Origins:       []string{"dns"},
+			},
+		}
+
+		resource2 := &CloudResource{
+			Name:         "test2",
+			Provider:     "aws",
+			ResourceType: "instance",
+			Properties:   map[string]any{"key2": "value2"},
+			BaseAsset: BaseAsset{
+				Key:    "test2",
+				Status: "visited",
+				TTL:    12345,
+			},
+			OriginationData: OriginationData{
+				Capability:    []string{"amazon", "portscan"},
+				AttackSurface: []string{"external"},
+				Origins:       []string{"amazon", "ipv4"},
+			},
+		}
+
+		resource1.Visit(resource2)
+
+		if resource1.BaseAsset.Status != "visited" {
+			t.Errorf("Expected status 'visited', got '%s'", resource1.BaseAsset.Status)
+		}
+		if resource1.BaseAsset.TTL != 12345 {
+			t.Errorf("Expected TTL 12345, got %d", resource1.BaseAsset.TTL)
+		}
+
+		if resource1.Properties["key1"] != "value1" {
+			t.Errorf("Existing property should be preserved")
+		}
+		if resource1.Properties["key2"] != "value2" {
+			t.Errorf("New property should be added")
+		}
+		sortStringSlice := func(s []string) {
+			for i := range s {
+				for j := range s {
+					if i < j && s[i] > s[j] {
+						s[i], s[j] = s[j], s[i]
+					}
+				}
+			}
+		}
+
+		sortStringSlice(resource1.Capability)
+		sortStringSlice(resource1.AttackSurface)
+		sortStringSlice(resource1.Origins)
+
+		expectedCapability := []string{"amazon", "dns", "portscan"}
+		expectedAttackSurface := []string{"external", "internal"}
+		expectedOrigins := []string{"amazon", "dns", "ipv4"}
+
+		sortStringSlice(expectedCapability)
+		sortStringSlice(expectedAttackSurface)
+		sortStringSlice(expectedOrigins)
+
+		if !reflect.DeepEqual(resource1.Capability, expectedCapability) {
+			t.Errorf("Capability visit failed: expected %v, got %v", expectedCapability, resource1.Capability)
+		}
+		if !reflect.DeepEqual(resource1.AttackSurface, expectedAttackSurface) {
+			t.Errorf("AttackSurface visit failed: expected %v, got %v", expectedAttackSurface, resource1.AttackSurface)
+		}
+		if !reflect.DeepEqual(resource1.Origins, expectedOrigins) {
+			t.Errorf("Origins visit failed: expected %v, got %v", expectedOrigins, resource1.Origins)
+		}
+	})
+}
+
+func TestAWSResource_OriginationDataIntegration(t *testing.T) {
+	t.Run("AWSResource should use CloudResource OriginationData merge/visit", func(t *testing.T) {
+		// Create AWS resources with OriginationData
+		resource1, err := NewAWSResource(
+			"arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0",
+			"123456789012",
+			AWSEC2Instance,
+			map[string]any{"InstanceId": "i-1234567890abcdef0"},
+		)
+		if err != nil {
+			t.Fatalf("Failed to create AWSResource: %v", err)
+		}
+
+		// Set some origination data
+		resource1.OriginationData = OriginationData{
+			Capability: []string{"amazon"},
+			Origins:    []string{"aws-account"},
+		}
+
+		resource2, err := NewAWSResource(
+			"arn:aws:ec2:us-east-1:123456789012:instance/i-abcdef1234567890",
+			"123456789012",
+			AWSEC2Instance,
+			map[string]any{"InstanceId": "i-abcdef1234567890"},
+		)
+		if err != nil {
+			t.Fatalf("Failed to create second AWSResource: %v", err)
+		}
+
+		resource2.OriginationData = OriginationData{
+			Capability: []string{"portscan"},
+			Origins:    []string{"discovery"},
+		}
+
+		resource1.Merge(&resource2)
+
+		expectedCapability := []string{"portscan"}
+		if !reflect.DeepEqual(resource1.Capability, expectedCapability) {
+			t.Errorf("AWS resource merge failed: expected %v, got %v", expectedCapability, resource1.Capability)
+		}
+
+		resource1.OriginationData.Capability = []string{"amazon"}
+		resource1.Visit(&resource2)
+		sortStringSlice := func(s []string) {
+			for i := range s {
+				for j := range s {
+					if i < j && s[i] > s[j] {
+						s[i], s[j] = s[j], s[i]
+					}
+				}
+			}
+		}
+		sortStringSlice(resource1.Capability)
+		expectedCapability = []string{"amazon", "portscan"}
+		sortStringSlice(expectedCapability)
+
+		if !reflect.DeepEqual(resource1.Capability, expectedCapability) {
+			t.Errorf("AWS resource visit failed: expected %v, got %v", expectedCapability, resource1.Capability)
+		}
 	})
 }
 

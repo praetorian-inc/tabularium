@@ -33,6 +33,7 @@ type AegisManagementTask struct {
 	ErrorMessage              string            `dynamodbav:"errorMessage,omitempty" json:"errorMessage,omitempty" desc:"Error message if the task failed." example:"Failed to create tunnel: connection timeout"`
 	CommandResult             *CommandResult    `dynamodbav:"commandResult,omitempty" json:"commandResult,omitempty" desc:"Detailed command execution result including exit code and output."`
 	Async                     bool              `dynamodbav:"async" json:"async" desc:"Whether the Aegis management task is asynchronous." example:"true"`
+	HealthCheck               bool              `dynamodbav:"healthCheck" json:"healthCheck" desc:"Whether to trigger a healthcheck after task completion." example:"true"`
 	TTL                       int64             `dynamodbav:"ttl" json:"ttl" desc:"Time-to-live for the task record (Unix timestamp)." example:"1706353200"`
 }
 
@@ -132,13 +133,14 @@ func (amt *AegisManagementTask) GetDescription() string {
 }
 
 // NewAegisManagementTask creates a new Aegis management task
-func NewAegisManagementTask(username, capability, clientID string, parameters map[string]string, async bool) AegisManagementTask {
+func NewAegisManagementTask(username, capability, clientID string, parameters map[string]string, async bool, healthCheck bool) AegisManagementTask {
 	task := AegisManagementTask{
 		Username:                  username,
 		AegisManagementCapability: capability,
 		AegisClientID:             clientID,
 		Parameters:                parameters,
 		Async:                     async,
+		HealthCheck:               healthCheck,
 	}
 	task.Defaulted()
 	registry.CallHooks(&task)

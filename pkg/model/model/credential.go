@@ -10,6 +10,7 @@ import (
 type CredentialCategory string
 type CredentialType string
 type CredentialLifecycle string
+type CredentialOperation string
 type AdditionalCredParams map[string]any
 
 const (
@@ -22,14 +23,15 @@ const (
 	CategoryAdHoc       CredentialCategory = "ad-hoc"          // Found during in-flight execution
 
 	// Credential Types
-	StaticCredential      CredentialType = "static-credential" // un/pw pairs
-	TokenCredential       CredentialType = "static-token"      // API key, PAT, etc.
-	AWSCredential         CredentialType = "aws"
-	GCloudCredential      CredentialType = "gcloud"
-	AzureCredential       CredentialType = "azure"
-	SSHKeyCredential      CredentialType = "ssh-key"         // SSH private key
-	JSONCredential        CredentialType = "json-credential" // Generic JSON credential format
-	AegisConfigCredential CredentialType = "aegis-config"    // Aegis config credential
+	StaticCredential                  CredentialType = "static-credential" // un/pw pairs
+	TokenCredential                   CredentialType = "static-token"      // API key, PAT, etc.
+	AWSCredential                     CredentialType = "aws"
+	GCloudCredential                  CredentialType = "gcloud"
+	AzureCredential                   CredentialType = "azure"
+	SSHKeyCredential                  CredentialType = "ssh-key"             // SSH private key
+	JSONCredential                    CredentialType = "json-credential"     // Generic JSON credential format
+	AegisConfigCredential             CredentialType = "aegis-config"        // Aegis config credential
+	BurpSuiteAuthenticationCredential CredentialType = "burp-authentication" // Internal BurpSuite instance authentication credentials
 
 	// API Keys
 	ApolloCredential                CredentialType = "apollo_api" // Apollo.io API key
@@ -59,13 +61,19 @@ const (
 	LegacyCloudCredential CredentialType = "legacy-cloud" // Legacy cloud credentials (AWS, GCP, Azure)
 
 	// Credential Formats for capabilities to use (and advertise)
-	CredentialFormatEnv   CredentialFormat = "env"   // things like tokens can be release into env vars for caps to use
-	CredentialFormatFile  CredentialFormat = "file"  // credentials requested as files to be stored at a specific location
-	CredentialFormatToken CredentialFormat = "token" // returned in a struct for direct use by caps
+	CredentialFormatEnv     CredentialFormat = "env"      // things like tokens can be release into env vars for caps to use
+	CredentialFormatFile    CredentialFormat = "file"     // credentials requested as files to be stored at a specific location
+	CredentialFormatToken   CredentialFormat = "token"    // returned in a struct for direct use by caps
+	CredentialFormatAPIAuth CredentialFormat = "api-auth" // API authentication credentials
 
 	// Credential Lifecycles
 	CredentialLifecycleStatic    CredentialLifecycle = "static"
 	CredentialLifecycleTemporary CredentialLifecycle = "temporary"
+
+	// Credential Operations
+	CredentialOperationGet    CredentialOperation = "get"
+	CredentialOperationAdd    CredentialOperation = "add"
+	CredentialOperationDelete CredentialOperation = "delete"
 )
 
 type CredentialRequest struct {
@@ -74,6 +82,7 @@ type CredentialRequest struct {
 	ResourceKey  string               `json:"resourceKey,omitempty"`  // key of the resource to get the credential for
 	Category     CredentialCategory   `json:"category"`               // internal, client integration, etc.
 	Type         CredentialType       `json:"type"`                   // static, AWS, GCP, etc.
+	Operation    CredentialOperation  `json:"operation"`              // get, add, delete operation type
 	Format       []CredentialFormat   `json:"format"`                 // formats to get credentials in - file, env, token, etc.
 	Parameters   AdditionalCredParams `json:"parameters,omitempty"`   // additional parameters to help with retrieval (if any)
 }
@@ -100,6 +109,8 @@ type Credential struct {
 	AccountKey   string             `neo4j:"accountKey" json:"accountKey" desc:"Key of the associated account"`
 	Category     CredentialCategory `neo4j:"category" json:"category" desc:"Category of the credential"`
 	Type         CredentialType     `neo4j:"type" json:"type" desc:"Type of credential"`
+	Format       CredentialFormat   `neo4j:"format" json:"format" desc:"Format of the credential"`
+	Name         string             `neo4j:"name" json:"name" desc:"Pretty name or user label for the credential"`
 	Created      string             `neo4j:"created" json:"created" desc:"Timestamp when the credential was created"`
 	Updated      string             `neo4j:"updated" json:"updated" desc:"Timestamp when the credential was last updated"`
 }
@@ -127,6 +138,7 @@ func NewCredential(accountKey string, category CredentialCategory, credType Cred
 		AccountKey:   accountKey,
 		Category:     category,
 		Type:         credType,
+		Name:         fmt.Sprintf("%s %s", category, credType),
 	}
 	c.Defaulted()
 	registry.CallHooks(&c)
@@ -151,6 +163,10 @@ func (c *Credential) GetLabels() []string {
 
 func (c *Credential) Valid() bool {
 	return c.CredentialID != "" && c.Key != "" && c.Category != "" && c.Type != ""
+}
+
+func (c *Credential) SetName(name string) {
+	c.Name = name
 }
 
 func init() {

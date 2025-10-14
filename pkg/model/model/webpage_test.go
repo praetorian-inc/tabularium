@@ -86,37 +86,28 @@ func TestWebpageConstructors(t *testing.T) {
 }
 
 func TestWebpage_IsPrivate(t *testing.T) {
-	publicAsset := NewAsset("contoso.com", "18.1.2.4")
-	privateAsset := NewAsset("contoso.com", "10.0.0.1")
-
-	privateHTTPS := NewAttribute("https", "443", &privateAsset)
-	publicHTTPS := NewAttribute("https", "443", &publicAsset)
-
-	privatePort := NewAttribute("port", "443", &privateAsset)
-	publicPort := NewAttribute("port", "443", &publicAsset)
+	webapp := NewWebApplication("https://example.com", "Example App")
 
 	url, _ := url.Parse("https://contoso.com:443")
 
-	w := NewWebpage(*url, &privateHTTPS)
-	assert.True(t, w.IsPrivate(), "private https should be private")
+	w := NewWebpage(*url, &webapp)
+	assert.False(t, w.IsPrivate(), "webpage with webapp parent should inherit privacy (false by default)")
 
-	w = NewWebpage(*url, &publicHTTPS)
-	assert.False(t, w.IsPrivate(), "public https should not be private")
+	w = NewWebpage(*url, nil)
+	assert.False(t, w.IsPrivate(), "webpage with nil parent should not be private")
 
-	w = NewWebpage(*url, &privatePort)
-	assert.True(t, w.IsPrivate(), "private port should be private")
+	w.Private = true
+	assert.True(t, w.IsPrivate(), "webpage with Private=true should be private")
 
-	w = NewWebpage(*url, &publicPort)
-	assert.False(t, w.IsPrivate(), "public port should not be private")
-
-	w.Parent.Model = nil
-	marshalled, err := json.Marshal(w)
+	w2 := NewWebpage(*url, nil)
+	w2.Parent = nil
+	marshalled, err := json.Marshal(w2)
 	assert.NoError(t, err)
 
 	var unmarshalled Webpage
 	err = json.Unmarshal(marshalled, &unmarshalled)
 	assert.NoError(t, err)
-	assert.False(t, unmarshalled.IsPrivate(), "no parent should not be private")
+	assert.False(t, unmarshalled.IsPrivate(), "webpage with no parent should not be private")
 }
 
 func TestWebpageConstructorEdgeCases(t *testing.T) {
@@ -131,7 +122,7 @@ func TestWebpageConstructorEdgeCases(t *testing.T) {
 		},
 		"parent assignment": func(t *testing.T) {
 			webpage := createTestWebpage(testBaseURL + testPath)
-			assert.Equal(t, parent, webpage.Parent.Model)
+			assert.Equal(t, parent, webpage.Parent)
 		},
 		"valid webpage creation": func(t *testing.T) {
 			webpage := createTestWebpage(testBaseURL + testPath)
@@ -431,7 +422,7 @@ func TestWebpageValidation(t *testing.T) {
 func TestWebpageParent(t *testing.T) {
 	expectedParent := createTestParent()
 	webpage1, _ := createTestWebpages()
-	assert.Equal(t, expectedParent, webpage1.Parent.Model)
+	assert.Equal(t, expectedParent, webpage1.Parent)
 }
 
 func TestWebpageHydrationAndDehydration(t *testing.T) {
@@ -440,12 +431,13 @@ func TestWebpageHydrationAndDehydration(t *testing.T) {
 		expectedDetails := createTestWebpageDetails("0")
 		webpage.WebpageDetails = expectedDetails
 
-		detailsFile, dehydratedWebpage := webpage.Dehydrate()
-		detailsPath, hydrate := dehydratedWebpage.Hydrate()
+		detailsFile := webpage.HydratedFile()
+		dehydratedWebpage := webpage.Dehydrate()
+		detailsPath := webpage.HydratableFilepath()
 
 		assert.True(t, strings.HasPrefix(detailsPath, "webpage/example.com/443/"+RemoveReservedCharacters(testBaseURL+testPath)+"/details"))
 
-		err := hydrate(detailsFile.Bytes)
+		err := dehydratedWebpage.Hydrate(detailsFile.Bytes)
 		assert.NoError(t, err)
 		assert.Equal(t, expectedDetails, dehydratedWebpage.(*Webpage).WebpageDetails)
 
@@ -482,7 +474,8 @@ func TestWebpageHydrationAndDehydration(t *testing.T) {
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				webpage := tc.setupFunc()
-				file, dehydrated := webpage.Dehydrate()
+				file := webpage.HydratedFile()
+				dehydrated := webpage.Dehydrate()
 
 				assert.NotEmpty(t, file.Bytes)
 				assert.Equal(t, 0, len(dehydrated.(*Webpage).Requests))
@@ -990,10 +983,9 @@ func assertWebpageURL(t *testing.T, webpage Webpage, expectedURL string) {
 	assert.Equal(t, expectedURL, webpage.URL, "webpage URL should match expected")
 }
 
-func createTestParent() GraphModel {
-	parentAsset := NewAsset("gladiator", "systems")
-	parentAttribute := NewAttribute("https", "443", &parentAsset)
-	return &parentAttribute
+func createTestParent() *WebApplication {
+	webapp := NewWebApplication("https://example.com", "Example App")
+	return &webapp
 }
 
 func createTestWebpage(rawURL string, options ...WebpageOption) Webpage {

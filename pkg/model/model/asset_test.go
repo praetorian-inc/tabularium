@@ -271,3 +271,26 @@ func TestAsset_DomainVerificationJob(t *testing.T) {
 		})
 	}
 }
+
+func TestAsset_RFC1918(t *testing.T) {
+	t.Run("private addresses have default AS data", func(t *testing.T) {
+		a := NewAsset("10.0.0.1", "10.0.0.1")
+		assert.Equal(t, a.IsPrivate(), true)
+		assert.Equal(t, a.ASNumber, "0")
+		assert.Equal(t, a.ASName, "Non-Routable")
+	})
+
+	t.Run("non-private addresses have no AS data", func(t *testing.T) {
+		a := NewAsset("100.0.0.1", "100.0.0.1")
+		assert.Equal(t, a.IsPrivate(), false)
+		assert.Equal(t, a.ASNumber, "")
+		assert.Equal(t, a.ASName, "")
+	})
+
+	t.Run("non-ips have no AS data", func(t *testing.T) {
+		a := NewAsset("test.internal", "test.internal")
+		assert.Equal(t, a.IsPrivate(), false)
+		assert.Equal(t, a.ASNumber, "")
+		assert.Equal(t, a.ASName, "")
+	})
+}

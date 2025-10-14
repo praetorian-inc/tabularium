@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	"maps"
 	"net"
 	"strings"
 
@@ -17,6 +16,7 @@ const (
 
 type AWSResource struct {
 	CloudResource
+	OrgPolicy []byte `neo4j:"-" json:"orgPolicy"`
 }
 
 func init() {
@@ -37,7 +37,7 @@ func NewAWSResource(name, accountRef string, rtype CloudResourceType, properties
 			DisplayName:  parsedARN.Resource,
 			Provider:     AWSProvider,
 			Properties:   properties,
-			ResourceType: CloudResourceType(rtype),
+			ResourceType: rtype,
 			Region:       parsedARN.Region,
 			AccountRef:   accountRef,
 		},
@@ -48,8 +48,16 @@ func NewAWSResource(name, accountRef string, rtype CloudResourceType, properties
 	return r, nil
 }
 
+func (a *AWSResource) Defaulted() {
+	a.Origins = []string{"amazon"}
+	a.AttackSurface = []string{"cloud"}
+	a.CloudResource.Defaulted()
+	a.BaseAsset.Defaulted()
+}
+
 func (a *AWSResource) GetHooks() []registry.Hook {
 	hooks := []registry.Hook{
+		useGroupAndIdentifier(a, &a.AccountRef, &a.Name),
 		{
 			Call: func() error {
 				a.CloudResource.Key = fmt.Sprintf("#awsresource#%s#%s", a.AccountRef, a.Name)
@@ -59,6 +67,7 @@ func (a *AWSResource) GetHooks() []registry.Hook {
 				return nil
 			},
 		},
+		setGroupAndIdentifier(a, &a.AccountRef, &a.Name),
 	}
 
 	hooks = append(hooks, a.CloudResource.GetHooks()...)
@@ -71,6 +80,59 @@ func (a *AWSResource) WithStatus(status string) Target {
 	ret := *a // Copy the full AWSResource, not just CloudResource
 	ret.Status = status
 	return &ret
+}
+
+func (c *AWSResource) HydratableFilepath() string {
+	if c.OrgPolicy == nil {
+		return SKIP_HYDRATION
+	}
+	return c.GetOrgPolicyFilename()
+}
+
+func (a *AWSResource) GetOrgPolicyFilename() string {
+	return fmt.Sprintf("awsresource/%s/%s/org-policies.json", a.AccountRef, RemoveReservedCharacters(a.Identifier()))
+}
+
+func (c *AWSResource) Hydrate(data []byte) error {
+	c.OrgPolicy = data
+	return nil
+}
+
+func (c *AWSResource) HydratedFile() File {
+	filepath := c.HydratableFilepath()
+	if filepath == "" {
+		return File{}
+	}
+
+	file := NewFile(filepath)
+	file.Bytes = c.OrgPolicy
+	return file
+}
+
+func (c *AWSResource) Dehydrate() Hydratable {
+	dehydrated := *c
+	dehydrated.OrgPolicy = nil
+	return &dehydrated
+}
+
+func (a *AWSResource) Visit(other Assetlike) {
+	otherResource, ok := other.(*AWSResource)
+	if !ok {
+		return
+	}
+
+	a.CloudResource.Visit(&otherResource.CloudResource)
+	a.BaseAsset.Visit(otherResource)
+}
+
+func (a *AWSResource) Merge(other Assetlike) {
+	otherResource, ok := other.(*AWSResource)
+	if !ok {
+		return
+	}
+
+	a.CloudResource.Merge(&otherResource.CloudResource)
+	a.BaseAsset.Merge(otherResource)
 }
 
 func (a *AWSResource) GetIPs() []string {
@@ -99,51 +161,16 @@ func (a *AWSResource) GetDNS() string {
 	return ""
 }
 
-func (a *AWSResource) Group() string { return "awsresource" }
-
-// Insertable interface methods
-func (a *AWSResource) Merge(otherModel any) {
-	other, ok := otherModel.(*AWSResource)
-	if !ok {
-		return
-	}
-	a.Status = other.Status
-	a.Visited = other.Visited
-
-	// Safely copy properties with nil checks
-	if a.Properties == nil {
-		a.Properties = make(map[string]any)
-	}
-	if other.Properties != nil {
-		maps.Copy(a.Properties, other.Properties)
-	}
+func (a *AWSResource) Group() string {
+	return a.AccountRef
 }
 
-func (a *AWSResource) Visit(otherModel any) error {
-	other, ok := otherModel.(*AWSResource)
-	if !ok {
-		return fmt.Errorf("expected *AWSResource, got %T", otherModel)
-	}
-	a.Visited = other.Visited
-	a.Status = other.Status
-
-	// Safely copy properties with nil checks
-	if a.Properties == nil {
-		a.Properties = make(map[string]any)
-	}
-	if other.Properties != nil {
-		maps.Copy(a.Properties, other.Properties)
-	}
-
-	// Fix TTL update logic: update if other has a valid TTL
-	if other.TTL != 0 {
-		a.TTL = other.TTL
-	}
-	return nil
+func (a *AWSResource) Identifier() string {
+	return a.Name
 }
 
 // Return an Asset that matches the legacy integration
-func (a *AWSResource) NewAsset() []Asset {
+func (a *AWSResource) NewAssets() []Asset {
 	assets := make([]Asset, 0)
 	dns := a.GetDNS()
 	ips := a.GetIPs()
@@ -152,42 +179,31 @@ func (a *AWSResource) NewAsset() []Asset {
 	// Extract service name from ARN (same logic as Amazon capability)
 	service := a.extractService()
 
+	record := func(asset Asset) {
+		asset.CloudId = a.Name
+		asset.CloudService = service
+		asset.CloudAccount = a.AccountRef
+		assets = append(assets, asset)
+	}
+
 	// Create assets from URLs - NewAsset(url, arn)
 	for _, url := range urls {
-		asset := NewAsset(url, a.Name)
-		asset.CloudId = a.Name
-		asset.CloudService = service
-		asset.CloudAccount = a.AccountRef
-		assets = append(assets, asset)
+		record(NewAsset(url, a.Name))
 	}
 
-	// Create assets from IPs
 	for _, ip := range ips {
-		var asset Asset
 		if dns != "" {
-			// NewAsset(dns, dns) when both DNS and IP exist - DNS takes precedence as identifier
-			asset = NewAsset(dns, dns)
-		} else {
-			// NewAsset(ip, ip) when only IP exists
-			asset = NewAsset(ip, ip)
+			record(NewAsset(dns, ip))
 		}
-		asset.CloudId = a.Name
-		asset.CloudService = service
-		asset.CloudAccount = a.AccountRef
-		assets = append(assets, asset)
+		record(NewAsset(ip, ip))
 	}
 
-	// If no URLs or IPs, create a fallback asset using the ARN
 	if len(assets) == 0 {
 		identifier := a.Name // Use ARN as fallback
 		if dns != "" {
 			identifier = dns
 		}
-		asset := NewAsset(identifier, identifier)
-		asset.CloudId = a.Name
-		asset.CloudService = service
-		asset.CloudAccount = a.AccountRef
-		assets = append(assets, asset)
+		record(NewAsset(identifier, identifier))
 	}
 
 	return assets

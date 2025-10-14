@@ -89,9 +89,13 @@ type AgentSendable interface {
 }
 
 type Hydratable interface {
-	Hydrate() (path string, hydrate func([]byte) error)
-	Dehydrate() (File, Hydratable)
+	Hydrate([]byte) error
+	HydratableFilepath() string
+	HydratedFile() File
+	Dehydrate() Hydratable
 }
+
+const SKIP_HYDRATION = ""
 
 type HydratableTarget interface {
 	Hydratable
@@ -110,6 +114,10 @@ const (
 )
 
 const (
+	// Global Flags
+	FrozenFlag     string = "frozen"
+	BurpModuleFlag string = "enable_burp_module"
+
 	// seed:status
 	Rejected string = "FR"
 

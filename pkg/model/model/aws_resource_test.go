@@ -2,11 +2,11 @@ package model
 
 import (
 	"fmt"
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 	"net"
 	"slices"
-	"strings"
 	"testing"
+
+	"github.com/praetorian-inc/tabularium/pkg/registry"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -330,6 +330,16 @@ func TestNewAWSResource_Fields(t *testing.T) {
 	if awsRes.AccountRef != accountRef {
 		t.Errorf("expected AccountRef '%s', got '%s'", accountRef, awsRes.AccountRef)
 	}
+
+	// Test defaulted origination data fields
+	expectedOrigins := []string{"amazon"}
+	if !slices.Equal(awsRes.Origins, expectedOrigins) {
+		t.Errorf("expected Origins %v, got %v", expectedOrigins, awsRes.Origins)
+	}
+	expectedAttackSurface := []string{"cloud"}
+	if !slices.Equal(awsRes.AttackSurface, expectedAttackSurface) {
+		t.Errorf("expected AttackSurface %v, got %v", expectedAttackSurface, awsRes.AttackSurface)
+	}
 }
 
 func TestNewAWSResource_Labels(t *testing.T) {
@@ -497,7 +507,7 @@ func TestAWSResource_GetLabels(t *testing.T) {
 	}
 }
 
-func TestAWSResource_NewAsset(t *testing.T) {
+func TestAWSResource_NewAssets(t *testing.T) {
 	t.Run("EC2 instance with DNS and IP", func(t *testing.T) {
 		awsResource, err := NewAWSResource(
 			"arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0",
@@ -511,11 +521,10 @@ func TestAWSResource_NewAsset(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		assets := awsResource.NewAsset()
+		assets := awsResource.NewAssets()
 
-		// Should create 2 assets: one for each IP
-		if len(assets) != 2 {
-			t.Errorf("Expected 2 assets (one for each IP), got %d", len(assets))
+		if len(assets) != 4 {
+			t.Errorf("Expected 4 assets got %d", len(assets))
 		}
 
 		// Check the first asset (public IP)
@@ -523,118 +532,10 @@ func TestAWSResource_NewAsset(t *testing.T) {
 
 		assert.Equal(t, "ec2", asset.CloudService)
 		assert.Equal(t, "ec2-203-0-113-1.compute-1.amazonaws.com", asset.DNS)
-		assert.Equal(t, "ec2-203-0-113-1.compute-1.amazonaws.com", asset.Name)
+		assert.Equal(t, "203.0.113.1", asset.Name)
 		assert.Equal(t, awsResource.Name, asset.CloudId)
 		assert.Equal(t, "123456789012", asset.CloudAccount)
 		assert.True(t, asset.Valid())
-	})
-
-	t.Run("Lambda function without DNS or IP", func(t *testing.T) {
-		awsResource, err := NewAWSResource(
-			"arn:aws:lambda:us-west-2:123456789012:function:my-function",
-			"123456789012",
-			AWSLambdaFunction,
-			map[string]any{
-				"Runtime": "python3.9",
-			},
-		)
-		require.NoError(t, err)
-
-		assets := awsResource.NewAsset()
-
-		// Should create 1 fallback asset
-		if len(assets) != 1 {
-			t.Errorf("Expected 1 fallback asset, got %d", len(assets))
-		}
-
-		asset := assets[0]
-
-		assert.Equal(t, "lambda", asset.CloudService)
-		assert.Equal(t, awsResource.Name, asset.Name)
-		assert.Equal(t, awsResource.Name, asset.DNS)
-		assert.Equal(t, awsResource.Name, asset.CloudId)
-		assert.True(t, asset.Valid(), asset.Key)
-	})
-
-	t.Run("S3 bucket without DNS or IP", func(t *testing.T) {
-		awsResource, err := NewAWSResource(
-			"arn:aws:s3:::my-test-bucket",
-			"123456789012",
-			AWSS3Bucket,
-			map[string]any{
-				"BucketName": "my-test-bucket",
-			},
-		)
-		if err != nil {
-			t.Fatalf("Failed to create AWSResource: %v", err)
-		}
-
-		assets := awsResource.NewAsset()
-
-		// Should create 1 fallback asset
-		if len(assets) != 1 {
-			t.Errorf("Expected 1 fallback asset, got %d", len(assets))
-		}
-
-		asset := assets[0]
-
-		// Verify service extraction (should be "s3", not "aws")
-		if asset.CloudService != "s3" {
-			t.Errorf("Expected CloudService 's3', got '%s'", asset.CloudService)
-		}
-
-		// Verify ARN is used as fallback identifier
-		if asset.Name != awsResource.Name {
-			t.Errorf("Expected Name to be ARN '%s', got '%s'", awsResource.Name, asset.Name)
-		}
-
-		// DNS should be set to ARN for S3 (to create valid Asset key)
-		if asset.DNS != awsResource.Name {
-			t.Errorf("Expected DNS to be ARN '%s', got '%s'", awsResource.Name, asset.DNS)
-		}
-
-		// Verify valid key (should not be "#asset##")
-		if !asset.Valid() {
-			t.Errorf("Asset should be valid, but got invalid asset with key: %s", asset.Key)
-		}
-	})
-
-	t.Run("IAM role without DNS or IP", func(t *testing.T) {
-		awsResource, err := NewAWSResource(
-			"arn:aws:iam::123456789012:role/MyRole",
-			"123456789012",
-			AWSRole,
-			map[string]any{
-				"RoleName": "MyRole",
-			},
-		)
-		if err != nil {
-			t.Fatalf("Failed to create AWSResource: %v", err)
-		}
-
-		assets := awsResource.NewAsset()
-
-		// Should create 1 fallback asset
-		if len(assets) != 1 {
-			t.Errorf("Expected 1 fallback asset, got %d", len(assets))
-		}
-
-		asset := assets[0]
-
-		// Verify service extraction (should be "iam", not "aws")
-		if asset.CloudService != "iam" {
-			t.Errorf("Expected CloudService 'iam', got '%s'", asset.CloudService)
-		}
-
-		// Verify ARN is used as fallback identifier
-		if asset.Name != awsResource.Name {
-			t.Errorf("Expected Name to be ARN '%s', got '%s'", awsResource.Name, asset.Name)
-		}
-
-		// Verify valid key (should not be "#asset##")
-		if !asset.Valid() {
-			t.Errorf("Asset should be valid, but got invalid asset with key: %s", asset.Key)
-		}
 	})
 
 	t.Run("EC2 instance with IP but no DNS", func(t *testing.T) {
@@ -651,7 +552,7 @@ func TestAWSResource_NewAsset(t *testing.T) {
 			t.Fatalf("Failed to create AWSResource: %v", err)
 		}
 
-		assets := awsResource.NewAsset()
+		assets := awsResource.NewAssets()
 
 		// Should create 1 asset for the IP
 		if len(assets) != 1 {
@@ -670,247 +571,158 @@ func TestAWSResource_NewAsset(t *testing.T) {
 		assert.True(t, asset.Valid())
 	})
 
-	t.Run("malformed ARN falls back gracefully", func(t *testing.T) {
-		// This creates a resource with malformed ARN (bypassing constructor validation)
-		awsResource := &AWSResource{
+	t.Run("resource with multiple IPs creates multiple assets", func(t *testing.T) {
+		awsResource, err := NewAWSResource(
+			"arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0",
+			"123456789012",
+			AWSEC2Instance,
+			map[string]any{
+				"PublicIp":      "203.0.113.1",
+				"PrivateIp":     "10.0.1.100",
+				"PublicDnsName": "ec2-203-0-113-1.compute-1.amazonaws.com",
+			},
+		)
+		if err != nil {
+			t.Fatalf("Failed to create AWSResource: %v", err)
+		}
+
+		assets := awsResource.NewAssets()
+
+		if len(assets) != 4 {
+			t.Errorf("Expected 4 assets (two for each IP), got %d", len(assets))
+		}
+
+		// Check first asset uses DNS+IP format
+		asset1 := assets[0]
+		if asset1.DNS != "ec2-203-0-113-1.compute-1.amazonaws.com" {
+			t.Errorf("Expected first asset DNS to be DNS name, got '%s'", asset1.DNS)
+		}
+
+		// All assets should have the same cloud metadata
+		for i, asset := range assets {
+			if asset.CloudService != "ec2" {
+				t.Errorf("Asset %d: Expected CloudService 'ec2', got '%s'", i, asset.CloudService)
+			}
+			if asset.CloudId != awsResource.Name {
+				t.Errorf("Asset %d: Expected CloudId '%s', got '%s'", i, awsResource.Name, asset.CloudId)
+			}
+			if asset.CloudAccount != "123456789012" {
+				t.Errorf("Asset %d: Expected CloudAccount '123456789012', got '%s'", i, asset.CloudAccount)
+			}
+			if !asset.Valid() {
+				t.Errorf("Asset %d should be valid, but got invalid asset with key: %s", i, asset.Key)
+			}
+		}
+	})
+
+	t.Run("resource with multiple IPs creates multiple assets", func(t *testing.T) {
+		awsResource, err := NewAWSResource(
+			"arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0",
+			"123456789012",
+			AWSEC2Instance,
+			map[string]any{
+				"PublicIp":      "203.0.113.1",
+				"PrivateIp":     "10.0.1.100",
+				"PublicDnsName": "ec2-203-0-113-1.compute-1.amazonaws.com",
+			},
+		)
+		if err != nil {
+			t.Fatalf("Failed to create AWSResource: %v", err)
+		}
+
+		assets := awsResource.NewAssets()
+
+		if len(assets) != 4 {
+			t.Errorf("Expected 4 assets (two for each IP), got %d", len(assets))
+		}
+
+		// Check first asset uses DNS+IP format
+		asset1 := assets[0]
+		if asset1.DNS != "ec2-203-0-113-1.compute-1.amazonaws.com" {
+			t.Errorf("Expected first asset DNS to be DNS name, got '%s'", asset1.DNS)
+		}
+
+		// All assets should have the same cloud metadata
+		for i, asset := range assets {
+			if asset.CloudService != "ec2" {
+				t.Errorf("Asset %d: Expected CloudService 'ec2', got '%s'", i, asset.CloudService)
+			}
+			if asset.CloudId != awsResource.Name {
+				t.Errorf("Asset %d: Expected CloudId '%s', got '%s'", i, awsResource.Name, asset.CloudId)
+			}
+			if asset.CloudAccount != "123456789012" {
+				t.Errorf("Asset %d: Expected CloudAccount '123456789012', got '%s'", i, asset.CloudAccount)
+			}
+			if !asset.Valid() {
+				t.Errorf("Asset %d should be valid, but got invalid asset with key: %s", i, asset.Key)
+			}
+		}
+	})
+}
+
+func TestAWSResource_Defaulted(t *testing.T) {
+	t.Run("Defaulted sets correct Origins and AttackSurface values", func(t *testing.T) {
+		awsRes := &AWSResource{
 			CloudResource: CloudResource{
-				Name:         "invalid-arn",
+				Name:         "arn:aws:s3:::test-bucket",
 				Provider:     "aws",
-				ResourceType: AWSEC2Instance,
+				ResourceType: AWSS3Bucket,
 				AccountRef:   "123456789012",
-				Properties:   map[string]any{},
 			},
 		}
 
-		assets := awsResource.NewAsset()
+		// Call Defaulted method directly
+		awsRes.Defaulted()
 
-		// Should create 1 fallback asset
-		if len(assets) != 1 {
-			t.Errorf("Expected 1 fallback asset, got %d", len(assets))
-		}
+		// Check that Origins is set to ["amazon"]
+		expectedOrigins := []string{"amazon"}
+		assert.Equal(t, expectedOrigins, awsRes.Origins, "Origins should be set to ['amazon']")
 
-		asset := assets[0]
-
-		// Should fall back to "Unknown Service"
-		assert.Equal(t, "Unknown Service", asset.CloudService)
-
-		// Should use ARN as fallback identifier
-		assert.Equal(t, "invalid-arn", asset.Name)
-
-		// Should still be valid
-		assert.True(t, asset.Valid())
+		// Check that AttackSurface is set to ["cloud"]
+		expectedAttackSurface := []string{"cloud"}
+		assert.Equal(t, expectedAttackSurface, awsRes.AttackSurface, "AttackSurface should be set to ['cloud']")
 	})
 
-	t.Run("resource with multiple IPs creates multiple assets", func(t *testing.T) {
-		awsResource, err := NewAWSResource(
+	t.Run("NewAWSResource calls Defaulted automatically", func(t *testing.T) {
+		awsRes, err := NewAWSResource(
 			"arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0",
 			"123456789012",
 			AWSEC2Instance,
-			map[string]any{
-				"PublicIp":      "203.0.113.1",
-				"PrivateIp":     "10.0.1.100",
-				"PublicDnsName": "ec2-203-0-113-1.compute-1.amazonaws.com",
-			},
+			map[string]any{"region": "us-east-1"},
 		)
-		if err != nil {
-			t.Fatalf("Failed to create AWSResource: %v", err)
-		}
+		require.NoError(t, err)
 
-		assets := awsResource.NewAsset()
+		// Verify that Origins and AttackSurface were set by NewAWSResource calling Defaulted()
+		expectedOrigins := []string{"amazon"}
+		assert.Equal(t, expectedOrigins, awsRes.Origins, "NewAWSResource should call Defaulted() which sets Origins to ['amazon']")
 
-		// Should create 2 assets: one for each IP
-		if len(assets) != 2 {
-			t.Errorf("Expected 2 assets (one for each IP), got %d", len(assets))
-		}
-
-		// Check first asset uses DNS+IP format
-		asset1 := assets[0]
-		if asset1.DNS != "ec2-203-0-113-1.compute-1.amazonaws.com" {
-			t.Errorf("Expected first asset DNS to be DNS name, got '%s'", asset1.DNS)
-		}
-
-		// All assets should have the same cloud metadata
-		for i, asset := range assets {
-			if asset.CloudService != "ec2" {
-				t.Errorf("Asset %d: Expected CloudService 'ec2', got '%s'", i, asset.CloudService)
-			}
-			if asset.CloudId != awsResource.Name {
-				t.Errorf("Asset %d: Expected CloudId '%s', got '%s'", i, awsResource.Name, asset.CloudId)
-			}
-			if asset.CloudAccount != "123456789012" {
-				t.Errorf("Asset %d: Expected CloudAccount '123456789012', got '%s'", i, asset.CloudAccount)
-			}
-			if !asset.Valid() {
-				t.Errorf("Asset %d should be valid, but got invalid asset with key: %s", i, asset.Key)
-			}
-		}
-	})
-
-	t.Run("resource with multiple IPs creates multiple assets", func(t *testing.T) {
-		awsResource, err := NewAWSResource(
-			"arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0",
-			"123456789012",
-			AWSEC2Instance,
-			map[string]any{
-				"PublicIp":      "203.0.113.1",
-				"PrivateIp":     "10.0.1.100",
-				"PublicDnsName": "ec2-203-0-113-1.compute-1.amazonaws.com",
-			},
-		)
-		if err != nil {
-			t.Fatalf("Failed to create AWSResource: %v", err)
-		}
-
-		assets := awsResource.NewAsset()
-
-		// Should create 2 assets: one for each IP
-		if len(assets) != 2 {
-			t.Errorf("Expected 2 assets (one for each IP), got %d", len(assets))
-		}
-
-		// Check first asset uses DNS+IP format
-		asset1 := assets[0]
-		if asset1.DNS != "ec2-203-0-113-1.compute-1.amazonaws.com" {
-			t.Errorf("Expected first asset DNS to be DNS name, got '%s'", asset1.DNS)
-		}
-
-		// All assets should have the same cloud metadata
-		for i, asset := range assets {
-			if asset.CloudService != "ec2" {
-				t.Errorf("Asset %d: Expected CloudService 'ec2', got '%s'", i, asset.CloudService)
-			}
-			if asset.CloudId != awsResource.Name {
-				t.Errorf("Asset %d: Expected CloudId '%s', got '%s'", i, awsResource.Name, asset.CloudId)
-			}
-			if asset.CloudAccount != "123456789012" {
-				t.Errorf("Asset %d: Expected CloudAccount '123456789012', got '%s'", i, asset.CloudAccount)
-			}
-			if !asset.Valid() {
-				t.Errorf("Asset %d should be valid, but got invalid asset with key: %s", i, asset.Key)
-			}
-		}
+		expectedAttackSurface := []string{"cloud"}
+		assert.Equal(t, expectedAttackSurface, awsRes.AttackSurface, "NewAWSResource should call Defaulted() which sets AttackSurface to ['cloud']")
 	})
 }
 
-func TestAWSResource_NewAsset_IssuesFixed(t *testing.T) {
-	t.Run("Before fix: Service extraction and invalid Asset issues", func(t *testing.T) {
-		// Test case 1: Lambda function - tests both issues
-		lambdaARN := "arn:aws:lambda:us-west-2:123456789012:function:my-function"
-		awsResource, err := NewAWSResource(
-			lambdaARN,
-			"123456789012",
-			AWSLambdaFunction,
-			map[string]any{"Runtime": "python3.9"},
-		)
-		if err != nil {
-			t.Fatalf("Failed to create AWSResource: %v", err)
-		}
+func TestAWSResource_HydrateDehydrate(t *testing.T) {
+	resource, err := NewAWSResource("arn:aws:organizations::992382775570:account/o-a6zw2rb1jz/992382775570", "992382775570", AWSAccount, nil)
+	require.NoError(t, err)
 
-		assets := awsResource.NewAsset()
+	gotFilepath := resource.HydratableFilepath()
+	assert.Equal(t, gotFilepath, "")
 
-		// ✅ ISSUE 1 FIXED: Service extraction now correctly uses index 2
-		// Before fix: parts[1] would extract "aws" (partition)
-		// After fix: parts[2] correctly extracts "lambda" (service)
-		if assets[0].CloudService != "lambda" {
-			t.Errorf("❌ Service extraction still broken: expected 'lambda', got '%s'", assets[0].CloudService)
-		} else {
-			t.Logf("✅ Service extraction fixed: correctly extracted 'lambda' from ARN")
-		}
+	err = resource.Hydrate([]byte(`{"dummy": "test policy"}`))
+	require.NoError(t, err)
 
-		// ✅ ISSUE 2 FIXED: Asset validation now passes
-		// Before fix: NewAsset("", "") → Key: "#asset##" (invalid)
-		// After fix: Uses ARN as identifier creating valid key "#asset#arn#arn"
-		if !assets[0].Valid() {
-			t.Errorf("❌ Asset validation still broken: invalid key '%s'", assets[0].Key)
-		} else {
-			t.Logf("✅ Asset validation fixed: valid key '%s'", assets[0].Key)
-		}
+	gotFilepath = resource.HydratableFilepath()
+	expectedFilepath := "awsresource/992382775570/arn_aws_organizations__992382775570_account_o-a6zw2rb1jz_992382775570/org-policies.json"
+	assert.Equal(t, gotFilepath, expectedFilepath)
 
-		// Verify the fix details
-		expectedKey := strings.ToLower(fmt.Sprintf("#asset#%s#%s", lambdaARN, lambdaARN))
-		if assets[0].Key != expectedKey {
-			t.Errorf("Unexpected key format: got '%s', expected '%s'", assets[0].Key, expectedKey)
-		}
+	expectedFile := NewFile(expectedFilepath)
+	expectedFile.Bytes = []byte(`{"dummy": "test policy"}`)
+	gotFile := resource.HydratedFile()
+	assert.Equal(t, expectedFile.Key, gotFile.Key)
+	assert.Equal(t, expectedFile.Name, gotFile.Name)
+	assert.Equal(t, expectedFile.Bytes, gotFile.Bytes)
 
-		t.Logf("📊 Lambda Asset Summary:")
-		t.Logf("   CloudService: %s (correctly extracted from ARN)", assets[0].CloudService)
-		t.Logf("   DNS: %s (set to ARN for valid key)", assets[0].DNS)
-		t.Logf("   Name: %s (set to ARN)", assets[0].Name)
-		t.Logf("   Key: %s (valid format)", assets[0].Key)
-		t.Logf("   Valid: %t", assets[0].Valid())
-
-		// Test case 2: S3 bucket - similar issues
-		s3ARN := "arn:aws:s3:::my-test-bucket"
-		s3Resource, err := NewAWSResource(
-			s3ARN,
-			"123456789012",
-			AWSS3Bucket,
-			map[string]any{"BucketName": "my-test-bucket"},
-		)
-		if err != nil {
-			t.Fatalf("Failed to create S3Resource: %v", err)
-		}
-
-		s3Assets := s3Resource.NewAsset()
-
-		// Verify S3 service extraction
-		if s3Assets[0].CloudService != "s3" {
-			t.Errorf("❌ S3 service extraction failed: expected 's3', got '%s'", s3Assets[0].CloudService)
-		} else {
-			t.Logf("✅ S3 service extraction fixed: correctly extracted 's3' from ARN")
-		}
-
-		// Verify S3 asset validation
-		if !s3Assets[0].Valid() {
-			t.Errorf("❌ S3 Asset validation failed: invalid key '%s'", s3Assets[0].Key)
-		} else {
-			t.Logf("✅ S3 Asset validation fixed: valid key '%s'", s3Assets[0].Key)
-		}
-
-		// Test case 3: EC2 with IP but no DNS - should use IP as identifier
-		ec2Resource, err := NewAWSResource(
-			"arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0",
-			"123456789012",
-			AWSEC2Instance,
-			map[string]any{
-				"PublicIp":      "203.0.113.1",
-				"PublicDnsName": "", // No DNS
-			},
-		)
-		if err != nil {
-			t.Fatalf("Failed to create EC2Resource: %v", err)
-		}
-
-		ec2Assets := ec2Resource.NewAsset()
-
-		// Should use IP when DNS is empty
-		if ec2Assets[0].Name != "203.0.113.1" {
-			t.Errorf("Expected EC2 asset to use IP as identifier, got '%s'", ec2Assets[0].Name)
-		} else {
-			t.Logf("✅ EC2 without DNS: correctly uses IP as identifier")
-		}
-
-		if !ec2Assets[0].Valid() {
-			t.Errorf("❌ EC2 Asset validation failed: invalid key '%s'", ec2Assets[0].Key)
-		} else {
-			t.Logf("✅ EC2 Asset validation: valid key '%s'", ec2Assets[0].Key)
-		}
-	})
+	dehydrated, ok := resource.Dehydrate().(*AWSResource)
+	require.True(t, ok, "object is not *AWSResource: %T", resource)
+	assert.Nil(t, dehydrated.OrgPolicy)
 }
-
-/*
-Summary of fixes made to AWSResource.NewAsset():
-
-ISSUE 1 - Incorrect AWS Service Extraction:
-❌ Before: service = parts[1]  // extracted "aws" (partition)
-✅ After:  service = parts[2]  // extracts actual service (lambda, s3, ec2, etc.)
-
-ISSUE 2 - Invalid Asset Creation:
-❌ Before: NewAsset("", "") → Key: "#asset##" (invalid)
-✅ After:  Uses ARN as fallback → Key: "#asset#arn#arn" (valid)
-
-The fix ensures:
-1. Correct service extraction from ARN parts[2]
-2. Valid Asset keys by using ARN as fallback when DNS/IP are empty
-3. Maintains backward compatibility for EC2 instances with DNS/IP
-*/

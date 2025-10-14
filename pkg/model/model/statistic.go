@@ -60,9 +60,9 @@ func (s *Statistic) GetHooks() []registry.Hook {
 	}
 }
 
-func NewStatistic(t, name, value, created string) Statistic {
+func NewStatistic(tipe, name, value, created string) Statistic {
 	s := Statistic{
-		Type:    t,
+		Type:    tipe,
 		Name:    name,
 		Value:   value,
 		Created: created,

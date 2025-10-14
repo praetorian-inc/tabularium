@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	"maps"
 	"net"
 	"strings"
 
@@ -29,7 +28,7 @@ func NewAzureResource(name, accountRef string, rtype CloudResourceType, properti
 			Name:         name,
 			Provider:     "azure",
 			Properties:   properties,
-			ResourceType: CloudResourceType(rtype),
+			ResourceType: rtype,
 			AccountRef:   accountRef,
 		},
 	}
@@ -53,8 +52,16 @@ func (a *AzureResource) GetDisplayName() string {
 	return a.Name
 }
 
+func (a *AzureResource) Defaulted() {
+	a.Origins = []string{"azure"}
+	a.AttackSurface = []string{"cloud"}
+	a.CloudResource.Defaulted()
+	a.BaseAsset.Defaulted()
+}
+
 func (a *AzureResource) GetHooks() []registry.Hook {
 	hooks := []registry.Hook{
+		useGroupAndIdentifier(a, &a.AccountRef, &a.Name),
 		{
 			Call: func() error {
 				a.CloudResource.Key = fmt.Sprintf("#azureresource#%s#%s", a.AccountRef, a.Name)
@@ -64,10 +71,39 @@ func (a *AzureResource) GetHooks() []registry.Hook {
 				return nil
 			},
 		},
+		setGroupAndIdentifier(a, &a.AccountRef, &a.Name),
 	}
 
 	hooks = append(hooks, a.CloudResource.GetHooks()...)
 	return hooks
+}
+
+func (a *AzureResource) NewAssets() []Asset {
+	assets := []Asset{}
+	ipSet := make(map[string]bool)
+	urlSet := make(map[string]bool)
+
+	record := func(asset Asset) {
+		asset.CloudId = a.Name
+		asset.CloudService = a.ResourceType.String()
+		asset.CloudAccount = a.AccountRef
+		assets = append(assets, asset)
+	}
+
+	for _, ip := range a.GetIPs() {
+		if _, ok := ipSet[ip]; !ok && ip != "" {
+			ipSet[ip] = true
+			record(NewAsset(ip, ip))
+		}
+	}
+	for _, url := range a.GetURLs() {
+		if _, ok := urlSet[url]; !ok && url != "" {
+			urlSet[url] = true
+			record(NewAsset(url, url))
+		}
+	}
+
+	return assets
 }
 
 func (a *AzureResource) GetIPs() []string {
@@ -112,47 +148,34 @@ func (a *AzureResource) GetURLs() []string {
 	return []string{}
 }
 
-func (a *AzureResource) Group() string { return "azureresource" }
-
-func (a *AzureResource) Merge(otherModel any) {
-	other, ok := otherModel.(*AzureResource)
+func (a *AzureResource) Visit(other Assetlike) {
+	otherResource, ok := other.(*AzureResource)
 	if !ok {
 		return
 	}
-	a.Status = other.Status
-	a.Visited = other.Visited
 
-	// Safely copy properties with nil checks
-	if a.Properties == nil {
-		a.Properties = make(map[string]any)
-	}
-	if other.Properties != nil {
-		maps.Copy(a.Properties, other.Properties)
-	}
+	a.CloudResource.Visit(&otherResource.CloudResource)
+	a.BaseAsset.Visit(otherResource)
 }
 
-func (a *AzureResource) Visit(otherModel any) error {
-	other, ok := otherModel.(*AzureResource)
+func (a *AzureResource) Merge(other Assetlike) {
+	otherResource, ok := other.(*AzureResource)
 	if !ok {
-		return fmt.Errorf("expected *AzureResource, got %T", otherModel)
-	}
-	a.Visited = other.Visited
-	a.Status = other.Status
-
-	// Safely copy properties with nil checks
-	if a.Properties == nil {
-		a.Properties = make(map[string]any)
-	}
-	if other.Properties != nil {
-		maps.Copy(a.Properties, other.Properties)
+		return
 	}
 
-	// Fix TTL update logic: update if other has a valid TTL
-	if other.TTL != 0 {
-		a.TTL = other.TTL
-	}
-	return nil
+	a.CloudResource.Merge(&otherResource.CloudResource)
+	a.BaseAsset.Merge(otherResource)
 }
+
+func (a *AzureResource) Group() string {
+	return a.AccountRef
+}
+
+func (a *AzureResource) Identifier() string {
+	return a.Name
+}
+
 func (a *AzureResource) WithStatus(status string) Target {
 	ret := *a
 	ret.Status = status
