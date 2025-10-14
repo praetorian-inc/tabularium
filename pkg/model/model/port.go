@@ -17,20 +17,16 @@ const (
 
 type Port struct {
 	registry.BaseModel
-	Username     string            `neo4j:"username" json:"username" desc:"Chariot username associated with the port." example:"user@example.com"`
-	Key          string            `neo4j:"key" json:"key" desc:"Unique key identifying the port." example:"#port#tcp#80#asset#example.com#example.com"`
-	OriginSource string            `neo4j:"origin_source" json:"origin_source" desc:"Source that added this to the system (one of self, account, seed)" example:"seed"`
-	Source       string            `neo4j:"source" json:"source" desc:"Key of the parent asset this port belongs to." example:"#asset#example.com#example.com"`
-	Protocol     string            `neo4j:"protocol" json:"protocol" desc:"The protocol of this port." example:"tcp"`
-	PortNumber   int               `neo4j:"port" json:"port" desc:"The port number of this port." example:"80"`
-	Service      string            `neo4j:"service" json:"service" desc:"The name of the service identified on this port." example:"https"`
-	Status       string            `neo4j:"status" json:"status" desc:"Status of the port." example:"A"`
-	Created      string            `neo4j:"created" json:"created" desc:"Timestamp when the port was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
-	Visited      string            `neo4j:"visited" json:"visited" desc:"Timestamp when the port was last visited or confirmed (RFC3339)." example:"2023-10-27T11:00:00Z"`
-	Capability   string            `neo4j:"capability" json:"capability,omitempty" desc:"Capability that discovered this port." example:"portscan"`
-	TTL          int64             `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the port record (Unix timestamp)." example:"1706353200"`
-	Metadata     map[string]string `neo4j:"metadata" json:"metadata,omitempty" desc:"Additional metadata associated with the port." example:"{\"tool\": \"masscan\"}"`
-	Parent       GraphModelWrapper `neo4j:"-" json:"parent" desc:"Port parent asset."`
+	Username   string            `neo4j:"username" json:"username" desc:"Chariot username associated with the port." example:"user@example.com"`
+	Key        string            `neo4j:"key" json:"key" desc:"Unique key identifying the port." example:"#port#tcp#80#asset#example.com#example.com"`
+	Source     string            `neo4j:"source" json:"source" desc:"Key of the parent asset this port belongs to." example:"#asset#example.com#example.com"`
+	Protocol   string            `neo4j:"protocol" json:"protocol" desc:"The protocol of this port." example:"tcp"`
+	PortNumber int               `neo4j:"port" json:"port" desc:"The port number of this port." example:"80"`
+	Service    string            `neo4j:"service" json:"service" desc:"The name of the service identified on this port." example:"https"`
+	Created    string            `neo4j:"created" json:"created" desc:"Timestamp when the port was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
+	Visited    string            `neo4j:"visited" json:"visited" desc:"Timestamp when the port was last visited or confirmed (RFC3339)." example:"2023-10-27T11:00:00Z"`
+	TTL        int64             `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the port record (Unix timestamp)." example:"1706353200"`
+	Parent     GraphModelWrapper `neo4j:"-" json:"parent" desc:"Port parent asset."`
 }
 
 const PortLabel = "Port"
@@ -69,15 +65,8 @@ func (p *Port) Valid() bool {
 
 func (p *Port) Visit(other Port) {
 	p.Visited = other.Visited
-	if other.Status != Pending {
-		p.Status = other.Status
-	}
 	if other.TTL != 0 {
 		p.TTL = other.TTL
-	}
-	p.Capability = other.Capability
-	if len(other.Metadata) > 0 {
-		p.Metadata = other.Metadata
 	}
 	if other.Service != "" {
 		p.Service = other.Service
@@ -85,29 +74,8 @@ func (p *Port) Visit(other Port) {
 	p.Parent = other.Parent
 }
 
-func (p *Port) IsStatus(value string) bool {
-	return strings.HasPrefix(p.Status, value)
-}
-
 func (p *Port) IsClass(value string) bool {
 	return strings.HasPrefix("port", value)
-}
-
-func (p *Port) GetStatus() string {
-	return p.Status
-}
-
-func (p *Port) WithStatus(status string) Target {
-	p.Status = status
-	return p
-}
-
-func (p *Port) SetSource(source string) {
-	p.OriginSource = source
-}
-
-func (p *Port) GetSource() string {
-	return p.OriginSource
 }
 
 func (p *Port) Group() string {
@@ -124,8 +92,6 @@ func (p *Port) IsPrivate() bool {
 }
 
 func (p *Port) Defaulted() {
-	p.Status = Active
-	p.Metadata = map[string]string{}
 	p.Visited = Now()
 	p.Created = Now()
 	p.TTL = Future(14 * 24)
