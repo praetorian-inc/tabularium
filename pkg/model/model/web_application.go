@@ -16,20 +16,20 @@ import (
 )
 
 type BurpMetadata struct {
-	BurpType                 string   `neo4j:"burp_type" json:"burp_type" dynamodbav:"burp_type" desc:"Burp type" example:"enterprise"`
-	BurpSiteID               string   `neo4j:"burp_site_id" json:"burp_site_id" dynamodbav:"burp_site_id" desc:"Burp Enterprise site identifier" example:"18865"`
-	BurpFolderID             string   `neo4j:"burp_folder_id" json:"burp_folder_id" dynamodbav:"burp_folder_id" desc:"Burp Enterprise folder identifier" example:"17519"`
-	BurpScheduleID           string   `neo4j:"burp_schedule_id" json:"burp_schedule_id" dynamodbav:"burp_schedule_id" desc:"Burp Enterprise schedule identifier" example:"45934"`
-	ApiDefinitionURL         string   `json:"api_definition_url" dynamodbav:"api_definition_url" desc:"URL to OpenAPI/Swagger specification" example:"https://api.example.com/openapi.json"`
-	ApiDefinitionContentPath string   `neo4j:"api_definition_content_path" json:"api_definition_content_path" dynamodbav:"api_definition_content_path" desc:"S3 path to API definition content for large files" example:"webapplication/user@example.com/api-definition-1234567890.json"`
-	ExcludedExtensions       []string `json:"excluded_extensions" desc:"Excluded extensions" example:"[\"pdf\", \"doc\"]"`
-	ScheduledInterval        int      `json:"scheduledInterval" desc:"Scheduled interval" example:"10"`
-	MapType                  string   `json:"mapType" desc:"Map type" example:"proxy"`
-	SizeThreshold            int      `json:"sizeThreshold" desc:"Size threshold" example:"1024"`
-	AIEnabled                bool     `json:"ai_enabled" desc:"AI enabled" example:"true"`
-	ScopeEnabled             bool     `json:"scope_enabled" desc:"Scope enabled" example:"true"`
-	TimeUnit                 string   `json:"timeUnit" desc:"Time unit" example:"seconds"`
-	TargetApplication        string   `json:"target_application" desc:"Target application" example:"https://example.com"`
+	BurpType                 string   `neo4j:"burp_type" json:"burp_type" desc:"Burp type" example:"enterprise"`
+	BurpSiteID               string   `neo4j:"burp_site_id" json:"burp_site_id" desc:"Burp Enterprise site identifier" example:"18865"`
+	BurpFolderID             string   `neo4j:"burp_folder_id" json:"burp_folder_id" desc:"Burp Enterprise folder identifier" example:"17519"`
+	BurpScheduleID           string   `neo4j:"burp_schedule_id" json:"burp_schedule_id" desc:"Burp Enterprise schedule identifier" example:"45934"`
+	ApiDefinitionURL         string   `neo4j:"api_definition_url" json:"api_definition_url" desc:"URL to OpenAPI/Swagger specification" example:"https://api.example.com/openapi.json"`
+	ApiDefinitionContentPath string   `neo4j:"api_definition_content_path" json:"api_definition_content_path" desc:"S3 path to API definition content for large files" example:"webapplication/user@example.com/api-definition-1234567890.json"`
+	ExcludedExtensions       []string `neo4j:"excluded_extensions" json:"excluded_extensions" desc:"Excluded extensions" example:"[\"pdf\", \"doc\"]"`
+	ScheduledInterval        int      `neo4j:"scheduledInterval" json:"scheduledInterval" desc:"Scheduled interval" example:"10"`
+	MapType                  string   `neo4j:"mapType" json:"mapType" desc:"Map type" example:"proxy"`
+	SizeThreshold            int      `neo4j:"sizeThreshold" json:"sizeThreshold" desc:"Size threshold" example:"1024"`
+	AIEnabled                bool     `neo4j:"ai_enabled" json:"ai_enabled" desc:"AI enabled" example:"true"`
+	ScopeEnabled             bool     `neo4j:"scope_enabled" json:"scope_enabled" desc:"Scope enabled" example:"true"`
+	TimeUnit                 string   `neo4j:"timeUnit" json:"timeUnit" desc:"Time unit" example:"seconds"`
+	TargetApplication        string   `neo4j:"target_application" json:"target_application" desc:"Target application" example:"https://example.com"`
 }
 
 // We wrap it so its still easy to marshal/unmarshal
