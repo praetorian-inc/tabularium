@@ -291,9 +291,6 @@ func TestTargetEvent_DynamoDBMarshaling(t *testing.T) {
 		webapplication.TTL = 123456789
 		webapplication.Source = "seed"
 		webapplication.URLs = []string{"https://example.com/api", "https://example.com/admin"}
-		webapplication.BurpSiteID = "1234"
-		webapplication.BurpFolderID = "42"
-		webapplication.BurpScheduleID = "abcd"
 
 		original := TargetWrapper{Model: &webapplication}
 
@@ -312,9 +309,6 @@ func TestTargetEvent_DynamoDBMarshaling(t *testing.T) {
 		assert.Equal(t, webapplication.URLs, result.URLs)
 		assert.Equal(t, webapplication.Status, result.Status)
 		assert.Equal(t, webapplication.Source, result.Source)
-		assert.Equal(t, webapplication.BurpSiteID, result.BurpSiteID)
-		assert.Equal(t, webapplication.BurpFolderID, result.BurpFolderID)
-		assert.Equal(t, webapplication.BurpScheduleID, result.BurpScheduleID)
 	})
 
 	t.Run("marshal and unmarshal webpage", func(t *testing.T) {
