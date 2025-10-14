@@ -115,7 +115,8 @@ const (
 
 const (
 	// seed:status
-	Rejected string = "FR"
+	Rejected       string = "FR"
+	BurpModuleFlag string = "enable_burp_module"
 
 	// asset:status (in database)
 	Deleted        string = "D"
