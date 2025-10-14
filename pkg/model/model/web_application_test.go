@@ -443,6 +443,7 @@ func TestWebApplicationMergeEmptyName(t *testing.T) {
 func TestWebApplicationHydrationLifecycle(t *testing.T) {
 	primaryURL := "https://api.example.com"
 	w := NewWebApplication(primaryURL, "Example App")
+	w.BurpType = "webapplication"
 
 	expectedPath := fmt.Sprintf("webapplication/%s/api-definition.json", RemoveReservedCharacters(w.PrimaryURL))
 	assert.Equal(t, expectedPath, w.GetHydratableFilepath())
@@ -450,7 +451,7 @@ func TestWebApplicationHydrationLifecycle(t *testing.T) {
 	assert.False(t, w.IsWebService())
 	assert.Equal(t, SKIP_HYDRATION, w.HydratableFilepath())
 
-	w.ApiDefinitionContentPath = expectedPath
+	w.BurpType = "webservice"
 	assert.True(t, w.IsWebService())
 	assert.Equal(t, expectedPath, w.HydratableFilepath())
 

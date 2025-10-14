@@ -114,6 +114,10 @@ const (
 )
 
 const (
+	// Global Flags
+	FrozenFlag     string = "frozen"
+	BurpModuleFlag string = "enable_burp_module"
+
 	// seed:status
 	Rejected       string = "FR"
 	BurpModuleFlag string = "enable_burp_module"
