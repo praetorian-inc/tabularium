@@ -12,6 +12,7 @@ func TestNewPort(t *testing.T) {
 
 	assert.Equal(t, "tcp", port.Protocol)
 	assert.Equal(t, 80, port.PortNumber)
+	assert.Equal(t, Active, port.Status)
 	assert.NotEmpty(t, port.Created)
 	assert.NotEmpty(t, port.Visited)
 	assert.Equal(t, "#port#tcp#80#asset#example.com#192.168.1.1", port.Key)
@@ -99,12 +100,14 @@ func TestPort_IsClass(t *testing.T) {
 func TestPort_Visit(t *testing.T) {
 	port1 := NewPort("tcp", 80, &Asset{})
 	port2 := Port{
+		Status:  "inactive", 
 		Service: "http",
 		TTL:     12345,
 	}
 
 	port1.Visit(port2)
 
+	assert.Equal(t, "inactive", port1.Status)
 	assert.Equal(t, "http", port1.Service)
 	assert.Equal(t, int64(12345), port1.TTL)
 }

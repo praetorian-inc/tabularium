@@ -23,6 +23,7 @@ type Port struct {
 	Protocol   string            `neo4j:"protocol" json:"protocol" desc:"The protocol of this port." example:"tcp"`
 	PortNumber int               `neo4j:"port" json:"port" desc:"The port number of this port." example:"80"`
 	Service    string            `neo4j:"service" json:"service" desc:"The name of the service identified on this port." example:"https"`
+	Status     string            `neo4j:"status" json:"status" desc:"Status of the port." example:"A"`
 	Created    string            `neo4j:"created" json:"created" desc:"Timestamp when the port was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
 	Visited    string            `neo4j:"visited" json:"visited" desc:"Timestamp when the port was last visited or confirmed (RFC3339)." example:"2023-10-27T11:00:00Z"`
 	TTL        int64             `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the port record (Unix timestamp)." example:"1706353200"`
@@ -65,6 +66,9 @@ func (p *Port) Valid() bool {
 
 func (p *Port) Visit(other Port) {
 	p.Visited = other.Visited
+	if other.Status != Pending {
+		p.Status = other.Status
+	}
 	if other.TTL != 0 {
 		p.TTL = other.TTL
 	}
@@ -76,6 +80,19 @@ func (p *Port) Visit(other Port) {
 
 func (p *Port) IsClass(value string) bool {
 	return strings.HasPrefix("port", value)
+}
+
+func (p *Port) GetStatus() string {
+	return p.Status
+}
+
+func (p *Port) WithStatus(status string) Target {
+	p.Status = status
+	return p
+}
+
+func (p *Port) IsStatus(value string) bool {
+	return strings.HasPrefix(p.Status, value)
 }
 
 func (p *Port) Group() string {
@@ -92,6 +109,7 @@ func (p *Port) IsPrivate() bool {
 }
 
 func (p *Port) Defaulted() {
+	p.Status = Active
 	p.Visited = Now()
 	p.Created = Now()
 	p.TTL = Future(14 * 24)
