@@ -6,9 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-}
-
-
 func TestAttribute_IsPrivate(t *testing.T) {
 	publicAsset := NewAsset("contoso.com", "18.1.2.4")
 	privateAsset := NewAsset("contoso.local", "10.0.0.1")
