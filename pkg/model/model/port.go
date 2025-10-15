@@ -17,17 +17,17 @@ const (
 
 type Port struct {
 	registry.BaseModel
-	Username   string            `neo4j:"username" json:"username" desc:"Chariot username associated with the port." example:"user@example.com"`
-	Key        string            `neo4j:"key" json:"key" desc:"Unique key identifying the port." example:"#port#tcp#80#asset#example.com#example.com"`
-	Source     string            `neo4j:"source" json:"source" desc:"Key of the parent asset this port belongs to." example:"#asset#example.com#example.com"`
-	Protocol   string            `neo4j:"protocol" json:"protocol" desc:"The protocol of this port." example:"tcp"`
-	PortNumber int               `neo4j:"port" json:"port" desc:"The port number of this port." example:"80"`
-	Service    string            `neo4j:"service" json:"service" desc:"The name of the service identified on this port." example:"https"`
-	Status     string            `neo4j:"status" json:"status" desc:"Status of the port." example:"A"`
-	Created    string            `neo4j:"created" json:"created" desc:"Timestamp when the port was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
-	Visited    string            `neo4j:"visited" json:"visited" desc:"Timestamp when the port was last visited or confirmed (RFC3339)." example:"2023-10-27T11:00:00Z"`
-	TTL        int64             `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the port record (Unix timestamp)." example:"1706353200"`
-	Parent     GraphModelWrapper `neo4j:"-" json:"parent" desc:"Port parent asset."`
+	Username   string `neo4j:"username" json:"username" desc:"Chariot username associated with the port." example:"user@example.com"`
+	Key        string `neo4j:"key" json:"key" desc:"Unique key identifying the port." example:"#port#tcp#80#asset#example.com#example.com"`
+	Source     string `neo4j:"source" json:"source" desc:"Key of the parent asset this port belongs to." example:"#asset#example.com#example.com"`
+	Protocol   string `neo4j:"protocol" json:"protocol" desc:"The protocol of this port." example:"tcp"`
+	PortNumber int    `neo4j:"port" json:"port" desc:"The port number of this port." example:"80"`
+	Service    string `neo4j:"service" json:"service" desc:"The name of the service identified on this port." example:"https"`
+	Status     string `neo4j:"status" json:"status" desc:"Status of the port." example:"A"`
+	Created    string `neo4j:"created" json:"created" desc:"Timestamp when the port was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
+	Visited    string `neo4j:"visited" json:"visited" desc:"Timestamp when the port was last visited or confirmed (RFC3339)." example:"2023-10-27T11:00:00Z"`
+	TTL        int64  `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the port record (Unix timestamp)." example:"1706353200"`
+	Parent     *Asset `neo4j:"-" json:"parent" desc:"Port parent asset."`
 }
 
 const PortLabel = "Port"
@@ -45,19 +45,17 @@ func (p *Port) GetLabels() []string {
 }
 
 func (p *Port) Target() string {
-	asset := p.Asset()
 	if p.Service != "" {
-		return fmt.Sprintf("%s://%s:%d", p.Service, asset.Name, p.PortNumber)
+		return fmt.Sprintf("%s://%s:%d", p.Service, p.Parent.Name, p.PortNumber)
 	}
-	return fmt.Sprintf("%s:%d", asset.Name, p.PortNumber)
+	return fmt.Sprintf("%s:%d", p.Parent.Name, p.PortNumber)
 }
 
 func (p *Port) Asset() Asset {
-	parts := strings.Split(p.Source, "#")
-	if len(parts) != 4 {
+	if p.Parent == nil {
 		return Asset{}
 	}
-	return NewAsset(parts[2], parts[3])
+	return *p.Parent
 }
 
 func (p *Port) Valid() bool {
@@ -75,7 +73,9 @@ func (p *Port) Visit(other Port) {
 	if other.Service != "" {
 		p.Service = other.Service
 	}
-	p.Parent = other.Parent
+	if other.Parent != nil {
+		p.Parent = other.Parent
+	}
 }
 
 func (p *Port) IsClass(value string) bool {
@@ -96,7 +96,10 @@ func (p *Port) IsStatus(value string) bool {
 }
 
 func (p *Port) Group() string {
-	return p.Asset().DNS
+	if p.Parent == nil {
+		return ""
+	}
+	return p.Parent.DNS
 }
 
 func (p *Port) Identifier() string {
@@ -104,8 +107,10 @@ func (p *Port) Identifier() string {
 }
 
 func (p *Port) IsPrivate() bool {
-	parent := p.Asset()
-	return parent.IsPrivate()
+	if p.Parent == nil {
+		return false
+	}
+	return p.Parent.IsPrivate()
 }
 
 func (p *Port) Defaulted() {
@@ -119,22 +124,22 @@ func (p *Port) GetHooks() []registry.Hook {
 	return []registry.Hook{
 		{
 			Call: func() error {
-				if p.Parent.Model == nil {
-					return fmt.Errorf("parent is required")
+				if p.Parent == nil {
+					return fmt.Errorf("parent asset is required")
 				}
-				p.Key = fmt.Sprintf("#port#%s#%d%s", p.Protocol, p.PortNumber, p.Parent.Model.GetKey())
-				p.Source = p.Parent.Model.GetKey()
+				p.Key = fmt.Sprintf("#port#%s#%d%s", p.Protocol, p.PortNumber, p.Parent.GetKey())
+				p.Source = p.Parent.GetKey()
 				return nil
 			},
 		},
 	}
 }
 
-func NewPort(protocol string, portNumber int, parent GraphModel) Port {
+func NewPort(protocol string, portNumber int, parent *Asset) Port {
 	p := Port{
 		Protocol:   protocol,
 		PortNumber: portNumber,
-		Parent:     NewGraphModelWrapper(parent),
+		Parent:     parent,
 	}
 	p.Defaulted()
 	registry.CallHooks(&p)

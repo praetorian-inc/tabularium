@@ -25,14 +25,19 @@ func TestPort_Target(t *testing.T) {
 		expected string
 	}{
 		{
-			name:     "port without service",
-			port:     NewPort("tcp", 80, &Asset{BaseAsset: BaseAsset{Key: "#asset#example.com#192.168.1.1"}}),
+			name: "port without service",
+			port: func() Port {
+				asset := Asset{BaseAsset: BaseAsset{Key: "#asset#example.com#192.168.1.1"}}
+				asset.Name = "192.168.1.1"
+				return NewPort("tcp", 80, &asset)
+			}(),
 			expected: "192.168.1.1:80",
 		},
 		{
 			name: "port with service",
 			port: func() Port {
 				asset := Asset{BaseAsset: BaseAsset{Key: "#asset#example.com#192.168.1.1"}}
+				asset.Name = "192.168.1.1"
 				port := NewPort("tcp", 443, &asset)
 				port.Service = "https"
 				return port
@@ -55,7 +60,10 @@ func TestPort_Valid(t *testing.T) {
 	}{
 		{
 			name: "valid port",
-			port: NewPort("tcp", 80, &Asset{BaseAsset: BaseAsset{Key: "#asset#example.com#example.com"}}),
+			port: func() Port {
+				asset := Asset{BaseAsset: BaseAsset{Key: "#asset#example.com#example.com"}}
+				return NewPort("tcp", 80, &asset)
+			}(),
 			want: true,
 		},
 		{
@@ -82,7 +90,10 @@ func TestPort_Valid(t *testing.T) {
 }
 
 func TestPort_Asset(t *testing.T) {
-	port := NewPort("tcp", 80, &Asset{BaseAsset: BaseAsset{Key: "#asset#example.com#192.168.1.1"}})
+	parentAsset := Asset{BaseAsset: BaseAsset{Key: "#asset#example.com#192.168.1.1"}}
+	parentAsset.DNS = "example.com"
+	parentAsset.Name = "192.168.1.1"
+	port := NewPort("tcp", 80, &parentAsset)
 	
 	asset := port.Asset()
 	assert.Equal(t, "example.com", asset.DNS)
@@ -90,7 +101,8 @@ func TestPort_Asset(t *testing.T) {
 }
 
 func TestPort_IsClass(t *testing.T) {
-	port := NewPort("tcp", 80, &Asset{})
+	asset := Asset{}
+	port := NewPort("tcp", 80, &asset)
 	
 	assert.True(t, port.IsClass("port"))
 	assert.True(t, port.IsClass("por"))
@@ -98,7 +110,8 @@ func TestPort_IsClass(t *testing.T) {
 }
 
 func TestPort_Visit(t *testing.T) {
-	port1 := NewPort("tcp", 80, &Asset{})
+	asset := Asset{}
+	port1 := NewPort("tcp", 80, &asset)
 	port2 := Port{
 		Status:  "inactive", 
 		Service: "http",
@@ -113,7 +126,8 @@ func TestPort_Visit(t *testing.T) {
 }
 
 func TestPortConditions(t *testing.T) {
-	port := NewPort("tcp", 80, &Asset{})
+	asset := Asset{}
+	port := NewPort("tcp", 80, &asset)
 	
 	conditions := PortConditions(port)
 	
