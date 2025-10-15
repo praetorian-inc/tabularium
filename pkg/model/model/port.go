@@ -47,7 +47,7 @@ func (p *Port) GetLabels() []string {
 func (p *Port) Target() string {
 	asset := p.Asset()
 	if p.Service != "" {
-		return fmt.Sprintf("%s://%s:%d", p.Service, asset.Name, p.PortNumber)
+		return fmt.Sprintf("%s://%s:%d", p.Service, asset.DNS, p.PortNumber)
 	}
 	return fmt.Sprintf("%s:%d", asset.Name, p.PortNumber)
 }
