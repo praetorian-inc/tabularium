@@ -6,33 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAttribute_Preseed(t *testing.T) {
-	tests := []struct {
-		name string
-		attr Attribute
-		want Preseed
-	}{
-		{
-			name: "basic preseed",
-			attr: NewAttribute("preseed", "#preseed#whois+company#company#Chariot Systems", &Asset{BaseAsset: BaseAsset{Key: "#asset#gladiator.systems#gladiator.systems"}}),
-			want: NewPreseed("whois+company", "company", "Chariot Systems"),
-		},
-		{
-			name: "not a preseed",
-			attr: NewAttribute("http", "80", &Asset{BaseAsset: BaseAsset{Key: "#asset#gladiator.systems#gladiator.systems"}}),
-			want: Preseed{},
-		},
-		{
-			name: "long truncated preseed",
-			attr: NewAttribute("preseed", "#preseed#tlscert#530046309f9a6e3424d4ae66953b3671#-----BEGIN CERTIFICATE-----\nMIIEIzCCA6mgAwIBAgISBKY4tUq22IC5By7JQHN/o3ulMAoGCCqGSM49BAMDMDIx\nCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJF\nNjAeFw0yNDExMTEyMDMwNDNaFw0yNTAyMDkyMDMwNDJaMBwxGjAYBgNVBAMTEWds\nYWRpYXRvci5zeXN0ZW1zMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEWgBr/u1z\nKSzmPSlG00wHyoIsDJKcdiEQWj9i/Al2dm2DZUgY6BG3ThJL2mjgeL59HIxoGMpr\ntbux5XhAwi0bLaOCArMwggKvMA4GA1UdDwEB/wQEAwIHgDAdBgNVHSUEFjAUBggr\nBgEFBQcDAQYIKwYBBQUHAwIwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQU9djs2bmY\nbsY6YFH8KVA85/ZV0SAwHwYDVR0jBBgwFoAUkydGmAOpUWiOmNbEQkjbI79YlNIw\nVQYIKwYBBQUHAQEESTBHMCEGCCsGAQUFBzABhhVodHRwOi8vZTYuby5sZW5jci5v\ncmcwIgYIKwYBBQUHMAKGFmh0dHA6Ly9lNi5pLmxlbmNyLm9yZy8wgbwGA1UdEQSB\ntDCBsYIYY2ljZXJvLmdsYWRpYXRvci5zeXN0ZW1zghFnbGFkaWF0b3Iuc3lzdGVt\nc4IZZ3JhY2N1cy5nbGFkaWF0b3Iuc3lzdGVtc4IYbWFyY3VzLmdsYWRpYXRvci5z\neXN0ZW1zghltYXhpbXVzLmdsYWRpYXRvci5zeXN0ZW1zghZuZXJvLmdsYWRpYXRv\nci5zeXN0ZW1zghpzdWIubmVyby5nbGFkaWF0b3Iuc3lzdGVtczATBgNVHSAEDDAK\nMAgGBmeBDAECATCCAQMGCisGAQQB1nkCBAIEgfQEgfEA7wB2AObSMWNAd4zBEEEG\n13G5zsHSQPaWhIb7uocyHf0eN45QAAABkx0hfAsAAAQDAEcwRQIgRFQZz2woupNO\nnACvzN+VA6hdFPtURqHSQ515DjPcRHgCIQDV9ESS2H+5goazEVEvJl5mHJ0b3nAs\nWp5ZvHUCGiUxKwB1AOCSs/wMHcjnaDYf3mG5lk0KUngZinLWcsSwTaVtb1QEAAAB\nkx0hfBIAAAQDAEYwRAIgDLwbI0v7nax4VIqninXbEUHfnU8TYc4084cWKXsdbQ0C\nID+PJFgxIPAHEQ5T+WMGtMnMk9VbFW3oqKS6iVXy4kRTMAoGCCqGSM49BAMDA2gA\nMGUCMQCEw6wNjTvzYPUbCy0uVg5ZBfFQO51S8broOZV+y2xSPrfuwe8jpWqhjceF\nO97uffgCMHtc96t9h+UxWbuGwAugUEHvog9vsZmOq3UrNX5PntVznRg1Jvx+htje\nWPvnk2BEMQ==\n-----END CERTIFICATE-----\n", &Asset{BaseAsset: BaseAsset{Key: "#asset#gladiator.systems#52.169.142.100"}}),
-			want: NewPreseed("tlscert", "530046309f9a6e3424d4ae66953b3671", "-----BEGIN CERTIFICATE-----\nMIIEIzCCA6mgAwIBAgISBKY4tUq22IC5By7JQHN/o3ulMAoGCCqGSM49BAMDMDIx\nCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJF\nNjAeFw0yNDExMTEyMDMwNDNaFw0yNTAyMDkyMDMwNDJaMBwxGjAYBgNVBAMTEWds\nYWRpYXRvci5zeXN0ZW1zMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEWgBr/u1z\nKSzmPSlG00wHyoIsDJKcdiEQWj9i/Al2dm2DZUgY6BG3ThJL2mjgeL59HIxoGMpr\ntbux5XhAwi0bLaOCArMwggKvMA4GA1UdDwEB/wQEAwIHgDAdBgNVHSUEFjAUBggr\nBgEFBQcDAQYIKwYBBQUHAwIwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQU9djs2bmY\nbsY6YFH8KVA85/ZV0SAwHwYDVR0jBBgwFoAUkydGmAOpUWiOmNbEQkjbI79YlNIw\nVQYIKwYBBQUHAQEESTBHMCEGCCsGAQUFBzABhhVodHRwOi8vZTYuby5sZW5jci5v\ncmcwIgYIKwYBBQUHMAKGFmh0dHA6Ly9lNi5pLmxlbmNyLm9yZy8wgbwGA1UdEQSB\ntDCBsYIYY2ljZXJvLmdsYWRpYXRvci5zeXN0ZW1zghFnbGFkaWF0b3Iuc3lzdGVt\nc4IZZ3JhY2N1cy5nbGFkaWF0b3Iuc3lzdGVtc4IYbWFyY3VzLmdsYWRpYXRvci5z\neXN0ZW1zghltYXhpbXVzLmdsYWRpYXRvci5zeXN0ZW1zghZuZXJvLmdsYWRpYXRv\nci5zeXN0ZW1zghpzdWIubmVyby5nbGFkaWF0b3Iuc3lzdGVtczATBgNVHSAEDDAK\nMAgGBmeBDAECATCCAQMGCisGAQQB1nkCBAIEgfQEgfEA7wB2AObSMWNAd4zBEEEG\n13G5zsHSQPaWhIb7uocyHf0eN45QAAABkx0hfAsAAAQDAEcwRQIgRFQZz2woupNO\nnACvzN+VA6hdFPtURqHSQ515DjPcRHgCIQDV9ESS2H+5goazEVEvJl5mHJ0b3nAs\nWp5ZvHUCGiUxKwB1AOCSs/wMHcjnaDYf3mG5lk0KUngZinLWcsSwTaVtb1QEAAAB\nkx0hfBIAAAQDAEYwRAIgDLwbI0v7nax4VIqninXbEUHfnU8TYc4084cWKXsdbQ0C\nID+PJFgxIPAHEQ5T+WMGtMnMk9VbFW3oqKS6iVXy4kRTMAoGCCqGSM49BAMDA2gA\nMGUCMQCEw6wNjTvzYPUbCy0uVg5ZBfFQO51S8broOZV+y2xSPrfuwe8jpWqhjceF\nO97uffgCMHtc96t9h+UxWbuGwAugUEHvog9vsZmOq3UrNX5PntVznRg1Jvx+htje\nWPvnk2BEMQ==\n-----END CERTIFICATE-----\n"),
-		},
-	}
-
-	for _, test := range tests {
-		actual := test.attr.Preseed()
-		assert.Equal(t, test.want, actual, "test case %s failed: expected %v, got %v", test.name, test.want, actual)
-	}
 }
 
 

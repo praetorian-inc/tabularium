@@ -39,25 +39,6 @@ func (a *Attribute) GetLabels() []string {
 	return []string{AttributeLabel, TTLLabel}
 }
 
-func (a *Attribute) Target() string {
-	parts := strings.Split(a.Source, "#")
-	if len(parts) < 3 {
-		return ""
-	}
-	sourceDNS := parts[2]
-
-	target := fmt.Sprintf("%s://%s:%s", a.Name, sourceDNS, a.Value)
-
-	switch a.Name {
-	case "port":
-		target = strings.TrimPrefix(target, "port://")
-	case "protocol":
-		target = strings.Replace(target, "protocol://", a.Value+"://", 1)
-		target = strings.TrimSuffix(target, ":"+a.Value)
-	}
-
-	return target
-}
 
 func (a *Attribute) Asset() Asset {
 	parts := strings.Split(a.Source, "#")
@@ -67,14 +48,6 @@ func (a *Attribute) Asset() Asset {
 	return NewAsset(parts[2], parts[3])
 }
 
-func (a *Attribute) Preseed() Preseed {
-	parts := strings.Split(a.Value, "#")
-	if len(parts) != 5 || !strings.HasPrefix(a.Value, "#preseed") {
-		return Preseed{}
-	}
-
-	return NewPreseed(parts[2], parts[3], parts[4])
-}
 
 func (a *Attribute) Valid() bool {
 	return a.Key != ""
