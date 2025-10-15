@@ -11,7 +11,7 @@ func TestNewPort(t *testing.T) {
 	port := NewPort("tcp", 80, &asset)
 
 	assert.Equal(t, "tcp", port.Protocol)
-	assert.Equal(t, 80, port.PortNumber)
+	assert.Equal(t, 80, port.Port)
 	assert.Equal(t, Active, port.Status)
 	assert.NotEmpty(t, port.Created)
 	assert.NotEmpty(t, port.Visited)
@@ -68,17 +68,17 @@ func TestPort_Valid(t *testing.T) {
 		},
 		{
 			name: "invalid port - zero",
-			port: Port{PortNumber: 0, Key: "test"},
+			port: Port{Port: 0, Key: "test"},
 			want: false,
 		},
 		{
 			name: "invalid port - too high",
-			port: Port{PortNumber: 65536, Key: "test"},
+			port: Port{Port: 65536, Key: "test"},
 			want: false,
 		},
 		{
 			name: "invalid port - no key",
-			port: Port{PortNumber: 80},
+			port: Port{Port: 80},
 			want: false,
 		},
 	}
@@ -94,7 +94,7 @@ func TestPort_Asset(t *testing.T) {
 	parentAsset.DNS = "example.com"
 	parentAsset.Name = "192.168.1.1"
 	port := NewPort("tcp", 80, &parentAsset)
-	
+
 	asset := port.Asset()
 	assert.Equal(t, "example.com", asset.DNS)
 	assert.Equal(t, "192.168.1.1", asset.Name)
@@ -104,7 +104,7 @@ func TestPort_IsClass(t *testing.T) {
 	asset := Asset{}
 	port := NewPort("tcp", 80, &asset)
 	port.Service = "http"
-	
+
 	assert.True(t, port.IsClass("http"))
 	assert.True(t, port.IsClass("80"))
 	assert.False(t, port.IsClass("ssh"))
@@ -114,7 +114,7 @@ func TestPort_Visit(t *testing.T) {
 	asset := Asset{}
 	port1 := NewPort("tcp", 80, &asset)
 	port2 := Port{
-		Status:  "inactive", 
+		Status:  "inactive",
 		Service: "http",
 		TTL:     12345,
 	}
@@ -129,9 +129,9 @@ func TestPort_Visit(t *testing.T) {
 func TestPortConditions(t *testing.T) {
 	asset := Asset{}
 	port := NewPort("tcp", 80, &asset)
-	
+
 	conditions := PortConditions(port)
-	
+
 	assert.Len(t, conditions, 2)
 	assert.Equal(t, "port", conditions[0].Name)
 	assert.Equal(t, "", conditions[0].Value)
