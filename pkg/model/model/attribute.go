@@ -99,38 +99,12 @@ func (a *Attribute) IsStatus(value string) bool {
 	return strings.HasPrefix(a.Status, value)
 }
 
-func (a *Attribute) IsClass(value string) bool {
-	return strings.HasPrefix(a.Name, value)
-}
-
-func (a *Attribute) GetStatus() string {
-	return a.Status
-}
-
-func (a *Attribute) WithStatus(status string) Target {
-	a.Status = status
-	return a
-}
-
 func (a *Attribute) SetSource(source string) {
 	a.OriginSource = source
 }
 
 func (a *Attribute) GetSource() string {
 	return a.OriginSource
-}
-
-func (a *Attribute) Group() string {
-	return a.Asset().DNS
-}
-
-func (a *Attribute) Identifier() string {
-	return a.Target()
-}
-
-func (a *Attribute) IsPrivate() bool {
-	parent := a.Asset()
-	return parent.IsPrivate()
 }
 
 func (a *Attribute) Defaulted() {

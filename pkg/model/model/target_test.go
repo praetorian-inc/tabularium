@@ -48,14 +48,15 @@ func TestTargetEvent_UnmarshalJSON(t *testing.T) {
 		err := json.Unmarshal([]byte(input), &event)
 		require.NoError(t, err)
 
-		attr, ok := event.Model.(*Attribute)
-		require.True(t, ok, "expected Target to be *Attribute")
-		assert.Equal(t, "#attribute#https#443#asset#example.com#1.2.3.4", attr.Key)
-		assert.Equal(t, "test@example.com", attr.Username)
-		assert.Equal(t, "https", attr.Name)
-		assert.Equal(t, "443", attr.Value)
-		assert.Equal(t, "#asset#example.com#1.2.3.4", attr.Source)
-		assert.Equal(t, "A", attr.Status)
+		port, ok := event.Model.(*Port)
+		require.True(t, ok, "expected Target to be *Port")
+		assert.Equal(t, "#port#tcp#443#asset#example.com#1.2.3.4", port.Key)
+		assert.Equal(t, "test@example.com", port.Username)
+		assert.Equal(t, "tcp", port.Protocol)
+		assert.Equal(t, 443, port.PortNumber)
+		assert.Equal(t, "https", port.Service)
+		assert.Equal(t, "#asset#example.com#1.2.3.4", port.Source)
+		assert.Equal(t, "A", port.Status)
 	})
 
 	t.Run("unmarshal preseed", func(t *testing.T) {
@@ -159,12 +160,10 @@ func TestTargetEvent_UnmarshalJSON(t *testing.T) {
 
 func TestTargetEvent_Interface(t *testing.T) {
 	asset := NewAsset("example.com", "1.2.3.4")
-	attribute := asset.Attribute("https", "443")
 	preseed := NewPreseed("whois+company", "Chariot Systems", "Chariot Systems")
 	webpage := NewWebpageFromString("https://example.com/", nil)
 
 	testTargetInterface(t, "Asset", &asset)
-	testTargetInterface(t, "Attribute", &attribute)
 	testTargetInterface(t, "Preseed", &preseed)
 	testTargetInterface(t, "Webpage", &webpage)
 }
@@ -216,39 +215,6 @@ func TestTargetEvent_DynamoDBMarshaling(t *testing.T) {
 		assert.Equal(t, asset.TTL, result.TTL)
 	})
 
-	t.Run("marshal and unmarshal attribute", func(t *testing.T) {
-		attribute := NewAttribute("https", "443", &Asset{BaseAsset: BaseAsset{Key: "#asset#example.com#1.2.3.4"}})
-		attribute.Username = "test@example.com"
-		attribute.Status = "A"
-		attribute.Created = Now()
-		attribute.Visited = Now()
-		attribute.TTL = 123456789
-		attribute.Capability = "portscan"
-		attribute.Metadata = map[string]string{"test": "value"}
-
-		original := TargetWrapper{Model: &attribute}
-
-		av, err := attributevalue.Marshal(original)
-		require.NoError(t, err)
-
-		var unmarshaled TargetWrapper
-		err = attributevalue.Unmarshal(av, &unmarshaled)
-		require.NoError(t, err)
-
-		result, ok := unmarshaled.Model.(*Attribute)
-		require.True(t, ok)
-		assert.Equal(t, attribute.Key, result.Key)
-		assert.Equal(t, attribute.Username, result.Username)
-		assert.Equal(t, attribute.Name, result.Name)
-		assert.Equal(t, attribute.Value, result.Value)
-		assert.Equal(t, attribute.Source, result.Source)
-		assert.Equal(t, attribute.Status, result.Status)
-		assert.Equal(t, attribute.Created, result.Created)
-		assert.Equal(t, attribute.Visited, result.Visited)
-		assert.Equal(t, attribute.TTL, result.TTL)
-		assert.Equal(t, attribute.Capability, result.Capability)
-		assert.Equal(t, attribute.Metadata, result.Metadata)
-	})
 
 	t.Run("marshal and unmarshal preseed", func(t *testing.T) {
 		preseed := NewPreseed("whois+company", "Chariot Systems", "Chariot Systems")

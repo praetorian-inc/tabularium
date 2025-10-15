@@ -35,68 +35,6 @@ func TestAttribute_Preseed(t *testing.T) {
 	}
 }
 
-func TestAttribute_Target(t *testing.T) {
-	tests := []struct {
-		name     string
-		attr     Attribute
-		expected string
-	}{
-		{
-			name:     "http target",
-			attr:     NewAttribute("http", "80", &Asset{BaseAsset: BaseAsset{Key: "#asset#gladiator.systems#52.169.142.100"}}),
-			expected: "http://gladiator.systems:80",
-		},
-		{
-			name:     "ssh target",
-			attr:     NewAttribute("ssh", "22", &Asset{BaseAsset: BaseAsset{Key: "#asset#gladiator.systems#52.169.142.100"}}),
-			expected: "ssh://gladiator.systems:22",
-		},
-		{
-			name:     "port target",
-			attr:     NewAttribute("port", "80", &Asset{BaseAsset: BaseAsset{Key: "#asset#gladiator.systems#52.169.142.100"}}),
-			expected: "gladiator.systems:80",
-		},
-		{
-			name:     "protocol target",
-			attr:     NewAttribute("protocol", "http", &Asset{BaseAsset: BaseAsset{Key: "#asset#gladiator.systems#52.169.142.100"}}),
-			expected: "http://gladiator.systems",
-		},
-	}
-
-	for _, test := range tests {
-		actual := test.attr.Target()
-		if actual != test.expected {
-			t.Errorf("Attribute.Target() = %v, want %v", actual, test.expected)
-		}
-	}
-}
-
-func TestAttribute_TargetImplementation(t *testing.T) {
-	tests := []struct {
-		name               string
-		attr               Attribute
-		expectedGroup      string
-		expectedIdentifier string
-	}{
-		{
-			name:               "http target",
-			attr:               NewAttribute("http", "80", &Asset{BaseAsset: BaseAsset{Key: "#asset#gladiator.systems#52.169.142.100"}}),
-			expectedGroup:      "gladiator.systems",
-			expectedIdentifier: "http://gladiator.systems:80",
-		},
-	}
-
-	for _, test := range tests {
-		actual := test.attr.Group()
-		if actual != test.expectedGroup {
-			t.Errorf("Attribute.Target() = %v, want %v", actual, test.expectedGroup)
-		}
-		actual = test.attr.Identifier()
-		if actual != test.expectedIdentifier {
-			t.Errorf("Attribute.Target() = %v, want %v", actual, test.expectedIdentifier)
-		}
-	}
-}
 
 func TestAttribute_IsPrivate(t *testing.T) {
 	publicAsset := NewAsset("contoso.com", "18.1.2.4")
@@ -130,7 +68,8 @@ func TestAttribute_IsPrivate(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		actual := tc.attr.IsPrivate()
+		asset := tc.attr.Asset()
+		actual := asset.IsPrivate()
 		assert.Equal(t, tc.want, actual, "test case %s failed: expected %t, got %t", tc.name, tc.want, actual)
 	}
 }

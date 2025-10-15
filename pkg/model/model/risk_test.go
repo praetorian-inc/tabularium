@@ -73,7 +73,6 @@ func TestRisk_MergePriority(t *testing.T) {
 
 func TestRiskConstructors(t *testing.T) {
 	testAsset := NewAsset("example.com", "Example Asset")
-	testAttribute := NewAttribute("test", "test", &testAsset)
 	testWebpage := NewWebpageFromString("https://gladiator.systems", nil)
 	tests := []struct {
 		name         string
@@ -96,13 +95,13 @@ func TestRiskConstructors(t *testing.T) {
 		},
 		{
 			name:     "Same DNS",
-			target:   &testAttribute,
+			target:   &testAsset,
 			riskName: "test-risk",
 			dns:      "example.com",
 		},
 		{
 			name:     "Different DNS",
-			target:   &testAttribute,
+			target:   &testAsset,
 			riskName: "test-risk",
 			dns:      "subdomain.example.com",
 		},
@@ -175,7 +174,8 @@ func TestRisk_PendingAsset(t *testing.T) {
 	assert.Equal(t, originalAsset.TTL, pendingAsset.TTL, "TTL should not change")
 
 	attr := NewAttribute("test-attr", "test-value", &originalAsset)
-	attrRisk := NewRisk(&attr, "test-risk", TriageInfo)
+	asset := attr.Asset()
+	attrRisk := NewRisk(&asset, "test-risk", TriageInfo)
 
 	// True negative
 	pendingAsset, ok = attrRisk.PendingAsset()
