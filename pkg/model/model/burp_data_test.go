@@ -1,7 +1,6 @@
 package model
 
 import (
-	"encoding/base64"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -47,6 +46,7 @@ func TestParseBurpHTTPData(t *testing.T) {
         "inScope": false,
         "method": "",
         "path": "",
+        "statusCode": 200,
         "headers": [
           {
             "Content-Type": "text/html"
@@ -65,34 +65,37 @@ func TestParseBurpHTTPData(t *testing.T) {
 	assert.True(t, burpData.Metadata.AIEnabled)
 	assert.Equal(t, 1, len(burpData.Data))
 
-	entry := burpData.Data["14"]
-	assert.Equal(t, "GET", entry.OriginalRequest.Method)
-	assert.Equal(t, "http://example.com:8888/", entry.OriginalRequest.RawURL)
-	assert.Equal(t, "burp.test", entry.ToolSource)
-	assert.Equal(t, 0, entry.RequestMessageID)
-	assert.False(t, entry.RequestInScope)
+	webpage := burpData.Data["14"]
+	assert.Equal(t, "http://example.com:8888/", webpage.URL)
+	assert.Equal(t, []string{BURP_COURIER_SOURCE}, webpage.Source)
+	assert.Equal(t, "burp.test", webpage.Metadata["tool_source"])
+
+	// Check that the webpage has requests
+	assert.Equal(t, 1, len(webpage.Requests))
+	request := webpage.Requests[0]
+	assert.Equal(t, "GET", request.Method)
+	assert.Equal(t, "http://example.com:8888/", request.RawURL)
+	assert.Equal(t, []string{"example.com:8888"}, request.Headers["Host"])
+	assert.Equal(t, []string{"Mozilla/5.0"}, request.Headers["User-Agent"])
+
+	// Check response
+	require.NotNil(t, request.Response)
+	assert.Equal(t, 200, request.Response.StatusCode)
+	assert.Equal(t, "<html><body>Test</body></html>", request.Response.Body)
+	assert.Equal(t, []string{"text/html"}, request.Response.Headers["Content-Type"])
 }
 
 func TestBurpHTTPData_ExtractBaseURLs(t *testing.T) {
 	burpData := &BurpHTTPData{
-		Data: map[string]BurpHTTPEntry{
+		Data: map[string]Webpage{
 			"1": {
-				OriginalRequest: &WebpageRequest{
-					RawURL: "http://api.example.com:8888/api/users",
-					Method: "GET",
-				},
+				URL: "http://api.example.com:8888/api/users",
 			},
 			"2": {
-				OriginalRequest: &WebpageRequest{
-					RawURL: "http://api.example.com:8888/login",
-					Method: "GET",
-				},
+				URL: "http://api.example.com:8888/login",
 			},
 			"3": {
-				OriginalRequest: &WebpageRequest{
-					RawURL: "https://secure.example.com:443/",
-					Method: "GET",
-				},
+				URL: "https://secure.example.com:443/",
 			},
 		},
 	}
@@ -105,23 +108,28 @@ func TestBurpHTTPData_ExtractBaseURLs(t *testing.T) {
 
 func TestBurpHTTPData_ToWebpageRequests(t *testing.T) {
 	burpData := &BurpHTTPData{
-		Data: map[string]BurpHTTPEntry{
+		Data: map[string]Webpage{
 			"1": {
-				OriginalRequest: &WebpageRequest{
-					RawURL: "http://api.example.com:8888/api/users",
-					Method: "GET",
-					Body:   "",
-					Headers: map[string][]string{
-						"Host":       {"api.example.com:8888"},
-						"User-Agent": {"Mozilla/5.0"},
+				URL: "http://api.example.com:8888/api/users",
+				WebpageDetails: WebpageDetails{
+					Requests: []WebpageRequest{
+						{
+							RawURL: "http://api.example.com:8888/api/users",
+							Method: "GET",
+							Body:   "",
+							Headers: map[string][]string{
+								"Host":       {"api.example.com:8888"},
+								"User-Agent": {"Mozilla/5.0"},
+							},
+							Response: &WebpageResponse{
+								Body: `{"users": []}`,
+								Headers: map[string][]string{
+									"Content-Type": {"application/json"},
+								},
+								StatusCode: 200,
+							},
+						},
 					},
-				},
-				OriginalResponse: &WebpageResponse{
-					Body: `{"users": []}`,
-					Headers: map[string][]string{
-						"Content-Type": {"application/json"},
-					},
-					StatusCode: 200,
 				},
 			},
 		},
@@ -142,11 +150,19 @@ func TestBurpHTTPData_ToWebpageRequests(t *testing.T) {
 
 func TestBurpHTTPData_ExtractToolSources(t *testing.T) {
 	burpData := &BurpHTTPData{
-		Data: map[string]BurpHTTPEntry{
-			"1": {ToolSource: "burp.proxy"},
-			"2": {ToolSource: "burp.repeater"},
-			"3": {ToolSource: "burp.proxy"},
-			"4": {ToolSource: ""},
+		Data: map[string]Webpage{
+			"1": {
+				Metadata: map[string]any{"tool_source": "burp.proxy"},
+			},
+			"2": {
+				Metadata: map[string]any{"tool_source": "burp.repeater"},
+			},
+			"3": {
+				Metadata: map[string]any{"tool_source": "burp.proxy"},
+			},
+			"4": {
+				Metadata: map[string]any{"tool_source": ""},
+			},
 		},
 	}
 
@@ -154,362 +170,6 @@ func TestBurpHTTPData_ExtractToolSources(t *testing.T) {
 	assert.Equal(t, 2, len(sources))
 	assert.Contains(t, sources, "burp.proxy")
 	assert.Contains(t, sources, "burp.repeater")
-}
-
-func TestBurpHTTPEntry_GetBurpMetadata(t *testing.T) {
-	entry := BurpHTTPEntry{
-		RequestMessageID:             123,
-		RequestInScope:               true,
-		ResponseMessageID:            124,
-		ResponseInScope:              false,
-		ToolSource:                   "burp.repeater",
-		WasRequestIntercepted:        true,
-		WasResponseIntercepted:       false,
-		WasRequestModified:           true,
-		WasResponseModified:          false,
-		WasRequestBodyBase64Encoded:  false,
-		WasResponseBodyBase64Encoded: true,
-	}
-
-	metadata := entry.GetBurpMetadata()
-
-	assert.Equal(t, 123, metadata["request_message_id"])
-	assert.Equal(t, true, metadata["request_in_scope"])
-	assert.Equal(t, 124, metadata["response_message_id"])
-	assert.Equal(t, false, metadata["response_in_scope"])
-	assert.Equal(t, "burp.repeater", metadata["tool_source"])
-	assert.Equal(t, true, metadata["was_request_intercepted"])
-	assert.Equal(t, false, metadata["was_response_intercepted"])
-	assert.Equal(t, true, metadata["was_request_modified"])
-	assert.Equal(t, false, metadata["was_response_modified"])
-	assert.Equal(t, false, metadata["was_request_body_base64_encoded"])
-	assert.Equal(t, true, metadata["was_response_body_base64_encoded"])
-}
-
-func TestBurpHTTPEntry_HelperMethods(t *testing.T) {
-	entry := BurpHTTPEntry{
-		OriginalRequest: &WebpageRequest{
-			Method: "GET",
-		},
-		OriginalResponse: &WebpageResponse{
-			StatusCode: 200,
-		},
-		ModifiedRequest: &WebpageRequest{
-			Method: "POST",
-		},
-		RequestMessageID:  123,
-		RequestInScope:    true,
-		ResponseMessageID: 124,
-	}
-
-	assert.True(t, entry.HasModifiedRequest())
-	assert.False(t, entry.HasModifiedResponse())
-	assert.Equal(t, 123, entry.GetOriginalRequestMessageID())
-	assert.Equal(t, 124, entry.GetOriginalResponseMessageID())
-	assert.True(t, entry.IsInScope())
-}
-
-func TestBurpHTTPEntry_HelperMethods_NilRequests(t *testing.T) {
-	entry := BurpHTTPEntry{}
-
-	assert.False(t, entry.HasModifiedRequest())
-	assert.False(t, entry.HasModifiedResponse())
-	assert.Equal(t, 0, entry.GetOriginalRequestMessageID())
-	assert.Equal(t, 0, entry.GetOriginalResponseMessageID())
-	assert.False(t, entry.IsInScope())
-}
-
-func TestBurpHTTPEntry_UnmarshalJSON(t *testing.T) {
-	jsonData := `{
-		"originalRequest": {
-			"body": "test body",
-			"messageId": 456,
-			"inScope": true,
-			"method": "POST",
-			"path": "/test",
-			"url": "https://test.example.com:443/test",
-			"headers": [
-				{"Host": "test.example.com:443"},
-				{"Content-Type": "application/json"}
-			]
-		},
-		"originalResponse": {
-			"body": "response body",
-			"messageId": 457,
-			"inScope": false,
-			"headers": [
-				{"Content-Type": "text/html"}
-			]
-		},
-		"toolSource": "burp.proxy",
-		"wasRequestIntercepted": true
-	}`
-
-	var entry BurpHTTPEntry
-	err := entry.UnmarshalJSON([]byte(jsonData))
-	require.NoError(t, err)
-
-	assert.Equal(t, "POST", entry.OriginalRequest.Method)
-	assert.Equal(t, "https://test.example.com:443/test", entry.OriginalRequest.RawURL)
-	assert.Equal(t, "test body", entry.OriginalRequest.Body)
-	assert.Equal(t, "response body", entry.OriginalResponse.Body)
-	assert.Equal(t, "burp.proxy", entry.ToolSource)
-	assert.Equal(t, 456, entry.RequestMessageID)
-	assert.True(t, entry.RequestInScope)
-	assert.Equal(t, 457, entry.ResponseMessageID)
-	assert.False(t, entry.ResponseInScope)
-	assert.True(t, entry.WasRequestIntercepted)
-}
-
-func TestBurpHTTPEntry_UnmarshalJSON_ComplexWithModified(t *testing.T) {
-	jsonData := `{
-		"originalRequest": {
-			"body": "original request body",
-			"messageId": 100,
-			"inScope": true,
-			"method": "POST",
-			"path": "/api/login",
-			"url": "https://example.com:443/api/login",
-			"headers": [
-				{"Host": "example.com:443"},
-				{"Content-Type": "application/json"},
-				{"Authorization": "Bearer original-token"}
-			]
-		},
-		"originalResponse": {
-			"body": "{\"status\": \"success\", \"token\": \"abc123\"}",
-			"messageId": 101,
-			"inScope": true,
-			"headers": [
-				{"Content-Type": "application/json"},
-				{"Set-Cookie": "session=xyz789"}
-			]
-		},
-		"modifiedRequest": {
-			"body": "modified request body with injection",
-			"messageId": 102,
-			"inScope": true,
-			"method": "POST",
-			"path": "/api/login",
-			"url": "https://example.com:443/api/login",
-			"headers": [
-				{"Host": "example.com:443"},
-				{"Content-Type": "application/json"},
-				{"Authorization": "Bearer modified-token"},
-				{"X-Injection": "malicious-payload"}
-			]
-		},
-		"modifiedResponse": {
-			"body": "{\"status\": \"error\", \"message\": \"access denied\"}",
-			"messageId": 103,
-			"inScope": false,
-			"headers": [
-				{"Content-Type": "application/json"},
-				{"X-Error": "auth-failed"}
-			]
-		},
-		"toolSource": "burp.repeater",
-		"wasRequestIntercepted": true,
-		"wasResponseIntercepted": true,
-		"wasRequestModified": true,
-		"wasResponseModified": true,
-		"wasRequestBodyBase64Encoded": false,
-		"wasResponseBodyBase64Encoded": false,
-		"wasModifiedRequestBodyBase64Encoded": false,
-		"wasModifiedResponseBodyBase64Encoded": false
-	}`
-
-	var entry BurpHTTPEntry
-	err := entry.UnmarshalJSON([]byte(jsonData))
-	require.NoError(t, err)
-
-	// Test original request
-	require.NotNil(t, entry.OriginalRequest)
-	assert.Equal(t, "POST", entry.OriginalRequest.Method)
-	assert.Equal(t, "https://example.com:443/api/login", entry.OriginalRequest.RawURL)
-	assert.Equal(t, "original request body", entry.OriginalRequest.Body)
-	assert.Equal(t, []string{"example.com:443"}, entry.OriginalRequest.Headers["Host"])
-	assert.Equal(t, []string{"application/json"}, entry.OriginalRequest.Headers["Content-Type"])
-	assert.Equal(t, []string{"Bearer original-token"}, entry.OriginalRequest.Headers["Authorization"])
-
-	// Test original response
-	require.NotNil(t, entry.OriginalResponse)
-	assert.Equal(t, `{"status": "success", "token": "abc123"}`, entry.OriginalResponse.Body)
-	assert.Equal(t, []string{"application/json"}, entry.OriginalResponse.Headers["Content-Type"])
-	assert.Equal(t, []string{"session=xyz789"}, entry.OriginalResponse.Headers["Set-Cookie"])
-
-	// Test modified request
-	require.NotNil(t, entry.ModifiedRequest)
-	assert.Equal(t, "POST", entry.ModifiedRequest.Method)
-	assert.Equal(t, "https://example.com:443/api/login", entry.ModifiedRequest.RawURL)
-	assert.Equal(t, "modified request body with injection", entry.ModifiedRequest.Body)
-	assert.Equal(t, []string{"example.com:443"}, entry.ModifiedRequest.Headers["Host"])
-	assert.Equal(t, []string{"application/json"}, entry.ModifiedRequest.Headers["Content-Type"])
-	assert.Equal(t, []string{"Bearer modified-token"}, entry.ModifiedRequest.Headers["Authorization"])
-	assert.Equal(t, []string{"malicious-payload"}, entry.ModifiedRequest.Headers["X-Injection"])
-
-	// Test modified response
-	require.NotNil(t, entry.ModifiedResponse)
-	assert.Equal(t, `{"status": "error", "message": "access denied"}`, entry.ModifiedResponse.Body)
-	assert.Equal(t, []string{"application/json"}, entry.ModifiedResponse.Headers["Content-Type"])
-	assert.Equal(t, []string{"auth-failed"}, entry.ModifiedResponse.Headers["X-Error"])
-
-	// Test Burp metadata
-	assert.Equal(t, "burp.repeater", entry.ToolSource)
-	assert.Equal(t, 100, entry.RequestMessageID)
-	assert.True(t, entry.RequestInScope)
-	assert.Equal(t, 101, entry.ResponseMessageID)
-	assert.True(t, entry.ResponseInScope)
-
-	// Test interception and modification flags
-	assert.True(t, entry.WasRequestIntercepted)
-	assert.True(t, entry.WasResponseIntercepted)
-	assert.True(t, entry.WasRequestModified)
-	assert.True(t, entry.WasResponseModified)
-	assert.False(t, entry.WasRequestBodyBase64Encoded)
-	assert.False(t, entry.WasResponseBodyBase64Encoded)
-	assert.False(t, entry.WasModifiedRequestBodyBase64Encoded)
-	assert.False(t, entry.WasModifiedResponseBodyBase64Encoded)
-
-	// Test helper methods
-	assert.True(t, entry.HasModifiedRequest())
-	assert.True(t, entry.HasModifiedResponse())
-	assert.Equal(t, 100, entry.GetOriginalRequestMessageID())
-	assert.Equal(t, 101, entry.GetOriginalResponseMessageID())
-	assert.True(t, entry.IsInScope())
-
-	// Test metadata extraction
-	metadata := entry.GetBurpMetadata()
-	assert.Equal(t, 100, metadata["request_message_id"])
-	assert.Equal(t, true, metadata["request_in_scope"])
-	assert.Equal(t, 101, metadata["response_message_id"])
-	assert.Equal(t, true, metadata["response_in_scope"])
-	assert.Equal(t, "burp.repeater", metadata["tool_source"])
-	assert.Equal(t, true, metadata["was_request_intercepted"])
-	assert.Equal(t, true, metadata["was_response_intercepted"])
-	assert.Equal(t, true, metadata["was_request_modified"])
-	assert.Equal(t, true, metadata["was_response_modified"])
-	assert.Equal(t, false, metadata["was_request_body_base64_encoded"])
-	assert.Equal(t, false, metadata["was_response_body_base64_encoded"])
-}
-
-func TestBurpHTTPEntry_UnmarshalJSON_Base64EncodedModifiedRequest(t *testing.T) {
-	// Base64 encode the bytes 0xdeadcafebabe
-	binaryData := []byte{0xde, 0xad, 0xca, 0xfe, 0xba, 0xbe}
-	base64EncodedData := base64.StdEncoding.EncodeToString(binaryData)
-
-	jsonData := `{
-		"originalRequest": {
-			"body": "normal plain text request body",
-			"messageId": 200,
-			"inScope": true,
-			"method": "POST",
-			"path": "/api/upload",
-			"url": "https://api.example.com/api/upload",
-			"headers": [
-				{"Host": "api.example.com"},
-				{"Content-Type": "text/plain"}
-			]
-		},
-		"originalResponse": {
-			"body": "{\"status\": \"received\"}",
-			"messageId": 201,
-			"inScope": true,
-			"headers": [
-				{"Content-Type": "application/json"}
-			]
-		},
-		"modifiedRequest": {
-			"body": "` + base64EncodedData + `",
-			"messageId": 202,
-			"inScope": true,
-			"method": "POST",
-			"path": "/api/upload",
-			"url": "https://api.example.com/api/upload",
-			"headers": [
-				{"Host": "api.example.com"},
-				{"Content-Type": "application/octet-stream"},
-				{"Content-Encoding": "base64"}
-			]
-		},
-		"modifiedResponse": {
-			"body": "{\"status\": \"error\", \"message\": \"malicious content detected\"}",
-			"messageId": 203,
-			"inScope": false,
-			"headers": [
-				{"Content-Type": "application/json"},
-				{"X-Security-Alert": "true"}
-			]
-		},
-		"toolSource": "burp.intruder",
-		"wasRequestIntercepted": true,
-		"wasResponseIntercepted": true,
-		"wasRequestModified": true,
-		"wasResponseModified": true,
-		"wasRequestBodyBase64Encoded": false,
-		"wasResponseBodyBase64Encoded": false,
-		"wasModifiedRequestBodyBase64Encoded": true,
-		"wasModifiedResponseBodyBase64Encoded": false
-	}`
-
-	var entry BurpHTTPEntry
-	err := entry.UnmarshalJSON([]byte(jsonData))
-	require.NoError(t, err)
-
-	// Test original request - should contain plain text
-	require.NotNil(t, entry.OriginalRequest)
-	assert.Equal(t, "normal plain text request body", entry.OriginalRequest.Body)
-	assert.Equal(t, "POST", entry.OriginalRequest.Method)
-	assert.Equal(t, "https://api.example.com/api/upload", entry.OriginalRequest.RawURL)
-	assert.Equal(t, []string{"text/plain"}, entry.OriginalRequest.Headers["Content-Type"])
-
-	// Test modified request - should contain base64 encoded data
-	require.NotNil(t, entry.ModifiedRequest)
-	assert.Equal(t, base64EncodedData, entry.ModifiedRequest.Body)
-	assert.Equal(t, "POST", entry.ModifiedRequest.Method)
-	assert.Equal(t, "https://api.example.com/api/upload", entry.ModifiedRequest.RawURL)
-	assert.Equal(t, []string{"application/octet-stream"}, entry.ModifiedRequest.Headers["Content-Type"])
-	assert.Equal(t, []string{"base64"}, entry.ModifiedRequest.Headers["Content-Encoding"])
-
-	// Test original response
-	require.NotNil(t, entry.OriginalResponse)
-	assert.Equal(t, `{"status": "received"}`, entry.OriginalResponse.Body)
-	assert.Equal(t, []string{"application/json"}, entry.OriginalResponse.Headers["Content-Type"])
-
-	// Test modified response
-	require.NotNil(t, entry.ModifiedResponse)
-	assert.Equal(t, `{"status": "error", "message": "malicious content detected"}`, entry.ModifiedResponse.Body)
-	assert.Equal(t, []string{"application/json"}, entry.ModifiedResponse.Headers["Content-Type"])
-	assert.Equal(t, []string{"true"}, entry.ModifiedResponse.Headers["X-Security-Alert"])
-
-	// Test Burp metadata
-	assert.Equal(t, "burp.intruder", entry.ToolSource)
-	assert.Equal(t, 200, entry.RequestMessageID)
-	assert.True(t, entry.RequestInScope)
-	assert.Equal(t, 201, entry.ResponseMessageID)
-	assert.True(t, entry.ResponseInScope)
-
-	// Test Base64 encoding flags - this is the key test
-	assert.False(t, entry.WasRequestBodyBase64Encoded)        // Original request is NOT base64 encoded
-	assert.True(t, entry.WasModifiedRequestBodyBase64Encoded) // Modified request IS base64 encoded
-	assert.False(t, entry.WasResponseBodyBase64Encoded)
-	assert.False(t, entry.WasModifiedResponseBodyBase64Encoded)
-
-	// Test other flags
-	assert.True(t, entry.WasRequestIntercepted)
-	assert.True(t, entry.WasResponseIntercepted)
-	assert.True(t, entry.WasRequestModified)
-	assert.True(t, entry.WasResponseModified)
-
-	// Test helper methods
-	assert.True(t, entry.HasModifiedRequest())
-	assert.True(t, entry.HasModifiedResponse())
-
-	// Verify the base64 data decodes correctly to our expected bytes
-	// This validates that the test data is correct
-	decodedBytes, err := base64.StdEncoding.DecodeString(entry.ModifiedRequest.Body)
-	require.NoError(t, err)
-	assert.Equal(t, binaryData, decodedBytes)
 }
 
 // Tests for Burp Issues structures
@@ -914,4 +574,393 @@ func TestBurpIssueEntry_UnmarshalJSON_ComplexExample(t *testing.T) {
 	assert.Equal(t, 200, resp2.StatusCode)
 	assert.Equal(t, "<!DOCTYPE html>\\n<html>...</html>", resp2.Body)
 	assert.Equal(t, []string{"Tue, 09 Sep 2025 18:22:52 GMT"}, resp2.Headers["Date"])
+}
+
+// Test functions for the new BurpHTTPData UnmarshalJSON functionality
+
+func TestBurpHTTPData_UnmarshalJSON_CreatesWebpages(t *testing.T) {
+	sampleJSON := `{
+  "metadata": {
+    "mapType": "http",
+    "ai_enabled": true,
+    "scope_enabled": false
+  },
+  "data": {
+    "100": {
+      "originalRequest": {
+        "body": "test=data",
+        "messageId": 100,
+        "inScope": true,
+        "method": "POST",
+        "path": "/api/login",
+        "url": "https://example.com/api/login",
+        "headers": [
+          {"Host": "example.com"},
+          {"Content-Type": "application/x-www-form-urlencoded"}
+        ]
+      },
+      "originalResponse": {
+        "body": "{\"success\": true}",
+        "messageId": 101,
+        "inScope": true,
+        "statusCode": 200,
+        "headers": [
+          {"Content-Type": "application/json"}
+        ]
+      },
+      "toolSource": "burp.proxy",
+      "wasRequestIntercepted": true,
+      "wasResponseIntercepted": false
+    },
+    "200": {
+      "originalRequest": {
+        "body": "",
+        "messageId": 200,
+        "inScope": false,
+        "method": "GET",
+        "path": "/robots.txt",
+        "url": "https://example.com/robots.txt",
+        "headers": [
+          {"Host": "example.com"},
+          {"User-Agent": "BurpSuite/1.0"}
+        ]
+      },
+      "originalResponse": {
+        "body": "User-agent: *\nDisallow: /",
+        "messageId": 201,
+        "inScope": false,
+        "statusCode": 200,
+        "headers": [
+          {"Content-Type": "text/plain"}
+        ]
+      },
+      "toolSource": "burp.spider"
+    }
+  }
+}`
+
+	var burpData BurpHTTPData
+	err := burpData.UnmarshalJSON([]byte(sampleJSON))
+	require.NoError(t, err)
+
+	// Test metadata
+	assert.Equal(t, "http", burpData.Metadata.MapType)
+	assert.True(t, burpData.Metadata.AIEnabled)
+	assert.False(t, burpData.Metadata.ScopeEnabled)
+
+	// Test that we have 2 webpages
+	assert.Equal(t, 2, len(burpData.Data))
+
+	// Test first webpage (messageID "100")
+	webpage1 := burpData.Data["100"]
+	assert.Equal(t, "https://example.com/api/login", webpage1.URL)
+	assert.Equal(t, []string{BURP_COURIER_SOURCE}, webpage1.Source)
+	assert.Equal(t, "burp.proxy", webpage1.Metadata["tool_source"])
+	assert.Equal(t, true, webpage1.Metadata["was_request_intercepted"])
+	assert.Equal(t, false, webpage1.Metadata["was_response_intercepted"])
+
+	// Test first webpage requests
+	assert.Equal(t, 1, len(webpage1.Requests))
+	request1 := webpage1.Requests[0]
+	assert.Equal(t, "POST", request1.Method)
+	assert.Equal(t, "https://example.com/api/login", request1.RawURL)
+	assert.Equal(t, "test=data", request1.Body)
+	assert.Equal(t, []string{"example.com"}, request1.Headers["Host"])
+	assert.Equal(t, []string{"application/x-www-form-urlencoded"}, request1.Headers["Content-Type"])
+	assert.True(t, request1.WasIntercepted)
+
+	// Test first webpage response
+	require.NotNil(t, request1.Response)
+	assert.Equal(t, 200, request1.Response.StatusCode)
+	assert.Equal(t, "{\"success\": true}", request1.Response.Body)
+	assert.Equal(t, []string{"application/json"}, request1.Response.Headers["Content-Type"])
+
+	// Test second webpage (messageID "200")
+	webpage2 := burpData.Data["200"]
+	assert.Equal(t, "https://example.com/robots.txt", webpage2.URL)
+	assert.Equal(t, []string{BURP_COURIER_SOURCE}, webpage2.Source)
+	assert.Equal(t, "burp.spider", webpage2.Metadata["tool_source"])
+
+	// Test second webpage requests
+	assert.Equal(t, 1, len(webpage2.Requests))
+	request2 := webpage2.Requests[0]
+	assert.Equal(t, "GET", request2.Method)
+	assert.Equal(t, "https://example.com/robots.txt", request2.RawURL)
+	assert.Equal(t, "", request2.Body)
+	assert.Equal(t, []string{"example.com"}, request2.Headers["Host"])
+	assert.Equal(t, []string{"BurpSuite/1.0"}, request2.Headers["User-Agent"])
+
+	// Test second webpage response
+	require.NotNil(t, request2.Response)
+	assert.Equal(t, 200, request2.Response.StatusCode)
+	assert.Equal(t, "User-agent: *\nDisallow: /", request2.Response.Body)
+	assert.Equal(t, []string{"text/plain"}, request2.Response.Headers["Content-Type"])
+}
+
+func TestBurpHTTPData_UnmarshalJSON_WithModifiedRequests(t *testing.T) {
+	sampleJSON := `{
+  "metadata": {
+    "mapType": "http"
+  },
+  "data": {
+    "300": {
+      "originalRequest": {
+        "body": "username=admin&password=test",
+        "messageId": 300,
+        "inScope": true,
+        "method": "POST",
+        "path": "/login",
+        "url": "https://test.com/login",
+        "headers": [
+          {"Host": "test.com"},
+          {"Content-Type": "application/x-www-form-urlencoded"}
+        ]
+      },
+      "originalResponse": {
+        "body": "Login failed",
+        "messageId": 301,
+        "inScope": true,
+        "statusCode": 401,
+        "headers": [
+          {"Content-Type": "text/plain"}
+        ]
+      },
+      "modifiedRequest": {
+        "body": "username=admin&password=admin123",
+        "messageId": 302,
+        "inScope": true,
+        "method": "POST",
+        "path": "/login",
+        "url": "https://test.com/login",
+        "headers": [
+          {"Host": "test.com"},
+          {"Content-Type": "application/x-www-form-urlencoded"},
+          {"X-Injection": "test"}
+        ]
+      },
+      "modifiedResponse": {
+        "body": "Login successful",
+        "messageId": 303,
+        "inScope": true,
+        "statusCode": 200,
+        "headers": [
+          {"Content-Type": "text/plain"},
+          {"Set-Cookie": "session=abc123"}
+        ]
+      },
+      "toolSource": "burp.repeater",
+      "wasRequestIntercepted": true,
+      "wasResponseIntercepted": true,
+      "wasRequestModified": true,
+      "wasResponseModified": true
+    }
+  }
+}`
+
+	var burpData BurpHTTPData
+	err := burpData.UnmarshalJSON([]byte(sampleJSON))
+	require.NoError(t, err)
+
+	assert.Equal(t, 1, len(burpData.Data))
+
+	webpage := burpData.Data["300"]
+	assert.Equal(t, "https://test.com/login", webpage.URL)
+	assert.Equal(t, []string{BURP_COURIER_SOURCE}, webpage.Source)
+	assert.Equal(t, "burp.repeater", webpage.Metadata["tool_source"])
+	assert.Equal(t, true, webpage.Metadata["was_request_intercepted"])
+	assert.Equal(t, true, webpage.Metadata["was_response_intercepted"])
+	assert.Equal(t, true, webpage.Metadata["was_request_modified"])
+	assert.Equal(t, true, webpage.Metadata["was_response_modified"])
+
+	// Should have both original and modified requests
+	assert.Equal(t, 2, len(webpage.Requests))
+
+	// Test original request
+	originalRequest := webpage.Requests[0]
+	assert.Equal(t, "POST", originalRequest.Method)
+	assert.Equal(t, "https://test.com/login", originalRequest.RawURL)
+	assert.Equal(t, "username=admin&password=test", originalRequest.Body)
+	assert.True(t, originalRequest.WasIntercepted)
+	assert.False(t, originalRequest.WasModified) // Original request is never modified by definition
+
+	// Test original response
+	require.NotNil(t, originalRequest.Response)
+	assert.Equal(t, 401, originalRequest.Response.StatusCode)
+	assert.Equal(t, "Login failed", originalRequest.Response.Body)
+	assert.True(t, originalRequest.Response.WasIntercepted)
+	assert.False(t, originalRequest.Response.WasModified) // Original response is never modified by definition
+
+	// Test modified request
+	modifiedRequest := webpage.Requests[1]
+	assert.Equal(t, "POST", modifiedRequest.Method)
+	assert.Equal(t, "https://test.com/login", modifiedRequest.RawURL)
+	assert.Equal(t, "username=admin&password=admin123", modifiedRequest.Body)
+	assert.True(t, modifiedRequest.WasIntercepted)
+	assert.True(t, modifiedRequest.WasModified)
+	assert.Equal(t, []string{"test"}, modifiedRequest.Headers["X-Injection"])
+
+	// Test modified response
+	require.NotNil(t, modifiedRequest.Response)
+	assert.Equal(t, 200, modifiedRequest.Response.StatusCode)
+	assert.Equal(t, "Login successful", modifiedRequest.Response.Body)
+	assert.Equal(t, []string{"session=abc123"}, modifiedRequest.Response.Headers["Set-Cookie"])
+	assert.True(t, modifiedRequest.Response.WasIntercepted)
+	assert.True(t, modifiedRequest.Response.WasModified)
+}
+
+func TestCreateWebpage(t *testing.T) {
+	urlString := "https://example.com/test"
+	burpEntry := &BurpHTTPEntryRaw{
+		OriginalRequest: &BurpRawRequestData{
+			Body:      "test body",
+			MessageID: 100,
+			InScope:   true,
+			Method:    "POST",
+			Path:      "/test",
+			URL:       urlString,
+			Headers: []map[string]string{
+				{"Host": "example.com"},
+				{"Content-Type": "application/json"},
+			},
+		},
+		OriginalResponse: &BurpRawResponseData{
+			Body:       "response body",
+			MessageID:  101,
+			InScope:    true,
+			StatusCode: 200,
+			Headers: []map[string]string{
+				{"Content-Type": "application/json"},
+			},
+		},
+		ToolSource:             "burp.test",
+		WasRequestIntercepted:  true,
+		WasRequestModified:     false,
+		WasResponseIntercepted: false,
+		WasResponseModified:    false,
+	}
+
+	webpage, err := createWebpage(burpEntry)
+	require.NoError(t, err)
+	require.NotNil(t, webpage)
+
+	// Test webpage properties
+	assert.Equal(t, urlString, webpage.URL)
+	assert.Equal(t, []string{BURP_COURIER_SOURCE}, webpage.Source)
+	assert.Equal(t, "burp.test", webpage.Metadata["tool_source"])
+	assert.Equal(t, true, webpage.Metadata["was_request_intercepted"])
+	assert.Equal(t, false, webpage.Metadata["was_request_modified"])
+
+	// Test requests
+	assert.Equal(t, 1, len(webpage.Requests))
+	request := webpage.Requests[0]
+	assert.Equal(t, "POST", request.Method)
+	assert.Equal(t, urlString, request.RawURL)
+	assert.Equal(t, "test body", request.Body)
+	assert.Equal(t, []string{"example.com"}, request.Headers["Host"])
+	assert.Equal(t, []string{"application/json"}, request.Headers["Content-Type"])
+	assert.True(t, request.WasIntercepted)
+	assert.False(t, request.WasModified)
+
+	// Test response
+	require.NotNil(t, request.Response)
+	assert.Equal(t, 200, request.Response.StatusCode)
+	assert.Equal(t, "response body", request.Response.Body)
+	assert.Equal(t, []string{"application/json"}, request.Response.Headers["Content-Type"])
+	assert.False(t, request.Response.WasIntercepted)
+	assert.False(t, request.Response.WasModified)
+}
+
+func TestCreateWebpage_InvalidURL(t *testing.T) {
+	invalidURL := "://invalid-url"
+	burpEntry := &BurpHTTPEntryRaw{
+		OriginalRequest: &BurpRawRequestData{
+			URL: invalidURL,
+		},
+	}
+
+	webpage, err := createWebpage(burpEntry)
+	assert.Error(t, err)
+	assert.Nil(t, webpage)
+}
+
+func TestConvertRawRequestToWebpageRequest_WithResponse(t *testing.T) {
+	rawRequest := &BurpRawRequestData{
+		Body:      "request body",
+		MessageID: 100,
+		InScope:   true,
+		Method:    "PUT",
+		Path:      "/api/update",
+		URL:       "https://api.example.com/api/update",
+		Headers: []map[string]string{
+			{"Host": "api.example.com"},
+			{"Content-Type": "application/json"},
+			{"Authorization": "Bearer token123"},
+		},
+	}
+
+	rawResponse := &BurpRawResponseData{
+		Body:       "response body",
+		MessageID:  101,
+		InScope:    true,
+		StatusCode: 201,
+		Headers: []map[string]string{
+			{"Content-Type": "application/json"},
+			{"Location": "/api/resource/123"},
+		},
+	}
+
+	webpageRequest, err := convertRawRequestToWebpageRequest(rawRequest, rawResponse)
+	require.NoError(t, err)
+
+	// Test request fields
+	assert.Equal(t, "https://api.example.com/api/update", webpageRequest.RawURL)
+	assert.Equal(t, "PUT", webpageRequest.Method)
+	assert.Equal(t, "request body", webpageRequest.Body)
+	assert.Equal(t, []string{"api.example.com"}, webpageRequest.Headers["Host"])
+	assert.Equal(t, []string{"application/json"}, webpageRequest.Headers["Content-Type"])
+	assert.Equal(t, []string{"Bearer token123"}, webpageRequest.Headers["Authorization"])
+
+	// Test response fields
+	require.NotNil(t, webpageRequest.Response)
+	assert.Equal(t, 201, webpageRequest.Response.StatusCode)
+	assert.Equal(t, "response body", webpageRequest.Response.Body)
+	assert.Equal(t, []string{"application/json"}, webpageRequest.Response.Headers["Content-Type"])
+	assert.Equal(t, []string{"/api/resource/123"}, webpageRequest.Response.Headers["Location"])
+}
+
+func TestConvertRawRequestToWebpageRequest_WithoutResponse(t *testing.T) {
+	rawRequest := &BurpRawRequestData{
+		Body:      "request body",
+		MessageID: 100,
+		InScope:   true,
+		Method:    "DELETE",
+		Path:      "/api/delete",
+		URL:       "https://api.example.com/api/delete",
+		Headers: []map[string]string{
+			{"Host": "api.example.com"},
+		},
+	}
+
+	webpageRequest, err := convertRawRequestToWebpageRequest(rawRequest, nil)
+	require.NoError(t, err)
+
+	// Test request fields
+	assert.Equal(t, "https://api.example.com/api/delete", webpageRequest.RawURL)
+	assert.Equal(t, "DELETE", webpageRequest.Method)
+	assert.Equal(t, "request body", webpageRequest.Body)
+	assert.Equal(t, []string{"api.example.com"}, webpageRequest.Headers["Host"])
+
+	// Test that response is nil
+	assert.Nil(t, webpageRequest.Response)
+}
+
+func TestConvertRawRequestToWebpageRequest_EmptyURL(t *testing.T) {
+	rawRequest := &BurpRawRequestData{
+		URL: "",
+	}
+
+	webpageRequest, err := convertRawRequestToWebpageRequest(rawRequest, nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "URL field is empty")
+	assert.Equal(t, WebpageRequest{}, webpageRequest)
 }
