@@ -103,10 +103,11 @@ func TestPort_Asset(t *testing.T) {
 func TestPort_IsClass(t *testing.T) {
 	asset := Asset{}
 	port := NewPort("tcp", 80, &asset)
+	port.Service = "http"
 	
-	assert.True(t, port.IsClass("port"))
-	assert.True(t, port.IsClass("por"))
-	assert.False(t, port.IsClass("attribute"))
+	assert.True(t, port.IsClass("http"))
+	assert.True(t, port.IsClass("80"))
+	assert.False(t, port.IsClass("ssh"))
 }
 
 func TestPort_Visit(t *testing.T) {
