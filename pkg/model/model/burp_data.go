@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"strings"
 )
@@ -11,35 +12,8 @@ const BURP_COURIER_SOURCE = "burp-courier"
 
 // BurpHTTPData represents the top-level structure of Burp Suite HTTP export data
 type BurpHTTPData struct {
-	Metadata BurpMetadata             `json:"metadata"`
-	Data     map[string]BurpHTTPEntry `json:"data"`
-}
-
-// BurpHTTPEntry represents a single HTTP request/response pair from Burp Suite
-// Uses existing WebpageRequest and WebpageResponse types with Burp-specific metadata
-type BurpHTTPEntry struct {
-	// Use existing WebpageRequest and WebpageResponse types
-	OriginalRequest  *WebpageRequest  `json:"-"`
-	OriginalResponse *WebpageResponse `json:"-"`
-	ModifiedRequest  *WebpageRequest  `json:"-"`
-	ModifiedResponse *WebpageResponse `json:"-"`
-
-	// Burp-specific fields stored directly in the entry
-	RequestMessageID  int  `json:"-"`
-	RequestInScope    bool `json:"-"`
-	ResponseMessageID int  `json:"-"`
-	ResponseInScope   bool `json:"-"`
-
-	WasRequestIntercepted                bool   `json:"wasRequestIntercepted" desc:"Was the request intercepted?" example:"true"`
-	WasResponseIntercepted               bool   `json:"wasResponseIntercepted" desc:"Was the response intercepted?" example:"true"`
-	WasRequestModified                   bool   `json:"wasRequestModified" desc:"Was the request modified?" example:"true"`
-	WasResponseModified                  bool   `json:"wasResponseModified" desc:"Was the response modified?" example:"true"`
-	WasModifiedRequestBodyBase64Encoded  bool   `json:"wasModifiedRequestBodyBase64Encoded" desc:"Was the request body base64 encoded?" example:"true"`
-	WasModifiedResponseBodyBase64Encoded bool   `json:"wasModifiedResponseBodyBase64Encoded" desc:"Was the response body base64 encoded?" example:"true"`
-	WasRequestBodyBase64Encoded          bool   `json:"wasRequestBodyBase64Encoded" desc:"Was the request body base64 encoded?" example:"true"`
-	WasResponseBodyBase64Encoded         bool   `json:"wasResponseBodyBase64Encoded" desc:"Was the response body base64 encoded?" example:"true"`
-	ToolSource                           string `json:"toolSource" desc:"The tool source of the entry." example:"Repeater"`
-	Note                                 string `json:"notes" desc:"The notes of the entry." example:"This is a note about the entry."`
+	Metadata BurpMetadata       `json:"metadata"`
+	Data     map[string]Webpage `json:"data"` // Changed to map messageID to Webpage directly
 }
 
 // BurpRawRequestData represents the raw HTTP request structure from Burp Suite JSON for unmarshaling
@@ -81,56 +55,107 @@ type BurpHTTPEntryRaw struct {
 	ToolSource                           string               `json:"toolSource" desc:"The tool source of the entry." example:"Repeater"`
 }
 
-// UnmarshalJSON custom unmarshaling for BurpHTTPEntry
-func (e *BurpHTTPEntry) UnmarshalJSON(data []byte) error {
-	var raw BurpHTTPEntryRaw
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return err
+func createWebpage(burpEntry *BurpHTTPEntryRaw) (*Webpage, error) {
+	parsedURL, err := url.Parse(burpEntry.OriginalRequest.URL)
+	if err != nil {
+		return nil, err
 	}
+	baseURL := fmt.Sprintf("%s://%s", parsedURL.Scheme, parsedURL.Host)
+	parentWebApplication := NewWebApplication(baseURL, baseURL)
 
-	// Copy simple fields
-	e.WasRequestIntercepted = raw.WasRequestIntercepted
-	e.WasResponseIntercepted = raw.WasResponseIntercepted
-	e.WasRequestModified = raw.WasRequestModified
-	e.WasResponseModified = raw.WasResponseModified
-	e.WasModifiedRequestBodyBase64Encoded = raw.WasModifiedRequestBodyBase64Encoded
-	e.WasModifiedResponseBodyBase64Encoded = raw.WasModifiedResponseBodyBase64Encoded
-	e.WasRequestBodyBase64Encoded = raw.WasRequestBodyBase64Encoded
-	e.WasResponseBodyBase64Encoded = raw.WasResponseBodyBase64Encoded
-	e.ToolSource = raw.ToolSource
+	var webpageRequests []WebpageRequest
 
-	// Convert raw request to WebpageRequest
-	if raw.OriginalRequest != nil {
-		req, err := convertRawRequestToWebpageRequest(raw.OriginalRequest)
+	// Convert original request if present
+	if burpEntry.OriginalRequest != nil {
+		originalRequest, err := convertRawRequestToWebpageRequest(burpEntry.OriginalRequest, burpEntry.OriginalResponse)
 		if err != nil {
-			return fmt.Errorf("failed to convert original request: %w", err)
+			return nil, fmt.Errorf("failed to convert original request: %w", err)
 		}
-		e.OriginalRequest = &req
-		e.RequestMessageID = raw.OriginalRequest.MessageID
-		e.RequestInScope = raw.OriginalRequest.InScope
-	}
+		// Set Burp-specific metadata for original request
+		originalRequest.WasIntercepted = burpEntry.WasRequestIntercepted
+		originalRequest.WasModified = false
 
-	// Convert raw response to WebpageResponse
-	if raw.OriginalResponse != nil {
-		resp := convertRawResponseToWebpageResponse(raw.OriginalResponse)
-		e.OriginalResponse = &resp
-		e.ResponseMessageID = raw.OriginalResponse.MessageID
-		e.ResponseInScope = raw.OriginalResponse.InScope
+		// Set response interception/modification status if response exists
+		if originalRequest.Response != nil {
+			originalRequest.Response.WasIntercepted = burpEntry.WasResponseIntercepted
+			originalRequest.Response.WasModified = false
+		}
+
+		webpageRequests = append(webpageRequests, originalRequest)
 	}
 
 	// Convert modified request if present
-	if raw.ModifiedRequest != nil {
-		req, err := convertRawRequestToWebpageRequest(raw.ModifiedRequest)
+	if burpEntry.ModifiedRequest != nil {
+		modifiedRequest, err := convertRawRequestToWebpageRequest(burpEntry.ModifiedRequest, burpEntry.ModifiedResponse)
 		if err != nil {
-			return fmt.Errorf("failed to convert modified request: %w", err)
+			return nil, fmt.Errorf("failed to convert modified request: %w", err)
 		}
-		e.ModifiedRequest = &req
+		// Set Burp-specific metadata for modified request
+		modifiedRequest.WasIntercepted = burpEntry.WasRequestIntercepted
+		modifiedRequest.WasModified = burpEntry.WasRequestModified // Use actual modification status
+
+		// Set response interception/modification status if response exists
+		if modifiedRequest.Response != nil {
+			modifiedRequest.Response.WasIntercepted = burpEntry.WasResponseIntercepted
+			modifiedRequest.Response.WasModified = burpEntry.WasResponseModified // Use actual modification status
+		}
+
+		webpageRequests = append(webpageRequests, modifiedRequest)
+	}
+	if len(webpageRequests) == 0 {
+		slog.Error("no requests found", "burpEntry", burpEntry)
+	}
+	// Create webpage with requests
+	webpage := NewWebpage(*parsedURL, &parentWebApplication, WithRequests(webpageRequests...))
+
+	// Set source to indicate this came from Burp
+	webpage.Source = []string{BURP_COURIER_SOURCE}
+
+	// Add Burp-specific metadata
+	if webpage.Metadata == nil {
+		webpage.Metadata = make(map[string]any)
+	}
+	webpage.Metadata["tool_source"] = burpEntry.ToolSource
+	webpage.Metadata["was_request_intercepted"] = burpEntry.WasRequestIntercepted
+	webpage.Metadata["was_response_intercepted"] = burpEntry.WasResponseIntercepted
+	webpage.Metadata["was_request_modified"] = burpEntry.WasRequestModified
+	webpage.Metadata["was_response_modified"] = burpEntry.WasResponseModified
+
+	return &webpage, nil
+}
+
+func (e *BurpHTTPData) UnmarshalJSON(data []byte) error {
+	// First unmarshal the raw structure to get metadata and data separately
+	var rawData struct {
+		Metadata BurpMetadata                `json:"metadata"`
+		Data     map[string]BurpHTTPEntryRaw `json:"data"`
 	}
 
-	// Convert modified response if present
-	if raw.ModifiedResponse != nil {
-		resp := convertRawResponseToWebpageResponse(raw.ModifiedResponse)
-		e.ModifiedResponse = &resp
+	if err := json.Unmarshal(data, &rawData); err != nil {
+		return fmt.Errorf("failed to unmarshal raw burp data: %w", err)
+	}
+
+	// Set metadata
+	e.Metadata = rawData.Metadata
+
+	// Initialize the Data map
+	e.Data = make(map[string]Webpage)
+
+	// Convert each BurpHTTPEntryRaw to a Webpage
+	for messageID, burpEntry := range rawData.Data {
+		// Skip entries without original request
+		if burpEntry.OriginalRequest == nil {
+			continue
+		}
+
+		// Create webpage from the burp entry
+		webpage, err := createWebpage(&burpEntry)
+		if err != nil {
+			return fmt.Errorf("failed to create webpage for message ID %s: %w", messageID, err)
+		}
+
+		// Store the webpage in the data map
+		e.Data[messageID] = *webpage
 	}
 
 	return nil
@@ -140,20 +165,9 @@ func (e *BurpHTTPEntry) UnmarshalJSON(data []byte) error {
 func (b *BurpHTTPData) ToWebpageRequests() ([]WebpageRequest, error) {
 	var requests []WebpageRequest
 
-	for _, entry := range b.Data {
-		if entry.OriginalRequest == nil {
-			continue
-		}
-
-		// The request is already converted during unmarshaling
-		request := *entry.OriginalRequest
-
-		// Add response if available
-		if entry.OriginalResponse != nil {
-			request.Response = entry.OriginalResponse
-		}
-
-		requests = append(requests, request)
+	for _, webpage := range b.Data {
+		// Extract all requests from the webpage
+		requests = append(requests, webpage.Requests...)
 	}
 
 	return requests, nil
@@ -163,12 +177,8 @@ func (b *BurpHTTPData) ToWebpageRequests() ([]WebpageRequest, error) {
 func (b *BurpHTTPData) ExtractBaseURLs() []string {
 	urlSet := make(map[string]struct{})
 
-	for _, entry := range b.Data {
-		if entry.OriginalRequest == nil {
-			continue
-		}
-
-		baseURL := ExtractBaseURL(entry.OriginalRequest.RawURL)
+	for _, webpage := range b.Data {
+		baseURL := ExtractBaseURL(webpage.URL)
 		if baseURL != "" {
 			urlSet[baseURL] = struct{}{}
 		}
@@ -205,9 +215,11 @@ func ParseBurpHTTPData(data []byte) (*BurpHTTPData, error) {
 func (b *BurpHTTPData) ExtractToolSources() []string {
 	toolSources := make(map[string]struct{})
 
-	for _, entry := range b.Data {
-		if entry.ToolSource != "" {
-			toolSources[entry.ToolSource] = struct{}{}
+	for _, webpage := range b.Data {
+		if toolSource, exists := webpage.Metadata["tool_source"]; exists {
+			if toolSourceStr, ok := toolSource.(string); ok && toolSourceStr != "" {
+				toolSources[toolSourceStr] = struct{}{}
+			}
 		}
 	}
 
@@ -217,50 +229,6 @@ func (b *BurpHTTPData) ExtractToolSources() []string {
 	}
 
 	return sources
-}
-
-// GetBurpMetadata returns Burp-specific metadata for the entry
-func (e *BurpHTTPEntry) GetBurpMetadata() map[string]any {
-	metadata := make(map[string]any)
-
-	metadata["request_message_id"] = e.RequestMessageID
-	metadata["request_in_scope"] = e.RequestInScope
-	metadata["response_message_id"] = e.ResponseMessageID
-	metadata["response_in_scope"] = e.ResponseInScope
-	metadata["tool_source"] = e.ToolSource
-	metadata["was_request_intercepted"] = e.WasRequestIntercepted
-	metadata["was_response_intercepted"] = e.WasResponseIntercepted
-	metadata["was_request_modified"] = e.WasRequestModified
-	metadata["was_response_modified"] = e.WasResponseModified
-	metadata["was_request_body_base64_encoded"] = e.WasRequestBodyBase64Encoded
-	metadata["was_response_body_base64_encoded"] = e.WasResponseBodyBase64Encoded
-
-	return metadata
-}
-
-// HasModifiedRequest returns true if the entry has a modified request
-func (e *BurpHTTPEntry) HasModifiedRequest() bool {
-	return e.ModifiedRequest != nil
-}
-
-// HasModifiedResponse returns true if the entry has a modified response
-func (e *BurpHTTPEntry) HasModifiedResponse() bool {
-	return e.ModifiedResponse != nil
-}
-
-// GetOriginalRequestMessageID returns the message ID of the original request
-func (e *BurpHTTPEntry) GetOriginalRequestMessageID() int {
-	return e.RequestMessageID
-}
-
-// GetOriginalResponseMessageID returns the message ID of the original response
-func (e *BurpHTTPEntry) GetOriginalResponseMessageID() int {
-	return e.ResponseMessageID
-}
-
-// IsInScope returns true if the original request was in scope
-func (e *BurpHTTPEntry) IsInScope() bool {
-	return e.RequestInScope
 }
 
 // BurpIssuesData represents the top-level structure of Burp Suite Issues export data
@@ -279,6 +247,7 @@ type BurpIssueEntry struct {
 	Responses                []BurpRawResponseData     `json:"responses" desc:"The responses of the issue."`
 	Name                     string                    `json:"name" desc:"The name of the issue." example:"SQL Injection"`
 	Detail                   string                    `json:"detail" desc:"The detail of the issue." example:"SQL Injection vulnerability detected."`
+	Remediation              string                    `json:"remediation" desc:"The remediation of the issue." example:"SQL Injection can be fixed by using parameterized queries."`
 
 	// Processed requests and responses using existing structures
 	ProcessedRequests  []WebpageRequest  `json:"-"`
@@ -311,11 +280,15 @@ func (e *BurpIssueEntry) UnmarshalJSON(data []byte) error {
 	e.Responses = raw.Responses
 	e.Name = raw.Name
 	e.Detail = raw.Detail
-
+	e.Remediation = raw.Remediation
 	// Convert requests to WebpageRequest format
 	e.ProcessedRequests = make([]WebpageRequest, len(raw.Requests))
 	for i, req := range raw.Requests {
-		converted, err := convertRawRequestToWebpageRequest(&req)
+		var resp *BurpRawResponseData
+		if i < len(raw.Responses) {
+			resp = &raw.Responses[i]
+		}
+		converted, err := convertRawRequestToWebpageRequest(&req, resp)
 		if err != nil {
 			return fmt.Errorf("failed to convert request %d: %w", i, err)
 		}
@@ -332,26 +305,34 @@ func (e *BurpIssueEntry) UnmarshalJSON(data []byte) error {
 }
 
 // convertRawRequestToWebpageRequest converts BurpRawRequestData to WebpageRequest (standalone function)
-func convertRawRequestToWebpageRequest(raw *BurpRawRequestData) (WebpageRequest, error) {
+func convertRawRequestToWebpageRequest(rawRequest *BurpRawRequestData, rawResponse *BurpRawResponseData) (WebpageRequest, error) {
 	// Use the URL field directly from the Burp data
-	if raw.URL == "" {
+	if rawRequest.URL == "" {
 		return WebpageRequest{}, fmt.Errorf("URL field is empty")
 	}
 
 	// Convert headers format from Burp's []map[string]string to map[string][]string
 	headers := make(map[string][]string)
-	for _, header := range raw.Headers {
+	for _, header := range rawRequest.Headers {
 		for key, value := range header {
 			headers[key] = append(headers[key], value)
 		}
 	}
 
-	return WebpageRequest{
-		RawURL:  raw.URL,
-		Method:  raw.Method,
+	webpageRequest := WebpageRequest{
+		RawURL:  rawRequest.URL,
+		Method:  rawRequest.Method,
 		Headers: headers,
-		Body:    raw.Body,
-	}, nil
+		Body:    rawRequest.Body,
+	}
+
+	// Add response if available
+	if rawResponse != nil {
+		webpageResponse := convertRawResponseToWebpageResponse(rawResponse)
+		webpageRequest.Response = &webpageResponse
+	}
+
+	return webpageRequest, nil
 }
 
 func convertRawResponseToWebpageResponse(raw *BurpRawResponseData) WebpageResponse {
