@@ -103,7 +103,7 @@ func (p *Port) Group() string {
 }
 
 func (p *Port) Identifier() string {
-	return p.Target()
+	return fmt.Sprintf("%s://%s:%d", p.Protocol, p.Parent.Name, p.PortNumber)
 }
 
 func (p *Port) IsPrivate() bool {
