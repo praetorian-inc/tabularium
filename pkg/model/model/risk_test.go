@@ -173,14 +173,13 @@ func TestRisk_PendingAsset(t *testing.T) {
 	assert.Equal(t, originalAsset.Visited, pendingAsset.Visited, "Visited should not change")
 	assert.Equal(t, originalAsset.TTL, pendingAsset.TTL, "TTL should not change")
 
-	attr := NewAttribute("test-attr", "test-value", &originalAsset)
-	asset := attr.Asset()
-	attrRisk := NewRisk(&asset, "test-risk", TriageInfo)
+	port := NewPort("tcp", 80, &originalAsset)
+	portRisk := NewRisk(&port, "test-risk", TriageInfo)
 
 	// True negative
-	pendingAsset, ok = attrRisk.PendingAsset()
+	pendingAsset, ok = portRisk.PendingAsset()
 	if ok {
-		t.Errorf("expected PendingAsset to return false for attribute-based risk")
+		t.Errorf("expected PendingAsset to return false for port-based risk")
 	}
 }
 

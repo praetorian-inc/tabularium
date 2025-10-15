@@ -34,30 +34,6 @@ func TestTargetEvent_UnmarshalJSON(t *testing.T) {
 		assert.Equal(t, "P", asset.Status)
 	})
 
-	t.Run("unmarshal attribute", func(t *testing.T) {
-		input := `{
-			"key": "#attribute#https#443#asset#example.com#1.2.3.4",
-			"username": "test@example.com",
-			"name": "https",
-			"value": "443",
-			"source": "#asset#example.com#1.2.3.4",
-			"status": "A"
-		}`
-
-		var event TargetWrapper
-		err := json.Unmarshal([]byte(input), &event)
-		require.NoError(t, err)
-
-		port, ok := event.Model.(*Port)
-		require.True(t, ok, "expected Target to be *Port")
-		assert.Equal(t, "#port#tcp#443#asset#example.com#1.2.3.4", port.Key)
-		assert.Equal(t, "test@example.com", port.Username)
-		assert.Equal(t, "tcp", port.Protocol)
-		assert.Equal(t, 443, port.PortNumber)
-		assert.Equal(t, "https", port.Service)
-		assert.Equal(t, "#asset#example.com#1.2.3.4", port.Source)
-		assert.Equal(t, "A", port.Status)
-	})
 
 	t.Run("unmarshal preseed", func(t *testing.T) {
 		input := `{
