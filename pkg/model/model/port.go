@@ -47,7 +47,7 @@ func (p *Port) GetLabels() []string {
 
 func (p *Port) Target() string {
 	asset := p.Asset()
-	if p.Service != "" {
+	if p.IsClass("http") {
 		return fmt.Sprintf("%s://%s:%d", p.Service, asset.DNS, p.Port)
 	}
 	return fmt.Sprintf("%s:%d", asset.Name, p.Port)
@@ -101,7 +101,8 @@ func (p *Port) Group() string {
 }
 
 func (p *Port) Identifier() string {
-	return p.Target()
+	asset := p.Asset()
+	return fmt.Sprintf("%s:%d", asset.Name, p.Port)
 }
 
 func (p *Port) IsPrivate() bool {
