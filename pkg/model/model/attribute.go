@@ -39,25 +39,6 @@ func (a *Attribute) GetLabels() []string {
 	return []string{AttributeLabel, TTLLabel}
 }
 
-func (a *Attribute) Target() string {
-	parts := strings.Split(a.Source, "#")
-	if len(parts) < 3 {
-		return ""
-	}
-	sourceDNS := parts[2]
-
-	target := fmt.Sprintf("%s://%s:%s", a.Name, sourceDNS, a.Value)
-
-	switch a.Name {
-	case "port":
-		target = strings.TrimPrefix(target, "port://")
-	case "protocol":
-		target = strings.Replace(target, "protocol://", a.Value+"://", 1)
-		target = strings.TrimSuffix(target, ":"+a.Value)
-	}
-
-	return target
-}
 
 func (a *Attribute) Asset() Asset {
 	parts := strings.Split(a.Source, "#")
@@ -67,14 +48,6 @@ func (a *Attribute) Asset() Asset {
 	return NewAsset(parts[2], parts[3])
 }
 
-func (a *Attribute) Preseed() Preseed {
-	parts := strings.Split(a.Value, "#")
-	if len(parts) != 5 || !strings.HasPrefix(a.Value, "#preseed") {
-		return Preseed{}
-	}
-
-	return NewPreseed(parts[2], parts[3], parts[4])
-}
 
 func (a *Attribute) Valid() bool {
 	return a.Key != ""
@@ -99,38 +72,12 @@ func (a *Attribute) IsStatus(value string) bool {
 	return strings.HasPrefix(a.Status, value)
 }
 
-func (a *Attribute) IsClass(value string) bool {
-	return strings.HasPrefix(a.Name, value)
-}
-
-func (a *Attribute) GetStatus() string {
-	return a.Status
-}
-
-func (a *Attribute) WithStatus(status string) Target {
-	a.Status = status
-	return a
-}
-
 func (a *Attribute) SetSource(source string) {
 	a.OriginSource = source
 }
 
 func (a *Attribute) GetSource() string {
 	return a.OriginSource
-}
-
-func (a *Attribute) Group() string {
-	return a.Asset().DNS
-}
-
-func (a *Attribute) Identifier() string {
-	return a.Target()
-}
-
-func (a *Attribute) IsPrivate() bool {
-	parent := a.Asset()
-	return parent.IsPrivate()
 }
 
 func (a *Attribute) Defaulted() {

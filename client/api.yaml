@@ -2099,6 +2099,14 @@ components:
       required:
       - BaseRelationship
       type: object
+    hasport:
+      description: Represents the relationship indicating an asset has an open port.
+      properties:
+        BaseRelationship:
+          type: object
+      required:
+      - BaseRelationship
+      type: object
     hastechnology:
       description: Represents the relationship indicating an asset uses or runs a
         specific technology.
@@ -2978,6 +2986,74 @@ components:
       - History
       - created
       - key
+      - status
+      - ttl
+      - username
+      - visited
+      type: object
+    port:
+      description: Represents an open port on an asset with protocol, port number,
+        and optional service information.
+      properties:
+        BaseModel:
+          type: object
+        capability:
+          description: Capability that discovered this port.
+          example: portscan
+          type: string
+        created:
+          description: Timestamp when the port was created (RFC3339).
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        key:
+          description: Unique key identifying the port.
+          example: '#port#tcp#80#asset#example.com#example.com'
+          type: string
+        parent:
+          description: Port parent asset.
+          type: object
+        port:
+          description: The port number of this port.
+          example: "80"
+          type: integer
+        protocol:
+          description: The protocol of this port.
+          example: tcp
+          type: string
+        service:
+          description: The name of the service identified on this port.
+          example: https
+          type: string
+        source:
+          description: Key of the parent asset this port belongs to.
+          example: '#asset#example.com#example.com'
+          type: string
+        status:
+          description: Status of the port.
+          example: A
+          type: string
+        ttl:
+          description: Time-to-live for the port record (Unix timestamp).
+          example: "1706353200"
+          format: int64
+          type: integer
+        username:
+          description: Chariot username associated with the port.
+          example: user@example.com
+          type: string
+        visited:
+          description: Timestamp when the port was last visited or confirmed (RFC3339).
+          example: "2023-10-27T11:00:00Z"
+          type: string
+      required:
+      - BaseModel
+      - created
+      - key
+      - parent
+      - port
+      - protocol
+      - service
+      - source
       - status
       - ttl
       - username
