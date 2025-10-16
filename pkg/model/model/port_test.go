@@ -34,7 +34,7 @@ func TestPort_Target(t *testing.T) {
 			expected: "192.168.1.1:80",
 		},
 		{
-			name: "port with service",
+			name: "port with http service",
 			port: func() Port {
 				asset := Asset{BaseAsset: BaseAsset{Key: "#asset#example.com#192.168.1.1"}}
 				asset.Name = "192.168.1.1"
@@ -43,6 +43,17 @@ func TestPort_Target(t *testing.T) {
 				return port
 			}(),
 			expected: "https://example.com:443",
+		},
+		{
+			name: "port with ssh service",
+			port: func() Port {
+				asset := Asset{BaseAsset: BaseAsset{Key: "#asset#example.com#192.168.1.1"}}
+				asset.Name = "192.168.1.1"
+				port := NewPort("tcp", 443, &asset)
+				port.Service = "ssh"
+				return port
+			}(),
+			expected: "192.168.1.1:443",
 		},
 	}
 
