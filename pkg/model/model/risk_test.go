@@ -73,7 +73,6 @@ func TestRisk_MergePriority(t *testing.T) {
 
 func TestRiskConstructors(t *testing.T) {
 	testAsset := NewAsset("example.com", "Example Asset")
-	testAttribute := NewAttribute("test", "test", &testAsset)
 	testWebpage := NewWebpageFromString("https://gladiator.systems", nil)
 	tests := []struct {
 		name         string
@@ -96,13 +95,13 @@ func TestRiskConstructors(t *testing.T) {
 		},
 		{
 			name:     "Same DNS",
-			target:   &testAttribute,
+			target:   &testAsset,
 			riskName: "test-risk",
 			dns:      "example.com",
 		},
 		{
 			name:     "Different DNS",
-			target:   &testAttribute,
+			target:   &testAsset,
 			riskName: "test-risk",
 			dns:      "subdomain.example.com",
 		},
@@ -174,13 +173,13 @@ func TestRisk_PendingAsset(t *testing.T) {
 	assert.Equal(t, originalAsset.Visited, pendingAsset.Visited, "Visited should not change")
 	assert.Equal(t, originalAsset.TTL, pendingAsset.TTL, "TTL should not change")
 
-	attr := NewAttribute("test-attr", "test-value", &originalAsset)
-	attrRisk := NewRisk(&attr, "test-risk", TriageInfo)
+	port := NewPort("tcp", 80, &originalAsset)
+	portRisk := NewRisk(&port, "test-risk", TriageInfo)
 
 	// True negative
-	pendingAsset, ok = attrRisk.PendingAsset()
+	pendingAsset, ok = portRisk.PendingAsset()
 	if ok {
-		t.Errorf("expected PendingAsset to return false for attribute-based risk")
+		t.Errorf("expected PendingAsset to return false for port-based risk")
 	}
 }
 
