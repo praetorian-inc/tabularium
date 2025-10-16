@@ -149,7 +149,8 @@ func (p *Port) GetDescription() string {
 func PortConditions(port Port) []Condition {
 	portStr := strconv.Itoa(port.Port)
 	return []Condition{
-		NewCondition("port", ""),
 		NewCondition("port", portStr),
+		NewCondition("protocol", port.Service),
+		NewCondition(port.Service, ""),
 	}
 }
