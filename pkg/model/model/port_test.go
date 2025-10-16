@@ -42,7 +42,7 @@ func TestPort_Target(t *testing.T) {
 				port.Service = "https"
 				return port
 			}(),
-			expected: "https://192.168.1.1:443",
+			expected: "https://example.com:443",
 		},
 	}
 
@@ -129,12 +129,15 @@ func TestPort_Visit(t *testing.T) {
 func TestPortConditions(t *testing.T) {
 	asset := Asset{}
 	port := NewPort("tcp", 80, &asset)
+	port.Service = "http"
 
 	conditions := PortConditions(port)
 
-	assert.Len(t, conditions, 2)
+	assert.Len(t, conditions, 3)
 	assert.Equal(t, "port", conditions[0].Name)
-	assert.Equal(t, "", conditions[0].Value)
-	assert.Equal(t, "port", conditions[1].Name)
-	assert.Equal(t, "80", conditions[1].Value)
+	assert.Equal(t, "80", conditions[0].Value)
+	assert.Equal(t, "protocol", conditions[1].Name)
+	assert.Equal(t, "http", conditions[1].Value)
+	assert.Equal(t, "http", conditions[2].Name)
+	assert.Equal(t, "", conditions[2].Value)
 }
