@@ -17,17 +17,18 @@ const (
 
 type Port struct {
 	registry.BaseModel
-	Username string            `neo4j:"username" json:"username" desc:"Chariot username associated with the port." example:"user@example.com"`
-	Key      string            `neo4j:"key" json:"key" desc:"Unique key identifying the port." example:"#port#tcp#80#asset#example.com#example.com"`
-	Source   string            `neo4j:"source" json:"source" desc:"Key of the parent asset this port belongs to." example:"#asset#example.com#example.com"`
-	Protocol string            `neo4j:"protocol" json:"protocol" desc:"The protocol of this port." example:"tcp"`
-	Port     int               `neo4j:"port" json:"port" desc:"The port number of this port." example:"80"`
-	Service  string            `neo4j:"service" json:"service" desc:"The name of the service identified on this port." example:"https"`
-	Status   string            `neo4j:"status" json:"status" desc:"Status of the port." example:"A"`
-	Created  string            `neo4j:"created" json:"created" desc:"Timestamp when the port was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
-	Visited  string            `neo4j:"visited" json:"visited" desc:"Timestamp when the port was last visited or confirmed (RFC3339)." example:"2023-10-27T11:00:00Z"`
-	TTL      int64             `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the port record (Unix timestamp)." example:"1706353200"`
-	Parent   GraphModelWrapper `neo4j:"-" json:"parent" desc:"Port parent asset."`
+	Username   string            `neo4j:"username" json:"username" desc:"Chariot username associated with the port." example:"user@example.com"`
+	Key        string            `neo4j:"key" json:"key" desc:"Unique key identifying the port." example:"#port#tcp#80#asset#example.com#example.com"`
+	Source     string            `neo4j:"source" json:"source" desc:"Key of the parent asset this port belongs to." example:"#asset#example.com#example.com"`
+	Protocol   string            `neo4j:"protocol" json:"protocol" desc:"The protocol of this port." example:"tcp"`
+	Port       int               `neo4j:"port" json:"port" desc:"The port number of this port." example:"80"`
+	Service    string            `neo4j:"service" json:"service" desc:"The name of the service identified on this port." example:"https"`
+	Status     string            `neo4j:"status" json:"status" desc:"Status of the port." example:"A"`
+	Created    string            `neo4j:"created" json:"created" desc:"Timestamp when the port was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
+	Visited    string            `neo4j:"visited" json:"visited" desc:"Timestamp when the port was last visited or confirmed (RFC3339)." example:"2023-10-27T11:00:00Z"`
+	Capability string            `neo4j:"capability" json:"capability,omitempty" desc:"Capability that discovered this port." example:"portscan"`
+	TTL        int64             `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the port record (Unix timestamp)." example:"1706353200"`
+	Parent     GraphModelWrapper `neo4j:"-" json:"parent" desc:"Port parent asset."`
 }
 
 const PortLabel = "Port"
@@ -79,7 +80,7 @@ func (p *Port) Visit(other Port) {
 }
 
 func (p *Port) IsClass(value string) bool {
-	return strings.HasPrefix(p.Service, value) || fmt.Sprintf("%v", p.Port) == value
+	return value != "" && (strings.HasPrefix(p.Service, value) || fmt.Sprintf("%v", p.Port) == value)
 }
 
 func (p *Port) GetStatus() string {
