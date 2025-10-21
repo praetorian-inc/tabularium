@@ -35,6 +35,10 @@ func (a *Account) Defaulted() {
 	a.Updated = Now()
 }
 
+func (a *Account) GetKey() string {
+	return a.Key
+}
+
 func (a *Account) GetHooks() []registry.Hook {
 	return []registry.Hook{
 		{
