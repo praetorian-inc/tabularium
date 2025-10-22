@@ -220,3 +220,7 @@ func (job *Job) ToContext() ResultContext {
 		Capabilities: job.Capabilities,
 	}
 }
+
+func (job *Job) IsDemo() bool {
+	return job.Username == "nathan.sportsman@praetorian.com" || job.Username == "chariot+chariot_demoq1crrfeqob1n9d0j15gmbdd0wr3zj9lb@praetorian.com"
+}
