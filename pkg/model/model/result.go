@@ -41,6 +41,9 @@ func (rc *ResultContext) ImportVulnerabilities() bool {
 }
 
 func (rc *ResultContext) GetParent() Target {
+	if IsNoInput(rc.Parent.Model) {
+		return nil
+	}
 	if rc.Parent.Model != nil {
 		return rc.Parent.Model
 	}
