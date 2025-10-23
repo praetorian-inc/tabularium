@@ -13,6 +13,8 @@ type Capability interface {
 	Surface() attacksurface.Surface
 	// Parameters returns the parameters of the capability
 	Parameters() []AgoraParameter
+	// GetJob returns the capability's job
+	GetJob() Job
 	// Match returns whether the attributes of the capability match this capability
 	Match() error
 	// Accepts returns whether the status of this asset allows it to be accepted by this capability
