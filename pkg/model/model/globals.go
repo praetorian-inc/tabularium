@@ -21,6 +21,15 @@ type Notification interface {
 	CreateTicket(risk Risk, templateID string) (Attribute, error)
 	AssociateTicket(risk Risk, ticketID string) (Attribute, error)
 	ValidateCredentials() (map[string]any, error)
+
+	// UpdateTicketMetadata syncs ticket metadata from external system
+	// Returns updated attribute with current status, assignee, resolution, etc.
+	// Returns error if integration doesn't support ticket syncing
+	UpdateTicketMetadata(attr Attribute) (Attribute, error)
+
+	// SupportsTicketSync returns true if this integration supports ticket metadata syncing
+	// Used by cron job to auto-discover which integrations to process
+	SupportsTicketSync() bool
 }
 
 type Export interface {
