@@ -107,6 +107,9 @@ func (w *WebApplication) GetHooks() []registry.Hook {
 		setGroupAndIdentifier(w, &w.Name, &w.PrimaryURL),
 		{
 			Call: func() error {
+				if w.ExcludedExtensions == nil {
+					w.ExcludedExtensions = []string{}
+				}
 				if !w.IsWebService() {
 					w.BurpType = "webapplication"
 				}

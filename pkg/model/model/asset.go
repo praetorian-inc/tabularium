@@ -154,6 +154,7 @@ func (a *Asset) DomainVerificationJob(parentJob *Job, config ...string) Job {
 		Parent:  parentJob.Target,
 		Full:    true,
 	}
+	registry.CallHooks(&job)
 
 	if job.Target.Model != nil {
 		template := fmt.Sprintf("#job#%%s#%s#%s", job.Target.Model.Identifier(), job.Source)

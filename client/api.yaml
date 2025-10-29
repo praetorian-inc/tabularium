@@ -860,6 +860,10 @@ components:
         client_id:
           description: Unique agent identifier
           type: string
+        first_seen_at:
+          description: Unix timestamp (seconds) of first check-in
+          format: int64
+          type: integer
         fqdn:
           description: Fully-qualified domain name
           type: string
@@ -888,6 +892,7 @@ components:
       - BaseAsset
       - architecture
       - client_id
+      - first_seen_at
       - fqdn
       - hostname
       - last_seen_at
