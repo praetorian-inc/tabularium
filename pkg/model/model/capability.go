@@ -45,8 +45,6 @@ type Capability interface {
 	Integration() bool
 	// LargeArtifact returns whether this capability should support downloading a large artifact output
 	LargeArtifact() bool
-	// Hooks returns a list of setup/cleanup hooks to try from the registry
-	Hooks() []string
 	Lifecycle
 }
 
