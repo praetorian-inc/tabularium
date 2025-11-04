@@ -228,6 +228,8 @@ const (
 	Unanalyzed    string = "unanalyzed"
 	Interesting   string = "interesting"
 	Uninteresting string = "uninteresting"
+
+	AllHooks string = "all"
 )
 
 var Intensity map[string]int = map[string]int{
