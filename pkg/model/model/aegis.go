@@ -36,6 +36,16 @@ type AegisAgent struct {
 	HealthCheck       *AegisHealthCheckData   `json:"health_check,omitempty" desc:"Latest health check payload"`
 }
 
+// GetLabels returns the Neo4j labels for AegisAgent
+func (a *AegisAgent) GetLabels() []string {
+	return []string{"AegisAgent", TTLLabel}
+}
+
+// Valid checks if the AegisAgent has required fields
+func (a *AegisAgent) Valid() bool {
+	return a.ClientID != "" && a.Key != ""
+}
+
 // AegisNetworkInterface represents a network interface on an Aegis agent
 type AegisNetworkInterface struct {
 	Name        string   `json:"name" desc:"Interface name" example:"eth0"`

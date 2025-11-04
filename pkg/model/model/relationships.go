@@ -33,6 +33,7 @@ func init() {
 	registry.Registry.MustRegisterModel(&HasTechnology{})
 	registry.Registry.MustRegisterModel(&HasCredential{})
 	registry.Registry.MustRegisterModel(&HasWebpage{})
+	registry.Registry.MustRegisterModel(&ScannedBy{})
 }
 
 func (br *BaseRelationship) GetKey() string {
@@ -259,4 +260,32 @@ func (hw HasWebpage) Label() string {
 // GetDescription returns a description for the HasWebpage relationship model.
 func (hw *HasWebpage) GetDescription() string {
 	return "Represents the relationship indicating a web application has a specific webpage."
+}
+
+const ScannedByLabel = "SCANNED_BY"
+
+// ScannedBy represents an asset discovered/scanned by an Aegis agent
+type ScannedBy struct {
+	*BaseRelationship
+	ScanTime string `neo4j:"scan_time" json:"scan_time" desc:"Timestamp when the scan was performed (RFC3339)." example:"2023-10-27T12:00:00Z"`
+	ScanType string `neo4j:"scan_type" json:"scan_type" desc:"Type of scan performed (e.g., nmap, ping)." example:"nmap"`
+}
+
+// NewScannedBy creates a new ScannedBy relationship between an asset and an Aegis agent
+func NewScannedBy(asset Assetlike, agent *AegisAgent) GraphRelationship {
+	rel := &ScannedBy{
+		BaseRelationship: NewBaseRelationship(asset, agent, ScannedByLabel),
+		ScanTime:         Now(),
+		ScanType:         "nmap",
+	}
+	return rel
+}
+
+func (s ScannedBy) Label() string {
+	return ScannedByLabel
+}
+
+// GetDescription returns a description for the ScannedBy relationship model.
+func (s *ScannedBy) GetDescription() string {
+	return "Represents the relationship indicating an asset was discovered/scanned by an Aegis agent, enabling network reachability tracking."
 }
