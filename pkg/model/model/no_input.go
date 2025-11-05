@@ -48,3 +48,10 @@ func (n *NoInput) GetHooks() []registry.Hook {
 		},
 	}
 }
+
+func IsNoInput(model GraphModel) bool {
+	if model != nil {
+		return model.GetKey() == "noinput"
+	}
+	return false
+}
