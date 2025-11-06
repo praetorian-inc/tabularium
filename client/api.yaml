@@ -2961,6 +2961,9 @@ components:
         parent:
           description: Optional parent target from which this job was spawned.
           type: object
+        retries:
+          description: The number of times this job has been retried.
+          type: integer
         s3DownloadURL:
           description: The URL of the file that contains the large output.
           example: https://s3.amazonaws.com/big_output.zip
@@ -3005,6 +3008,7 @@ components:
       - dns
       - key
       - origin
+      - retries
       - secret
       - source
       - status
