@@ -4,10 +4,6 @@ import (
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
-func init() {
-	registry.Registry.MustRegisterModel(&ADRelationship{})
-}
-
 // AD Relationship type labels (matching BloodHound exactly)
 const (
 	// Domain Trusts
@@ -161,6 +157,98 @@ const (
 	// Trust Keys
 	ADHasTrustKeysLabel = "HasTrustKeys"
 )
+
+var ADRelationshipLabels = []string{
+	ADOwnsLabel,
+	ADGenericAllLabel,
+	ADGenericWriteLabel,
+	ADWriteOwnerLabel,
+	ADWriteDACLLabel,
+	ADMemberOfLabel,
+	ADForceChangePasswordLabel,
+	ADAllExtendedRightsLabel,
+	ADAddMemberLabel,
+	ADHasSessionLabel,
+	ADContainsLabel,
+	ADGPLinkLabel,
+	ADAllowedToDelegateLabel,
+	ADCoerceToTGTLabel,
+	ADGetChangesLabel,
+	ADGetChangesAllLabel,
+	ADGetChangesInFilteredSetLabel,
+	ADCrossForestTrustLabel,
+	ADSameForestTrustLabel,
+	ADSpoofSIDHistoryLabel,
+	ADAbuseTGTDelegationLabel,
+	ADAllowedToActLabel,
+	ADAdminToLabel,
+	ADCanPSRemoteLabel,
+	ADCanRDPLabel,
+	ADExecuteDCOMLabel,
+	ADHasSIDHistoryLabel,
+	ADAddSelfLabel,
+	ADDCSyncLabel,
+	ADReadLAPSPasswordLabel,
+	ADReadGMSAPasswordLabel,
+	ADDumpSMSAPasswordLabel,
+	ADSQLAdminLabel,
+	ADAddAllowedToActLabel,
+	ADWriteSPNLabel,
+	ADAddKeyCredentialLinkLabel,
+	ADLocalToComputerLabel,
+	ADMemberOfLocalGroupLabel,
+	ADRemoteInteractiveLogonRightLabel,
+	ADSyncLAPSPasswordLabel,
+	ADWriteAccountRestrictionsLabel,
+	ADWriteGPLinkLabel,
+	ADRootCAForLabel,
+	ADDCForLabel,
+	ADPublishedToLabel,
+	ADManageCertificatesLabel,
+	ADManageCALabel,
+	ADDelegatedEnrollmentAgentLabel,
+	ADEnrollLabel,
+	ADHostsCAServiceLabel,
+	ADWritePKIEnrollmentFlagLabel,
+	ADWritePKINameFlagLabel,
+	ADNTAuthStoreForLabel,
+	ADTrustedForNTAuthLabel,
+	ADEnterpriseCAForLabel,
+	ADIssuedSignedByLabel,
+	ADGoldenCertLabel,
+	ADEnrollOnBehalfOfLabel,
+	ADOIDGroupLinkLabel,
+	ADExtendedByPolicyLabel,
+	ADADCSESC1Label,
+	ADADCSESC3Label,
+	ADADCSESC4Label,
+	ADADCSESC6aLabel,
+	ADADCSESC6bLabel,
+	ADADCSESC9aLabel,
+	ADADCSESC9bLabel,
+	ADADCSESC10aLabel,
+	ADADCSESC10bLabel,
+	ADADCSESC13Label,
+	ADSyncedToEntraUserLabel,
+	ADCoerceAndRelayNTLMToSMBLabel,
+	ADCoerceAndRelayNTLMToADCSLabel,
+	ADCoerceAndRelayNTLMToLDAPLabel,
+	ADCoerceAndRelayNTLMToLDAPSLabel,
+	ADWriteOwnerLimitedRightsLabel,
+	ADWriteOwnerRawLabel,
+	ADOwnsLimitedRightsLabel,
+	ADOwnsRawLabel,
+	ADClaimSpecialIdentityLabel,
+	ADContainsIdentityLabel,
+	ADPropagatesACEsToLabel,
+	ADGPOAppliesToLabel,
+	ADCanApplyGPOLabel,
+	ADHasTrustKeysLabel,
+}
+
+func init() {
+	registry.Registry.MustRegisterModel(&ADRelationship{}, ADRelationshipLabels...)
+}
 
 type ADRelationship struct {
 	*BaseRelationship
