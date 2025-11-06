@@ -272,11 +272,11 @@ type ScannedBy struct {
 }
 
 // NewScannedBy creates a new ScannedBy relationship between an asset and an Aegis agent
-func NewScannedBy(asset Assetlike, agent *AegisAgent) GraphRelationship {
+func NewScannedBy(asset Assetlike, agent *AegisAgent, scanType string) GraphRelationship {
 	rel := &ScannedBy{
 		BaseRelationship: NewBaseRelationship(asset, agent, ScannedByLabel),
 		ScanTime:         Now(),
-		ScanType:         "nmap",
+		ScanType:         scanType,
 	}
 	return rel
 }

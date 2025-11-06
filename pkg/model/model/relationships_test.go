@@ -265,6 +265,129 @@ func TestHasWebpageRelationship(t *testing.T) {
 	})
 }
 
+// TestScannedByRelationship tests the ScannedBy relationship functionality
+func TestScannedByRelationship(t *testing.T) {
+	t.Run("Label returns correct value", func(t *testing.T) {
+		asset := NewAsset("10.0.0.5", "10.0.0.5")
+		agent := &AegisAgent{
+			ClientID: "test-agent-123",
+		}
+		agent.Key = "#aegisagent#test-agent-123"
+
+		rel := NewScannedBy(&asset, agent, "nmap")
+		assert.Equal(t, ScannedByLabel, rel.Label())
+		assert.Equal(t, "SCANNED_BY", rel.Label())
+	})
+
+	t.Run("Key generation follows pattern", func(t *testing.T) {
+		asset := NewAsset("10.0.0.5", "10.0.0.5")
+		asset.Key = "#asset#10.0.0.5#10.0.0.5"
+		agent := &AegisAgent{
+			ClientID: "test-agent-123",
+		}
+		agent.Key = "#aegisagent#test-agent-123"
+
+		rel := NewScannedBy(&asset, agent, "nmap")
+		expectedKey := "#asset#10.0.0.5#10.0.0.5#SCANNED_BY#aegisagent#test-agent-123"
+		assert.Equal(t, expectedKey, rel.GetKey())
+		assert.Contains(t, rel.GetKey(), "#SCANNED_BY#")
+		assert.Contains(t, rel.GetKey(), asset.GetKey())
+		assert.Contains(t, rel.GetKey(), agent.GetKey())
+	})
+
+	t.Run("Scan type is configurable", func(t *testing.T) {
+		asset := NewAsset("10.0.0.5", "10.0.0.5")
+		agent := &AegisAgent{ClientID: "test-agent-123"}
+		agent.Key = "#aegisagent#test-agent-123"
+
+		// Test different scan types
+		scanTypes := []string{"nmap", "ping", "http", "custom-scanner"}
+		for _, scanType := range scanTypes {
+			rel := NewScannedBy(&asset, agent, scanType).(*ScannedBy)
+			assert.Equal(t, scanType, rel.ScanType, "ScanType should be configurable")
+		}
+	})
+
+	t.Run("Scan type is set as provided by caller", func(t *testing.T) {
+		asset := NewAsset("10.0.0.5", "10.0.0.5")
+		agent := &AegisAgent{ClientID: "test-agent-123"}
+		agent.Key = "#aegisagent#test-agent-123"
+
+		// Empty string is accepted if caller provides it
+		rel := NewScannedBy(&asset, agent, "").(*ScannedBy)
+		assert.Equal(t, "", rel.ScanType, "Empty scan type should be accepted if caller provides it")
+		
+		// Caller should provide the scan type explicitly
+		relWithType := NewScannedBy(&asset, agent, "nmap").(*ScannedBy)
+		assert.Equal(t, "nmap", relWithType.ScanType, "Scan type should be set as provided by caller")
+	})
+
+	t.Run("ScanTime is set", func(t *testing.T) {
+		asset := NewAsset("10.0.0.5", "10.0.0.5")
+		agent := &AegisAgent{ClientID: "test-agent-123"}
+		agent.Key = "#aegisagent#test-agent-123"
+
+		rel := NewScannedBy(&asset, agent, "nmap").(*ScannedBy)
+		assert.NotEmpty(t, rel.ScanTime, "ScanTime should be set")
+	})
+
+	t.Run("Relationship implements GraphRelationship interface", func(t *testing.T) {
+		asset := NewAsset("10.0.0.5", "10.0.0.5")
+		agent := &AegisAgent{ClientID: "test-agent-123"}
+		agent.Key = "#aegisagent#test-agent-123"
+
+		rel := NewScannedBy(&asset, agent, "nmap")
+
+		// Test that it implements GraphRelationship interface
+		var _ GraphRelationship = rel
+		assert.NotNil(t, rel.Base())
+		assert.Equal(t, ScannedByLabel, rel.Label())
+		assert.True(t, rel.Valid())
+	})
+
+	t.Run("Visit functionality works correctly", func(t *testing.T) {
+		// Create original relationship
+		dbAsset := NewAsset("10.0.0.5", "10.0.0.5")
+		dbAsset.Key = "#asset#10.0.0.5#10.0.0.5"
+		dbAgent := &AegisAgent{ClientID: "test-agent-123"}
+		dbAgent.Key = "#aegisagent#test-agent-123"
+		dbRel := NewScannedBy(&dbAsset, dbAgent, "nmap").(*ScannedBy)
+		dbRel.Base().Capability = "original-scanner"
+		dbRel.Base().Visited = "2024-01-01"
+		dbRel.ScanType = "nmap"
+
+		// Create new relationship with updated data
+		newAsset := NewAsset("10.0.0.5", "10.0.0.5")
+		newAsset.Key = "#asset#10.0.0.5#10.0.0.5"
+		newAgent := &AegisAgent{ClientID: "test-agent-123"}
+		newAgent.Key = "#aegisagent#test-agent-123"
+		newRel := NewScannedBy(&newAsset, newAgent, "ping").(*ScannedBy)
+		newRel.Base().Capability = "new-scanner"
+		newRel.Base().Visited = "2024-01-02"
+
+		// Perform Visit
+		dbRel.Base().Visit(newRel)
+
+		// Verify updates
+		assert.Equal(t, "2024-01-02", dbRel.Base().Visited)
+		assert.Equal(t, "new-scanner", dbRel.Base().Capability)
+		assert.Equal(t, &newAsset, dbRel.Base().Source)
+		assert.Equal(t, newAgent, dbRel.Base().Target)
+	})
+
+	t.Run("Nodes returns correct source and target", func(t *testing.T) {
+		asset := NewAsset("10.0.0.5", "10.0.0.5")
+		agent := &AegisAgent{ClientID: "test-agent-123"}
+		agent.Key = "#aegisagent#test-agent-123"
+
+		rel := NewScannedBy(&asset, agent, "nmap")
+		sourceNode, targetNode := rel.Nodes()
+
+		assert.Equal(t, &asset, sourceNode)
+		assert.Equal(t, agent, targetNode)
+	})
+}
+
 // Test to reproduce the actual error scenario
 func TestReproduceConstraintViolation(t *testing.T) {
 	// This test reproduces the exact scenario that causes the constraint violation:

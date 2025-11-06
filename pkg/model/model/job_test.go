@@ -291,3 +291,220 @@ func TestJob_Conversation(t *testing.T) {
 		})
 	}
 }
+
+// TestJob_AgentClientIDExtraction tests that agent client ID is correctly extracted from job config
+func TestJob_AgentClientIDExtraction(t *testing.T) {
+	dummy := NewAsset("example.com", "example.com")
+
+	tests := []struct {
+		name              string
+		config            map[string]string
+		expectedClientID  string
+	}{
+		{
+			name:              "client_id present in config",
+			config:            map[string]string{"client_id": "agent-123"},
+			expectedClientID:  "agent-123",
+		},
+		{
+			name:              "no client_id in config",
+			config:            map[string]string{"other_key": "value"},
+			expectedClientID:  "",
+		},
+		{
+			name:              "empty config",
+			config:            map[string]string{},
+			expectedClientID:  "",
+		},
+		{
+			name:              "client_id with special characters",
+			config:            map[string]string{"client_id": "agent-abc-123-xyz"},
+			expectedClientID:  "agent-abc-123-xyz",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			job := NewJob("test-source", &dummy)
+			job.Config = tt.config
+			
+			context := job.ToContext()
+			assert.Equal(t, tt.expectedClientID, context.AgentClientID, "AgentClientID should be extracted from config")
+		})
+	}
+}
+
+// TestResultContext_GetAgentClientID tests the validation logic in GetAgentClientID
+func TestResultContext_GetAgentClientID(t *testing.T) {
+	// Create a buffer to capture log output
+	var logBuffer strings.Builder
+	slog.SetDefault(slog.New(slog.NewTextHandler(&logBuffer, nil)))
+
+	tests := []struct {
+		name          string
+		agentClientID string
+		expectedValue string
+		expectWarning bool
+	}{
+		{
+			name:          "valid client ID",
+			agentClientID: "agent-123",
+			expectedValue: "agent-123",
+			expectWarning: false,
+		},
+		{
+			name:          "empty client ID",
+			agentClientID: "",
+			expectedValue: "",
+			expectWarning: false,
+		},
+		{
+			name:          "client ID with whitespace",
+			agentClientID: "  agent-123  ",
+			expectedValue: "agent-123",
+			expectWarning: false,
+		},
+		{
+			name:          "client ID with only whitespace",
+			agentClientID: "   ",
+			expectedValue: "",
+			expectWarning: true,
+		},
+		{
+			name:          "client ID with tabs and spaces",
+			agentClientID: "\t\n  \t",
+			expectedValue: "",
+			expectWarning: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Clear the buffer before each test
+			logBuffer.Reset()
+
+			context := &ResultContext{
+				AgentClientID: tt.agentClientID,
+			}
+
+			result := context.GetAgentClientID()
+			assert.Equal(t, tt.expectedValue, result, "GetAgentClientID should return expected value")
+
+			// Check for warning log
+			logOutput := logBuffer.String()
+			if tt.expectWarning {
+				assert.Contains(t, logOutput, "AgentClientID contains only whitespace", "Should log warning for whitespace-only client ID")
+			} else {
+				assert.NotContains(t, logOutput, "AgentClientID contains only whitespace", "Should not log warning for valid client ID")
+			}
+		})
+	}
+}
+
+// TestJob_ContextPropagation tests that context is correctly propagated through job processing
+func TestJob_ContextPropagation(t *testing.T) {
+	dummy := NewAsset("example.com", "example.com")
+
+	t.Run("ToContext preserves all fields", func(t *testing.T) {
+		job := NewJob("test-source", &dummy)
+		job.Username = "testuser@example.com"
+		job.Config = map[string]string{"client_id": "agent-456", "other_key": "value"}
+		job.Secret = map[string]string{"api_key": "secret123"}
+		job.Capabilities = []string{"nmap", "nuclei"}
+		job.Queue = "priority"
+
+		context := job.ToContext()
+
+		assert.Equal(t, job.Username, context.Username, "Username should be preserved")
+		assert.Equal(t, job.Source, context.Source, "Source should be preserved")
+		assert.Equal(t, job.Config, context.Config, "Config should be preserved")
+		assert.Equal(t, job.Secret, context.Secret, "Secret should be preserved")
+		assert.Equal(t, job.Capabilities, context.Capabilities, "Capabilities should be preserved")
+		assert.Equal(t, job.Queue, context.Queue, "Queue should be preserved")
+		assert.Equal(t, "agent-456", context.AgentClientID, "AgentClientID should be extracted from config")
+	})
+
+	t.Run("SpawnJob propagates context", func(t *testing.T) {
+		job := NewJob("parent-source", &dummy)
+		job.Capabilities = []string{"capability1", "capability2"}
+		job.Origin = TargetWrapper{Model: &dummy}
+
+		context := job.ToContext()
+		newTarget := NewAsset("new.example.com", "new.example.com")
+		newConfig := map[string]string{"new_key": "new_value"}
+
+		spawnedJob := context.SpawnJob("child-source", &newTarget, newConfig)
+
+		assert.Equal(t, "child-source", spawnedJob.Source, "Spawned job should have new source")
+		assert.Equal(t, newConfig, spawnedJob.Config, "Spawned job should have new config")
+		assert.Equal(t, job.Capabilities, spawnedJob.Capabilities, "Spawned job should inherit capabilities")
+		assert.Equal(t, job.Origin, spawnedJob.Origin, "Spawned job should inherit origin")
+	})
+
+	t.Run("GetAgentClientID returns validated ID", func(t *testing.T) {
+		job := NewJob("test-source", &dummy)
+		job.Config = map[string]string{"client_id": "  agent-789  "}
+
+		context := job.ToContext()
+		clientID := context.GetAgentClientID()
+
+		assert.Equal(t, "agent-789", clientID, "GetAgentClientID should trim whitespace")
+	})
+}
+
+// TestAegisAgent_Valid tests the validation logic for AegisAgent
+func TestAegisAgent_Valid(t *testing.T) {
+	tests := []struct {
+		name     string
+		agent    *AegisAgent
+		expected bool
+	}{
+		{
+			name: "valid agent with both ClientID and Key",
+			agent: &AegisAgent{
+				ClientID: "agent-123",
+			},
+			expected: true,
+		},
+		{
+			name: "invalid agent with empty ClientID",
+			agent: &AegisAgent{
+				ClientID: "",
+			},
+			expected: false,
+		},
+		{
+			name: "invalid agent with empty Key",
+			agent: &AegisAgent{
+				ClientID: "agent-123",
+			},
+			expected: false,
+		},
+		{
+			name: "invalid agent with whitespace-only ClientID",
+			agent: &AegisAgent{
+				ClientID: "   ",
+			},
+			expected: false,
+		},
+		{
+			name: "invalid agent with both fields empty",
+			agent: &AegisAgent{
+				ClientID: "",
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Set Key for valid cases
+			if tt.agent.ClientID != "" && tt.expected {
+				tt.agent.Key = "#aegisagent#" + tt.agent.ClientID
+			}
+			
+			result := tt.agent.Valid()
+			assert.Equal(t, tt.expected, result, "Agent validation should match expected result")
+		})
+	}
+}

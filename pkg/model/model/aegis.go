@@ -2,6 +2,7 @@ package model
 
 import (
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
@@ -43,7 +44,11 @@ func (a *AegisAgent) GetLabels() []string {
 
 // Valid checks if the AegisAgent has required fields
 func (a *AegisAgent) Valid() bool {
-	return a.ClientID != "" && a.Key != ""
+	if a.ClientID == "" || a.Key == "" {
+		return false
+	}
+	// Ensure ClientID is consistent by checking it's not just whitespace
+	return len(strings.TrimSpace(a.ClientID)) > 0
 }
 
 // AegisNetworkInterface represents a network interface on an Aegis agent
