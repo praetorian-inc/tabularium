@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strconv"
+	"strings"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
@@ -62,8 +63,18 @@ func (rc *ResultContext) GetOrigin() Target {
 	return rc.Target.Model
 }
 
+// GetAgentClientID returns the agent client ID after validating it's not empty or just whitespace
 func (rc *ResultContext) GetAgentClientID() string {
-	return rc.AgentClientID
+	if rc.AgentClientID == "" {
+		return ""
+	}
+	// Validate that the client ID is not just whitespace
+	trimmed := strings.TrimSpace(rc.AgentClientID)
+	if trimmed == "" {
+		slog.Warn("AgentClientID contains only whitespace, returning empty string")
+		return ""
+	}
+	return trimmed
 }
 
 type SpawnJobOption func(job *Job)
