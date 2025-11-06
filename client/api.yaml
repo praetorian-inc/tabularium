@@ -2925,6 +2925,12 @@ components:
           description: Timestamp when the job was created (RFC3339).
           example: "2023-10-27T10:00:00Z"
           type: string
+        credential_ids:
+          description: List of credential IDs to retrieve and inject into job execution.
+          example: '["550e8400-e29b-41d4-a716-446655440000"]'
+          items:
+            type: string
+          type: array
         delayed:
           description: Timestamp that this job should be delayed until
           example: "2023-10-27T10:00:00Z"
@@ -2941,7 +2947,7 @@ components:
           description: Unique key for the job.
           example: '#job#example.com#asset#portscan'
           type: string
-        largeArtifactFileName:
+        large_artifact_filename:
           description: The name of the file that contains the large artifacts.
           example: large_artifact.zip
           type: string
