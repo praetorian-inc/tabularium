@@ -1,5 +1,17 @@
 components:
   schemas:
+    abusetgtdelegation:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
     access:
       description: Represents a record of access to chariot
       properties:
@@ -253,6 +265,162 @@ components:
       - labels
       - objectid
       type: object
+    adcsesc1:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    adcsesc3:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    adcsesc4:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    adcsesc6a:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    adcsesc6b:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    adcsesc9a:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    adcsesc9b:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    adcsesc10a:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    adcsesc10b:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    adcsesc13:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    addallowedtoact:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    addkeycredentiallink:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    addmember:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
     addomain:
       description: Represents an Active Directory object with properties and organizational
         unit information.
@@ -293,6 +461,18 @@ components:
       - label
       - labels
       - objectid
+      type: object
+    addself:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
       type: object
     adenterpriseca:
       description: Represents an Active Directory object with properties and organizational
@@ -539,6 +719,18 @@ components:
       - label
       - labels
       - objectid
+      type: object
+    adminto:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
       type: object
     adntauthstore:
       description: Represents an Active Directory object with properties and organizational
@@ -1210,6 +1402,42 @@ components:
       - required
       - type
       type: object
+    allextendedrights:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    allowedtoact:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    allowedtodelegate:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
     asset:
       description: Represents a discoverable entity within an infrastructure, such
         as a host, service, or application.
@@ -1407,6 +1635,54 @@ components:
       - ttl
       - username
       type: object
+    canapplygpo:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    canpsremote:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    canrdp:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    claimspecialidentity:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
     cloudresource:
       description: ' ()'
       properties:
@@ -1453,6 +1729,66 @@ components:
       - region
       - resourceType
       - urls
+      type: object
+    coerceandrelayntlmtoadcs:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    coerceandrelayntlmtoldap:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    coerceandrelayntlmtoldaps:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    coerceandrelayntlmtosmb:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    coercetotgt:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
       type: object
     commandresult:
       description: Represents the success/failure status of an Aegis capability execution.
@@ -1573,6 +1909,30 @@ components:
       - name
       - username
       - value
+      type: object
+    contains:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    containsidentity:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
       type: object
     conversation:
       description: Represents a conversation between a user and AI assistant with
@@ -1725,6 +2085,18 @@ components:
       - updated
       - username
       type: object
+    crossforesttrust:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
     cvssmetrics:
       description: Represents Common Vulnerability Scoring System (CVSS) metrics for
         a vulnerability.
@@ -1810,6 +2182,42 @@ components:
       required:
       - BaseModel
       type: object
+    dcfor:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    dcsync:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    delegatedenrollmentagent:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
     discovered:
       description: Represents a discovery relationship between two entities (e.g.,
         a host discovered a service).
@@ -1818,6 +2226,18 @@ components:
           type: object
       required:
       - BaseRelationship
+      type: object
+    dumpsmsapassword:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
       type: object
     enrichment:
       description: Represents enrichment data for a vulnerability.
@@ -1889,6 +2309,42 @@ components:
       - name
       - published
       type: object
+    enroll:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    enrollonbehalfof:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    enterprisecafor:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
     epss:
       description: Represents EPSS score and percentile for a vulnerability.
       properties:
@@ -1904,6 +2360,18 @@ components:
           type: number
       required:
       - BaseModel
+      type: object
+    executedcom:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
       type: object
     exploitcounts:
       description: Represents counts of various exploit-related indicators for a vulnerability.
@@ -2017,6 +2485,18 @@ components:
       required:
       - BaseModel
       type: object
+    extendedbypolicy:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
     file:
       description: Represents a file system entity, including its path and potential
         content hash.
@@ -2078,6 +2558,18 @@ components:
       - name
       - username
       type: object
+    forcechangepassword:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
     gcpresource:
       description: ' ()'
       properties:
@@ -2085,6 +2577,102 @@ components:
           type: object
       required:
       - CloudResource
+      type: object
+    genericall:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    genericwrite:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    getchanges:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    getchangesall:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    getchangesinfilteredset:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    goldencert:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    gplink:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    gpoappliesto:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
       type: object
     hasattribute:
       description: Represents the relationship indicating an entity has a specific
@@ -2112,6 +2700,30 @@ components:
       required:
       - BaseRelationship
       type: object
+    hassession:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    hassidhistory:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
     hastechnology:
       description: Represents the relationship indicating an asset uses or runs a
         specific technology.
@@ -2120,6 +2732,18 @@ components:
           type: object
       required:
       - BaseRelationship
+      type: object
+    hastrustkeys:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
       type: object
     hasvulnerability:
       description: Represents the relationship indicating an asset has a specific
@@ -2201,6 +2825,18 @@ components:
       required:
       - BaseModel
       type: object
+    hostscaservice:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
     iamrelationship:
       description: Represents the base structure for all graph relationships, containing
         source, target, and metadata.
@@ -2239,6 +2875,18 @@ components:
       - BaseAsset
       - name
       - value
+      type: object
+    issuedsignedby:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
       type: object
     job:
       description: Represents an asynchronous job or task, including its status, specification,
@@ -2412,6 +3060,66 @@ components:
       - status
       - username
       - visited
+      type: object
+    localtocomputer:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    manageca:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    managecertificates:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    memberof:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    memberoflocalgroup:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
       type: object
     message:
       description: Represents a message within a conversation, with UUIDv7 ordering
@@ -2617,6 +3325,30 @@ components:
       - identifier
       - key
       - status
+      type: object
+    ntauthstorefor:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    oidgrouplink:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
       type: object
     organization:
       description: Represents organization data enriched from Apollo.io API, including
@@ -2837,6 +3569,42 @@ components:
       - ttl
       - username
       - visited
+      type: object
+    owns:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    ownslimitedrights:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    ownsraw:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
       type: object
     person:
       description: Represents person data enriched from Apollo.io People Enrichment
@@ -3129,6 +3897,66 @@ components:
       - value
       - visited
       type: object
+    propagatesacesto:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    publishedto:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    readgmsapassword:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    readlapspassword:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    remoteinteractivelogonright:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
     repository:
       description: Base logic for an asset.
       properties:
@@ -3287,6 +4115,30 @@ components:
       - Recommendation
       - References
       type: object
+    rootcafor:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    sameforesttrust:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
     scanner:
       description: Represents a record of access to chariot
       properties:
@@ -3348,6 +4200,30 @@ components:
       - name
       - username
       - value
+      type: object
+    spoofsidhistory:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    sqladmin:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
       type: object
     ssvc:
       description: Represents SSVC assessment information for a vulnerability.
@@ -3427,6 +4303,30 @@ components:
       - type
       - username
       - value
+      type: object
+    syncedtoentrauser:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    synclapspassword:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
       type: object
     technology:
       description: Represents a specific technology (e.g., software, library, framework)
@@ -3563,6 +4463,18 @@ components:
       - aliases
       - categories
       - name
+      type: object
+    trustedforntauth:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
       type: object
     vulnerability:
       description: Represents a specific vulnerability identified in the system (e.g.,
@@ -3796,6 +4708,114 @@ components:
       - url
       - username
       - visited
+      type: object
+    writeaccountrestrictions:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    writedacl:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    writegplink:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    writeowner:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    writeownerlimitedrights:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    writeownerraw:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    writepkienrollmentflag:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    writepkinameflag:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
+      type: object
+    writespn:
+      description: Represents an Active Directory relationship between two AD objects,
+        supporting all BloodHound relationship types.
+      properties:
+        BaseRelationship:
+          type: object
+        relationshipType:
+          type: string
+      required:
+      - BaseRelationship
+      - relationshipType
       type: object
 info:
   description: Unified Data Model for Chariot
