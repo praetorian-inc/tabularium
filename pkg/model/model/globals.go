@@ -96,6 +96,7 @@ type Hydratable interface {
 }
 
 const SKIP_HYDRATION = ""
+const NEVER_FULL = -1
 
 type HydratableTarget interface {
 	Hydratable
