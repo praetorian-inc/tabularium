@@ -9,10 +9,10 @@ import (
 const RecordTTLInHours = 24 * 90 // 90 days
 
 func init() {
-	registry.Registry.MustRegisterModel(&Record{})
+	registry.Registry.MustRegisterModel(&JobRecord{})
 }
 
-type Record struct {
+type JobRecord struct {
 	registry.BaseModel
 	baseTableModel
 	Username   string `dynamodbav:"username" json:"username" desc:"Chariot username associated with the account." example:"user@example.com"`
@@ -23,29 +23,29 @@ type Record struct {
 	TTL        int64  `dynamodbav:"ttl" json:"ttl" desc:"Time-to-live for the record record (Unix timestamp)." example:"1706353200"`
 }
 
-func (r *Record) GetDescription() string {
+func (r *JobRecord) GetDescription() string {
 	return "Represents a record of a job. Used to track when a job was last successfully completed."
 }
 
-func (r *Record) GetKey() string {
+func (r *JobRecord) GetKey() string {
 	return r.Key
 }
 
-func (r *Record) GetHooks() []registry.Hook {
+func (r *JobRecord) GetHooks() []registry.Hook {
 	return []registry.Hook{
 		{
 			Call: func() error {
-				r.Key = fmt.Sprintf("#record#%s#%s", r.JobKey, r.RecordTime)
+				r.Key = fmt.Sprintf("%s%s", RecordSearchKey(Job{Key: r.JobKey}), r.RecordTime)
 				return nil
 			},
 		},
 	}
 }
 
-func (r *Record) Defaulted() {}
+func (r *JobRecord) Defaulted() {}
 
-func NewRecord(job Job) Record {
-	record := Record{
+func NewRecord(job Job) JobRecord {
+	record := JobRecord{
 		JobKey:     job.Key,
 		RecordTime: job.Updated,
 		Full:       job.Full,
@@ -56,5 +56,5 @@ func NewRecord(job Job) Record {
 }
 
 func RecordSearchKey(job Job) string {
-	return fmt.Sprintf("#record#%s#", job.Key)
+	return fmt.Sprintf("#jobrecord%s#", job.Key)
 }
