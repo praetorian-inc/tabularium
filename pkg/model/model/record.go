@@ -15,9 +15,16 @@ func init() {
 type Record struct {
 	registry.BaseModel
 	baseTableModel
-	Job
-	Username string `dynamodbav:"username" json:"username" desc:"Chariot username associated with the account." example:"user@example.com"`
-	Key      string `dynamodbav:"key" json:"key" desc:"Unique key for the job." example:"#job#example.com#asset#portscan"`
+	Username   string `dynamodbav:"username" json:"username" desc:"Chariot username associated with the account." example:"user@example.com"`
+	Key        string `dynamodbav:"key" json:"key" desc:"Unique key for the job." example:"#job#example.com#asset#portscan"`
+	JobKey     string `dynamodbav:"jobKey" json:"jobKey" desc:"Key of the job that was recorded" example:"#job#example.com#asset#portscan"`
+	RecordTime string `dynamodbav:"recordTime" json:"recordTime" desc:"Timestamp when the recorded job was last updated (RFC3339)." example:"2023-10-27T10:00:00Z"`
+	Full       bool   `dynamodbav:"full" json:"full" desc:"Whether the record is full." example:"true"`
+	TTL        int64  `dynamodbav:"ttl" json:"ttl" desc:"Time-to-live for the record record (Unix timestamp)." example:"1706353200"`
+}
+
+func (r *Record) GetDescription() string {
+	return "Represents a record of a job. Used to track when a job was last successfully completed."
 }
 
 func (r *Record) GetKey() string {
@@ -28,7 +35,7 @@ func (r *Record) GetHooks() []registry.Hook {
 	return []registry.Hook{
 		{
 			Call: func() error {
-				r.Key = fmt.Sprintf("#record%s#%s", r.Job.Key, r.Job.Updated)
+				r.Key = fmt.Sprintf("#record#%s#%s", r.JobKey, r.RecordTime)
 				return nil
 			},
 		},
@@ -39,9 +46,11 @@ func (r *Record) Defaulted() {}
 
 func NewRecord(job Job) Record {
 	record := Record{
-		Job: job,
+		JobKey:     job.Key,
+		RecordTime: job.Updated,
+		Full:       job.Full,
+		TTL:        Future(RecordTTLInHours),
 	}
-	record.TTL = Future(RecordTTLInHours)
 	registry.CallHooks(&record)
 	return record
 }
