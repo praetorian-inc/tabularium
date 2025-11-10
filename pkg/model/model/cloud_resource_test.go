@@ -525,16 +525,16 @@ func TestCloudResource_TTLUpdateLogic(t *testing.T) {
 			t.Logf("✅ TTL update worked: existing TTL updated from 9999 to %d", resource1.BaseAsset.TTL)
 		}
 
-		// Test case 3: TTL should NOT be updated when source has zero TTL
+		// Test case 3: TTL should be updated to 0 when other's TTL is 0
 		resource1.BaseAsset.TTL = 7777 // Valid existing TTL
 		resource2.BaseAsset.TTL = 0    // Zero TTL (uninitialized)
 
 		resource1.Visit(resource2)
 
-		if resource1.BaseAsset.TTL != 7777 {
-			t.Errorf("❌ TTL preservation failed: expected 7777, got %d", resource1.BaseAsset.TTL)
+		if resource1.BaseAsset.TTL != 0 {
+			t.Errorf("❌ TTL update failed: expected 0, got %d", resource1.BaseAsset.TTL)
 		} else {
-			t.Logf("✅ TTL preservation worked: existing TTL preserved when source has zero TTL")
+			t.Logf("✅ TTL update succeded: TTL updated to 0")
 		}
 	})
 
