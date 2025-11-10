@@ -30,7 +30,7 @@ type Capability interface {
 	// Cleanup cleans up the capability after execution
 	HasGlobalConfig() bool
 	// Full returns how often the capability should execute a full scan. This is used to determine if job.Full is set to true.
-	Full() int
+	Full() time.Duration
 	// Rescan indicates whether this capability should be executed during risk rescanning
 	Rescan() bool
 	// Retries returns the maximum number of retries allowed by this capability, and the delay time that should be used
