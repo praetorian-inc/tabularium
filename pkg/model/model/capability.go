@@ -21,7 +21,7 @@ type Capability interface {
 	GetJob() Job
 	// Match returns whether the attributes of the capability match this capability
 	Match() error
-	// Accepts returns whether the status of this asset allows it to be accepted by this capability
+	// Accepts returns whether the status of the target and job are acceptable to this capability
 	Accepts() bool
 	// Invoke executes the capability
 	Invoke() error

@@ -6,6 +6,12 @@ import (
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
+const RecordTTLInHours = 24 * 90 // 90 days
+
+func init() {
+	registry.Registry.MustRegisterModel(&Record{})
+}
+
 type Record struct {
 	registry.BaseModel
 	baseTableModel
@@ -22,7 +28,7 @@ func (r *Record) GetHooks() []registry.Hook {
 	return []registry.Hook{
 		{
 			Call: func() error {
-				r.Key = fmt.Sprintf("#record#%s#%s", r.Job.Key, r.Job.Updated)
+				r.Key = fmt.Sprintf("#record%s#%s", r.Job.Key, r.Job.Updated)
 				return nil
 			},
 		},
@@ -35,6 +41,11 @@ func NewRecord(job Job) Record {
 	record := Record{
 		Job: job,
 	}
+	record.TTL = Future(RecordTTLInHours)
 	registry.CallHooks(&record)
 	return record
+}
+
+func RecordSearchKey(job Job) string {
+	return fmt.Sprintf("#record#%s#", job.Key)
 }
