@@ -1,6 +1,8 @@
 package model
 
 import (
+	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -298,7 +300,7 @@ func TestWebApplicationURLsNormalization(t *testing.T) {
 			"https://api.example.com:443",
 			"http://admin.example.com:80",
 			"https://MIXED.EXAMPLE.COM/Path?query=1#frag",
-			"invalid-url", // This should be filtered out
+			"invalid-url",
 			"https://valid.example.com",
 		},
 	}
@@ -339,4 +341,167 @@ func TestWebApplicationSeedModels(t *testing.T) {
 	assert.Equal(t, webApp.Status, returnedWebApp.Status)
 	assert.Equal(t, webApp.Source, returnedWebApp.Source)
 	assert.Equal(t, webApp.Key, returnedWebApp.Key)
+}
+
+func TestWebApplicationSeedPromotion(t *testing.T) {
+	tests := []struct {
+		name              string
+		existingSource    string
+		incomingSource    string
+		expectPromotion   bool
+		expectedPromotion string
+	}{
+		{
+			name:              "Promotion from self to seed",
+			existingSource:    SelfSource,
+			incomingSource:    SeedSource,
+			expectPromotion:   true,
+			expectedPromotion: SeedLabel,
+		},
+		{
+			name:              "No promotion - both self source",
+			existingSource:    SelfSource,
+			incomingSource:    SelfSource,
+			expectPromotion:   false,
+			expectedPromotion: NO_PENDING_LABEL_ADDITION,
+		},
+		{
+			name:              "No promotion - both seed source",
+			existingSource:    SeedSource,
+			incomingSource:    SeedSource,
+			expectPromotion:   false,
+			expectedPromotion: NO_PENDING_LABEL_ADDITION,
+		},
+		{
+			name:              "No promotion - seed to self (downgrade)",
+			existingSource:    SeedSource,
+			incomingSource:    SelfSource,
+			expectPromotion:   false,
+			expectedPromotion: NO_PENDING_LABEL_ADDITION,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			existing := NewWebApplication("https://test.example.com", "Test App")
+			existing.Source = tt.existingSource
+
+			incoming := NewWebApplication("https://test.example.com", "Test App")
+			incoming.Source = tt.incomingSource
+
+			existing.Merge(&incoming)
+
+			if tt.expectPromotion {
+				pendingPromotion, required := PendingLabelAddition(&existing)
+				assert.Equal(t, tt.expectedPromotion, pendingPromotion,
+					"Expected pending promotion to be set")
+				assert.True(t, required,
+					"PendingPromotion should return true")
+			} else {
+				pendingPromotion, required := PendingLabelAddition(&existing)
+				assert.Equal(t, tt.expectedPromotion, pendingPromotion,
+					"Expected no pending promotion")
+				assert.False(t, required,
+					"HasPendingPromotion should return false")
+			}
+		})
+	}
+}
+
+func TestWebApplicationLabelSettableInterface(t *testing.T) {
+	webapp := NewWebApplication("https://example.com", "Test")
+	var _ LabelSettable = &webapp
+
+	pendingAddition, required := PendingLabelAddition(&webapp)
+	assert.Equal(t, NO_PENDING_LABEL_ADDITION, pendingAddition)
+	assert.False(t, required)
+
+	webapp.PendingLabelAddition = SeedLabel
+	pendingAddition, required = PendingLabelAddition(&webapp)
+	assert.Equal(t, SeedLabel, pendingAddition)
+	assert.True(t, required)
+}
+
+func TestWebApplicationMergeName(t *testing.T) {
+	w1 := NewWebApplication("https://app.example.com", "Original Name")
+	w2 := NewWebApplication("https://app.example.com", "Updated Name")
+
+	w1.Merge(&w2)
+
+	assert.Equal(t, "Updated Name", w1.Name)
+}
+
+func TestWebApplicationMergeEmptyName(t *testing.T) {
+	w1 := NewWebApplication("https://app.example.com", "Original Name")
+	w2 := NewWebApplication("https://app.example.com", "")
+
+	w1.Merge(&w2)
+
+	assert.Equal(t, "Original Name", w1.Name)
+}
+
+func TestWebApplicationHydrationLifecycle(t *testing.T) {
+	primaryURL := "https://api.example.com"
+	w := NewWebApplication(primaryURL, "Example App")
+	w.BurpType = "webapplication"
+
+	expectedPath := fmt.Sprintf("webapplication/%s/api-definition.json", RemoveReservedCharacters(w.PrimaryURL))
+	assert.Equal(t, expectedPath, w.GetHydratableFilepath())
+
+	assert.False(t, w.IsWebService())
+	assert.Equal(t, SKIP_HYDRATION, w.HydratableFilepath())
+
+	w.BurpType = "webservice"
+	assert.True(t, w.IsWebService())
+	assert.Equal(t, expectedPath, w.HydratableFilepath())
+
+	originalContent := APIDefinitionResult{
+		PrimaryURL: w.PrimaryURL,
+		FileBasedDefinition: &FileBasedAPIDefinition{
+			Filename:         "openapi.json",
+			Contents:         "{}",
+			EnabledEndpoints: []EnabledEndpoint{{ID: "endpoint-1"}},
+		},
+	}
+
+	w.WebApplicationDetails.ApiDefinitionContent = originalContent
+
+	file := w.HydratedFile()
+	assert.Equal(t, expectedPath, file.Name)
+	assert.Equal(t, expectedPath, w.ApiDefinitionContentPath)
+
+	var parsed APIDefinitionResult
+	require.NoError(t, json.Unmarshal(file.Bytes, &parsed))
+	assert.Equal(t, originalContent, parsed)
+
+	dehydrated := w.Dehydrate()
+	dehydratedApp, ok := dehydrated.(*WebApplication)
+	require.True(t, ok)
+	assert.Equal(t, expectedPath, dehydratedApp.ApiDefinitionContentPath)
+	assert.Empty(t, dehydratedApp.WebApplicationDetails.ApiDefinitionContent)
+
+	rehydrated := NewWebApplication(primaryURL, "Rehydrated")
+	rehydrated.ApiDefinitionContentPath = dehydratedApp.ApiDefinitionContentPath
+	require.NoError(t, rehydrated.Hydrate(file.Bytes))
+	assert.Equal(t, originalContent, rehydrated.WebApplicationDetails.ApiDefinitionContent)
+}
+
+func TestWebApplicationGobEncodeDecode(t *testing.T) {
+	original := NewWebApplication("https://gob.example.com", "Gob Example")
+	original.URLs = []string{"https://gob.example.com/api"}
+	original.ApiDefinitionContentPath = original.HydratableFilepath()
+	original.WebApplicationDetails.ApiDefinitionContent = APIDefinitionResult{PrimaryURL: original.PrimaryURL}
+
+	data, err := original.GobEncode()
+	require.NoError(t, err)
+
+	assert.NotEmpty(t, original.WebApplicationDetails.ApiDefinitionContent)
+
+	var decoded WebApplication
+	require.NoError(t, decoded.GobDecode(data))
+
+	assert.Equal(t, original.PrimaryURL, decoded.PrimaryURL)
+	assert.Equal(t, original.URLs, decoded.URLs)
+	assert.Equal(t, original.ApiDefinitionContentPath, decoded.ApiDefinitionContentPath)
+	assert.Empty(t, decoded.WebApplicationDetails.ApiDefinitionContent)
 }

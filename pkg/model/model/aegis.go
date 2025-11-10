@@ -25,6 +25,7 @@ type CloudflaredStatus struct {
 type AegisAgent struct {
 	BaseAsset                                 // required for models
 	ClientID          string                  `json:"client_id" desc:"Unique agent identifier"`
+	FirstSeenAt       int64                   `json:"first_seen_at" desc:"Unix timestamp (seconds) of first check-in"`
 	LastSeenAt        int64                   `json:"last_seen_at" desc:"Unix timestamp (seconds) of last check-in"`
 	Hostname          string                  `json:"hostname" desc:"Host short name"`
 	FQDN              string                  `json:"fqdn" desc:"Fully-qualified domain name"`

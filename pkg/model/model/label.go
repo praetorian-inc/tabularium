@@ -10,7 +10,7 @@ import (
 
 var labelRegistry map[string]string
 
-func getRegistry() map[string]string {
+func GetLabelRegistry() map[string]string {
 	if labelRegistry == nil {
 		labelRegistry = map[string]string{}
 	}
@@ -19,7 +19,7 @@ func getRegistry() map[string]string {
 }
 
 func MustRegisterLabel(label string) {
-	registry := getRegistry()
+	registry := GetLabelRegistry()
 	_, exists := registry[label]
 	if exists {
 		panic(fmt.Sprintf("label '%s' already registered", label))
@@ -32,7 +32,7 @@ func MustRegisterLabel(label string) {
 func GetLabel(label string) string {
 	lowercase := strings.ToLower(label)
 
-	registry := getRegistry()
+	registry := GetLabelRegistry()
 	registered, ok := registry[lowercase]
 	if ok {
 		return registered

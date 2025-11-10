@@ -77,17 +77,23 @@ type WebpageDetails struct {
 }
 
 type WebpageRequest struct {
-	RawURL   string              `json:"raw_url" desc:"The raw URL of the request." example:"https://example.com/path?query=value"`
-	Method   string              `json:"method" desc:"HTTP method used for the request (e.g., GET, POST)." example:"GET"`
-	Headers  map[string][]string `json:"headers" desc:"Headers sent in the request." example:"{\"User-Agent\": [\"TabulariumCrawler/1.0\"]}"`
-	Body     string              `json:"body" desc:"Body content of the request, if applicable." example:"{\"key\": \"value\"}"`
-	Response *WebpageResponse    `json:"response" desc:"Details of the HTTP response received from the webpage." example:"{\"status_code\": 200, \"headers\": {\"Content-Type\": [\"text/html\"]}, \"body\": \"<html><body>Example Domain</body></html>\"}"`
+	RawURL         string              `json:"raw_url" desc:"The raw URL of the request." example:"https://example.com/path?query=value"`
+	Method         string              `json:"method" desc:"HTTP method used for the request (e.g., GET, POST)." example:"GET"`
+	Headers        map[string][]string `json:"headers" desc:"Headers sent in the request." example:"{\"User-Agent\": [\"TabulariumCrawler/1.0\"]}"`
+	Body           string              `json:"body" desc:"Body content of the request, if applicable." example:"{\"key\": \"value\"}"`
+	WasIntercepted bool                `json:"was_intercepted" desc:"Whether the request was intercepted by a proxy." example:"false"`
+	WasModified    bool                `json:"was_modified" desc:"Whether the request was modified by a proxy." example:"false"`
+	Response       *WebpageResponse    `json:"response" desc:"Details of the HTTP response received from the webpage." example:"{\"status_code\": 200, \"headers\": {\"Content-Type\": [\"text/html\"]}, \"body\": \"<html><body>Example Domain</body></html>\"}"`
+	Notes          string              `json:"notes" desc:"Notes about the request." example:"This is a note about the request."`
 }
 
 type WebpageResponse struct {
-	StatusCode int                 `json:"status_code" desc:"HTTP status code of the response." example:"200"`
-	Headers    map[string][]string `json:"headers" desc:"Headers received in the response." example:"{\"Content-Type\": [\"text/html\"]}"`
-	Body       string              `json:"body" desc:"Body content of the response." example:"<html><body>Example Domain</body></html>"`
+	StatusCode     int                 `json:"status_code" desc:"HTTP status code of the response." example:"200"`
+	Headers        map[string][]string `json:"headers" desc:"Headers received in the response." example:"{\"Content-Type\": [\"text/html\"]}"`
+	Body           string              `json:"body" desc:"Body content of the response." example:"<html><body>Example Domain</body></html>"`
+	WasIntercepted bool                `json:"was_intercepted" desc:"Whether the response was intercepted by a proxy." example:"false"`
+	WasModified    bool                `json:"was_modified" desc:"Whether the response was modified by a proxy." example:"false"`
+	Notes          string              `json:"notes" desc:"Notes about the response." example:"This is a note about the response."`
 }
 
 const WebpageLabel = "Webpage"

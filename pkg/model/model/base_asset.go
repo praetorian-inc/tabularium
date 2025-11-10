@@ -72,6 +72,10 @@ func (a *BaseAsset) SetSource(source string) {
 	a.Source = source
 }
 
+func (a *BaseAsset) GetOrigin() string {
+	return a.Origin
+}
+
 func (a *BaseAsset) SetOrigin(origin string) {
 	a.Origin = origin
 }

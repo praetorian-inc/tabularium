@@ -180,3 +180,7 @@ func (a *AzureResource) WithStatus(status string) Target {
 	ret.Status = status
 	return &ret
 }
+
+func (a *AzureResource) IsPrivate() bool {
+	return false
+}

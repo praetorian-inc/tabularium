@@ -195,3 +195,7 @@ func (a *GCPResource) NewAssets() []Asset {
 	}
 	return assets
 }
+
+func (a *GCPResource) IsPrivate() bool {
+	return false
+}

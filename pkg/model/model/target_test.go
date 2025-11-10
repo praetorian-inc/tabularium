@@ -34,12 +34,13 @@ func TestTargetEvent_UnmarshalJSON(t *testing.T) {
 		assert.Equal(t, "P", asset.Status)
 	})
 
-	t.Run("unmarshal attribute", func(t *testing.T) {
+	t.Run("unmarshal port", func(t *testing.T) {
 		input := `{
-			"key": "#attribute#https#443#asset#example.com#1.2.3.4",
+			"key": "#port#tcp#443#asset#example.com#1.2.3.4",
 			"username": "test@example.com",
-			"name": "https",
-			"value": "443",
+			"protocol": "tcp",
+			"port": 443,
+			"service": "https",
 			"source": "#asset#example.com#1.2.3.4",
 			"status": "A"
 		}`
@@ -48,14 +49,15 @@ func TestTargetEvent_UnmarshalJSON(t *testing.T) {
 		err := json.Unmarshal([]byte(input), &event)
 		require.NoError(t, err)
 
-		attr, ok := event.Model.(*Attribute)
-		require.True(t, ok, "expected Target to be *Attribute")
-		assert.Equal(t, "#attribute#https#443#asset#example.com#1.2.3.4", attr.Key)
-		assert.Equal(t, "test@example.com", attr.Username)
-		assert.Equal(t, "https", attr.Name)
-		assert.Equal(t, "443", attr.Value)
-		assert.Equal(t, "#asset#example.com#1.2.3.4", attr.Source)
-		assert.Equal(t, "A", attr.Status)
+		port, ok := event.Model.(*Port)
+		require.True(t, ok, "expected Target to be *Port")
+		assert.Equal(t, "#port#tcp#443#asset#example.com#1.2.3.4", port.Key)
+		assert.Equal(t, "test@example.com", port.Username)
+		assert.Equal(t, "tcp", port.Protocol)
+		assert.Equal(t, 443, port.Port)
+		assert.Equal(t, "https", port.Service)
+		assert.Equal(t, "#asset#example.com#1.2.3.4", port.Source)
+		assert.Equal(t, "A", port.Status)
 	})
 
 	t.Run("unmarshal preseed", func(t *testing.T) {
@@ -159,12 +161,12 @@ func TestTargetEvent_UnmarshalJSON(t *testing.T) {
 
 func TestTargetEvent_Interface(t *testing.T) {
 	asset := NewAsset("example.com", "1.2.3.4")
-	attribute := asset.Attribute("https", "443")
+	port := NewPort("tcp", 443, &asset)
 	preseed := NewPreseed("whois+company", "Chariot Systems", "Chariot Systems")
 	webpage := NewWebpageFromString("https://example.com/", nil)
 
 	testTargetInterface(t, "Asset", &asset)
-	testTargetInterface(t, "Attribute", &attribute)
+	testTargetInterface(t, "Port", &port)
 	testTargetInterface(t, "Preseed", &preseed)
 	testTargetInterface(t, "Webpage", &webpage)
 }
@@ -216,17 +218,18 @@ func TestTargetEvent_DynamoDBMarshaling(t *testing.T) {
 		assert.Equal(t, asset.TTL, result.TTL)
 	})
 
-	t.Run("marshal and unmarshal attribute", func(t *testing.T) {
-		attribute := NewAttribute("https", "443", &Asset{BaseAsset: BaseAsset{Key: "#asset#example.com#1.2.3.4"}})
-		attribute.Username = "test@example.com"
-		attribute.Status = "A"
-		attribute.Created = Now()
-		attribute.Visited = Now()
-		attribute.TTL = 123456789
-		attribute.Capability = "portscan"
-		attribute.Metadata = map[string]string{"test": "value"}
+	t.Run("marshal and unmarshal port", func(t *testing.T) {
+		asset := Asset{BaseAsset: BaseAsset{Key: "#asset#example.com#1.2.3.4"}}
+		port := NewPort("tcp", 443, &asset)
+		port.Username = "test@example.com"
+		port.Service = "https"
+		port.Status = "A"
+		port.Created = Now()
+		port.Visited = Now()
+		port.TTL = 123456789
+		port.Capability = "portscan"
 
-		original := TargetWrapper{Model: &attribute}
+		original := TargetWrapper{Model: &port}
 
 		av, err := attributevalue.Marshal(original)
 		require.NoError(t, err)
@@ -235,19 +238,19 @@ func TestTargetEvent_DynamoDBMarshaling(t *testing.T) {
 		err = attributevalue.Unmarshal(av, &unmarshaled)
 		require.NoError(t, err)
 
-		result, ok := unmarshaled.Model.(*Attribute)
+		result, ok := unmarshaled.Model.(*Port)
 		require.True(t, ok)
-		assert.Equal(t, attribute.Key, result.Key)
-		assert.Equal(t, attribute.Username, result.Username)
-		assert.Equal(t, attribute.Name, result.Name)
-		assert.Equal(t, attribute.Value, result.Value)
-		assert.Equal(t, attribute.Source, result.Source)
-		assert.Equal(t, attribute.Status, result.Status)
-		assert.Equal(t, attribute.Created, result.Created)
-		assert.Equal(t, attribute.Visited, result.Visited)
-		assert.Equal(t, attribute.TTL, result.TTL)
-		assert.Equal(t, attribute.Capability, result.Capability)
-		assert.Equal(t, attribute.Metadata, result.Metadata)
+		assert.Equal(t, port.Key, result.Key)
+		assert.Equal(t, port.Username, result.Username)
+		assert.Equal(t, port.Protocol, result.Protocol)
+		assert.Equal(t, port.Port, result.Port)
+		assert.Equal(t, port.Service, result.Service)
+		assert.Equal(t, port.Source, result.Source)
+		assert.Equal(t, port.Status, result.Status)
+		assert.Equal(t, port.Created, result.Created)
+		assert.Equal(t, port.Visited, result.Visited)
+		assert.Equal(t, port.TTL, result.TTL)
+		assert.Equal(t, port.Capability, result.Capability)
 	})
 
 	t.Run("marshal and unmarshal preseed", func(t *testing.T) {
@@ -291,9 +294,6 @@ func TestTargetEvent_DynamoDBMarshaling(t *testing.T) {
 		webapplication.TTL = 123456789
 		webapplication.Source = "seed"
 		webapplication.URLs = []string{"https://example.com/api", "https://example.com/admin"}
-		webapplication.BurpSiteID = "1234"
-		webapplication.BurpFolderID = "42"
-		webapplication.BurpScheduleID = "abcd"
 
 		original := TargetWrapper{Model: &webapplication}
 
@@ -312,9 +312,6 @@ func TestTargetEvent_DynamoDBMarshaling(t *testing.T) {
 		assert.Equal(t, webapplication.URLs, result.URLs)
 		assert.Equal(t, webapplication.Status, result.Status)
 		assert.Equal(t, webapplication.Source, result.Source)
-		assert.Equal(t, webapplication.BurpSiteID, result.BurpSiteID)
-		assert.Equal(t, webapplication.BurpFolderID, result.BurpFolderID)
-		assert.Equal(t, webapplication.BurpScheduleID, result.BurpScheduleID)
 	})
 
 	t.Run("marshal and unmarshal webpage", func(t *testing.T) {

@@ -28,10 +28,11 @@ const (
 	AWSCredential                     CredentialType = "aws"
 	GCloudCredential                  CredentialType = "gcloud"
 	AzureCredential                   CredentialType = "azure"
-	SSHKeyCredential                  CredentialType = "ssh-key"             // SSH private key
-	JSONCredential                    CredentialType = "json-credential"     // Generic JSON credential format
-	AegisConfigCredential             CredentialType = "aegis-config"        // Aegis config credential
-	BurpSuiteAuthenticationCredential CredentialType = "burp-authentication" // Internal BurpSuite instance authentication credentials
+	SSHKeyCredential                  CredentialType = "ssh-key"                // SSH private key
+	JSONCredential                    CredentialType = "json-credential"        // Generic JSON credential format
+	AegisConfigCredential             CredentialType = "aegis-config"           // Aegis config credential
+	ActiveDirectoryCredential         CredentialType = "active-directory"       // Active Directory credentials (username, password, domain) for Aegis capabilities
+	BurpSuiteAuthenticationCredential CredentialType = "burp-authentication"    // Internal BurpSuite instance authentication credentials
 
 	// API Keys
 	ApolloCredential                CredentialType = "apollo_api" // Apollo.io API key
@@ -57,13 +58,15 @@ const (
 	WizCredential                   CredentialType = "wiz"                     // Wiz credentials
 	WhoxyCredential                 CredentialType = "whoxy"                   // Whoxy API key
 	XpanseCredential                CredentialType = "xpanse"                  // Xpanse credentials
+	InteractSHCredential            CredentialType = "interactsh"
 
 	LegacyCloudCredential CredentialType = "legacy-cloud" // Legacy cloud credentials (AWS, GCP, Azure)
 
 	// Credential Formats for capabilities to use (and advertise)
-	CredentialFormatEnv   CredentialFormat = "env"   // things like tokens can be release into env vars for caps to use
-	CredentialFormatFile  CredentialFormat = "file"  // credentials requested as files to be stored at a specific location
-	CredentialFormatToken CredentialFormat = "token" // returned in a struct for direct use by caps
+	CredentialFormatEnv     CredentialFormat = "env"      // things like tokens can be release into env vars for caps to use
+	CredentialFormatFile    CredentialFormat = "file"     // credentials requested as files to be stored at a specific location
+	CredentialFormatToken   CredentialFormat = "token"    // returned in a struct for direct use by caps
+	CredentialFormatAPIAuth CredentialFormat = "api-auth" // API authentication credentials
 
 	// Credential Lifecycles
 	CredentialLifecycleStatic    CredentialLifecycle = "static"

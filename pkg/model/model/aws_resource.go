@@ -228,3 +228,7 @@ func (a *AWSResource) extractService() string {
 	}
 	return "Unknown Service"
 }
+
+func (a *AWSResource) IsPrivate() bool {
+	return false
+}
