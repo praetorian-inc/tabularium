@@ -197,6 +197,7 @@ func NewADObject(domain, objectID, distinguishedName, objectLabel string) ADObje
 
 	ad.Defaulted()
 	registry.CallHooks(&ad)
+	ad.TTL = 0
 
 	return ad
 }
