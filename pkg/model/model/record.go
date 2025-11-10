@@ -35,7 +35,7 @@ func (r *JobRecord) GetHooks() []registry.Hook {
 	return []registry.Hook{
 		{
 			Call: func() error {
-				r.Key = fmt.Sprintf("%s%s", RecordSearchKey(Job{Key: r.JobKey}), r.RecordTime)
+				r.Key = fmt.Sprintf("%s%s", RecordSearchKeyPrefix(Job{Key: r.JobKey}), r.RecordTime)
 				return nil
 			},
 		},
@@ -55,6 +55,6 @@ func NewRecord(job Job) JobRecord {
 	return record
 }
 
-func RecordSearchKey(job Job) string {
+func RecordSearchKeyPrefix(job Job) string {
 	return fmt.Sprintf("#jobrecord%s#", job.Key)
 }
