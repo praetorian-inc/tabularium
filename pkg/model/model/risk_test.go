@@ -385,4 +385,24 @@ func TestRisk_MergePreservesCreated(t *testing.T) {
 		assert.NotEqual(t, fullRiskUpdate.Updated, existingRisk.Updated)
 		assert.NotEmpty(t, existingRisk.Updated)
 	})
+
+	t.Run("Visit with Remediated risk triggers Set which calls Merge", func(t *testing.T) {
+		existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", RemediatedHigh)
+		originalCreated := "2023-01-01T00:00:00Z"
+		existingRisk.Created = originalCreated
+		existingRisk.Updated = "2023-01-02T00:00:00Z"
+		existingRisk.Visited = "2023-01-02T00:00:00Z"
+
+		newRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", TriageHigh)
+		newRiskCreated := "2023-12-31T23:59:59Z"
+		newRisk.Created = newRiskCreated
+		newRisk.Visited = "2023-12-31T23:59:59Z"
+
+		existingRisk.Visit(newRisk)
+
+		assert.Equal(t, originalCreated, existingRisk.Created, "Created should be preserved when Visit triggers Set->Merge")
+		assert.Equal(t, OpenHigh, existingRisk.Status, "Status should change from Remediated to Open")
+		assert.Equal(t, newRisk.Visited, existingRisk.Visited, "Visited should be updated from new risk")
+		assert.NotEmpty(t, existingRisk.Updated, "Updated should be set when status changes")
+	})
 }
