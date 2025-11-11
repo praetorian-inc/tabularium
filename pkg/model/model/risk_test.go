@@ -260,3 +260,129 @@ func TestRisk_TagsMerge(t *testing.T) {
 		assert.Equal(t, tags, original.Tags)
 	})
 }
+
+func TestRisk_MergePreservesCreated(t *testing.T) {
+	t.Run("Created is preserved when existing risk has Created and update has Created", func(t *testing.T) {
+		existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", TriageInfo)
+		originalCreated := "2023-01-01T00:00:00Z"
+		existingRisk.Created = originalCreated
+
+		update := Risk{
+			Status:  OpenHigh,
+			Created: "2023-12-31T23:59:59Z",
+		}
+
+		existingRisk.Merge(update)
+
+		assert.Equal(t, originalCreated, existingRisk.Created)
+		assert.NotEqual(t, update.Created, existingRisk.Created)
+	})
+
+	t.Run("Created is set when existing risk has no Created but update has Created", func(t *testing.T) {
+		existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", TriageInfo)
+		existingRisk.Created = ""
+
+		updateCreated := "2023-06-15T12:00:00Z"
+		update := Risk{
+			Status:  OpenHigh,
+			Created: updateCreated,
+		}
+
+		existingRisk.Merge(update)
+
+		assert.Equal(t, updateCreated, existingRisk.Created)
+	})
+
+	t.Run("Created is preserved when existing risk has Created but update has empty Created", func(t *testing.T) {
+		existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", TriageInfo)
+		originalCreated := "2023-01-01T00:00:00Z"
+		existingRisk.Created = originalCreated
+
+		update := Risk{
+			Status:  OpenHigh,
+			Created: "",
+		}
+
+		existingRisk.Merge(update)
+
+		assert.Equal(t, originalCreated, existingRisk.Created)
+	})
+
+	t.Run("Created is preserved when both existing and update have empty Created", func(t *testing.T) {
+		existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", TriageInfo)
+		existingRisk.Created = ""
+
+		update := Risk{
+			Status:  OpenHigh,
+			Created: "",
+		}
+
+		existingRisk.Merge(update)
+
+		assert.Empty(t, existingRisk.Created)
+	})
+
+	t.Run("Updated is set correctly when status changes", func(t *testing.T) {
+		existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", TriageInfo)
+		originalCreated := "2023-01-01T00:00:00Z"
+		originalUpdated := "2023-01-02T00:00:00Z"
+		existingRisk.Created = originalCreated
+		existingRisk.Updated = originalUpdated
+
+		update := Risk{
+			Status:  OpenHigh,
+			Created: "2023-12-31T23:59:59Z",
+		}
+
+		existingRisk.Merge(update)
+
+		assert.Equal(t, originalCreated, existingRisk.Created)
+		assert.NotEqual(t, originalUpdated, existingRisk.Updated)
+		assert.NotEmpty(t, existingRisk.Updated)
+	})
+
+	t.Run("Created preservation does not affect other merge behavior", func(t *testing.T) {
+		existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", TriageInfo)
+		originalCreated := "2023-01-01T00:00:00Z"
+		existingRisk.Created = originalCreated
+		existingRisk.Status = TriageInfo
+
+		update := Risk{
+			Status:  OpenHigh,
+			Created: "2023-12-31T23:59:59Z",
+			Tags:    Tags{Tags: []string{"new-tag"}},
+		}
+
+		existingRisk.Merge(update)
+
+		assert.Equal(t, originalCreated, existingRisk.Created)
+		assert.Equal(t, OpenHigh, existingRisk.Status)
+		assert.Equal(t, update.Tags, existingRisk.Tags)
+		assert.NotEmpty(t, existingRisk.Updated)
+	})
+
+	t.Run("Merge with full Risk object from API", func(t *testing.T) {
+		existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", TriageInfo)
+		originalCreated := "2023-01-01T10:00:00Z"
+		existingRisk.Created = originalCreated
+		existingRisk.Updated = "2023-01-02T10:00:00Z"
+
+		fullRiskUpdate := Risk{
+			Key:     existingRisk.Key,
+			Name:    existingRisk.Name,
+			Status:  OpenHigh,
+			Comment: "Updated comment",
+			Created: "2023-12-31T23:59:59Z",
+			Updated: "2023-12-31T23:59:59Z",
+			Tags:    Tags{Tags: []string{"api-tag"}},
+		}
+
+		existingRisk.Merge(fullRiskUpdate)
+
+		assert.Equal(t, originalCreated, existingRisk.Created)
+		assert.Equal(t, OpenHigh, existingRisk.Status)
+		assert.Equal(t, fullRiskUpdate.Tags, existingRisk.Tags)
+		assert.NotEqual(t, fullRiskUpdate.Updated, existingRisk.Updated)
+		assert.NotEmpty(t, existingRisk.Updated)
+	})
+}

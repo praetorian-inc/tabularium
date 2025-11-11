@@ -105,7 +105,7 @@ func (r *Risk) Merge(update Risk) {
 		r.setStatus(update.Status)
 		r.Updated = Now()
 	}
-	if update.Created != "" {
+	if r.Created == "" && update.Created != "" {
 		r.Created = update.Created
 	}
 	if !r.Is(Triage) {
