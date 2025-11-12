@@ -507,6 +507,8 @@ func TestAegisAgent_Valid(t *testing.T) {
 			assert.Equal(t, tt.expected, result, "Agent validation should match expected result")
 		})
 	}
+}
+
 func TestJob_Valid(t *testing.T) {
 	target := NewAsset("example.com", "example.com")
 
