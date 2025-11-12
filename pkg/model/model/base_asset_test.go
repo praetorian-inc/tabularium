@@ -75,7 +75,7 @@ func TestAsset_Visit(t *testing.T) {
 				Visited: "other",
 			},
 			wantStatus: Pending,
-			wantTTL:    false,
+			wantTTL:    true,
 		},
 		{
 			name: "existing: pending account source, other: active",
@@ -90,7 +90,7 @@ func TestAsset_Visit(t *testing.T) {
 				Visited: "other",
 			},
 			wantStatus: Pending,
-			wantTTL:    false,
+			wantTTL:    true,
 		},
 		{
 			name: "existing: active high self source, other: active",
