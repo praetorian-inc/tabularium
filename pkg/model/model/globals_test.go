@@ -189,3 +189,115 @@ func TestGraphRelationshipEncoding(t *testing.T) {
 		assert.Equal(t, attr.Key, decodedTarget.GetKey())
 	})
 }
+
+// Hydratable follows these 2 flows for Hydrating and Dehydrating
+// To Dehydrate
+// We first check to see if the HydratableFilepath() returns a non-empty string
+// If so, we get the HydratedFile() and insert it into S3
+// Then we call Dehydrate() on the model to remove what we just saved to S3
+//
+// To Hydrate
+// We first check to see if the HydratableFilepath() returns a non-empty string
+// If so, we get the file from s3 using that filepath
+// Then we call Hydrate() on the model to load the data from the file
+func TestHydratableModels(t *testing.T) {
+	t.Run("webpage dehydration and hydration flow", func(t *testing.T) {
+		// Webpages always will be hydratable regardless of if req/responses exist
+		webpage := NewWebpageFromString("https://example.com", nil)
+		assert.NotEqual(t, SKIP_HYDRATION, webpage.HydratableFilepath())
+
+		response := WebpageResponse{
+			StatusCode: 200,
+			Headers: map[string][]string{
+				"Content-Type": {"text/html"},
+			},
+			Body: "<html><body><h1>Hello World</h1></body></html>",
+		}
+		request := WebpageRequest{
+			RawURL:   "https://example.com/page",
+			Method:   "GET",
+			Response: &response,
+		}
+		webpage.AddRequest(request)
+		assert.Empty(t, webpage.DetailsFilepath)
+		assert.Equal(t, webpage.DetailsFilePath(), webpage.HydratableFilepath())
+
+		file := webpage.HydratedFile()
+		assert.Equal(t, webpage.DetailsFilepath, file.Name)
+		assert.NotEmpty(t, file.Bytes)
+		assert.NotEmpty(t, webpage.Requests)
+		assert.Equal(t, webpage.Requests[0], request)
+
+		dehydrated := webpage.Dehydrate()
+		dehydratedWebpage, ok := dehydrated.(*Webpage)
+		assert.True(t, ok)
+		assert.Empty(t, dehydratedWebpage.Requests)
+
+		newWebpageInstance := NewWebpageFromString("https://example.com", nil)
+		newWebpageInstance.DetailsFilepath = dehydratedWebpage.DetailsFilepath
+
+		err := newWebpageInstance.Hydrate(file.Bytes)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, newWebpageInstance.Requests)
+		assert.Equal(t, newWebpageInstance.Requests[0], request)
+	})
+
+	t.Run("web application hydration flow", func(t *testing.T) {
+		//Web Applications only hydrate if they are a Web Service (contain a API Definition)
+		webapp := NewWebApplication("https://example.com", "Example's Website")
+		assert.Equal(t, SKIP_HYDRATION, webapp.HydratableFilepath())
+
+		fileBased := FileBasedAPIDefinition{
+			Filename:         "api.json",
+			Contents:         "{}",
+			EnabledEndpoints: []EnabledEndpoint{EnabledEndpoint{ID: "endpoint1"}, EnabledEndpoint{ID: "endpoint2"}},
+		}
+		urlBased := URLBasedAPIDefinition{
+			URL: "https://example.com/api/swagger.json",
+		}
+		apiContent := APIDefinitionResult{
+			PrimaryURL:          "https://example.com/api",
+			FileBasedDefinition: &fileBased,
+			URLBasedDefinition:  &urlBased,
+		}
+		webapp.ApiDefinitionContent = apiContent
+		webapp.BurpType = "webservice"
+		assert.Equal(t, webapp.GetHydratableFilepath(), webapp.HydratableFilepath())
+		assert.Empty(t, webapp.ApiDefinitionContentPath)
+
+		file := webapp.HydratedFile()
+		assert.Equal(t, webapp.ApiDefinitionContentPath, file.Name)
+		assert.NotEmpty(t, file.Bytes)
+		assert.Equal(t, webapp.ApiDefinitionContent, apiContent)
+
+		dehydrated := webapp.Dehydrate()
+		dehydratedWebapp, ok := dehydrated.(*WebApplication)
+		assert.True(t, ok)
+		assert.Empty(t, dehydratedWebapp.WebApplicationDetails)
+
+		newInstance := NewWebApplication("https://example.com", "Example's Website")
+		newInstance.Hydrate(file.Bytes)
+		assert.Equal(t, newInstance.ApiDefinitionContentPath, file.Name)
+		assert.NotEmpty(t, newInstance.ApiDefinitionContent)
+		assert.Equal(t, newInstance.ApiDefinitionContent, apiContent)
+	})
+
+	t.Run("file hydration flow", func(t *testing.T) {
+		file := NewFile("example.json")
+		file.Bytes = []byte(`{"key": "value"}`)
+
+		assert.Equal(t, file.Name, file.HydratableFilepath())
+
+		hFile := file.HydratedFile()
+		assert.Equal(t, file.Name, hFile.Name)
+		assert.Equal(t, file.Bytes, hFile.Bytes)
+
+		dehydrated := file.Dehydrate()
+		assert.Nil(t, dehydrated)
+
+		newInstance := NewFile("example.json")
+		newInstance.Hydrate(file.Bytes)
+		assert.Equal(t, newInstance.Name, file.Name)
+		assert.Equal(t, newInstance.Bytes, file.Bytes)
+	})
+}
