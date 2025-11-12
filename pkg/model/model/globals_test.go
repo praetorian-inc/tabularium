@@ -190,16 +190,6 @@ func TestGraphRelationshipEncoding(t *testing.T) {
 	})
 }
 
-// Hydratable follows these 2 flows for Hydrating and Dehydrating
-// To Dehydrate
-// We first check to see if the HydratableFilepath() returns a non-empty string
-// If so, we get the HydratedFile() and insert it into S3
-// Then we call Dehydrate() on the model to remove what we just saved to S3
-//
-// To Hydrate
-// We first check to see if the HydratableFilepath() returns a non-empty string
-// If so, we get the file from s3 using that filepath
-// Then we call Hydrate() on the model to load the data from the file
 func TestHydratableModels(t *testing.T) {
 	t.Run("webpage dehydration and hydration flow", func(t *testing.T) {
 		// Webpages always will be hydratable regardless of if req/responses exist
