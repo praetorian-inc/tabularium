@@ -282,6 +282,41 @@ func TestHydratableModels(t *testing.T) {
 		assert.Equal(t, newInstance.ApiDefinitionContent, apiContent)
 	})
 
+	t.Run("aws resource hydration flow", func(t *testing.T) {
+		name := "arn:aws:s3:::example-bucket"
+		account := "123456789012"
+
+		resource, err := NewAWSResource(name, account, AWSS3Bucket, nil)
+		require.NoError(t, err)
+
+		assert.Equal(t, SKIP_HYDRATION, resource.HydratableFilepath())
+
+		policyBytes := []byte(`{"Statement":[{"Action":"s3:*"}]}`)
+		err = resource.Hydrate(policyBytes)
+		require.NoError(t, err)
+
+		expectedPath := resource.GetOrgPolicyFilename()
+		assert.Equal(t, expectedPath, resource.HydratableFilepath())
+
+		file := resource.HydratedFile()
+		assert.Equal(t, expectedPath, file.Name)
+		assert.Equal(t, policyBytes, []byte(file.Bytes))
+
+		dehydrated := resource.Dehydrate()
+		dehydratedResource, ok := dehydrated.(*AWSResource)
+		assert.True(t, ok)
+		assert.Nil(t, dehydratedResource.OrgPolicy)
+
+		newInstance, err := NewAWSResource(name, account, AWSS3Bucket, nil)
+		require.NoError(t, err)
+
+		err = newInstance.Hydrate(file.Bytes)
+		require.NoError(t, err)
+
+		assert.Equal(t, policyBytes, newInstance.OrgPolicy)
+		assert.Equal(t, newInstance.GetOrgPolicyFilename(), newInstance.HydratableFilepath())
+	})
+
 	t.Run("file hydration flow", func(t *testing.T) {
 		file := NewFile("example.json")
 		file.Bytes = []byte(`{"key": "value"}`)
