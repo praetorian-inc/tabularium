@@ -28,10 +28,11 @@ const (
 	AWSCredential                     CredentialType = "aws"
 	GCloudCredential                  CredentialType = "gcloud"
 	AzureCredential                   CredentialType = "azure"
-	SSHKeyCredential                  CredentialType = "ssh-key"             // SSH private key
-	JSONCredential                    CredentialType = "json-credential"     // Generic JSON credential format
-	AegisConfigCredential             CredentialType = "aegis-config"        // Aegis config credential
-	BurpSuiteAuthenticationCredential CredentialType = "burp-authentication" // Internal BurpSuite instance authentication credentials
+	SSHKeyCredential                  CredentialType = "ssh-key"                // SSH private key
+	JSONCredential                    CredentialType = "json-credential"        // Generic JSON credential format
+	AegisConfigCredential             CredentialType = "aegis-config"           // Aegis config credential
+	ActiveDirectoryCredential         CredentialType = "active-directory"       // Active Directory credentials (username, password, domain) for Aegis capabilities
+	BurpSuiteAuthenticationCredential CredentialType = "burp-authentication"    // Internal BurpSuite instance authentication credentials
 
 	// API Keys
 	ApolloCredential                CredentialType = "apollo_api" // Apollo.io API key

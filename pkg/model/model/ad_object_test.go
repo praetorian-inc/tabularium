@@ -346,6 +346,7 @@ func TestADObject_Visit(t *testing.T) {
 			assert.Equal(t, tt.expected.SAMAccountName, ad.SAMAccountName, "SAMAccountName should match expected")
 			assert.Equal(t, tt.expected.DisplayName, ad.DisplayName, "DisplayName should match expected")
 			assert.Equal(t, tt.expected.Description, ad.Description, "Description should match expected")
+			assert.Equal(t, int64(0), ad.TTL, "TTL should be 0")
 		})
 	}
 }

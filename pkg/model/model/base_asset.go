@@ -119,6 +119,9 @@ func (a *BaseAsset) Visit(o Assetlike) {
 	if other.Source == SeedSource {
 		a.TTL = 0
 	}
+	if other.TTL == 0 {
+		a.TTL = 0
+	}
 	if a.Origin == "" {
 		a.Origin = other.Origin
 	}

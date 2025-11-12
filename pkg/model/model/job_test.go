@@ -255,7 +255,7 @@ func TestJob_Parameters(t *testing.T) {
 
 func TestJob_Conversation(t *testing.T) {
 	dummy := NewAsset("example.com", "example.com")
-	
+
 	tests := []struct {
 		name         string
 		conversation string
@@ -280,7 +280,7 @@ func TestJob_Conversation(t *testing.T) {
 
 			encoded, err := json.Marshal(job)
 			require.NoError(t, err)
-			
+
 			if tt.shouldOmit {
 				assert.NotContains(t, string(encoded), "conversation")
 			} else {
@@ -507,4 +507,22 @@ func TestAegisAgent_Valid(t *testing.T) {
 			assert.Equal(t, tt.expected, result, "Agent validation should match expected result")
 		})
 	}
+func TestJob_Valid(t *testing.T) {
+	target := NewAsset("example.com", "example.com")
+
+	noKey := Job{}
+	badKey := Job{Key: "malformed"}
+	goodJob := NewJob("test", &target)
+	
+	emptyCredentials := NewJob("test", &target)
+	emptyCredentials.CredentialIDs = []string{""}
+	goodJobWithCredentials := NewJob("test", &target)
+	goodJobWithCredentials.CredentialIDs = []string{"cred-id"}
+
+	assert.False(t, noKey.Valid())
+	assert.False(t, badKey.Valid())
+	assert.False(t, emptyCredentials.Valid())
+
+	assert.True(t, goodJob.Valid())
+	assert.True(t, goodJobWithCredentials.Valid())
 }

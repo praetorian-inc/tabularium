@@ -27,8 +27,10 @@ type Job struct {
 	Name                  string            `dynamodbav:"name,omitempty" json:"name,omitempty" desc:"The IP address this job was executed from" example:"1.2.3.4"`
 	Config                map[string]string `dynamodbav:"config" json:"config" desc:"Configuration parameters for the job capability." example:"{\"test\": \"cve-1111-2222\"}"`
 	Secret                map[string]string `dynamodbav:"-" json:"secret" desc:"Sensitive configuration parameters (credentials, tokens, keys)."`
-	LargeArtifactFileName string            `dynamodbav:"largeArtifactFileName" json:"largeArtifactFileName,omitempty" desc:"The name of the file that contains the large artifacts." example:"large_artifact.zip"`
+	CredentialIDs         []string          `dynamodbav:"credential_ids" json:"credential_ids,omitempty" desc:"List of credential IDs to retrieve and inject into job execution." example:"[\"550e8400-e29b-41d4-a716-446655440000\"]"`
+	LargeArtifactFileName string            `dynamodbav:"large_artifact_filename" json:"large_artifact_filename,omitempty" desc:"The name of the file that contains the large artifacts." example:"large_artifact.zip"`
 	S3DownloadURL         string            `dynamodbav:"s3DownloadURL" json:"s3DownloadURL,omitempty" desc:"The URL of the file that contains the large output." example:"https://s3.amazonaws.com/big_output.zip"`
+	Retries               int               `dynamodbav:"retries" json:"retries" desc:"The number of times this job has been retried."`
 	AllowRepeat           bool              `dynamodbav:"allowRepeat" json:"allowRepeat" desc:"Indicates if repeating this job should be allowed. Used for manual jobs, or rescan jobs, that should not block other job executions." example:"false"`
 	Full                  bool              `dynamodbav:"-" json:"full,omitempty" desc:"Indicates if this is a full scan job." example:"false"`
 	Capabilities          []string          `dynamodbav:"-" json:"capabilities,omitempty" desc:"List of specific capabilities to run for this job." example:"[\"portscan\", \"nuclei\"]"`
@@ -101,7 +103,15 @@ func (job *Job) Requested(capability string) bool {
 }
 
 func (job *Job) Valid() bool {
-	return strings.HasPrefix(job.Key, "#job#")
+	validPrefix := strings.HasPrefix(job.Key, "#job#")
+	validCredentials := true
+	for _, cred := range job.CredentialIDs {
+		if cred == "" {
+			validCredentials = false
+		}
+	}
+
+	return validPrefix && validCredentials
 }
 
 func (job *Job) Defaulted() {
