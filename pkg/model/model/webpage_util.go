@@ -150,13 +150,17 @@ func (w *Webpage) BasePath() string {
 	return fmt.Sprintf("webpage/%s/%d/%s", w.Hostname(), w.Port(), RemoveReservedCharacters(w.URL))
 }
 
+func (w *Webpage) DetailsFilePath() string {
+	return fmt.Sprintf("%s/details.json", w.BasePath())
+}
+
 func (w *Webpage) GetDetailsFile(details WebpageDetails) File {
 	bytes, err := json.Marshal(details)
 	if err != nil {
 		slog.Warn("Failed to marshal webpage details", "error", err)
 		return File{}
 	}
-	filename := fmt.Sprintf("%s/details.json", w.BasePath())
+	filename := w.DetailsFilePath()
 	file := NewFile(filename)
 	file.Bytes = bytes
 	return file

@@ -245,6 +245,7 @@ func (w *WebApplication) Hydrate(data []byte) error {
 		return nil
 	}
 
+	w.ApiDefinitionContentPath = w.GetHydratableFilepath()
 	if err := json.Unmarshal(data, &w.WebApplicationDetails.ApiDefinitionContent); err != nil {
 		return fmt.Errorf("failed to hydrate WebApplication details: %w", err)
 	}
