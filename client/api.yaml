@@ -3017,6 +3017,46 @@ components:
       - updated
       - username
       type: object
+    jobrecord:
+      description: Represents a record of a job. Used to track when a job was last
+        successfully completed.
+      properties:
+        BaseModel:
+          type: object
+        full:
+          description: Whether the record is full.
+          example: "true"
+          type: boolean
+        jobKey:
+          description: Key of the job that was recorded
+          example: '#job#example.com#asset#portscan'
+          type: string
+        key:
+          description: Unique key for the job.
+          example: '#job#example.com#asset#portscan'
+          type: string
+        recordTime:
+          description: Timestamp when the recorded job was last updated (RFC3339).
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        ttl:
+          description: Time-to-live for the record record (Unix timestamp).
+          example: "1706353200"
+          format: int64
+          type: integer
+        username:
+          description: Chariot username associated with the account.
+          example: user@example.com
+          type: string
+      required:
+      - BaseModel
+      - full
+      - jobKey
+      - key
+      - recordTime
+      - ttl
+      - username
+      type: object
     key:
       description: An API key for the Chariot platform
       properties:
