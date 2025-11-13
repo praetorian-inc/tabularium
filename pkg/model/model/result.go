@@ -19,6 +19,7 @@ type ResultContext struct {
 	Origin        TargetWrapper     `json:"origin" desc:"The origin for this chain of jobs. Defaults to target unless set here."`
 	Queue         string            `json:"queue,omitempty" desc:"Target queue for the job."`
 	Capabilities  []string          `json:"capabilities,omitempty" desc:"List of specific capabilities to run for this job."`
+  FullScan     bool              `json:"full,omitempty" desc:"Whether a full scan was performed or not."`
 	AgentClientID string            `json:"agent_client_id,omitempty" desc:"Aegis agent client ID that performed the scan."`
 }
 

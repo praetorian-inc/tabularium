@@ -234,6 +234,7 @@ func (job *Job) ToContext() ResultContext {
 		Parent:        job.Parent,
 		Queue:         job.Queue,
 		Capabilities:  job.Capabilities,
+    FullScan:      job.Full,
 		AgentClientID: agentClientID,
 	}
 }

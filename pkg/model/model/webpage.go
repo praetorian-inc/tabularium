@@ -216,7 +216,7 @@ func (w *Webpage) Merge(other Webpage) {
 }
 
 func (w *Webpage) HydratableFilepath() string {
-	return w.DetailsFilepath
+	return w.DetailsFilePath()
 }
 
 func (w *Webpage) Hydrate(data []byte) error {
