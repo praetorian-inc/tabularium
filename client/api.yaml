@@ -2939,6 +2939,10 @@ components:
           description: Primary DNS associated with the job's target.
           example: example.com
           type: string
+        finished:
+          description: Timestamp when the job was finished (RFC3339).
+          example: "2023-10-27T10:05:00Z"
+          type: string
         full:
           description: Indicates if this is a full scan job.
           example: "false"
@@ -2975,6 +2979,10 @@ components:
           description: The source or capability that generated this job.
           example: portscan
           type: string
+        started:
+          description: Timestamp when the job was started (RFC3339).
+          example: "2023-10-27T10:05:00Z"
+          type: string
         status:
           description: Current status of the job (e.g., JQ#portscan).
           example: JQ#portscan
@@ -3006,11 +3014,13 @@ components:
       - config
       - created
       - dns
+      - finished
       - key
       - origin
       - retries
       - secret
       - source
+      - started
       - status
       - target
       - ttl
