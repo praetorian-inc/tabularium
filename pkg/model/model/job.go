@@ -21,6 +21,8 @@ type Job struct {
 	Comment               string            `dynamodbav:"comment" json:"comment,omitempty" desc:"Optional comment about the job." example:"Scanning standard web ports"`
 	Created               string            `dynamodbav:"created" json:"created" desc:"Timestamp when the job was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
 	Updated               string            `dynamodbav:"updated" json:"updated" desc:"Timestamp when the job was last updated (RFC3339)." example:"2023-10-27T10:05:00Z"`
+	Started               string            `dynamodbav:"started" json:"started" desc:"Timestamp when the job was started (RFC3339)." example:"2023-10-27T10:05:00Z"`
+	Finished              string            `dynamodbav:"finished" json:"finished" desc:"Timestamp when the job was finished (RFC3339)." example:"2023-10-27T10:05:00Z"`
 	Delayed               string            `dynamodbav:"delayed,omitempty" json:"delayed,omitempty" desc:"Timestamp that this job should be delayed until" example:"2023-10-27T10:00:00Z"`
 	Status                string            `dynamodbav:"status" json:"status" desc:"Current status of the job (e.g., JQ#portscan)." example:"JQ#portscan"`
 	TTL                   int64             `dynamodbav:"ttl" json:"ttl" desc:"Time-to-live for the job record (Unix timestamp)." example:"1706353200"`
@@ -84,6 +86,13 @@ func (job *Job) Update(status string) {
 }
 
 func (job *Job) SetStatus(status string) {
+	if status == Queued {
+		job.Started, job.Finished = "", ""
+	} else if job.Started == "" && status == Running {
+		job.Started = Now()
+	} else if job.Finished == "" && (status == Fail || status == Pass) {
+		job.Finished = Now()
+	}
 	job.Status = fmt.Sprintf("%s#%s", status, job.Source)
 }
 
