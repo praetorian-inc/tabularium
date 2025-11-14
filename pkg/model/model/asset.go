@@ -112,6 +112,10 @@ func (a *Asset) Valid() bool {
 	return assetKey.MatchString(a.Key)
 }
 
+func (a *Asset) GetPartitionKey() string {
+	return a.Name
+}
+
 func (a *Asset) Visit(o Assetlike) {
 	other, ok := o.(*Asset)
 	if !ok {

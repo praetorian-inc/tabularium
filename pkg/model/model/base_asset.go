@@ -176,11 +176,7 @@ func (a *BaseAsset) GetSecret() string {
 // This ensures jobs for the same asset are grouped together while
 // distributing load across different assets.
 func (a *BaseAsset) GetPartitionKey() string {
-	if a.Identifier != "" {
-		return a.Identifier
-	}
-	// Fallback to Name if available (for concrete types like Asset)
-	return a.Key
+	return a.Identifier
 }
 
 func (a *BaseAsset) Defaulted() {
