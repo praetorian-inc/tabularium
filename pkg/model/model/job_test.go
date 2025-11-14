@@ -515,7 +515,7 @@ func TestJob_Valid(t *testing.T) {
 	noKey := Job{}
 	badKey := Job{Key: "malformed"}
 	goodJob := NewJob("test", &target)
-	
+
 	emptyCredentials := NewJob("test", &target)
 	emptyCredentials.CredentialIDs = []string{""}
 	goodJobWithCredentials := NewJob("test", &target)
@@ -527,4 +527,146 @@ func TestJob_Valid(t *testing.T) {
 
 	assert.True(t, goodJob.Valid())
 	assert.True(t, goodJobWithCredentials.Valid())
+}
+
+func TestJob_SetStatus_StartedAndFinishedTimes(t *testing.T) {
+	target := NewAsset("example.com", "example.com")
+
+	t.Run("queued status clears started and finished times", func(t *testing.T) {
+		job := NewJob("test-source", &target)
+
+		// Set some initial times
+		job.Started = "2023-10-27T10:00:00Z"
+		job.Finished = "2023-10-27T10:05:00Z"
+
+		// Set status to queued
+		job.SetStatus(Queued)
+
+		// Verify both times are cleared
+		assert.Empty(t, job.Started, "Started time should be cleared when status is set to Queued")
+		assert.Empty(t, job.Finished, "Finished time should be cleared when status is set to Queued")
+		assert.Equal(t, "JQ#test-source", job.Status)
+	})
+
+	t.Run("running status sets started time when unset", func(t *testing.T) {
+		job := NewJob("test-source", &target)
+
+		// Ensure started is empty
+		job.Started = ""
+
+		// Set status to running
+		job.SetStatus(Running)
+
+		// Verify started time is set
+		assert.NotEmpty(t, job.Started, "Started time should be set when status changes to Running")
+		assert.Empty(t, job.Finished, "Finished time should remain empty")
+		assert.Equal(t, "JR#test-source", job.Status)
+	})
+
+	t.Run("running status does not overwrite existing started time", func(t *testing.T) {
+		job := NewJob("test-source", &target)
+
+		// Set an existing started time
+		existingStarted := "2023-10-27T09:00:00Z"
+		job.Started = existingStarted
+
+		// Set status to running
+		job.SetStatus(Running)
+
+		// Verify started time is not overwritten
+		assert.Equal(t, existingStarted, job.Started, "Started time should not be overwritten when already set")
+		assert.Equal(t, "JR#test-source", job.Status)
+	})
+
+	t.Run("pass status sets finished time when unset", func(t *testing.T) {
+		job := NewJob("test-source", &target)
+
+		// Ensure finished is empty
+		job.Finished = ""
+
+		// Set status to pass
+		job.SetStatus(Pass)
+
+		// Verify finished time is set
+		assert.NotEmpty(t, job.Finished, "Finished time should be set when status changes to Pass")
+		assert.Equal(t, "JP#test-source", job.Status)
+	})
+
+	t.Run("fail status sets finished time when unset", func(t *testing.T) {
+		job := NewJob("test-source", &target)
+
+		// Ensure finished is empty
+		job.Finished = ""
+
+		// Set status to fail
+		job.SetStatus(Fail)
+
+		// Verify finished time is set
+		assert.NotEmpty(t, job.Finished, "Finished time should be set when status changes to Fail")
+		assert.Equal(t, "JF#test-source", job.Status)
+	})
+
+	t.Run("pass status does not overwrite existing finished time", func(t *testing.T) {
+		job := NewJob("test-source", &target)
+
+		// Set an existing finished time
+		existingFinished := "2023-10-27T10:05:00Z"
+		job.Finished = existingFinished
+
+		// Set status to pass
+		job.SetStatus(Pass)
+
+		// Verify finished time is not overwritten
+		assert.Equal(t, existingFinished, job.Finished, "Finished time should not be overwritten when already set")
+		assert.Equal(t, "JP#test-source", job.Status)
+	})
+
+	t.Run("fail status does not overwrite existing finished time", func(t *testing.T) {
+		job := NewJob("test-source", &target)
+
+		// Set an existing finished time
+		existingFinished := "2023-10-27T10:05:00Z"
+		job.Finished = existingFinished
+
+		// Set status to fail
+		job.SetStatus(Fail)
+
+		// Verify finished time is not overwritten
+		assert.Equal(t, existingFinished, job.Finished, "Finished time should not be overwritten when already set")
+		assert.Equal(t, "JF#test-source", job.Status)
+	})
+
+	t.Run("full job lifecycle manages times correctly", func(t *testing.T) {
+		job := NewJob("test-source", &target)
+
+		// Initial state: no times set
+		assert.Empty(t, job.Started)
+		assert.Empty(t, job.Finished)
+
+		// Move to running: started should be set
+		job.SetStatus(Running)
+		assert.NotEmpty(t, job.Started, "Started should be set when moving to Running")
+		assert.Empty(t, job.Finished, "Finished should still be empty")
+		startedTime := job.Started
+
+		// Move to pass: finished should be set
+		job.SetStatus(Pass)
+		assert.Equal(t, startedTime, job.Started, "Started should remain unchanged")
+		assert.NotEmpty(t, job.Finished, "Finished should be set when moving to Pass")
+
+		// Re-queue: both times should be cleared
+		job.SetStatus(Queued)
+		assert.Empty(t, job.Started, "Started should be cleared when re-queued")
+		assert.Empty(t, job.Finished, "Finished should be cleared when re-queued")
+
+		// Run again: new started time should be set
+		job.SetStatus(Running)
+		assert.NotEmpty(t, job.Started, "Started should be set again after re-queuing")
+		secondStartedTime := job.Started
+
+		// Fail this time: finished should be set
+		job.SetStatus(Fail)
+		assert.NotEmpty(t, job.Finished, "Finished should be set when failing")
+		assert.Equal(t, secondStartedTime, job.Started, "Started should remain unchanged during failure")
+	})
 }
