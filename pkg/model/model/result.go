@@ -4,21 +4,23 @@ import (
 	"fmt"
 	"log/slog"
 	"strconv"
+	"strings"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 type ResultContext struct {
-	Username     string            `json:"username" desc:"Username who initiated or owns the job."`
-	Source       string            `json:"source" desc:"The source or capability that generated this job."`
-	Config       map[string]string `json:"config" desc:"Configuration parameters for the job capability."`
-	Secret       map[string]string `json:"secret" desc:"Sensitive configuration parameters (credentials, tokens, keys)."`
-	Target       TargetWrapper     `json:"target" desc:"The primary target of the job."`
-	Parent       TargetWrapper     `json:"parent,omitempty" desc:"Optional parent target from which this job was spawned."`
-	Origin       TargetWrapper     `json:"origin" desc:"The origin for this chain of jobs. Defaults to target unless set here."`
-	Queue        string            `json:"queue,omitempty" desc:"Target queue for the job."`
-	Capabilities []string          `json:"capabilities,omitempty" desc:"List of specific capabilities to run for this job."`
-	FullScan     bool              `json:"full,omitempty" desc:"Whether a full scan was performed or not."`
+	Username      string            `json:"username" desc:"Username who initiated or owns the job."`
+	Source        string            `json:"source" desc:"The source or capability that generated this job."`
+	Config        map[string]string `json:"config" desc:"Configuration parameters for the job capability."`
+	Secret        map[string]string `json:"secret" desc:"Sensitive configuration parameters (credentials, tokens, keys)."`
+	Target        TargetWrapper     `json:"target" desc:"The primary target of the job."`
+	Parent        TargetWrapper     `json:"parent,omitempty" desc:"Optional parent target from which this job was spawned."`
+	Origin        TargetWrapper     `json:"origin" desc:"The origin for this chain of jobs. Defaults to target unless set here."`
+	Queue         string            `json:"queue,omitempty" desc:"Target queue for the job."`
+	Capabilities  []string          `json:"capabilities,omitempty" desc:"List of specific capabilities to run for this job."`
+  FullScan     bool              `json:"full,omitempty" desc:"Whether a full scan was performed or not."`
+	AgentClientID string            `json:"agent_client_id,omitempty" desc:"Aegis agent client ID that performed the scan."`
 }
 
 func _importEntity(entity string, config map[string]string) bool {
@@ -60,6 +62,20 @@ func (rc *ResultContext) GetOrigin() Target {
 		return rc.Origin.Model
 	}
 	return rc.Target.Model
+}
+
+// GetAgentClientID returns the agent client ID after validating it's not empty or just whitespace
+func (rc *ResultContext) GetAgentClientID() string {
+	if rc.AgentClientID == "" {
+		return ""
+	}
+	// Validate that the client ID is not just whitespace
+	trimmed := strings.TrimSpace(rc.AgentClientID)
+	if trimmed == "" {
+		slog.Warn("AgentClientID contains only whitespace, returning empty string")
+		return ""
+	}
+	return trimmed
 }
 
 type SpawnJobOption func(job *Job)

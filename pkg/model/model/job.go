@@ -228,15 +228,22 @@ func (job *Job) GetDescription() string {
 }
 
 func (job *Job) ToContext() ResultContext {
+	// Extract agent client ID from config if present (for Aegis agora capabilities)
+	agentClientID := ""
+	if clientID, ok := job.Config["client_id"]; ok {
+		agentClientID = clientID
+	}
+
 	return ResultContext{
-		Username:     job.Username,
-		Source:       job.Source,
-		Config:       job.Config,
-		Secret:       job.Secret,
-		Target:       job.Target,
-		Parent:       job.Parent,
-		Queue:        job.Queue,
-		Capabilities: job.Capabilities,
-		FullScan:     job.Full,
+		Username:      job.Username,
+		Source:        job.Source,
+		Config:        job.Config,
+		Secret:        job.Secret,
+		Target:        job.Target,
+		Parent:        job.Parent,
+		Queue:         job.Queue,
+		Capabilities:  job.Capabilities,
+    FullScan:      job.Full,
+		AgentClientID: agentClientID,
 	}
 }

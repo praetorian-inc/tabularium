@@ -2,6 +2,7 @@ package model
 
 import (
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
@@ -34,6 +35,20 @@ type AegisAgent struct {
 	OSVersion         string                  `json:"os_version" desc:"Operating system version"`
 	Architecture      string                  `json:"architecture" desc:"CPU architecture (e.g., amd64, arm64)"`
 	HealthCheck       *AegisHealthCheckData   `json:"health_check,omitempty" desc:"Latest health check payload"`
+}
+
+// GetLabels returns the Neo4j labels for AegisAgent
+func (a *AegisAgent) GetLabels() []string {
+	return []string{"AegisAgent", TTLLabel}
+}
+
+// Valid checks if the AegisAgent has required fields
+func (a *AegisAgent) Valid() bool {
+	if a.ClientID == "" || a.Key == "" {
+		return false
+	}
+	// Ensure ClientID is consistent by checking it's not just whitespace
+	return len(strings.TrimSpace(a.ClientID)) > 0
 }
 
 // AegisNetworkInterface represents a network interface on an Aegis agent
