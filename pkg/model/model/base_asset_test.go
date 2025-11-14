@@ -819,3 +819,171 @@ func TestMetadata_VisitOrigin(t *testing.T) {
 		})
 	}
 }
+
+func TestBaseAsset_GetPartitionKey(t *testing.T) {
+	tests := []struct {
+		name       string
+		baseAsset  BaseAsset
+		wantKey    string
+	}{
+		{
+			name: "returns identifier when set",
+			baseAsset: BaseAsset{
+				Identifier: "192.168.1.1",
+				Group:      "example.com",
+			},
+			wantKey: "192.168.1.1",
+		},
+		{
+			name: "returns identifier for different group, same identifier",
+			baseAsset: BaseAsset{
+				Identifier: "192.168.1.1",
+				Group:      "different.com",
+			},
+			wantKey: "192.168.1.1",
+		},
+		{
+			name: "returns empty string when identifier not set",
+			baseAsset: BaseAsset{
+				Group: "example.com",
+			},
+			wantKey: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.baseAsset.GetPartitionKey()
+			assert.Equal(t, tt.wantKey, got)
+		})
+	}
+}
+
+func TestAsset_GetPartitionKey_SameIP(t *testing.T) {
+	// Test that different DNS names on the same IP resolve to the same partition
+	asset1 := NewAsset("example.com", "192.168.1.1")
+	asset2 := NewAsset("test.com", "192.168.1.1")
+	asset3 := NewAsset("another.com", "192.168.1.1")
+
+	partition1 := asset1.GetPartitionKey()
+	partition2 := asset2.GetPartitionKey()
+	partition3 := asset3.GetPartitionKey()
+
+	// All should have the same partition key (the IP address)
+	assert.Equal(t, "192.168.1.1", partition1, "asset1 should use IP as partition key")
+	assert.Equal(t, "192.168.1.1", partition2, "asset2 should use IP as partition key")
+	assert.Equal(t, "192.168.1.1", partition3, "asset3 should use IP as partition key")
+	assert.Equal(t, partition1, partition2, "asset1 and asset2 should have same partition")
+	assert.Equal(t, partition1, partition3, "asset1 and asset3 should have same partition")
+}
+
+func TestAsset_GetPartitionKey_DifferentAssetTypes(t *testing.T) {
+	// Test various asset types
+	ipv4Asset := NewAsset("example.com", "192.168.1.1")
+	domainAsset := NewAsset("example.com", "example.com")
+	cidrAsset := NewAsset("10.0.0.0/8", "10.0.0.0/8")
+
+	assert.Equal(t, "192.168.1.1", ipv4Asset.GetPartitionKey(), "IPv4 asset should use IP")
+	assert.Equal(t, "example.com", domainAsset.GetPartitionKey(), "Domain asset should use domain")
+	assert.Equal(t, "10.0.0.0/8", cidrAsset.GetPartitionKey(), "CIDR asset should use CIDR")
+
+	// Verify different IPs get different partitions
+	ipv4Asset2 := NewAsset("different.com", "10.0.0.1")
+	assert.NotEqual(t, ipv4Asset.GetPartitionKey(), ipv4Asset2.GetPartitionKey(),
+		"Different IPs should have different partitions")
+}
+
+func TestPartitioned_IntegrationSameIPDifferentDNSAndPorts(t *testing.T) {
+	// Integration test: Verify that the Partitioned interface works correctly
+	// across multiple assets and ports on the same IP address.
+	// This simulates a real-world scenario where multiple domains resolve to
+	// the same IP and have various ports open.
+
+	sharedIP := "192.168.1.1"
+
+	// Create three different DNS names pointing to the same IP
+	asset1 := NewAsset("example.com", sharedIP)
+	asset2 := NewAsset("test.com", sharedIP)
+	asset3 := NewAsset("api.example.com", sharedIP)
+
+	// Create multiple ports on each asset
+	port1_80 := NewPort("tcp", 80, &asset1)
+	port1_443 := NewPort("tcp", 443, &asset1)
+
+	port2_80 := NewPort("tcp", 80, &asset2)
+	port2_443 := NewPort("tcp", 443, &asset2)
+	port2_8080 := NewPort("tcp", 8080, &asset2)
+
+	port3_22 := NewPort("tcp", 22, &asset3)
+	port3_443 := NewPort("tcp", 443, &asset3)
+
+	// Collect all partition keys
+	assetPartitions := []string{
+		asset1.GetPartitionKey(),
+		asset2.GetPartitionKey(),
+		asset3.GetPartitionKey(),
+	}
+
+	portPartitions := []string{
+		port1_80.GetPartitionKey(),
+		port1_443.GetPartitionKey(),
+		port2_80.GetPartitionKey(),
+		port2_443.GetPartitionKey(),
+		port2_8080.GetPartitionKey(),
+		port3_22.GetPartitionKey(),
+		port3_443.GetPartitionKey(),
+	}
+
+	// Verify all assets partition by the shared IP
+	for i, partition := range assetPartitions {
+		assert.Equal(t, sharedIP, partition,
+			"Asset %d should partition by shared IP %s", i+1, sharedIP)
+	}
+
+	// Verify all ports partition by the shared IP
+	for i, partition := range portPartitions {
+		assert.Equal(t, sharedIP, partition,
+			"Port %d should partition by shared IP %s", i+1, sharedIP)
+	}
+
+	// Verify all partition keys are identical
+	allPartitions := append(assetPartitions, portPartitions...)
+	for i := 1; i < len(allPartitions); i++ {
+		assert.Equal(t, allPartitions[0], allPartitions[i],
+			"All assets and ports on the same IP should have identical partition keys")
+	}
+
+	// Verify interface compliance
+	var _ Partitioned = &asset1
+	var _ Partitioned = &port1_80
+
+	// Test that a different IP produces a different partition
+	differentAsset := NewAsset("different.com", "10.0.0.1")
+	differentPort := NewPort("tcp", 80, &differentAsset)
+
+	assert.NotEqual(t, sharedIP, differentAsset.GetPartitionKey(),
+		"Different IP should have different partition")
+	assert.NotEqual(t, sharedIP, differentPort.GetPartitionKey(),
+		"Port on different IP should have different partition")
+}
+
+func TestPartitioned_InterfaceTypeAssertion(t *testing.T) {
+	// Test that the Partitioned interface can be used with type assertions
+	asset := NewAsset("example.com", "192.168.1.1")
+
+	// Test as interface{}
+	var model interface{} = &asset
+	partitioned, ok := model.(Partitioned)
+	assert.True(t, ok, "Asset should implement Partitioned interface")
+	assert.Equal(t, "192.168.1.1", partitioned.GetPartitionKey())
+
+	// Test with Port
+	port := NewPort("tcp", 80, &asset)
+	var portModel interface{} = &port
+	portPartitioned, ok := portModel.(Partitioned)
+	assert.True(t, ok, "Port should implement Partitioned interface")
+	assert.Equal(t, "192.168.1.1", portPartitioned.GetPartitionKey())
+
+	// Test fallback behavior for types without Partitioned
+	// (this would be tested if we had a type that implements HasKey but not Partitioned)
+}
