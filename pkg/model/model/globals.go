@@ -56,6 +56,13 @@ type HasSecret interface {
 	GetSecret() string
 }
 
+// Partitioned is an interface for models that support custom partition key generation.
+// This is used for load distribution across SQS FIFO message groups or similar partitioning needs.
+// Models that don't implement this interface will fall back to using their Key for partitioning.
+type Partitioned interface {
+	GetPartitionKey() string
+}
+
 // TableModel is a noop interface that is used to make DynamoDB inserts type-safe
 type TableModel interface {
 	TableModel()

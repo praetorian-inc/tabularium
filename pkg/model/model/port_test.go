@@ -152,3 +152,73 @@ func TestPortConditions(t *testing.T) {
 	assert.Equal(t, "http", conditions[2].Name)
 	assert.Equal(t, "", conditions[2].Value)
 }
+
+func TestPort_GetPartitionKey(t *testing.T) {
+	// Test that different ports on the same IP have the same partition key
+	asset := NewAsset("example.com", "192.168.1.1")
+	port80 := NewPort("tcp", 80, &asset)
+	port443 := NewPort("tcp", 443, &asset)
+	port8080 := NewPort("tcp", 8080, &asset)
+
+	partition80 := port80.GetPartitionKey()
+	partition443 := port443.GetPartitionKey()
+	partition8080 := port8080.GetPartitionKey()
+
+	// All ports on the same IP should have the same partition key
+	assert.Equal(t, "192.168.1.1", partition80, "port 80 should use parent asset IP")
+	assert.Equal(t, "192.168.1.1", partition443, "port 443 should use parent asset IP")
+	assert.Equal(t, "192.168.1.1", partition8080, "port 8080 should use parent asset IP")
+	assert.Equal(t, partition80, partition443, "port 80 and 443 should have same partition")
+	assert.Equal(t, partition80, partition8080, "port 80 and 8080 should have same partition")
+}
+
+func TestPort_GetPartitionKey_DifferentIPs(t *testing.T) {
+	// Test that ports on different IPs have different partition keys
+	asset1 := NewAsset("example.com", "192.168.1.1")
+	asset2 := NewAsset("test.com", "10.0.0.1")
+
+	port1 := NewPort("tcp", 80, &asset1)
+	port2 := NewPort("tcp", 80, &asset2)
+
+	partition1 := port1.GetPartitionKey()
+	partition2 := port2.GetPartitionKey()
+
+	assert.Equal(t, "192.168.1.1", partition1, "port1 should use first IP")
+	assert.Equal(t, "10.0.0.1", partition2, "port2 should use second IP")
+	assert.NotEqual(t, partition1, partition2, "different IPs should have different partitions")
+}
+
+func TestPort_GetPartitionKey_SameIPDifferentDNS(t *testing.T) {
+	// Critical test: different DNS names pointing to the same IP
+	// should result in the same partition key for all their ports
+	asset1 := NewAsset("example.com", "192.168.1.1")
+	asset2 := NewAsset("test.com", "192.168.1.1")
+	asset3 := NewAsset("another.com", "192.168.1.1")
+
+	port1 := NewPort("tcp", 80, &asset1)
+	port2 := NewPort("tcp", 443, &asset2)
+	port3 := NewPort("tcp", 8080, &asset3)
+
+	partition1 := port1.GetPartitionKey()
+	partition2 := port2.GetPartitionKey()
+	partition3 := port3.GetPartitionKey()
+
+	// All ports should partition by the shared IP address, not by DNS
+	assert.Equal(t, "192.168.1.1", partition1, "port on example.com should use IP")
+	assert.Equal(t, "192.168.1.1", partition2, "port on test.com should use IP")
+	assert.Equal(t, "192.168.1.1", partition3, "port on another.com should use IP")
+	assert.Equal(t, partition1, partition2, "ports on different DNS but same IP should partition together")
+	assert.Equal(t, partition1, partition3, "all ports on same IP should partition together")
+}
+
+func TestPort_GetPartitionKey_MatchesParentAsset(t *testing.T) {
+	// Verify that port partition key matches the parent asset's partition key
+	asset := NewAsset("example.com", "192.168.1.1")
+	port := NewPort("tcp", 443, &asset)
+
+	assetPartition := asset.GetPartitionKey()
+	portPartition := port.GetPartitionKey()
+
+	assert.Equal(t, assetPartition, portPartition,
+		"port partition key should match parent asset partition key")
+}
