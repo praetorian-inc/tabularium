@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/praetorian-inc/tabularium/pkg/model/beta"
@@ -405,4 +406,13 @@ func TestRisk_MergePreservesCreated(t *testing.T) {
 		assert.Equal(t, newRisk.Visited, existingRisk.Visited, "Visited should be updated from new risk")
 		assert.NotEmpty(t, existingRisk.Updated, "Updated should be set when status changes")
 	})
+}
+
+func TestRisk_SetPlexTracID(t *testing.T) {
+	asset := NewAsset("example.com", "example.com")
+	risk := NewRisk(&asset, "test-risk", TriageInfo)
+	require.Empty(t, risk.PlextracID)
+
+	risk.SetPlexTracID(123, 456, 789)
+	require.Equal(t, "#123#456#789", risk.PlextracID)
 }
