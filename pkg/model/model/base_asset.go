@@ -171,6 +171,18 @@ func (a *BaseAsset) GetSecret() string {
 	return ""
 }
 
+// GetPartitionKey returns a partition key for load distribution.
+// Uses the Identifier field for natural partitioning by asset identity.
+// This ensures jobs for the same asset are grouped together while
+// distributing load across different assets.
+func (a *BaseAsset) GetPartitionKey() string {
+	if a.Identifier != "" {
+		return a.Identifier
+	}
+	// Fallback to Name if available (for concrete types like Asset)
+	return a.Key
+}
+
 func (a *BaseAsset) Defaulted() {
 	a.Status = Active
 	a.Source = SelfSource

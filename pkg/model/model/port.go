@@ -110,6 +110,13 @@ func (p *Port) IsPrivate() bool {
 	return parent.IsPrivate()
 }
 
+// GetPartitionKey returns the parent asset's name for partitioning.
+// This ensures all ports on the same asset are partitioned together,
+// allowing efficient processing of related port scanning jobs.
+func (p *Port) GetPartitionKey() string {
+	return p.Asset().Name
+}
+
 func (p *Port) Defaulted() {
 	p.Status = Active
 	p.Visited = Now()
