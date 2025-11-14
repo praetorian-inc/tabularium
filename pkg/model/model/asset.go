@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
@@ -48,21 +49,16 @@ func (a *Asset) GetClass() string {
 			return "s3", s3.FindStringSubmatch(s) != nil
 		},
 		func(s string) (string, bool) {
-			ip := net.ParseIP(s)
-			if ip == nil {
-				return "", false
-			}
-			if ip4 := ip.To4(); ip4 != nil {
-				return "ipv4", true
-			}
-			return "ipv6", true
+			return "ipv4", isIPv4(s)
+		},
+		func(s string) (string, bool) {
+			return "ipv6", isIPv6(s)
 		},
 	}
 
 	dns := []func(string) (string, bool){
 		func(s string) (string, bool) {
-			_, _, err := net.ParseCIDR(s)
-			return "cidr", err == nil
+			return "cidr", isCIDR(s)
 		},
 		func(s string) (string, bool) {
 			tld, icann := publicsuffix.PublicSuffix(s)
@@ -70,7 +66,7 @@ func (a *Asset) GetClass() string {
 			return "tld", len(parts) == 2 && icann && !strings.Contains(s, "/")
 		},
 		func(s string) (string, bool) {
-			return "domain", domain.MatchString(s)
+			return "domain", isDomain(s)
 		},
 	}
 
@@ -93,6 +89,33 @@ func (a *Asset) GetClass() string {
 	return ""
 }
 
+func isIP(value string) bool {
+	return isIPv4(value) || isIPv6(value)
+}
+
+func isIPv4(value string) bool {
+	ip := net.ParseIP(value)
+	return ip != nil && ip.To4() != nil
+}
+
+func isIPv6(value string) bool {
+	ip := net.ParseIP(value)
+	return ip != nil && ip.To4() == nil
+}
+
+func isCIDR(value string) bool {
+	_, _, err := net.ParseCIDR(value)
+	return err == nil
+}
+
+func isDomain(value string) bool {
+	return domain.MatchString(value)
+}
+
+func isCloudAccount(value string) bool {
+	return slices.Contains([]string{"amazon", "azure", "gcp"}, value)
+}
+
 func (a *Asset) IsPrivate() bool {
 	if a.IsClass("ipv") {
 		return net.ParseIP(a.Name).IsPrivate()
@@ -109,7 +132,15 @@ func (a *Asset) IsPrivate() bool {
 }
 
 func (a *Asset) Valid() bool {
-	return assetKey.MatchString(a.Key)
+	keyMatches := assetKey.MatchString(a.Key)
+
+	isDomainAsset := isDomain(a.DNS) && isDomain(a.Name)
+	isIPAsset := isIP(a.DNS) && isIP(a.Name)
+	isDomainIPAsset := isDomain(a.DNS) && isIP(a.Name)
+	isCIDRAsset := isCIDR(a.DNS) && isCIDR(a.Name)
+	isCloudAsset := isCloudAccount(a.DNS)
+
+	return keyMatches && (isDomainAsset || isIPAsset || isDomainIPAsset || isCIDRAsset || isCloudAsset)
 }
 
 func (a *Asset) Visit(o Assetlike) {

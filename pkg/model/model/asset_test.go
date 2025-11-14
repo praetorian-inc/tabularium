@@ -33,19 +33,14 @@ func TestAsset_Class(t *testing.T) {
 		{"example.com", "0.0.0.0", SelfSource, "ipv4", false},
 		{"example.com", "2001::0000", SelfSource, "ipv6", false},
 		{"example.com", "192.168.0.1", SelfSource, "ipv4", true},
-		// {"https://github.com/example-inc/example-repo", "example-repo", SelfSource, "repository", false},
-		// {"https://gitlab.com/example-inc/example-repo", "example-repo", SelfSource, "repository", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := NewAsset(tt.dns, tt.name)
 			a.Source = tt.source
-			if got := a.GetClass(); got != tt.want {
-				t.Errorf("key: %s, GetClass(): %s, want: %s", a.Key, got, tt.want)
-			}
-			if gotPrivate := a.Private; gotPrivate != tt.wantPrivate {
-				t.Errorf("key: %s, Private: %t, want: %t", a.Key, gotPrivate, tt.wantPrivate)
-			}
+
+			assert.Equal(t, tt.want, a.GetClass(), "unexpected class for asset %q", a.Key)
+			assert.Equal(t, tt.wantPrivate, a.Private, "unexpected private for asset %q", a.Key)
 		})
 	}
 }
@@ -67,6 +62,26 @@ func TestAsset_Valid(t *testing.T) {
 			want: true,
 		},
 		{
+			name: "valid asset key with CIDR",
+			key:  "#asset#203.0.113.42/16#203.0.113.42/16",
+			want: true,
+		},
+		{
+			name: "valid amazon account",
+			key:  "#asset#amazon#123456789012",
+			want: true,
+		},
+		{
+			name: "valid azure subscription",
+			key:  "#asset#azure#EBB20B6C-98CB-4219-B5C3-620A4D38CCC6",
+			want: true,
+		},
+		{
+			name: "valid gcp project",
+			key:  "#asset#gcp#example-project",
+			want: true,
+		},
+		{
 			name: "invalid - missing asset prefix",
 			key:  "#registry#db.example.com#10.0.0.1",
 			want: false,
@@ -74,6 +89,11 @@ func TestAsset_Valid(t *testing.T) {
 		{
 			name: "invalid - attribute key",
 			key:  "#attribute#https#443#asset#db.example.com#10.0.0.1",
+			want: false,
+		},
+		{
+			name: "invalid - garbage",
+			key:  "#asset#entity url (http/https):https://exmaple.com/login#entity url (http/https):https://exmaple.com/login",
 			want: false,
 		},
 	}
@@ -173,7 +193,7 @@ func TestAsset_IsPrivate(t *testing.T) {
 	}
 }
 
-func TestAsset_Unmarshall(t *testing.T) {
+func TestAsset_Unmarshal(t *testing.T) {
 	tests := []struct {
 		name  string
 		data  string
