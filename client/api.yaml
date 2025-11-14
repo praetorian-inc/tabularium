@@ -4199,6 +4199,25 @@ components:
       - BaseRelationship
       - relationshipType
       type: object
+    scannedby:
+      description: Represents the relationship indicating an asset was discovered/scanned
+        by an Aegis agent, enabling network reachability tracking.
+      properties:
+        BaseRelationship:
+          type: object
+        scan_time:
+          description: Timestamp when the scan was performed (RFC3339).
+          example: "2023-10-27T12:00:00Z"
+          type: string
+        scan_type:
+          description: Type of scan performed (e.g., nmap, ping).
+          example: nmap
+          type: string
+      required:
+      - BaseRelationship
+      - scan_time
+      - scan_type
+      type: object
     scanner:
       description: Represents a record of access to chariot
       properties:
