@@ -2965,6 +2965,10 @@ components:
         parent:
           description: Optional parent target from which this job was spawned.
           type: object
+        partition:
+          description: The partition of the job.
+          example: user@example.com##asset#test#0.0.0.0
+          type: string
         retries:
           description: The number of times this job has been retried.
           type: integer
