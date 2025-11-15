@@ -39,6 +39,7 @@ type Job struct {
 	Queue                 string            `dynamodbav:"-" desc:"Target queue for the job." example:"standard"`
 	Conversation          string            `dynamodbav:"conversation,omitempty" json:"conversation,omitempty" desc:"UUID of the conversation that initiated this job." example:"550e8400-e29b-41d4-a716-446655440000"`
 	User                  string            `dynamodbav:"user,omitempty" json:"user,omitempty" desc:"User who initiated this job." example:"user@example.com"`
+	Partition             string            `dynamodbav:"partition,omitempty" json:"partition,omitempty" desc:"The partition of the job." example:"user@example.com##asset#test#0.0.0.0"`
 	Origin                TargetWrapper     `dynamodbav:"origin" json:"origin" desc:"The job that originally started this chain of jobs."`
 	Target                TargetWrapper     `dynamodbav:"target" json:"target" desc:"The primary target of the job."`
 	Parent                TargetWrapper     `dynamodbav:"parent" json:"parent,omitempty" desc:"Optional parent target from which this job was spawned."`
@@ -243,7 +244,7 @@ func (job *Job) ToContext() ResultContext {
 		Parent:        job.Parent,
 		Queue:         job.Queue,
 		Capabilities:  job.Capabilities,
-    FullScan:      job.Full,
+		FullScan:      job.Full,
 		AgentClientID: agentClientID,
 	}
 }
