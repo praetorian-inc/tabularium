@@ -298,29 +298,29 @@ func TestJob_AgentClientIDExtraction(t *testing.T) {
 	dummy := NewAsset("example.com", "example.com")
 
 	tests := []struct {
-		name              string
-		config            map[string]string
-		expectedClientID  string
+		name             string
+		config           map[string]string
+		expectedClientID string
 	}{
 		{
-			name:              "client_id present in config",
-			config:            map[string]string{"client_id": "agent-123"},
-			expectedClientID:  "agent-123",
+			name:             "client_id present in config",
+			config:           map[string]string{"client_id": "agent-123"},
+			expectedClientID: "agent-123",
 		},
 		{
-			name:              "no client_id in config",
-			config:            map[string]string{"other_key": "value"},
-			expectedClientID:  "",
+			name:             "no client_id in config",
+			config:           map[string]string{"other_key": "value"},
+			expectedClientID: "",
 		},
 		{
-			name:              "empty config",
-			config:            map[string]string{},
-			expectedClientID:  "",
+			name:             "empty config",
+			config:           map[string]string{},
+			expectedClientID: "",
 		},
 		{
-			name:              "client_id with special characters",
-			config:            map[string]string{"client_id": "agent-abc-123-xyz"},
-			expectedClientID:  "agent-abc-123-xyz",
+			name:             "client_id with special characters",
+			config:           map[string]string{"client_id": "agent-abc-123-xyz"},
+			expectedClientID: "agent-abc-123-xyz",
 		},
 	}
 
@@ -328,7 +328,7 @@ func TestJob_AgentClientIDExtraction(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			job := NewJob("test-source", &dummy)
 			job.Config = tt.config
-			
+
 			context := job.ToContext()
 			assert.Equal(t, tt.expectedClientID, context.AgentClientID, "AgentClientID should be extracted from config")
 		})
@@ -417,7 +417,7 @@ func TestJob_ContextPropagation(t *testing.T) {
 		context := job.ToContext()
 
 		assert.Equal(t, job.Username, context.Username, "Username should be preserved")
-		assert.Equal(t, job.Source, context.Source, "Source should be preserved")
+		assert.Equal(t, job.GetCapability(), context.Source, "Source should be preserved")
 		assert.Equal(t, job.Config, context.Config, "Config should be preserved")
 		assert.Equal(t, job.Secret, context.Secret, "Secret should be preserved")
 		assert.Equal(t, job.Capabilities, context.Capabilities, "Capabilities should be preserved")
@@ -504,7 +504,7 @@ func TestAegisAgent_Valid(t *testing.T) {
 			if tt.agent.ClientID != "" && tt.expected {
 				tt.agent.Key = "#aegisagent#" + tt.agent.ClientID
 			}
-			
+
 			result := tt.agent.Valid()
 			assert.Equal(t, tt.expected, result, "Agent validation should match expected result")
 		})

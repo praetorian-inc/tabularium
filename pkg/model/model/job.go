@@ -247,7 +247,7 @@ func (job *Job) ToContext() ResultContext {
 
 	return ResultContext{
 		Username:      job.Username,
-		Source:        job.Source,
+		Source:        job.GetCapability(),
 		Config:        job.Config,
 		Secret:        job.Secret,
 		Target:        job.Target,
