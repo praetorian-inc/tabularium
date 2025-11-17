@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"log/slog"
@@ -435,7 +436,8 @@ func TestJob_ContextPropagation(t *testing.T) {
 
 		spawnedJob := context.SpawnJob("child-source", &newTarget, newConfig)
 
-		assert.Equal(t, "child-source", spawnedJob.Source, "Spawned job should have new source")
+		assert.Equal(t, "child-source", spawnedJob.GetCapability(), "Spawned job should have new source capability")
+		assert.True(t, strings.HasPrefix(spawnedJob.Source, "child-source#"), "Source should start with child-source# followed by timestamp")
 		assert.Equal(t, newConfig, spawnedJob.Config, "Spawned job should have new config")
 		assert.Equal(t, job.Capabilities, spawnedJob.Capabilities, "Spawned job should inherit capabilities")
 		assert.Equal(t, job.Origin, spawnedJob.Origin, "Spawned job should inherit origin")
@@ -545,7 +547,8 @@ func TestJob_SetStatus_StartedAndFinishedTimes(t *testing.T) {
 		// Verify both times are cleared
 		assert.Empty(t, job.Started, "Started time should be cleared when status is set to Queued")
 		assert.Empty(t, job.Finished, "Finished time should be cleared when status is set to Queued")
-		assert.Equal(t, "JQ#test-source", job.Status)
+		assert.True(t, strings.HasPrefix(job.Status, "JQ#"), "Status should start with JQ# followed by timestamp")
+		assert.Equal(t, Queued, job.GetStatus(), "GetStatus should return Queued")
 	})
 
 	t.Run("running status sets started time when unset", func(t *testing.T) {
@@ -560,7 +563,8 @@ func TestJob_SetStatus_StartedAndFinishedTimes(t *testing.T) {
 		// Verify started time is set
 		assert.NotEmpty(t, job.Started, "Started time should be set when status changes to Running")
 		assert.Empty(t, job.Finished, "Finished time should remain empty")
-		assert.Equal(t, "JR#test-source", job.Status)
+		assert.True(t, strings.HasPrefix(job.Status, "JR#"), "Status should start with JR# followed by timestamp")
+		assert.Equal(t, Running, job.GetStatus(), "GetStatus should return Running")
 	})
 
 	t.Run("running status does not overwrite existing started time", func(t *testing.T) {
@@ -575,7 +579,8 @@ func TestJob_SetStatus_StartedAndFinishedTimes(t *testing.T) {
 
 		// Verify started time is not overwritten
 		assert.Equal(t, existingStarted, job.Started, "Started time should not be overwritten when already set")
-		assert.Equal(t, "JR#test-source", job.Status)
+		assert.True(t, strings.HasPrefix(job.Status, "JR#"), "Status should start with JR# followed by timestamp")
+		assert.Equal(t, Running, job.GetStatus(), "GetStatus should return Running")
 	})
 
 	t.Run("pass status sets finished time when unset", func(t *testing.T) {
@@ -589,7 +594,8 @@ func TestJob_SetStatus_StartedAndFinishedTimes(t *testing.T) {
 
 		// Verify finished time is set
 		assert.NotEmpty(t, job.Finished, "Finished time should be set when status changes to Pass")
-		assert.Equal(t, "JP#test-source", job.Status)
+		assert.True(t, strings.HasPrefix(job.Status, "JP#"), "Status should start with JP# followed by timestamp")
+		assert.Equal(t, Pass, job.GetStatus(), "GetStatus should return Pass")
 	})
 
 	t.Run("fail status sets finished time when unset", func(t *testing.T) {
@@ -603,7 +609,8 @@ func TestJob_SetStatus_StartedAndFinishedTimes(t *testing.T) {
 
 		// Verify finished time is set
 		assert.NotEmpty(t, job.Finished, "Finished time should be set when status changes to Fail")
-		assert.Equal(t, "JF#test-source", job.Status)
+		assert.True(t, strings.HasPrefix(job.Status, "JF#"), "Status should start with JF# followed by timestamp")
+		assert.Equal(t, Fail, job.GetStatus(), "GetStatus should return Fail")
 	})
 
 	t.Run("pass status does not overwrite existing finished time", func(t *testing.T) {
@@ -618,7 +625,8 @@ func TestJob_SetStatus_StartedAndFinishedTimes(t *testing.T) {
 
 		// Verify finished time is not overwritten
 		assert.Equal(t, existingFinished, job.Finished, "Finished time should not be overwritten when already set")
-		assert.Equal(t, "JP#test-source", job.Status)
+		assert.True(t, strings.HasPrefix(job.Status, "JP#"), "Status should start with JP# followed by timestamp")
+		assert.Equal(t, Pass, job.GetStatus(), "GetStatus should return Pass")
 	})
 
 	t.Run("fail status does not overwrite existing finished time", func(t *testing.T) {
@@ -633,7 +641,8 @@ func TestJob_SetStatus_StartedAndFinishedTimes(t *testing.T) {
 
 		// Verify finished time is not overwritten
 		assert.Equal(t, existingFinished, job.Finished, "Finished time should not be overwritten when already set")
-		assert.Equal(t, "JF#test-source", job.Status)
+		assert.True(t, strings.HasPrefix(job.Status, "JF#"), "Status should start with JF# followed by timestamp")
+		assert.Equal(t, Fail, job.GetStatus(), "GetStatus should return Fail")
 	})
 
 	t.Run("full job lifecycle manages times correctly", func(t *testing.T) {
@@ -668,5 +677,163 @@ func TestJob_SetStatus_StartedAndFinishedTimes(t *testing.T) {
 		job.SetStatus(Fail)
 		assert.NotEmpty(t, job.Finished, "Finished should be set when failing")
 		assert.Equal(t, secondStartedTime, job.Started, "Started should remain unchanged during failure")
+	})
+}
+
+func TestJob_SourceAndStatusConsistency(t *testing.T) {
+	target := NewAsset("example.com", "example.com")
+
+	t.Run("SetStatus updates status with timestamp", func(t *testing.T) {
+		job := NewJob("test-source", &target)
+
+		// Set a specific Updated time and verify exact format
+		job.Updated = "2023-10-27T10:00:00Z"
+		job.SetStatus(Running)
+
+		// Status should have the exact format: {status}#{timestamp}
+		assert.Equal(t, "JR#2023-10-27T10:00:00Z", job.Status, "Status should be exactly JR#{Updated}")
+
+		// Verify GetStatus extracts just the status part
+		assert.Equal(t, Running, job.GetStatus(), "GetStatus should return just the status without timestamp")
+	})
+
+	t.Run("SetCapability updates source with timestamp", func(t *testing.T) {
+		job := NewJob("test-source", &target)
+
+		// Set a specific Updated time and verify exact format
+		job.Updated = "2023-10-27T10:00:00Z"
+		job.SetCapability("new-capability")
+
+		// Source should have the exact format: {capability}#{timestamp}
+		assert.Equal(t, "new-capability#2023-10-27T10:00:00Z", job.Source, "Source should be exactly {capability}#{Updated}")
+
+		// Verify GetCapability extracts just the capability part
+		assert.Equal(t, "new-capability", job.GetCapability(), "GetCapability should return just the capability without timestamp")
+	})
+
+	t.Run("Update sets timestamp then calls SetStatus and SetCapability", func(t *testing.T) {
+		job := NewJob("test-source", &target)
+
+		// Get the initial capability
+		initialCapability := job.GetCapability()
+
+		// Call Update which should:
+		// 1. Set job.Updated to Now()
+		// 2. Call SetStatus(status) which uses job.Updated
+		// 3. Call SetCapability(capability) which uses job.Updated
+		job.Update(Running)
+
+		// Verify Updated was set
+		assert.NotEmpty(t, job.Updated, "Update should set the Updated field")
+
+		// Extract timestamps from Status and Source
+		statusParts := strings.Split(job.Status, "#")
+		sourceParts := strings.Split(job.Source, "#")
+
+		require.Len(t, statusParts, 2, "Status should have format {status}#{timestamp}")
+		require.Len(t, sourceParts, 2, "Source should have format {capability}#{timestamp}")
+
+		// Verify the format is exactly {status}#{job.Updated} and {capability}#{job.Updated}
+		assert.Equal(t, fmt.Sprintf("%s#%s", Running, job.Updated), job.Status, "Status should be {status}#{Updated}")
+		assert.Equal(t, fmt.Sprintf("%s#%s", initialCapability, job.Updated), job.Source, "Source should be {capability}#{Updated}")
+
+		// Both timestamps should match job.Updated
+		assert.Equal(t, job.Updated, statusParts[1], "Status timestamp should match Updated field")
+		assert.Equal(t, job.Updated, sourceParts[1], "Source timestamp should match Updated field")
+	})
+
+	t.Run("Update keeps Source and Status timestamps consistent", func(t *testing.T) {
+		job := NewJob("test-source", &target)
+
+		// Call Update which should update both Status and Source with the same timestamp
+		job.Update(Running)
+
+		// Extract timestamps from Status and Source
+		statusParts := strings.Split(job.Status, "#")
+		sourceParts := strings.Split(job.Source, "#")
+
+		require.Len(t, statusParts, 2, "Status should have format {status}#{timestamp}")
+		require.Len(t, sourceParts, 2, "Source should have format {capability}#{timestamp}")
+
+		statusTimestamp := statusParts[1]
+		sourceTimestamp := sourceParts[1]
+
+		// Both should have the same timestamp
+		assert.Equal(t, statusTimestamp, sourceTimestamp, "Status and Source should have the same timestamp after Update()")
+		assert.Equal(t, job.Updated, statusTimestamp, "Status timestamp should match Updated field")
+		assert.Equal(t, job.Updated, sourceTimestamp, "Source timestamp should match Updated field")
+	})
+
+	t.Run("Multiple state changes maintain timestamp consistency", func(t *testing.T) {
+		job := NewJob("test-source", &target)
+
+		// First update
+		job.Update(Running)
+		statusParts1 := strings.Split(job.Status, "#")
+		sourceParts1 := strings.Split(job.Source, "#")
+		assert.Equal(t, statusParts1[1], sourceParts1[1], "Timestamps should match after first Update")
+		assert.Equal(t, Running, job.GetStatus(), "Status should be Running after first Update")
+
+		// Second update with different status
+		job.Update(Pass)
+		statusParts2 := strings.Split(job.Status, "#")
+		sourceParts2 := strings.Split(job.Source, "#")
+		assert.Equal(t, statusParts2[1], sourceParts2[1], "Timestamps should match after second Update")
+		assert.Equal(t, Pass, job.GetStatus(), "Status should be Pass after second Update")
+
+		// Verify both updates have valid timestamp format
+		assert.NotEmpty(t, statusParts1[1], "First update should have a timestamp")
+		assert.NotEmpty(t, statusParts2[1], "Second update should have a timestamp")
+	})
+
+	t.Run("SetStatus alone does not update Source timestamp", func(t *testing.T) {
+		job := NewJob("test-source", &target)
+
+		// Get initial source
+		initialSource := job.Source
+
+		// Set a specific Updated time and call SetStatus
+		job.Updated = "2023-10-27T10:00:00Z"
+		job.SetStatus(Running)
+
+		// Source should remain unchanged since SetStatus doesn't modify Source
+		assert.Equal(t, initialSource, job.Source, "SetStatus should not modify Source field")
+
+		// But Status should have the new timestamp
+		assert.Contains(t, job.Status, "2023-10-27T10:00:00Z", "Status should have the new timestamp")
+	})
+
+	t.Run("GetStatus and GetCapability correctly extract values", func(t *testing.T) {
+		job := NewJob("test-source", &target)
+
+		// Manually set Status and Source with known timestamps
+		job.Status = "JR#2023-10-27T10:00:00Z"
+		job.Source = "portscan#2023-10-27T10:00:00Z"
+
+		assert.Equal(t, "JR", job.GetStatus(), "GetStatus should extract status without timestamp")
+		assert.Equal(t, "portscan", job.GetCapability(), "GetCapability should extract capability without timestamp")
+	})
+
+	t.Run("Is and Was methods work with timestamped status", func(t *testing.T) {
+		job := NewJob("test-source", &target)
+
+		// Set initial status
+		job.SetStatus(Queued)
+		job.originalStatus = job.Status
+
+		// Verify Is method
+		assert.True(t, job.Is(Queued), "Is(Queued) should return true")
+		assert.False(t, job.Is(Running), "Is(Running) should return false")
+
+		// Change status
+		job.SetStatus(Running)
+
+		// Verify Was method checks original status
+		assert.True(t, job.Was(Queued), "Was(Queued) should return true")
+		assert.False(t, job.Was(Running), "Was(Running) should return false")
+
+		// Verify Is method checks current status
+		assert.True(t, job.Is(Running), "Is(Running) should return true")
+		assert.False(t, job.Is(Queued), "Is(Queued) should return false")
 	})
 }
