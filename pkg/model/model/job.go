@@ -149,7 +149,7 @@ func (job *Job) GetHooks() []registry.Hook {
 				if job.Target.Model != nil {
 					group := job.Target.Model.Group()
 					identifier := job.Target.Model.Identifier()
-					template := fmt.Sprintf("#job#%%s#%s#%s", identifier, job.Source)
+					template := fmt.Sprintf("#job#%%s#%s#%s", identifier, job.GetCapability())
 					if len(template) <= 1024 {
 						shortenedDNS := group[:min(1024-len(template), len(group))]
 						job.DNS = shortenedDNS
