@@ -151,9 +151,7 @@ func (a *Asset) DomainVerificationJob(parentJob *Job, config ...string) Job {
 
 	copy := *a
 	job := Job{
-		Source:  "whois",
 		Target:  TargetWrapper{Model: &copy},
-		Status:  fmt.Sprintf("%s#%s", Queued, "whois"),
 		Config:  make(map[string]string),
 		Created: Now(),
 		Updated: Now(),
@@ -162,10 +160,12 @@ func (a *Asset) DomainVerificationJob(parentJob *Job, config ...string) Job {
 		Parent:  parentJob.Target,
 		Full:    true,
 	}
+	job.SetStatus(Queued)
+	job.SetCapability("whois")
 	registry.CallHooks(&job)
 
 	if job.Target.Model != nil {
-		template := fmt.Sprintf("#job#%%s#%s#%s", job.Target.Model.Identifier(), job.Source)
+		template := fmt.Sprintf("#job#%%s#%s#%s", job.Target.Model.Identifier(), job.GetCapability())
 		if len(template) <= 1024 {
 			shortenedDNS := job.Target.Model.Group()[:min(1024-len(template), len(job.Target.Model.Group()))]
 			job.DNS = shortenedDNS
@@ -173,7 +173,7 @@ func (a *Asset) DomainVerificationJob(parentJob *Job, config ...string) Job {
 		}
 	}
 
-	job.Config["source"] = parentJob.Source
+	job.Config["source"] = parentJob.GetCapability()
 	for i := 0; i < len(config); i += 2 {
 		job.Config[config[i]] = config[i+1]
 	}

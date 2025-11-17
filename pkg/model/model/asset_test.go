@@ -266,7 +266,7 @@ func TestAsset_DomainVerificationJob(t *testing.T) {
 
 			assert.Equal(t, job.Target.Model.Group(), tt.seed.DNS)
 			assert.Equal(t, job.Target.Model.GetStatus(), tt.seed.Status)
-			assert.Equal(t, job.Source, "whois")
+			assert.Equal(t, job.GetCapability(), "whois")
 			assert.True(t, job.Full)
 		})
 	}

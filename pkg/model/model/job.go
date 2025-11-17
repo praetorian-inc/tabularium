@@ -3,11 +3,10 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry"
 	"maps"
 	"slices"
 	"strings"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 type Job struct {
@@ -17,14 +16,14 @@ type Job struct {
 	Key      string `dynamodbav:"key" json:"key" desc:"Unique key for the job." example:"#job#example.com#asset#portscan"`
 	// Attributes
 	DNS                   string            `dynamodbav:"dns" json:"dns" desc:"Primary DNS associated with the job's target." example:"example.com"`
-	Source                string            `dynamodbav:"source" json:"source" desc:"The source or capability that generated this job." example:"portscan"`
+	Source                string            `dynamodbav:"source" json:"source" desc:"The source or capability that generated this job, ordered by updated" example:"portscan#2023-10-27T10:05:00Z"`
 	Comment               string            `dynamodbav:"comment" json:"comment,omitempty" desc:"Optional comment about the job." example:"Scanning standard web ports"`
 	Created               string            `dynamodbav:"created" json:"created" desc:"Timestamp when the job was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
 	Updated               string            `dynamodbav:"updated" json:"updated" desc:"Timestamp when the job was last updated (RFC3339)." example:"2023-10-27T10:05:00Z"`
 	Started               string            `dynamodbav:"started" json:"started" desc:"Timestamp when the job was started (RFC3339)." example:"2023-10-27T10:05:00Z"`
 	Finished              string            `dynamodbav:"finished" json:"finished" desc:"Timestamp when the job was finished (RFC3339)." example:"2023-10-27T10:05:00Z"`
 	Delayed               string            `dynamodbav:"delayed,omitempty" json:"delayed,omitempty" desc:"Timestamp that this job should be delayed until" example:"2023-10-27T10:00:00Z"`
-	Status                string            `dynamodbav:"status" json:"status" desc:"Current status of the job (e.g., JQ#portscan)." example:"JQ#portscan"`
+	Status                string            `dynamodbav:"status" json:"status" desc:"Current status of the job (e.g., JQ#2023-10-27T10:05:00Z)." example:"JQ#2023-10-27T10:05:00Z"`
 	TTL                   int64             `dynamodbav:"ttl" json:"ttl" desc:"Time-to-live for the job record (Unix timestamp)." example:"1706353200"`
 	Name                  string            `dynamodbav:"name,omitempty" json:"name,omitempty" desc:"The IP address this job was executed from" example:"1.2.3.4"`
 	Config                map[string]string `dynamodbav:"config" json:"config" desc:"Configuration parameters for the job capability." example:"{\"test\": \"cve-1111-2222\"}"`
@@ -79,10 +78,15 @@ func (job *Job) GetStatus() string {
 	return parts[0]
 }
 
-func (job *Job) Update(status string) {
-	job.SetStatus(status)
-	job.Updated = Now()
+func (job *Job) GetCapability() string {
+	parts := strings.Split(job.Source, "#")
+	return parts[0]
+}
 
+func (job *Job) Update(status string) {
+	job.Updated = Now()
+	job.SetStatus(status)
+	job.SetCapability(job.GetCapability())
 	job.TTL = Future(7 * 24)
 }
 
@@ -94,7 +98,11 @@ func (job *Job) SetStatus(status string) {
 	} else if job.Finished == "" && (status == Fail || status == Pass) {
 		job.Finished = Now()
 	}
-	job.Status = fmt.Sprintf("%s#%s", status, job.Source)
+	job.Status = fmt.Sprintf("%s#%s", status, job.Updated)
+}
+
+func (job *Job) SetCapability(capability string) {
+	job.Source = fmt.Sprintf("%s#%s", capability, job.Updated)
 }
 
 func (job *Job) State() string {
@@ -125,13 +133,13 @@ func (job *Job) Valid() bool {
 }
 
 func (job *Job) Defaulted() {
-	job.Status = fmt.Sprintf("%s#%s", Queued, job.Source)
 	job.initializeParameters()
 	job.Created = Now()
 	job.Updated = Now()
 	job.TTL = Future(7 * 24)
 	job.Queue = Standard
 	job.Async = false
+	job.SetStatus(Queued)
 }
 
 func (job *Job) GetHooks() []registry.Hook {
@@ -141,7 +149,7 @@ func (job *Job) GetHooks() []registry.Hook {
 				if job.Target.Model != nil {
 					group := job.Target.Model.Group()
 					identifier := job.Target.Model.Identifier()
-					template := fmt.Sprintf("#job#%%s#%s#%s", identifier, job.Source)
+					template := fmt.Sprintf("#job#%%s#%s#%s", identifier, job.GetCapability())
 					if len(template) <= 1024 {
 						shortenedDNS := group[:min(1024-len(template), len(group))]
 						job.DNS = shortenedDNS
@@ -150,6 +158,7 @@ func (job *Job) GetHooks() []registry.Hook {
 				}
 				job.initializeParameters()
 				job.originalStatus = job.Status
+				job.SetCapability(job.GetCapability())
 				return nil
 			},
 		},
@@ -210,10 +219,8 @@ func NewJob(source string, target Target) Job {
 
 func NewSystemJob(source, id string) Job {
 	t := NewAsset(id, id) // not needed, but required for target to unmarshal. TODO make this a separate type
-	return Job{
+	j := Job{
 		DNS:     id,
-		Source:  source,
-		Status:  fmt.Sprintf("%s#%s", Queued, source),
 		Created: Now(),
 		Updated: Now(),
 		Queue:   Standard,
@@ -221,6 +228,9 @@ func NewSystemJob(source, id string) Job {
 		Target:  TargetWrapper{Model: &t},
 		stream:  make(chan []registry.Model),
 	}
+	j.SetStatus(Queued)
+	j.SetCapability(source)
+	return j
 }
 
 // GetDescription returns a description for the Job model.
@@ -237,7 +247,7 @@ func (job *Job) ToContext() ResultContext {
 
 	return ResultContext{
 		Username:      job.Username,
-		Source:        job.Source,
+		Source:        job.GetCapability(),
 		Config:        job.Config,
 		Secret:        job.Secret,
 		Target:        job.Target,
