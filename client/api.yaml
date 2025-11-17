@@ -2980,16 +2980,17 @@ components:
           description: Sensitive configuration parameters (credentials, tokens, keys).
           type: object
         source:
-          description: The source or capability that generated this job.
-          example: portscan
+          description: The source or capability that generated this job, ordered by
+            updated
+          example: portscan#2023-10-27T10:05:00Z
           type: string
         started:
           description: Timestamp when the job was started (RFC3339).
           example: "2023-10-27T10:05:00Z"
           type: string
         status:
-          description: Current status of the job (e.g., JQ#portscan).
-          example: JQ#portscan
+          description: Current status of the job (e.g., JQ#2023-10-27T10:05:00Z).
+          example: JQ#2023-10-27T10:05:00Z
           type: string
         target:
           description: The primary target of the job.
