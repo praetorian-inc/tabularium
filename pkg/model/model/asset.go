@@ -65,6 +65,10 @@ func (a *Asset) GetClass() string {
 			return "cidr", err == nil
 		},
 		func(s string) (string, bool) {
+			if !domain.MatchString(s) {
+				return "", false
+			}
+
 			tld, icann := publicsuffix.PublicSuffix(s)
 			parts := strings.Split(strings.TrimSuffix(s, tld), ".")
 			return "tld", len(parts) == 2 && icann && !strings.Contains(s, "/")

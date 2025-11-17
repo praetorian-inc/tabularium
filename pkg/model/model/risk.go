@@ -231,11 +231,11 @@ func (r *Risk) SetUsername(username string) {
 	r.Username = username
 }
 
-func GeneratePlexTracID(clientID, reportID, findingID string) string {
-	return fmt.Sprintf("#%s#%s#%s", clientID, reportID, findingID)
+func GeneratePlexTracID(clientID, reportID, findingID int) string {
+	return fmt.Sprintf("#%d#%d#%d", clientID, reportID, findingID)
 }
 
-func (r *Risk) SetPlexTracID(clientID, reportID, findingID string) {
+func (r *Risk) SetPlexTracID(clientID, reportID, findingID int) {
 	r.PlextracID = GeneratePlexTracID(clientID, reportID, findingID)
 }
 
