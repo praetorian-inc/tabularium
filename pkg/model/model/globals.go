@@ -30,7 +30,7 @@ type Export interface {
 // Filter returns a boolean to indicate whether processing of this entity should be stopped
 // Methods of Filter may modify the input entity
 type Filter interface {
-	Asset(asset *Asset) bool
+	Asset(asset Assetlike) bool
 	Risk(risk *Risk) bool
 }
 
