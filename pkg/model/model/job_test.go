@@ -12,6 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var formatStrings = []string{"%s", "%+s", "%v", "%+v"}
+
 func TestJob_ImportAssets(t *testing.T) {
 	// Create a buffer to capture log output
 	var logBuffer strings.Builder
@@ -841,19 +843,23 @@ func TestJob_SourceAndStatusConsistency(t *testing.T) {
 
 func TestJob_SecretRedaction(t *testing.T) {
 	target := NewAsset("new.example.com", "10.1.1.1")
-	job := NewJob("test-capability", &target)
-	job.Secret = map[string]string{"secret-key": "secret-value"}
-	assert.Contains(t, fmt.Sprintf("%s", job), `"secret":{"secret-key":"*****"}`)
-	assert.Contains(t, fmt.Sprintf("%+s", job), `"secret":{"secret-key":"*****"}`)
-	assert.Contains(t, fmt.Sprintf("%v", job), `"secret":{"secret-key":"*****"}`)
-	assert.Contains(t, fmt.Sprintf("%+v", job), `"secret":{"secret-key":"*****"}`)
+	for _, format := range formatStrings {
+		job := NewJob("test-capability", &target)
+		job.Secret = map[string]string{"secret-key": "secret-value"}
+
+		// test that the secret is redacted
+		assert.Contains(t, fmt.Sprintf(format, job), `"secret":{"secret-key":"*****"}`)
+
+		// test that the original job object wasn't clobbered
+		assert.Equal(t, job.Secret["secret-key"], "secret-value")
+		assert.Contains(t, job.Raw(), `"secret-key":"secret-value"`)
+	}
 }
 
 func TestJob_NoSecretRedaction(t *testing.T) {
 	target := NewAsset("new.example.com", "10.1.1.1")
-	job := NewJob("test-capability", &target)
-	assert.Contains(t, fmt.Sprintf("%s", job), `"secret":{}`)
-	assert.Contains(t, fmt.Sprintf("%+s", job), `"secret":{}`)
-	assert.Contains(t, fmt.Sprintf("%v", job), `"secret":{}`)
-	assert.Contains(t, fmt.Sprintf("%+v", job), `"secret":{}`)
+	for _, format := range formatStrings {
+		job := NewJob("test-capability", &target)
+		assert.Contains(t, fmt.Sprintf(format, job), `"secret":{}`)
+	}
 }
