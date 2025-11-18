@@ -3,10 +3,11 @@ package model
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 	"maps"
 	"slices"
 	"strings"
+
+	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 type Job struct {
@@ -257,4 +258,13 @@ func (job *Job) ToContext() ResultContext {
 		FullScan:      job.Full,
 		AgentClientID: agentClientID,
 	}
+}
+
+func (job *Job) Redacted() Job {
+	redacted := *job
+	redacted.Secret = make(map[string]string)
+	for key := range job.Secret {
+		redacted.Secret[key] = "*****"
+	}
+	return redacted
 }
