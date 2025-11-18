@@ -848,3 +848,12 @@ func TestJob_SecretRedaction(t *testing.T) {
 	assert.Contains(t, fmt.Sprintf("%v", job), `"secret":{"secret-key":"*****"}`)
 	assert.Contains(t, fmt.Sprintf("%+v", job), `"secret":{"secret-key":"*****"}`)
 }
+
+func TestJob_NoSecretRedaction(t *testing.T) {
+	target := NewAsset("new.example.com", "10.1.1.1")
+	job := NewJob("test-capability", &target)
+	assert.Contains(t, fmt.Sprintf("%s", job), `"secret":{}`)
+	assert.Contains(t, fmt.Sprintf("%+s", job), `"secret":{}`)
+	assert.Contains(t, fmt.Sprintf("%v", job), `"secret":{}`)
+	assert.Contains(t, fmt.Sprintf("%+v", job), `"secret":{}`)
+}
