@@ -3,12 +3,13 @@ package model
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"log/slog"
 	"net/url"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestJob_ImportAssets(t *testing.T) {
@@ -836,4 +837,14 @@ func TestJob_SourceAndStatusConsistency(t *testing.T) {
 		assert.True(t, job.Is(Running), "Is(Running) should return true")
 		assert.False(t, job.Is(Queued), "Is(Queued) should return false")
 	})
+}
+
+func TestJob_SecretRedaction(t *testing.T) {
+	target := NewAsset("new.example.com", "10.1.1.1")
+	job := NewJob("test-capability", &target)
+	job.Secret = map[string]string{"secret-key": "secret-value"}
+	assert.Contains(t, fmt.Sprintf("%s", job), `"secret":{"secret-key":"*****"}`)
+	assert.Contains(t, fmt.Sprintf("%+s", job), `"secret":{"secret-key":"*****"}`)
+	assert.Contains(t, fmt.Sprintf("%v", job), `"secret":{"secret-key":"*****"}`)
+	assert.Contains(t, fmt.Sprintf("%+v", job), `"secret":{"secret-key":"*****"}`)
 }
