@@ -188,6 +188,25 @@ func (e *Enrichment) Vulnerability() Vulnerability {
 	v.Kev = e.IsKev
 	v.Exploit = e.Exploits != nil && e.Exploits.Counts.Exploits > 0
 
+	if e.Published != "" {
+		v.Created = &e.Published
+	}
+	if e.Modified != "" {
+		v.Updated = &e.Modified
+	}
+
+	if e.IsKev {
+		feed := "cisa-kev"
+		v.Feed = &feed
+
+		if e.Exploits != nil && e.Exploits.Timeline.CisaKevDateAdded != nil {
+			v.KevDateAdded = e.Exploits.Timeline.CisaKevDateAdded
+		}
+		if e.Exploits != nil && e.Exploits.Timeline.CisaKevDateDue != nil {
+			v.KevDueDate = e.Exploits.Timeline.CisaKevDateDue
+		}
+	}
+
 	version := ""
 	for _, cvss := range e.Cvss {
 		if cvss.Version < version || cvss.BaseScore == nil {
