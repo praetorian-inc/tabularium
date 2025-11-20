@@ -23,7 +23,7 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Set initial status
-		original.BaseAsset.Status = "A"
+		original.BaseAsset.Status = Active
 
 		// Call WithStatus
 		result := original.WithStatus("AH")
@@ -45,7 +45,7 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Verify the original wasn't modified
-		if original.BaseAsset.Status != "A" {
+		if original.BaseAsset.Status != Active {
 			t.Errorf("Original status was modified, got %s, expected A", original.BaseAsset.Status)
 		}
 	})
@@ -68,7 +68,7 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Set initial status
-		original.BaseAsset.Status = "A"
+		original.BaseAsset.Status = Active
 
 		// Call WithStatus
 		result := original.WithStatus("AL")
@@ -90,7 +90,7 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Verify the original wasn't modified
-		if original.BaseAsset.Status != "A" {
+		if original.BaseAsset.Status != Active {
 			t.Errorf("Original status was modified, got %s, expected A", original.BaseAsset.Status)
 		}
 	})
@@ -111,10 +111,10 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Set initial status
-		original.BaseAsset.Status = "A"
+		original.BaseAsset.Status = Active
 
 		// Call WithStatus
-		result := original.WithStatus("AP")
+		result := original.WithStatus(ActivePassive)
 
 		// Verify the result is still a *GCPResource
 		gcpResult, ok := result.(*GCPResource)
@@ -123,7 +123,7 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Verify the status was updated
-		if gcpResult.BaseAsset.Status != "AP" {
+		if gcpResult.BaseAsset.Status != ActivePassive {
 			t.Errorf("Status not updated, got %s, expected AP", gcpResult.BaseAsset.Status)
 		}
 
@@ -133,7 +133,7 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Verify the original wasn't modified
-		if original.BaseAsset.Status != "A" {
+		if original.BaseAsset.Status != Active {
 			t.Errorf("Original status was modified, got %s, expected A", original.BaseAsset.Status)
 		}
 	})
