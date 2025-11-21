@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"maps"
 	"strings"
 
 	"github.com/praetorian-inc/tabularium/pkg/model/filters"
@@ -51,6 +52,7 @@ func (p *Preseed) Visit(other Preseed) {
 		p.TTL = other.TTL
 	}
 	p.Visited = other.Visited
+	maps.Copy(p.Metadata, other.Metadata)
 }
 
 func (p *Preseed) Valid() bool {
@@ -71,8 +73,8 @@ func (p *Preseed) Synonymous() []filters.Filter {
 		// match other whois attributes with the same values
 		return []filters.Filter{
 			filters.NewFilter("", filters.OperatorOr, []filters.Filter{
-				filters.NewFilter("Type", filters.OperatorStartsWith, "whois"),
-				filters.NewFilter("Type", filters.OperatorStartsWith, "edgar"),
+				filters.NewFilter("type", filters.OperatorStartsWith, "whois"),
+				filters.NewFilter("type", filters.OperatorStartsWith, "edgar"),
 			}),
 			filters.NewFilter("title", filters.OperatorEqual, p.Title),
 			filters.NewFilter("value", filters.OperatorEqual, p.Value),
