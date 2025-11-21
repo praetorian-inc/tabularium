@@ -182,6 +182,7 @@ type Enrichment struct {
 	Weaknesses      []Weakness       `json:"weaknesses,omitempty" desc:"List of associated weaknesses (e.g., CWEs)."`
 	MitreTechniques []MitreTechnique `json:"mitre_techniques,omitempty" desc:"List of associated MITRE ATT&CK techniques."`
 	Exploits        *Exploits        `json:"exploits,omitempty" desc:"Exploit counts and timeline information."`
+	ThreatActors    []ThreatActor    `json:"threat_actors,omitempty" desc:"List of associated threat actors."`
 }
 
 func (e *Enrichment) Vulnerability() Vulnerability {
