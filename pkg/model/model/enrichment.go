@@ -1,6 +1,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -198,6 +200,11 @@ func (e *Enrichment) Vulnerability() Vulnerability {
 	if e.IsKev {
 		feed := "cisa-kev"
 		v.Feed = &feed
+
+		if data, err := json.Marshal(e); err == nil {
+			dataStr := string(data)
+			v.Data = &dataStr
+		}
 
 		if e.Exploits != nil && e.Exploits.Timeline.CisaKevDateAdded != nil {
 			v.KevDateAdded = e.Exploits.Timeline.CisaKevDateAdded
