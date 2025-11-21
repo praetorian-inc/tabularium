@@ -88,8 +88,9 @@ func (p *Port) GetStatus() string {
 }
 
 func (p *Port) WithStatus(status string) Target {
-	p.Status = status
-	return p
+	cp := *p
+	cp.Status = status
+	return &cp
 }
 
 func (p *Port) IsStatus(value string) bool {

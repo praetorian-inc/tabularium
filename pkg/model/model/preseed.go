@@ -90,8 +90,9 @@ func (p *Preseed) GetStatus() string {
 }
 
 func (p *Preseed) WithStatus(status string) Target {
-	p.Status = status
-	return p
+	cp := *p
+	cp.Status = status
+	return &cp
 }
 
 func (p *Preseed) Group() string {

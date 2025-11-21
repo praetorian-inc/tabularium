@@ -140,8 +140,9 @@ func (o *Organization) GetStatus() string {
 }
 
 func (o *Organization) WithStatus(status string) Target {
-	o.Status = status
-	return o
+	cp := *o
+	cp.Status = status
+	return &cp
 }
 
 func (o *Organization) Group() string {
