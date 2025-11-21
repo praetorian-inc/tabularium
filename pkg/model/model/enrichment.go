@@ -178,13 +178,16 @@ type Enrichment struct {
 	Modified        string           `json:"modified" desc:"Date the vulnerability or enrichment data was last modified (RFC3339)." example:"2023-11-10T12:00:00Z"`
 	Cvss            []CvssMetrics    `json:"cvss,omitempty" desc:"List of associated CVSS metrics."`
 	Epss            *Epss            `json:"epss,omitempty" desc:"Associated EPSS score and percentile."`
+	Ssvces          []Ssvc           `json:"ssvc,omitempty" desc:"List of associated SSVC assessments."`
 	Weaknesses      []Weakness       `json:"weaknesses,omitempty" desc:"List of associated weaknesses (e.g., CWEs)."`
 	MitreTechniques []MitreTechnique `json:"mitre_techniques,omitempty" desc:"List of associated MITRE ATT&CK techniques."`
+	Exploits        *Exploits        `json:"exploits,omitempty" desc:"Exploit counts and timeline information."`
 }
 
 func (e *Enrichment) Vulnerability() Vulnerability {
 	v := NewVulnerability(e.Id)
 	v.Kev = e.IsKev
+	v.Exploit = e.Exploits != nil && e.Exploits.Counts.Exploits > 0
 	v.Title = &e.Name
 
 	if e.Published != "" {
@@ -201,6 +204,13 @@ func (e *Enrichment) Vulnerability() Vulnerability {
 		if data, err := json.Marshal(e); err == nil {
 			dataStr := string(data)
 			v.Data = &dataStr
+		}
+
+		if e.Exploits != nil && e.Exploits.Timeline.CisaKevDateAdded != nil {
+			v.KevDateAdded = e.Exploits.Timeline.CisaKevDateAdded
+		}
+		if e.Exploits != nil && e.Exploits.Timeline.CisaKevDateDue != nil {
+			v.KevDueDate = e.Exploits.Timeline.CisaKevDateDue
 		}
 	}
 
