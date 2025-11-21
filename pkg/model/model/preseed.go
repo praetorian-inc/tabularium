@@ -67,10 +67,13 @@ func (p *Preseed) ToAttribute(source GraphModel, metadata ...string) Attribute {
 
 func (p *Preseed) Synonymous() []filters.Filter {
 	switch p.Class() {
-	case "whois":
+	case "whois", "edgar":
 		// match other whois attributes with the same values
 		return []filters.Filter{
-			filters.NewFilter("type", filters.OperatorStartsWith, "whois"),
+			filters.NewFilter("", filters.OperatorOr, []filters.Filter{
+				filters.NewFilter("Type", filters.OperatorStartsWith, "whois"),
+				filters.NewFilter("Type", filters.OperatorStartsWith, "edgar"),
+			}),
 			filters.NewFilter("title", filters.OperatorEqual, p.Title),
 			filters.NewFilter("value", filters.OperatorEqual, p.Value),
 		}
