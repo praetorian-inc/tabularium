@@ -18,51 +18,34 @@ type AegisSchedule struct {
 	baseTableModel     // Embed for TableModel interface
 	registry.BaseModel // Embed BaseModel for default implementations
 
-	// ScheduleID is the unique identifier for this schedule
 	ScheduleID string `json:"scheduleId" dynamodbav:"schedule_id" desc:"Unique identifier for this schedule"`
 
-	// Key is the DynamoDB partition key (#aegis_schedule#<scheduleId>)
 	Key string `json:"key" dynamodbav:"key" desc:"DynamoDB partition key"`
 
-	// Username is the account owner of this schedule
 	Username string `json:"username" dynamodbav:"username" desc:"Account owner email"`
 
-	// CapabilityName is the name of the Aegis capability to execute
 	CapabilityName string `json:"capabilityName" dynamodbav:"capability_name" desc:"Aegis capability name to execute"`
 
-	// ClientID is the Aegis agent client ID to execute on
 	ClientID string `json:"clientId" dynamodbav:"client_id" desc:"Aegis agent client ID"`
 
-	// TargetKey is the asset/target key for the capability execution
-	// Examples: #asset#..., #addomain#..., #port#...
 	TargetKey string `json:"targetKey" dynamodbav:"target_key" desc:"Asset or target key for capability execution"`
 
-	// Config contains capability-specific parameters including credentials
-	// Credentials are provided via Username, Password, Domain, etc. in the config
 	Config map[string]string `json:"config" dynamodbav:"config" desc:"Capability configuration parameters including credentials"`
 
-	// WeeklySchedule defines which days and times to execute
 	WeeklySchedule WeeklySchedule `json:"weeklySchedule" dynamodbav:"weekly_schedule" desc:"Weekly execution schedule configuration"`
 
-	// StartDate is when the schedule becomes active (RFC3339 format)
 	StartDate string `json:"startDate" dynamodbav:"start_date" desc:"Schedule start date in RFC3339 format"`
 
-	// EndDate is when the schedule expires (RFC3339 format, optional)
 	EndDate string `json:"endDate,omitempty" dynamodbav:"end_date,omitempty" desc:"Schedule end date in RFC3339 format (optional)"`
 
-	// Status indicates if the schedule is active, paused, or expired
 	Status ScheduleStatus `json:"status" dynamodbav:"status" desc:"Schedule status (active, paused, or expired)"`
 
-	// NextExecution is the calculated next execution time (RFC3339 format)
 	NextExecution string `json:"nextExecution,omitempty" dynamodbav:"next_execution,omitempty" desc:"Calculated next execution time"`
 
-	// LastExecution is the last time this schedule executed (RFC3339 format)
 	LastExecution string `json:"lastExecution,omitempty" dynamodbav:"last_execution,omitempty" desc:"Last execution timestamp"`
 
-	// CreatedAt is when this schedule was created (RFC3339 format)
 	CreatedAt string `json:"createdAt" dynamodbav:"created_at" desc:"Creation timestamp"`
 
-	// UpdatedAt is when this schedule was last modified (RFC3339 format)
 	UpdatedAt string `json:"updatedAt" dynamodbav:"updated_at" desc:"Last modification timestamp"`
 }
 
@@ -226,13 +209,11 @@ func (s *AegisSchedule) ShouldExecuteNow() bool {
 
 	now := time.Now().UTC()
 
-	// Check if schedule has started
 	startTime, err := time.Parse(time.RFC3339, s.StartDate)
 	if err != nil || now.Before(startTime) {
 		return false
 	}
 
-	// Check if schedule has expired
 	if s.EndDate != "" {
 		endTime, err := time.Parse(time.RFC3339, s.EndDate)
 		if err == nil && now.After(endTime) {
@@ -240,7 +221,6 @@ func (s *AegisSchedule) ShouldExecuteNow() bool {
 		}
 	}
 
-	// Check if next execution time has arrived
 	if s.NextExecution == "" {
 		return false
 	}
@@ -250,8 +230,6 @@ func (s *AegisSchedule) ShouldExecuteNow() bool {
 		return false
 	}
 
-	// Execute if we've reached or passed the next execution time
-	// Allow a 5-minute window to account for cron job timing
 	return now.After(nextExecTime)
 }
 
@@ -264,20 +242,15 @@ func (s *AegisSchedule) CreateJob() *Job {
 		Source:       "aegis_schedule",
 	}
 
-	// Copy config parameters (includes credentials like Username, Password, Domain)
 	for k, v := range s.Config {
 		job.Config[k] = v
 	}
 
-	// Add Aegis-specific parameters
 	job.Config["aegis"] = "true"
 	job.Config["client_id"] = s.ClientID
 
-	// Initialize default fields (Created, Updated, TTL, Status, etc.)
 	job.Defaulted()
 
-	// Call hooks to set up job properly (Key, DNS, etc.)
-	// Note: Key generation in hooks requires Target.Model, which should be set in the handler
 	registry.CallHooks(job)
 
 	return job
@@ -323,13 +296,11 @@ func (s *AegisSchedule) Validate() error {
 		return fmt.Errorf("start date is required")
 	}
 
-	// Validate start date format
 	_, err := time.Parse(time.RFC3339, s.StartDate)
 	if err != nil {
 		return fmt.Errorf("invalid start date format: %w", err)
 	}
 
-	// Validate end date format if provided
 	if s.EndDate != "" {
 		endTime, err := time.Parse(time.RFC3339, s.EndDate)
 		if err != nil {
@@ -342,7 +313,6 @@ func (s *AegisSchedule) Validate() error {
 		}
 	}
 
-	// Validate at least one day is enabled
 	hasEnabledDay := s.WeeklySchedule.Monday.Enabled ||
 		s.WeeklySchedule.Tuesday.Enabled ||
 		s.WeeklySchedule.Wednesday.Enabled ||
@@ -355,7 +325,6 @@ func (s *AegisSchedule) Validate() error {
 		return fmt.Errorf("at least one day must be enabled in the schedule")
 	}
 
-	// Validate time format for enabled days
 	days := []DaySchedule{
 		s.WeeklySchedule.Monday,
 		s.WeeklySchedule.Tuesday,
