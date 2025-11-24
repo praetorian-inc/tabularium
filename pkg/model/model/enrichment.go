@@ -1,6 +1,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -187,6 +189,31 @@ func (e *Enrichment) Vulnerability() Vulnerability {
 	v := NewVulnerability(e.Id)
 	v.Kev = e.IsKev
 	v.Exploit = e.Exploits != nil && e.Exploits.Counts.Exploits > 0
+	v.Title = &e.Name
+
+	if e.Published != "" {
+		v.Created = &e.Published
+	}
+	if e.Modified != "" {
+		v.Updated = &e.Modified
+	}
+
+	if e.IsKev {
+		feed := "cisa-kev"
+		v.Feed = &feed
+
+		if data, err := json.Marshal(e); err == nil {
+			dataStr := string(data)
+			v.Data = &dataStr
+		}
+
+		if e.Exploits != nil && e.Exploits.Timeline.CisaKevDateAdded != nil {
+			v.KevDateAdded = e.Exploits.Timeline.CisaKevDateAdded
+		}
+		if e.Exploits != nil && e.Exploits.Timeline.CisaKevDateDue != nil {
+			v.KevDueDate = e.Exploits.Timeline.CisaKevDateDue
+		}
+	}
 
 	version := ""
 	for _, cvss := range e.Cvss {

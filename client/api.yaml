@@ -4474,49 +4474,6 @@ components:
       - username
       - visited
       type: object
-    threat:
-      description: Represents a known threat, such as a malware family or campaign.
-      properties:
-        BaseModel:
-          type: object
-        created:
-          description: Timestamp associated with the threat data creation (often includes
-            feed name).
-          example: '#threat#vulncheck#2023-11-01T00:00:00Z'
-          type: string
-        data:
-          description: The actual threat intelligence data.
-          example: '{"cvss": 9.8, "exploits": ["metasploit"]}'
-          type: object
-        feed:
-          description: The feed this threat was found in
-          type: string
-        key:
-          description: Unique key identifying the threat record.
-          example: '#threat#vulncheck#CVE-2023-12345'
-          type: string
-        source:
-          description: Identifier for the source of the threat data (e.g., CVE ID).
-          example: CVE-2023-12345
-          type: string
-        updated:
-          description: Timestamp when the threat record was last updated (RFC3339).
-          example: "2023-11-10T12:00:00Z"
-          type: string
-        username:
-          description: Chariot username associated with the threat data.
-          example: system
-          type: string
-      required:
-      - BaseModel
-      - created
-      - data
-      - feed
-      - key
-      - source
-      - updated
-      - username
-      type: object
     threatactor:
       description: Represents a threat actor group for a vulnerability.
       properties:
@@ -4566,10 +4523,18 @@ components:
       properties:
         BaseModel:
           type: object
+        created:
+          description: Date the vulnerability was first created/published (from NVD).
+          example: "2023-11-01T00:00:00Z"
+          type: string
         cvss:
           description: Highest CVSS base score associated with the vulnerability.
           example: "9.8"
           type: number
+        data:
+          description: Full enrichment data as JSON string.
+          example: '{"cvss": 9.8, "exploits": [...]}'
+          type: string
         epss:
           description: EPSS score (probability of exploitation).
           example: "0.95"
@@ -4578,6 +4543,10 @@ components:
           description: Indicates if there is known public exploit code available.
           example: "true"
           type: boolean
+        feed:
+          description: Threat feed source (e.g., cisa-kev).
+          example: cisa-kev
+          type: string
         id:
           description: Identifier for the vulnerability (e.g., CVE ID).
           example: CVE-2023-12345
@@ -4586,6 +4555,14 @@ components:
           description: Indicates if the vulnerability is listed in the CISA KEV catalog.
           example: "true"
           type: boolean
+        kevDateAdded:
+          description: Date added to CISA KEV catalog.
+          example: "2024-03-15"
+          type: string
+        kevDueDate:
+          description: CISA KEV remediation due date.
+          example: "2024-04-05"
+          type: string
         key:
           description: Unique key identifying the vulnerability.
           example: '#vulnerability#CVE-2023-12345'
@@ -4593,6 +4570,10 @@ components:
         title:
           description: Title associated with the vulnerability.
           example: Title
+          type: string
+        updated:
+          description: Date the vulnerability was last updated (from NVD).
+          example: "2023-11-10T12:00:00Z"
           type: string
         username:
           description: Chariot username associated with the vulnerability record (usually

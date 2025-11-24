@@ -22,17 +22,21 @@ func NewNoInput(identifier string) *NoInput {
 	registry.CallHooks(n)
 	return n
 }
+func (n *NoInput) WithStatus(s string) Target {
+	cp := *n
+	cp.Status = s
+	return &cp
+}
 
-func (n *NoInput) GetStatus() string          { return n.Status }
-func (n *NoInput) WithStatus(s string) Target { n.Status = s; return n }
-func (n *NoInput) Group() string              { return "" }
-func (n *NoInput) Identifier() string         { return n.IdentifierValue }
-func (n *NoInput) IsStatus(string) bool       { return true }
-func (n *NoInput) IsClass(string) bool        { return false }
-func (n *NoInput) IsPrivate() bool            { return false }
-func (n *NoInput) GetLabels() []string        { return []string{} }
-func (n *NoInput) Valid() bool                { return false }
-func (n *NoInput) GetKey() string             { return n.Key }
+func (n *NoInput) GetStatus() string    { return n.Status }
+func (n *NoInput) Group() string        { return "" }
+func (n *NoInput) Identifier() string   { return n.IdentifierValue }
+func (n *NoInput) IsStatus(string) bool { return true }
+func (n *NoInput) IsClass(string) bool  { return false }
+func (n *NoInput) IsPrivate() bool      { return false }
+func (n *NoInput) GetLabels() []string  { return []string{} }
+func (n *NoInput) Valid() bool          { return false }
+func (n *NoInput) GetKey() string       { return n.Key }
 
 func (n *NoInput) GetDescription() string {
 	return "Sentinel target for capabilities that require no input target."
