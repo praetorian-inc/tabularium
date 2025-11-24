@@ -157,8 +157,8 @@ func (s *AegisSchedule) findNextExecutionFrom(from time.Time) string {
 		{time.Saturday, s.WeeklySchedule.Saturday},
 	}
 
-	// Check up to 7 days ahead to find next execution
-	for daysAhead := 0; daysAhead < 7; daysAhead++ {
+	// Check up to 7 days ahead to find next execution (0-7 to include same day next week)
+	for daysAhead := 0; daysAhead <= 7; daysAhead++ {
 		checkDate := from.AddDate(0, 0, daysAhead)
 		checkWeekday := checkDate.Weekday()
 
@@ -240,6 +240,7 @@ func (s *AegisSchedule) CreateJob() *Job {
 		Capabilities: []string{s.CapabilityName},
 		Config:       make(map[string]string),
 		Source:       "aegis_schedule",
+		Key:          s.TargetKey, // Set Key before hooks (will be overridden if Target.Model is set)
 	}
 
 	for k, v := range s.Config {
@@ -252,6 +253,15 @@ func (s *AegisSchedule) CreateJob() *Job {
 	job.Defaulted()
 
 	registry.CallHooks(job)
+
+	// Restore Source after hooks (SetCapability modifies it)
+	// Keep the original source format for scheduled jobs
+	job.Source = "aegis_schedule"
+
+	// If hooks didn't set Key (because Target.Model is nil), keep the TargetKey
+	if job.Key == "" {
+		job.Key = s.TargetKey
+	}
 
 	return job
 }
