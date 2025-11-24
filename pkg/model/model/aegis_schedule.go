@@ -252,14 +252,13 @@ func (s *AegisSchedule) ShouldExecuteNow() bool {
 
 	// Execute if we've reached or passed the next execution time
 	// Allow a 5-minute window to account for cron job timing
-	return now.After(nextExecTime.Add(-5 * time.Minute))
+	return now.After(nextExecTime)
 }
 
 // CreateJob creates a Job from this schedule for execution
 // All credentials (Username, Password, etc.) come from Config, not separate credential IDs
 func (s *AegisSchedule) CreateJob() *Job {
 	job := &Job{
-		Key:          s.TargetKey,
 		Capabilities: []string{s.CapabilityName},
 		Config:       make(map[string]string),
 		Source:       "aegis_schedule",
@@ -273,6 +272,13 @@ func (s *AegisSchedule) CreateJob() *Job {
 	// Add Aegis-specific parameters
 	job.Config["aegis"] = "true"
 	job.Config["client_id"] = s.ClientID
+
+	// Initialize default fields (Created, Updated, TTL, Status, etc.)
+	job.Defaulted()
+
+	// Call hooks to set up job properly (Key, DNS, etc.)
+	// Note: Key generation in hooks requires Target.Model, which should be set in the handler
+	registry.CallHooks(job)
 
 	return job
 }
