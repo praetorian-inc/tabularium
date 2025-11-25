@@ -10,43 +10,7 @@ import (
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&AegisSchedule{}, "aegis_schedule")
-}
-
-// AegisSchedule represents a scheduled execution configuration for an Aegis capability
-type AegisSchedule struct {
-	baseTableModel     // Embed for TableModel interface
-	registry.BaseModel // Embed BaseModel for default implementations
-
-	ScheduleID string `json:"scheduleId" dynamodbav:"schedule_id" desc:"Unique identifier for this schedule"`
-
-	Key string `json:"key" dynamodbav:"key" desc:"DynamoDB partition key"`
-
-	Username string `json:"username" dynamodbav:"username" desc:"Account owner email"`
-
-	CapabilityName string `json:"capabilityName" dynamodbav:"capability_name" desc:"Aegis capability name to execute"`
-
-	ClientID string `json:"clientId" dynamodbav:"client_id" desc:"Aegis agent client ID"`
-
-	TargetKey string `json:"targetKey" dynamodbav:"target_key" desc:"Asset or target key for capability execution"`
-
-	Config map[string]string `json:"config" dynamodbav:"config" desc:"Capability configuration parameters including credentials"`
-
-	WeeklySchedule WeeklySchedule `json:"weeklySchedule" dynamodbav:"weekly_schedule" desc:"Weekly execution schedule configuration"`
-
-	StartDate string `json:"startDate" dynamodbav:"start_date" desc:"Schedule start date in RFC3339 format"`
-
-	EndDate string `json:"endDate,omitempty" dynamodbav:"end_date,omitempty" desc:"Schedule end date in RFC3339 format (optional)"`
-
-	Status ScheduleStatus `json:"status" dynamodbav:"status" desc:"Schedule status (active, paused, or expired)"`
-
-	NextExecution string `json:"nextExecution,omitempty" dynamodbav:"next_execution,omitempty" desc:"Calculated next execution time"`
-
-	LastExecution string `json:"lastExecution,omitempty" dynamodbav:"last_execution,omitempty" desc:"Last execution timestamp"`
-
-	CreatedAt string `json:"createdAt" dynamodbav:"created_at" desc:"Creation timestamp"`
-
-	UpdatedAt string `json:"updatedAt" dynamodbav:"updated_at" desc:"Last modification timestamp"`
+	registry.Registry.MustRegisterModel(&CapabilitySchedule{}, "capability_schedule")
 }
 
 // WeeklySchedule defines execution times for each day of the week
@@ -75,30 +39,70 @@ const (
 	ScheduleStatusExpired ScheduleStatus = "expired"
 )
 
-// GetDescription returns a description of the AegisSchedule model
-func (s *AegisSchedule) GetDescription() string {
-	return "Scheduled execution configuration for Aegis capabilities"
+// CapabilitySchedule represents a scheduled execution configuration for any capability
+type CapabilitySchedule struct {
+	baseTableModel     // Embed for TableModel interface
+	registry.BaseModel // Embed BaseModel for default implementations
+
+	ScheduleID string `json:"scheduleId" dynamodbav:"schedule_id" desc:"Unique identifier for this schedule"`
+
+	Key string `json:"key" dynamodbav:"key" desc:"DynamoDB partition key"`
+
+	Username string `json:"username" dynamodbav:"username" desc:"Account owner email"`
+
+	CapabilityName string `json:"capabilityName" dynamodbav:"capability_name" desc:"Capability name to execute"`
+
+	ClientID string `json:"clientId,omitempty" dynamodbav:"client_id,omitempty" desc:"Aegis agent client ID (only for Aegis capabilities)"`
+
+	TargetKey string `json:"targetKey" dynamodbav:"target_key" desc:"Asset or target key for capability execution"`
+
+	Config map[string]string `json:"config" dynamodbav:"config" desc:"Capability configuration parameters including credentials"`
+
+	WeeklySchedule WeeklySchedule `json:"weeklySchedule" dynamodbav:"weekly_schedule" desc:"Weekly execution schedule configuration"`
+
+	StartDate string `json:"startDate" dynamodbav:"start_date" desc:"Schedule start date in RFC3339 format"`
+
+	EndDate string `json:"endDate,omitempty" dynamodbav:"end_date,omitempty" desc:"Schedule end date in RFC3339 format (optional)"`
+
+	Status ScheduleStatus `json:"status" dynamodbav:"status" desc:"Schedule status (active, paused, or expired)"`
+
+	NextExecution string `json:"nextExecution,omitempty" dynamodbav:"next_execution,omitempty" desc:"Calculated next execution time"`
+
+	LastExecution string `json:"lastExecution,omitempty" dynamodbav:"last_execution,omitempty" desc:"Last execution timestamp"`
+
+	IsAegis bool `json:"is_aegis" dynamodbav:"is_aegis" desc:"Indicates if this is an Aegis capability"`
+
+	CreatedAt string `json:"createdAt" dynamodbav:"created_at" desc:"Creation timestamp"`
+
+	UpdatedAt string `json:"updatedAt" dynamodbav:"updated_at" desc:"Last modification timestamp"`
+}
+
+// GetDescription returns a description of the CapabilitySchedule model
+func (s *CapabilitySchedule) GetDescription() string {
+	return "Scheduled execution configuration for capabilities"
 }
 
 // GetKey returns the DynamoDB partition key for this schedule
-func (s *AegisSchedule) GetKey() string {
+func (s *CapabilitySchedule) GetKey() string {
 	return s.Key
 }
 
-// NewAegisSchedule creates a new AegisSchedule with default values
+// NewCapabilitySchedule creates a new CapabilitySchedule with default values
 // Config should include all capability parameters including credentials
-func NewAegisSchedule(
-	username, capabilityName, clientID, targetKey string,
+func NewCapabilitySchedule(
+	username, capabilityName, targetKey string,
 	config map[string]string,
 	weeklySchedule WeeklySchedule,
 	startDate, endDate string,
-) *AegisSchedule {
+	isAegis bool,
+	clientID string,
+) *CapabilitySchedule {
 	now := Now()
 	scheduleID := uuid.New().String()
 
-	schedule := &AegisSchedule{
+	schedule := &CapabilitySchedule{
 		ScheduleID:     scheduleID,
-		Key:            fmt.Sprintf("#aegis_schedule#%s", scheduleID),
+		Key:            fmt.Sprintf("#capability_schedule#%s", scheduleID),
 		Username:       username,
 		CapabilityName: capabilityName,
 		ClientID:       clientID,
@@ -108,6 +112,7 @@ func NewAegisSchedule(
 		StartDate:      startDate,
 		EndDate:        endDate,
 		Status:         ScheduleStatusActive,
+		IsAegis:        isAegis,
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	}
@@ -117,7 +122,7 @@ func NewAegisSchedule(
 }
 
 // CalculateNextExecution calculates and sets the next execution time based on the schedule
-func (s *AegisSchedule) CalculateNextExecution() {
+func (s *CapabilitySchedule) CalculateNextExecution() {
 	now := time.Now().UTC()
 
 	// Check if schedule has expired
@@ -143,7 +148,7 @@ func (s *AegisSchedule) CalculateNextExecution() {
 }
 
 // findNextExecutionFrom finds the next execution time starting from the given time
-func (s *AegisSchedule) findNextExecutionFrom(from time.Time) string {
+func (s *CapabilitySchedule) findNextExecutionFrom(from time.Time) string {
 	days := []struct {
 		weekday  time.Weekday
 		schedule DaySchedule
@@ -197,12 +202,12 @@ func (s *AegisSchedule) findNextExecutionFrom(from time.Time) string {
 }
 
 // IsActive returns true if the schedule is currently active
-func (s *AegisSchedule) IsActive() bool {
+func (s *CapabilitySchedule) IsActive() bool {
 	return s.Status == ScheduleStatusActive
 }
 
 // ShouldExecuteNow checks if the schedule should execute at the current time
-func (s *AegisSchedule) ShouldExecuteNow() bool {
+func (s *CapabilitySchedule) ShouldExecuteNow() bool {
 	if !s.IsActive() {
 		return false
 	}
@@ -235,11 +240,11 @@ func (s *AegisSchedule) ShouldExecuteNow() bool {
 
 // CreateJob creates a Job from this schedule for execution
 // All credentials (Username, Password, etc.) come from Config, not separate credential IDs
-func (s *AegisSchedule) CreateJob() *Job {
+func (s *CapabilitySchedule) CreateJob() *Job {
 	job := &Job{
 		Capabilities: []string{s.CapabilityName},
 		Config:       make(map[string]string),
-		Source:       "aegis_schedule",
+		Source:       "capability_schedule",
 		Key:          s.TargetKey, // Set Key before hooks (will be overridden if Target.Model is set)
 	}
 
@@ -247,8 +252,13 @@ func (s *AegisSchedule) CreateJob() *Job {
 		job.Config[k] = v
 	}
 
-	job.Config["aegis"] = "true"
-	job.Config["client_id"] = s.ClientID
+	// Only set aegis-specific config if this is an Aegis capability
+	if s.IsAegis {
+		job.Config["aegis"] = "true"
+		if s.ClientID != "" {
+			job.Config["client_id"] = s.ClientID
+		}
+	}
 
 	job.Defaulted()
 
@@ -256,7 +266,7 @@ func (s *AegisSchedule) CreateJob() *Job {
 
 	// Restore Source after hooks (SetCapability modifies it)
 	// Keep the original source format for scheduled jobs
-	job.Source = "aegis_schedule"
+	job.Source = "capability_schedule"
 
 	// If hooks didn't set Key (because Target.Model is nil), keep the TargetKey
 	if job.Key == "" {
@@ -267,13 +277,13 @@ func (s *AegisSchedule) CreateJob() *Job {
 }
 
 // Pause pauses the schedule
-func (s *AegisSchedule) Pause() {
+func (s *CapabilitySchedule) Pause() {
 	s.Status = ScheduleStatusPaused
 	s.UpdatedAt = Now()
 }
 
 // Resume resumes a paused schedule
-func (s *AegisSchedule) Resume() {
+func (s *CapabilitySchedule) Resume() {
 	if s.Status == ScheduleStatusPaused {
 		s.Status = ScheduleStatusActive
 		s.CalculateNextExecution()
@@ -282,20 +292,21 @@ func (s *AegisSchedule) Resume() {
 }
 
 // MarkExecuted marks the schedule as executed and calculates next execution
-func (s *AegisSchedule) MarkExecuted() {
+func (s *CapabilitySchedule) MarkExecuted() {
 	s.LastExecution = Now()
 	s.CalculateNextExecution()
 	s.UpdatedAt = Now()
 }
 
 // Validate validates the schedule configuration
-func (s *AegisSchedule) Validate() error {
+func (s *CapabilitySchedule) Validate() error {
 	if s.CapabilityName == "" {
 		return fmt.Errorf("capability name is required")
 	}
 
-	if s.ClientID == "" {
-		return fmt.Errorf("client ID is required")
+	// ClientID is only required for Aegis capabilities
+	if s.IsAegis && s.ClientID == "" {
+		return fmt.Errorf("client ID is required for Aegis capabilities")
 	}
 
 	if s.TargetKey == "" {
@@ -361,9 +372,9 @@ func (s *AegisSchedule) Validate() error {
 	return nil
 }
 
-// MarshalJSON customizes JSON marshaling for AegisSchedule
-func (s *AegisSchedule) MarshalJSON() ([]byte, error) {
-	type Alias AegisSchedule
+// MarshalJSON customizes JSON marshaling for CapabilitySchedule
+func (s *CapabilitySchedule) MarshalJSON() ([]byte, error) {
+	type Alias CapabilitySchedule
 	return json.Marshal(&struct {
 		*Alias
 	}{
@@ -371,9 +382,9 @@ func (s *AegisSchedule) MarshalJSON() ([]byte, error) {
 	})
 }
 
-// UnmarshalJSON customizes JSON unmarshaling for AegisSchedule
-func (s *AegisSchedule) UnmarshalJSON(data []byte) error {
-	type Alias AegisSchedule
+// UnmarshalJSON customizes JSON unmarshaling for CapabilitySchedule
+func (s *CapabilitySchedule) UnmarshalJSON(data []byte) error {
+	type Alias CapabilitySchedule
 	aux := &struct {
 		*Alias
 	}{

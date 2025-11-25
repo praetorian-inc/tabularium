@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAegisSchedule_NewAegisSchedule(t *testing.T) {
+func TestCapabilitySchedule_NewCapabilitySchedule(t *testing.T) {
 	weeklySchedule := WeeklySchedule{
-		Monday:  DaySchedule{Enabled: true, Time: "09:00"},
-		Tuesday: DaySchedule{Enabled: true, Time: "14:30"},
+		Monday:   DaySchedule{Enabled: true, Time: "09:00"},
+		Tuesday:  DaySchedule{Enabled: true, Time: "14:30"},
 		Saturday: DaySchedule{Enabled: true, Time: "08:00"},
 	}
 
@@ -22,32 +22,35 @@ func TestAegisSchedule_NewAegisSchedule(t *testing.T) {
 		"Domain":   "example.com",
 	}
 
-	schedule := NewAegisSchedule(
+	schedule := NewCapabilitySchedule(
 		"user@example.com",
 		"windows-ad-sharphound",
-		"C.test-client-123",
 		"#addomain#example.com#S-1-5-21-123",
 		config,
 		weeklySchedule,
 		"2025-11-22T00:00:00Z",
 		"2025-12-10T00:00:00Z",
+		true,                // isAegis
+		"C.test-client-123", // clientID
 	)
 
 	assert.NotEmpty(t, schedule.ScheduleID)
-	assert.Equal(t, "#aegis_schedule#"+schedule.ScheduleID, schedule.Key)
+	assert.Equal(t, "#capability_schedule#"+schedule.ScheduleID, schedule.Key)
 	assert.Equal(t, "user@example.com", schedule.Username)
 	assert.Equal(t, "windows-ad-sharphound", schedule.CapabilityName)
 	assert.Equal(t, "C.test-client-123", schedule.ClientID)
+	assert.True(t, schedule.IsAegis)
 	assert.Equal(t, ScheduleStatusActive, schedule.Status)
 	assert.NotEmpty(t, schedule.CreatedAt)
 	assert.NotEmpty(t, schedule.UpdatedAt)
 	assert.NotEmpty(t, schedule.NextExecution)
 }
 
-func TestAegisSchedule_Validate_Success(t *testing.T) {
-	schedule := &AegisSchedule{
+func TestCapabilitySchedule_Validate_Success(t *testing.T) {
+	schedule := &CapabilitySchedule{
 		CapabilityName: "test-capability",
 		ClientID:       "C.test-123",
+		IsAegis:        true,
 		TargetKey:      "#asset#test.com#test.com",
 		StartDate:      "2025-11-22T00:00:00Z",
 		EndDate:        "2025-12-10T00:00:00Z",
@@ -60,9 +63,26 @@ func TestAegisSchedule_Validate_Success(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestAegisSchedule_Validate_MissingCapability(t *testing.T) {
-	schedule := &AegisSchedule{
+func TestCapabilitySchedule_Validate_Success_NonAegis(t *testing.T) {
+	schedule := &CapabilitySchedule{
+		CapabilityName: "test-capability",
+		IsAegis:        false,
+		TargetKey:      "#asset#test.com#test.com",
+		StartDate:      "2025-11-22T00:00:00Z",
+		EndDate:        "2025-12-10T00:00:00Z",
+		WeeklySchedule: WeeklySchedule{
+			Monday: DaySchedule{Enabled: true, Time: "09:00"},
+		},
+	}
+
+	err := schedule.Validate()
+	assert.NoError(t, err)
+}
+
+func TestCapabilitySchedule_Validate_MissingCapability(t *testing.T) {
+	schedule := &CapabilitySchedule{
 		ClientID:  "C.test-123",
+		IsAegis:   true,
 		TargetKey: "#asset#test.com#test.com",
 		StartDate: "2025-11-22T00:00:00Z",
 		WeeklySchedule: WeeklySchedule{
@@ -75,9 +95,10 @@ func TestAegisSchedule_Validate_MissingCapability(t *testing.T) {
 	assert.Contains(t, err.Error(), "capability name is required")
 }
 
-func TestAegisSchedule_Validate_MissingClientID(t *testing.T) {
-	schedule := &AegisSchedule{
+func TestCapabilitySchedule_Validate_MissingClientID_ForAegis(t *testing.T) {
+	schedule := &CapabilitySchedule{
 		CapabilityName: "test-capability",
+		IsAegis:        true,
 		TargetKey:      "#asset#test.com#test.com",
 		StartDate:      "2025-11-22T00:00:00Z",
 		WeeklySchedule: WeeklySchedule{
@@ -87,13 +108,14 @@ func TestAegisSchedule_Validate_MissingClientID(t *testing.T) {
 
 	err := schedule.Validate()
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "client ID is required")
+	assert.Contains(t, err.Error(), "client ID is required for Aegis capabilities")
 }
 
-func TestAegisSchedule_Validate_InvalidStartDate(t *testing.T) {
-	schedule := &AegisSchedule{
+func TestCapabilitySchedule_Validate_InvalidStartDate(t *testing.T) {
+	schedule := &CapabilitySchedule{
 		CapabilityName: "test-capability",
 		ClientID:       "C.test-123",
+		IsAegis:        true,
 		TargetKey:      "#asset#test.com#test.com",
 		StartDate:      "invalid-date",
 		WeeklySchedule: WeeklySchedule{
@@ -106,10 +128,11 @@ func TestAegisSchedule_Validate_InvalidStartDate(t *testing.T) {
 	assert.Contains(t, err.Error(), "invalid start date format")
 }
 
-func TestAegisSchedule_Validate_EndDateBeforeStart(t *testing.T) {
-	schedule := &AegisSchedule{
+func TestCapabilitySchedule_Validate_EndDateBeforeStart(t *testing.T) {
+	schedule := &CapabilitySchedule{
 		CapabilityName: "test-capability",
 		ClientID:       "C.test-123",
+		IsAegis:        true,
 		TargetKey:      "#asset#test.com#test.com",
 		StartDate:      "2025-12-10T00:00:00Z",
 		EndDate:        "2025-11-22T00:00:00Z",
@@ -123,10 +146,11 @@ func TestAegisSchedule_Validate_EndDateBeforeStart(t *testing.T) {
 	assert.Contains(t, err.Error(), "end date must be after start date")
 }
 
-func TestAegisSchedule_Validate_NoDaysEnabled(t *testing.T) {
-	schedule := &AegisSchedule{
+func TestCapabilitySchedule_Validate_NoDaysEnabled(t *testing.T) {
+	schedule := &CapabilitySchedule{
 		CapabilityName: "test-capability",
 		ClientID:       "C.test-123",
+		IsAegis:        true,
 		TargetKey:      "#asset#test.com#test.com",
 		StartDate:      "2025-11-22T00:00:00Z",
 		WeeklySchedule: WeeklySchedule{},
@@ -137,10 +161,11 @@ func TestAegisSchedule_Validate_NoDaysEnabled(t *testing.T) {
 	assert.Contains(t, err.Error(), "at least one day must be enabled")
 }
 
-func TestAegisSchedule_Validate_InvalidTimeFormat(t *testing.T) {
-	schedule := &AegisSchedule{
+func TestCapabilitySchedule_Validate_InvalidTimeFormat(t *testing.T) {
+	schedule := &CapabilitySchedule{
 		CapabilityName: "test-capability",
 		ClientID:       "C.test-123",
+		IsAegis:        true,
 		TargetKey:      "#asset#test.com#test.com",
 		StartDate:      "2025-11-22T00:00:00Z",
 		WeeklySchedule: WeeklySchedule{
@@ -153,10 +178,11 @@ func TestAegisSchedule_Validate_InvalidTimeFormat(t *testing.T) {
 	assert.Contains(t, err.Error(), "invalid time format")
 }
 
-func TestAegisSchedule_Validate_InvalidTimeRange(t *testing.T) {
-	schedule := &AegisSchedule{
+func TestCapabilitySchedule_Validate_InvalidTimeRange(t *testing.T) {
+	schedule := &CapabilitySchedule{
 		CapabilityName: "test-capability",
 		ClientID:       "C.test-123",
+		IsAegis:        true,
 		TargetKey:      "#asset#test.com#test.com",
 		StartDate:      "2025-11-22T00:00:00Z",
 		WeeklySchedule: WeeklySchedule{
@@ -169,11 +195,11 @@ func TestAegisSchedule_Validate_InvalidTimeRange(t *testing.T) {
 	assert.Contains(t, err.Error(), "invalid time range")
 }
 
-func TestAegisSchedule_CalculateNextExecution_FutureStart(t *testing.T) {
+func TestCapabilitySchedule_CalculateNextExecution_FutureStart(t *testing.T) {
 	// Schedule starts in the future
 	futureStart := time.Now().UTC().Add(48 * time.Hour).Format(time.RFC3339)
 
-	schedule := &AegisSchedule{
+	schedule := &CapabilitySchedule{
 		StartDate: futureStart,
 		WeeklySchedule: WeeklySchedule{
 			Monday: DaySchedule{Enabled: true, Time: "09:00"},
@@ -189,11 +215,11 @@ func TestAegisSchedule_CalculateNextExecution_FutureStart(t *testing.T) {
 	assert.True(t, nextExec.After(startTime) || nextExec.Equal(startTime))
 }
 
-func TestAegisSchedule_CalculateNextExecution_Expired(t *testing.T) {
+func TestCapabilitySchedule_CalculateNextExecution_Expired(t *testing.T) {
 	// Schedule ended in the past
 	pastEnd := time.Now().UTC().Add(-48 * time.Hour).Format(time.RFC3339)
 
-	schedule := &AegisSchedule{
+	schedule := &CapabilitySchedule{
 		StartDate: "2025-01-01T00:00:00Z",
 		EndDate:   pastEnd,
 		WeeklySchedule: WeeklySchedule{
@@ -208,10 +234,10 @@ func TestAegisSchedule_CalculateNextExecution_Expired(t *testing.T) {
 	assert.Empty(t, schedule.NextExecution)
 }
 
-func TestAegisSchedule_ShouldExecuteNow_NotStarted(t *testing.T) {
+func TestCapabilitySchedule_ShouldExecuteNow_NotStarted(t *testing.T) {
 	futureStart := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 
-	schedule := &AegisSchedule{
+	schedule := &CapabilitySchedule{
 		StartDate:     futureStart,
 		Status:        ScheduleStatusActive,
 		NextExecution: futureStart,
@@ -223,8 +249,8 @@ func TestAegisSchedule_ShouldExecuteNow_NotStarted(t *testing.T) {
 	assert.False(t, schedule.ShouldExecuteNow())
 }
 
-func TestAegisSchedule_ShouldExecuteNow_Paused(t *testing.T) {
-	schedule := &AegisSchedule{
+func TestCapabilitySchedule_ShouldExecuteNow_Paused(t *testing.T) {
+	schedule := &CapabilitySchedule{
 		StartDate:     "2025-01-01T00:00:00Z",
 		Status:        ScheduleStatusPaused,
 		NextExecution: time.Now().UTC().Add(-1 * time.Minute).Format(time.RFC3339),
@@ -236,11 +262,11 @@ func TestAegisSchedule_ShouldExecuteNow_Paused(t *testing.T) {
 	assert.False(t, schedule.ShouldExecuteNow())
 }
 
-func TestAegisSchedule_ShouldExecuteNow_ReadyToExecute(t *testing.T) {
+func TestCapabilitySchedule_ShouldExecuteNow_ReadyToExecute(t *testing.T) {
 	// Schedule should execute if next execution time has passed
 	pastExecution := time.Now().UTC().Add(-1 * time.Minute).Format(time.RFC3339)
 
-	schedule := &AegisSchedule{
+	schedule := &CapabilitySchedule{
 		StartDate:     "2025-01-01T00:00:00Z",
 		Status:        ScheduleStatusActive,
 		NextExecution: pastExecution,
@@ -252,16 +278,17 @@ func TestAegisSchedule_ShouldExecuteNow_ReadyToExecute(t *testing.T) {
 	assert.True(t, schedule.ShouldExecuteNow())
 }
 
-func TestAegisSchedule_CreateJob(t *testing.T) {
+func TestCapabilitySchedule_CreateJob_Aegis(t *testing.T) {
 	config := map[string]string{
 		"Username": "admin",
 		"Password": "secret",
 		"Domain":   "example.com",
 	}
 
-	schedule := &AegisSchedule{
+	schedule := &CapabilitySchedule{
 		CapabilityName: "windows-ad-sharphound",
 		ClientID:       "C.test-123",
+		IsAegis:        true,
 		TargetKey:      "#addomain#example.com#S-1-5-21-123",
 		Config:         config,
 	}
@@ -270,17 +297,48 @@ func TestAegisSchedule_CreateJob(t *testing.T) {
 
 	assert.Equal(t, schedule.TargetKey, job.Key)
 	assert.Equal(t, []string{schedule.CapabilityName}, job.Capabilities)
-	assert.Equal(t, "aegis_schedule", job.Source)
+	assert.Equal(t, "capability_schedule", job.Source)
 	// Credentials come from config, not separate credentialIDs field
 	assert.Equal(t, "admin", job.Config["Username"])
 	assert.Equal(t, "secret", job.Config["Password"])
 	assert.Equal(t, "example.com", job.Config["Domain"])
+	// Aegis-specific config should be set
 	assert.Equal(t, "true", job.Config["aegis"])
 	assert.Equal(t, "C.test-123", job.Config["client_id"])
 }
 
-func TestAegisSchedule_Pause(t *testing.T) {
-	schedule := &AegisSchedule{
+func TestCapabilitySchedule_CreateJob_NonAegis(t *testing.T) {
+	config := map[string]string{
+		"Username": "admin",
+		"Password": "secret",
+		"Domain":   "example.com",
+	}
+
+	schedule := &CapabilitySchedule{
+		CapabilityName: "test-capability",
+		IsAegis:        false,
+		TargetKey:      "#asset#test.com#test.com",
+		Config:         config,
+	}
+
+	job := schedule.CreateJob()
+
+	assert.Equal(t, schedule.TargetKey, job.Key)
+	assert.Equal(t, []string{schedule.CapabilityName}, job.Capabilities)
+	assert.Equal(t, "capability_schedule", job.Source)
+	// Credentials come from config
+	assert.Equal(t, "admin", job.Config["Username"])
+	assert.Equal(t, "secret", job.Config["Password"])
+	assert.Equal(t, "example.com", job.Config["Domain"])
+	// Aegis-specific config should NOT be set for non-Aegis capabilities
+	_, hasAegis := job.Config["aegis"]
+	assert.False(t, hasAegis, "aegis config should not be set for non-Aegis capabilities")
+	_, hasClientID := job.Config["client_id"]
+	assert.False(t, hasClientID, "client_id config should not be set for non-Aegis capabilities")
+}
+
+func TestCapabilitySchedule_Pause(t *testing.T) {
+	schedule := &CapabilitySchedule{
 		Status: ScheduleStatusActive,
 	}
 
@@ -290,8 +348,8 @@ func TestAegisSchedule_Pause(t *testing.T) {
 	assert.NotEmpty(t, schedule.UpdatedAt)
 }
 
-func TestAegisSchedule_Resume(t *testing.T) {
-	schedule := &AegisSchedule{
+func TestCapabilitySchedule_Resume(t *testing.T) {
+	schedule := &CapabilitySchedule{
 		Status:    ScheduleStatusPaused,
 		StartDate: "2025-11-22T00:00:00Z",
 		WeeklySchedule: WeeklySchedule{
@@ -306,8 +364,8 @@ func TestAegisSchedule_Resume(t *testing.T) {
 	assert.NotEmpty(t, schedule.NextExecution)
 }
 
-func TestAegisSchedule_Resume_OnlyWhenPaused(t *testing.T) {
-	schedule := &AegisSchedule{
+func TestCapabilitySchedule_Resume_OnlyWhenPaused(t *testing.T) {
+	schedule := &CapabilitySchedule{
 		Status: ScheduleStatusExpired,
 	}
 
@@ -318,8 +376,8 @@ func TestAegisSchedule_Resume_OnlyWhenPaused(t *testing.T) {
 	assert.Equal(t, oldStatus, schedule.Status)
 }
 
-func TestAegisSchedule_MarkExecuted(t *testing.T) {
-	schedule := &AegisSchedule{
+func TestCapabilitySchedule_MarkExecuted(t *testing.T) {
+	schedule := &CapabilitySchedule{
 		StartDate: "2025-11-22T00:00:00Z",
 		WeeklySchedule: WeeklySchedule{
 			Monday: DaySchedule{Enabled: true, Time: "09:00"},
@@ -334,7 +392,7 @@ func TestAegisSchedule_MarkExecuted(t *testing.T) {
 	assert.NotEmpty(t, schedule.UpdatedAt)
 }
 
-func TestAegisSchedule_IsActive(t *testing.T) {
+func TestCapabilitySchedule_IsActive(t *testing.T) {
 	tests := []struct {
 		name     string
 		status   ScheduleStatus
@@ -347,33 +405,34 @@ func TestAegisSchedule_IsActive(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			schedule := &AegisSchedule{Status: tt.status}
+			schedule := &CapabilitySchedule{Status: tt.status}
 			assert.Equal(t, tt.expected, schedule.IsActive())
 		})
 	}
 }
 
-func TestAegisSchedule_GetDescription(t *testing.T) {
-	schedule := &AegisSchedule{}
+func TestCapabilitySchedule_GetDescription(t *testing.T) {
+	schedule := &CapabilitySchedule{}
 	desc := schedule.GetDescription()
 	assert.NotEmpty(t, desc)
-	assert.Contains(t, desc, "Aegis")
+	assert.Contains(t, desc, "capabilities")
 }
 
-func TestAegisSchedule_GetKey(t *testing.T) {
-	schedule := &AegisSchedule{
-		Key: "#aegis_schedule#test-123",
+func TestCapabilitySchedule_GetKey(t *testing.T) {
+	schedule := &CapabilitySchedule{
+		Key: "#capability_schedule#test-123",
 	}
 
-	assert.Equal(t, "#aegis_schedule#test-123", schedule.GetKey())
+	assert.Equal(t, "#capability_schedule#test-123", schedule.GetKey())
 }
 
-func TestAegisSchedule_MarshalJSON(t *testing.T) {
-	schedule := &AegisSchedule{
+func TestCapabilitySchedule_MarshalJSON(t *testing.T) {
+	schedule := &CapabilitySchedule{
 		ScheduleID:     "test-123",
-		Key:            "#aegis_schedule#test-123",
+		Key:            "#capability_schedule#test-123",
 		CapabilityName: "test-capability",
 		ClientID:       "C.test-123",
+		IsAegis:        true,
 		TargetKey:      "#asset#test.com#test.com",
 		Status:         ScheduleStatusActive,
 		WeeklySchedule: WeeklySchedule{
@@ -387,12 +446,13 @@ func TestAegisSchedule_MarshalJSON(t *testing.T) {
 	assert.Contains(t, string(data), "test-capability")
 }
 
-func TestAegisSchedule_UnmarshalJSON(t *testing.T) {
+func TestCapabilitySchedule_UnmarshalJSON(t *testing.T) {
 	jsonData := `{
 		"scheduleId": "test-123",
-		"key": "#aegis_schedule#test-123",
+		"key": "#capability_schedule#test-123",
 		"capabilityName": "test-capability",
 		"clientId": "C.test-123",
+		"is_aegis": true,
 		"targetKey": "#asset#test.com#test.com",
 		"config": {"param1": "value1"},
 		"weeklySchedule": {
@@ -408,23 +468,24 @@ func TestAegisSchedule_UnmarshalJSON(t *testing.T) {
 		"status": "active"
 	}`
 
-	var schedule AegisSchedule
+	var schedule CapabilitySchedule
 	err := json.Unmarshal([]byte(jsonData), &schedule)
 
 	require.NoError(t, err)
 	assert.Equal(t, "test-123", schedule.ScheduleID)
 	assert.Equal(t, "test-capability", schedule.CapabilityName)
 	assert.Equal(t, "C.test-123", schedule.ClientID)
+	assert.True(t, schedule.IsAegis)
 	assert.True(t, schedule.WeeklySchedule.Monday.Enabled)
 	assert.Equal(t, "09:00", schedule.WeeklySchedule.Monday.Time)
 	assert.False(t, schedule.WeeklySchedule.Tuesday.Enabled)
 }
 
-func TestAegisSchedule_findNextExecutionFrom_SameDay(t *testing.T) {
+func TestCapabilitySchedule_findNextExecutionFrom_SameDay(t *testing.T) {
 	// Test finding next execution on the same day
 	now := time.Now().UTC()
 
-	schedule := &AegisSchedule{
+	schedule := &CapabilitySchedule{
 		StartDate: "2025-01-01T00:00:00Z",
 		WeeklySchedule: WeeklySchedule{
 			Monday:    DaySchedule{Enabled: true, Time: "09:00"},
@@ -446,12 +507,12 @@ func TestAegisSchedule_findNextExecutionFrom_SameDay(t *testing.T) {
 	assert.True(t, nextTime.After(now), "Next execution should be in the future")
 }
 
-func TestAegisSchedule_findNextExecutionFrom_NextWeek(t *testing.T) {
+func TestCapabilitySchedule_findNextExecutionFrom_NextWeek(t *testing.T) {
 	// Schedule only enabled for a specific day in the future
 	now := time.Now().UTC()
 
 	// Enable only one day per week
-	schedule := &AegisSchedule{
+	schedule := &CapabilitySchedule{
 		StartDate: "2025-01-01T00:00:00Z",
 		WeeklySchedule: WeeklySchedule{
 			Monday: DaySchedule{Enabled: int(now.Weekday()) != 1, Time: "09:00"},
@@ -465,12 +526,12 @@ func TestAegisSchedule_findNextExecutionFrom_NextWeek(t *testing.T) {
 	}
 }
 
-func TestAegisSchedule_findNextExecutionFrom_RespectEndDate(t *testing.T) {
+func TestCapabilitySchedule_findNextExecutionFrom_RespectEndDate(t *testing.T) {
 	now := time.Now().UTC()
 	// End date is tomorrow
 	tomorrow := now.Add(24 * time.Hour).Format(time.RFC3339)
 
-	schedule := &AegisSchedule{
+	schedule := &CapabilitySchedule{
 		StartDate: "2025-01-01T00:00:00Z",
 		EndDate:   tomorrow,
 		WeeklySchedule: WeeklySchedule{
