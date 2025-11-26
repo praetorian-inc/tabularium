@@ -1,7 +1,6 @@
 package model
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -322,29 +321,5 @@ func (s *CapabilitySchedule) Validate() error {
 		}
 	}
 
-	return nil
-}
-
-// MarshalJSON customizes JSON marshaling for CapabilitySchedule
-func (s *CapabilitySchedule) MarshalJSON() ([]byte, error) {
-	type Alias CapabilitySchedule
-	return json.Marshal(&struct {
-		*Alias
-	}{
-		Alias: (*Alias)(s),
-	})
-}
-
-// UnmarshalJSON customizes JSON unmarshaling for CapabilitySchedule
-func (s *CapabilitySchedule) UnmarshalJSON(data []byte) error {
-	type Alias CapabilitySchedule
-	aux := &struct {
-		*Alias
-	}{
-		Alias: (*Alias)(s),
-	}
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
 	return nil
 }
