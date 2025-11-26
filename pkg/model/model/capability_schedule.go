@@ -70,8 +70,6 @@ type CapabilitySchedule struct {
 
 	LastExecution string `json:"lastExecution,omitempty" dynamodbav:"last_execution,omitempty" desc:"Last execution timestamp"`
 
-	IsAegis bool `json:"is_aegis" dynamodbav:"is_aegis" desc:"Indicates if this is an Aegis capability"`
-
 	CreatedAt string `json:"createdAt" dynamodbav:"created_at" desc:"Creation timestamp"`
 
 	UpdatedAt string `json:"updatedAt" dynamodbav:"updated_at" desc:"Last modification timestamp"`
@@ -94,7 +92,6 @@ func NewCapabilitySchedule(
 	config map[string]string,
 	weeklySchedule WeeklySchedule,
 	startDate, endDate string,
-	isAegis bool,
 	clientID string,
 ) *CapabilitySchedule {
 	now := Now()
@@ -112,7 +109,6 @@ func NewCapabilitySchedule(
 		StartDate:      startDate,
 		EndDate:        endDate,
 		Status:         ScheduleStatusActive,
-		IsAegis:        isAegis,
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	}
@@ -238,44 +234,6 @@ func (s *CapabilitySchedule) ShouldExecuteNow() bool {
 	return now.After(nextExecTime)
 }
 
-// CreateJob creates a Job from this schedule for execution
-// All credentials (Username, Password, etc.) come from Config, not separate credential IDs
-func (s *CapabilitySchedule) CreateJob() *Job {
-	job := &Job{
-		Capabilities: []string{s.CapabilityName},
-		Config:       make(map[string]string),
-		Source:       "capability_schedule",
-		Key:          s.TargetKey, // Set Key before hooks (will be overridden if Target.Model is set)
-	}
-
-	for k, v := range s.Config {
-		job.Config[k] = v
-	}
-
-	// Only set aegis-specific config if this is an Aegis capability
-	if s.IsAegis {
-		job.Config["aegis"] = "true"
-		if s.ClientID != "" {
-			job.Config["client_id"] = s.ClientID
-		}
-	}
-
-	job.Defaulted()
-
-	registry.CallHooks(job)
-
-	// Restore Source after hooks (SetCapability modifies it)
-	// Keep the original source format for scheduled jobs
-	job.Source = "capability_schedule"
-
-	// If hooks didn't set Key (because Target.Model is nil), keep the TargetKey
-	if job.Key == "" {
-		job.Key = s.TargetKey
-	}
-
-	return job
-}
-
 // Pause pauses the schedule
 func (s *CapabilitySchedule) Pause() {
 	s.Status = ScheduleStatusPaused
@@ -302,11 +260,6 @@ func (s *CapabilitySchedule) MarkExecuted() {
 func (s *CapabilitySchedule) Validate() error {
 	if s.CapabilityName == "" {
 		return fmt.Errorf("capability name is required")
-	}
-
-	// ClientID is only required for Aegis capabilities
-	if s.IsAegis && s.ClientID == "" {
-		return fmt.Errorf("client ID is required for Aegis capabilities")
 	}
 
 	if s.TargetKey == "" {

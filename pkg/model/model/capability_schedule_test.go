@@ -30,7 +30,6 @@ func TestCapabilitySchedule_NewCapabilitySchedule(t *testing.T) {
 		weeklySchedule,
 		"2025-11-22T00:00:00Z",
 		"2025-12-10T00:00:00Z",
-		true,                // isAegis
 		"C.test-client-123", // clientID
 	)
 
@@ -39,7 +38,6 @@ func TestCapabilitySchedule_NewCapabilitySchedule(t *testing.T) {
 	assert.Equal(t, "user@example.com", schedule.Username)
 	assert.Equal(t, "windows-ad-sharphound", schedule.CapabilityName)
 	assert.Equal(t, "C.test-client-123", schedule.ClientID)
-	assert.True(t, schedule.IsAegis)
 	assert.Equal(t, ScheduleStatusActive, schedule.Status)
 	assert.NotEmpty(t, schedule.CreatedAt)
 	assert.NotEmpty(t, schedule.UpdatedAt)
@@ -50,7 +48,6 @@ func TestCapabilitySchedule_Validate_Success(t *testing.T) {
 	schedule := &CapabilitySchedule{
 		CapabilityName: "test-capability",
 		ClientID:       "C.test-123",
-		IsAegis:        true,
 		TargetKey:      "#asset#test.com#test.com",
 		StartDate:      "2025-11-22T00:00:00Z",
 		EndDate:        "2025-12-10T00:00:00Z",
@@ -66,7 +63,6 @@ func TestCapabilitySchedule_Validate_Success(t *testing.T) {
 func TestCapabilitySchedule_Validate_Success_NonAegis(t *testing.T) {
 	schedule := &CapabilitySchedule{
 		CapabilityName: "test-capability",
-		IsAegis:        false,
 		TargetKey:      "#asset#test.com#test.com",
 		StartDate:      "2025-11-22T00:00:00Z",
 		EndDate:        "2025-12-10T00:00:00Z",
@@ -82,7 +78,6 @@ func TestCapabilitySchedule_Validate_Success_NonAegis(t *testing.T) {
 func TestCapabilitySchedule_Validate_MissingCapability(t *testing.T) {
 	schedule := &CapabilitySchedule{
 		ClientID:  "C.test-123",
-		IsAegis:   true,
 		TargetKey: "#asset#test.com#test.com",
 		StartDate: "2025-11-22T00:00:00Z",
 		WeeklySchedule: WeeklySchedule{
@@ -95,27 +90,10 @@ func TestCapabilitySchedule_Validate_MissingCapability(t *testing.T) {
 	assert.Contains(t, err.Error(), "capability name is required")
 }
 
-func TestCapabilitySchedule_Validate_MissingClientID_ForAegis(t *testing.T) {
-	schedule := &CapabilitySchedule{
-		CapabilityName: "test-capability",
-		IsAegis:        true,
-		TargetKey:      "#asset#test.com#test.com",
-		StartDate:      "2025-11-22T00:00:00Z",
-		WeeklySchedule: WeeklySchedule{
-			Monday: DaySchedule{Enabled: true, Time: "09:00"},
-		},
-	}
-
-	err := schedule.Validate()
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "client ID is required for Aegis capabilities")
-}
-
 func TestCapabilitySchedule_Validate_InvalidStartDate(t *testing.T) {
 	schedule := &CapabilitySchedule{
 		CapabilityName: "test-capability",
 		ClientID:       "C.test-123",
-		IsAegis:        true,
 		TargetKey:      "#asset#test.com#test.com",
 		StartDate:      "invalid-date",
 		WeeklySchedule: WeeklySchedule{
@@ -132,7 +110,6 @@ func TestCapabilitySchedule_Validate_EndDateBeforeStart(t *testing.T) {
 	schedule := &CapabilitySchedule{
 		CapabilityName: "test-capability",
 		ClientID:       "C.test-123",
-		IsAegis:        true,
 		TargetKey:      "#asset#test.com#test.com",
 		StartDate:      "2025-12-10T00:00:00Z",
 		EndDate:        "2025-11-22T00:00:00Z",
@@ -150,7 +127,6 @@ func TestCapabilitySchedule_Validate_NoDaysEnabled(t *testing.T) {
 	schedule := &CapabilitySchedule{
 		CapabilityName: "test-capability",
 		ClientID:       "C.test-123",
-		IsAegis:        true,
 		TargetKey:      "#asset#test.com#test.com",
 		StartDate:      "2025-11-22T00:00:00Z",
 		WeeklySchedule: WeeklySchedule{},
@@ -165,7 +141,6 @@ func TestCapabilitySchedule_Validate_InvalidTimeFormat(t *testing.T) {
 	schedule := &CapabilitySchedule{
 		CapabilityName: "test-capability",
 		ClientID:       "C.test-123",
-		IsAegis:        true,
 		TargetKey:      "#asset#test.com#test.com",
 		StartDate:      "2025-11-22T00:00:00Z",
 		WeeklySchedule: WeeklySchedule{
@@ -182,7 +157,6 @@ func TestCapabilitySchedule_Validate_InvalidTimeRange(t *testing.T) {
 	schedule := &CapabilitySchedule{
 		CapabilityName: "test-capability",
 		ClientID:       "C.test-123",
-		IsAegis:        true,
 		TargetKey:      "#asset#test.com#test.com",
 		StartDate:      "2025-11-22T00:00:00Z",
 		WeeklySchedule: WeeklySchedule{
@@ -276,65 +250,6 @@ func TestCapabilitySchedule_ShouldExecuteNow_ReadyToExecute(t *testing.T) {
 	}
 
 	assert.True(t, schedule.ShouldExecuteNow())
-}
-
-func TestCapabilitySchedule_CreateJob_Aegis(t *testing.T) {
-	config := map[string]string{
-		"Username": "admin",
-		"Password": "secret",
-		"Domain":   "example.com",
-	}
-
-	schedule := &CapabilitySchedule{
-		CapabilityName: "windows-ad-sharphound",
-		ClientID:       "C.test-123",
-		IsAegis:        true,
-		TargetKey:      "#addomain#example.com#S-1-5-21-123",
-		Config:         config,
-	}
-
-	job := schedule.CreateJob()
-
-	assert.Equal(t, schedule.TargetKey, job.Key)
-	assert.Equal(t, []string{schedule.CapabilityName}, job.Capabilities)
-	assert.Equal(t, "capability_schedule", job.Source)
-	// Credentials come from config, not separate credentialIDs field
-	assert.Equal(t, "admin", job.Config["Username"])
-	assert.Equal(t, "secret", job.Config["Password"])
-	assert.Equal(t, "example.com", job.Config["Domain"])
-	// Aegis-specific config should be set
-	assert.Equal(t, "true", job.Config["aegis"])
-	assert.Equal(t, "C.test-123", job.Config["client_id"])
-}
-
-func TestCapabilitySchedule_CreateJob_NonAegis(t *testing.T) {
-	config := map[string]string{
-		"Username": "admin",
-		"Password": "secret",
-		"Domain":   "example.com",
-	}
-
-	schedule := &CapabilitySchedule{
-		CapabilityName: "test-capability",
-		IsAegis:        false,
-		TargetKey:      "#asset#test.com#test.com",
-		Config:         config,
-	}
-
-	job := schedule.CreateJob()
-
-	assert.Equal(t, schedule.TargetKey, job.Key)
-	assert.Equal(t, []string{schedule.CapabilityName}, job.Capabilities)
-	assert.Equal(t, "capability_schedule", job.Source)
-	// Credentials come from config
-	assert.Equal(t, "admin", job.Config["Username"])
-	assert.Equal(t, "secret", job.Config["Password"])
-	assert.Equal(t, "example.com", job.Config["Domain"])
-	// Aegis-specific config should NOT be set for non-Aegis capabilities
-	_, hasAegis := job.Config["aegis"]
-	assert.False(t, hasAegis, "aegis config should not be set for non-Aegis capabilities")
-	_, hasClientID := job.Config["client_id"]
-	assert.False(t, hasClientID, "client_id config should not be set for non-Aegis capabilities")
 }
 
 func TestCapabilitySchedule_Pause(t *testing.T) {
@@ -432,7 +347,6 @@ func TestCapabilitySchedule_MarshalJSON(t *testing.T) {
 		Key:            "#capability_schedule#test-123",
 		CapabilityName: "test-capability",
 		ClientID:       "C.test-123",
-		IsAegis:        true,
 		TargetKey:      "#asset#test.com#test.com",
 		Status:         ScheduleStatusActive,
 		WeeklySchedule: WeeklySchedule{
@@ -452,7 +366,6 @@ func TestCapabilitySchedule_UnmarshalJSON(t *testing.T) {
 		"key": "#capability_schedule#test-123",
 		"capabilityName": "test-capability",
 		"clientId": "C.test-123",
-		"is_aegis": true,
 		"targetKey": "#asset#test.com#test.com",
 		"config": {"param1": "value1"},
 		"weeklySchedule": {
@@ -475,7 +388,6 @@ func TestCapabilitySchedule_UnmarshalJSON(t *testing.T) {
 	assert.Equal(t, "test-123", schedule.ScheduleID)
 	assert.Equal(t, "test-capability", schedule.CapabilityName)
 	assert.Equal(t, "C.test-123", schedule.ClientID)
-	assert.True(t, schedule.IsAegis)
 	assert.True(t, schedule.WeeklySchedule.Monday.Enabled)
 	assert.Equal(t, "09:00", schedule.WeeklySchedule.Monday.Time)
 	assert.False(t, schedule.WeeklySchedule.Tuesday.Enabled)
