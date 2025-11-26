@@ -1,7 +1,9 @@
 package model
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func TestNewPreseed(t *testing.T) {
@@ -72,4 +74,25 @@ func TestGeneratePreseedDisplay(t *testing.T) {
 			t.Errorf("generatePreseedDisplay(%s) = %s, want %s", test.name, got, test.want)
 		}
 	}
+}
+
+func TestPreseedVisit(t *testing.T) {
+	oneDayAgo := time.Now().UTC().Add(-24 * time.Hour).Format(time.RFC3339)
+
+	p1 := NewPreseed("whois+company", "Test Org", "Test Org")
+	p1.Created = oneDayAgo
+	p1.Visited = oneDayAgo
+
+	p2 := NewPreseed("whois+company", "Test Org", "Test Org")
+	p2.Metadata = map[string]string{"test": "value"}
+
+	p1.Visit(p2)
+
+	assert.Equal(t, "whois+company", p1.Type)
+	assert.Equal(t, "Test Org", p1.Title)
+	assert.Equal(t, "Test Org", p1.Value)
+	assert.Equal(t, oneDayAgo, p1.Created)
+	assert.Equal(t, p2.Visited, p1.Visited)
+	assert.Contains(t, p1.Metadata, "test")
+	assert.Equal(t, "value", p1.Metadata["test"])
 }
