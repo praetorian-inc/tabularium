@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"maps"
 	"strings"
 
 	"github.com/praetorian-inc/tabularium/pkg/model/filters"
@@ -11,17 +12,18 @@ import (
 
 type Preseed struct {
 	registry.BaseModel
-	Username   string `neo4j:"username" json:"username" desc:"Chariot username associated with the preseed record." example:"user@example.com"`
-	Key        string `neo4j:"key" json:"key" desc:"Unique key identifying the preseed record." example:"#preseed#whois#registrant_email#test@example.com"`
-	Type       string `neo4j:"type" json:"type" desc:"Type of the preseed data." example:"whois"`
-	Title      string `neo4j:"title" json:"title" desc:"Title or category within the preseed type." example:"registrant_email"`
-	Value      string `neo4j:"value" json:"value" desc:"The actual preseed value." example:"test@example.com"`
-	Display    string `neo4j:"display" json:"display" desc:"Hint for UI display type (e.g., text, image, base64)." example:"text"`
-	Status     string `neo4j:"status" json:"status" desc:"Status of the preseed record." example:"A"`
-	Created    string `neo4j:"created" json:"created" desc:"Timestamp when the preseed record was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
-	Visited    string `neo4j:"visited" json:"visited" desc:"Timestamp when the preseed record was last visited or processed (RFC3339)." example:"2023-10-27T11:00:00Z"`
-	Capability string `neo4j:"capability" json:"capability,omitempty" desc:"Capability associated with processing this preseed record." example:"whois-lookup"`
-	TTL        int64  `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the preseed record (Unix timestamp)." example:"1706353200"`
+	Username   string            `neo4j:"username" json:"username" desc:"Chariot username associated with the preseed record." example:"user@example.com"`
+	Key        string            `neo4j:"key" json:"key" desc:"Unique key identifying the preseed record." example:"#preseed#whois#registrant_email#test@example.com"`
+	Type       string            `neo4j:"type" json:"type" desc:"Type of the preseed data." example:"whois"`
+	Title      string            `neo4j:"title" json:"title" desc:"Title or category within the preseed type." example:"registrant_email"`
+	Value      string            `neo4j:"value" json:"value" desc:"The actual preseed value." example:"test@example.com"`
+	Display    string            `neo4j:"display" json:"display" desc:"Hint for UI display type (e.g., text, image, base64)." example:"text"`
+	Status     string            `neo4j:"status" json:"status" desc:"Status of the preseed record." example:"A"`
+	Created    string            `neo4j:"created" json:"created" desc:"Timestamp when the preseed record was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
+	Visited    string            `neo4j:"visited" json:"visited" desc:"Timestamp when the preseed record was last visited or processed (RFC3339)." example:"2023-10-27T11:00:00Z"`
+	Capability string            `neo4j:"capability" json:"capability,omitempty" desc:"Capability associated with processing this preseed record." example:"whois-lookup"`
+	Metadata   map[string]string `neo4j:"metadata" json:"metadata,omitempty" desc:"Additional metadata associated with the preseed record." example:"{}"`
+	TTL        int64             `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the preseed record (Unix timestamp)." example:"1706353200"`
 }
 
 func init() {
@@ -50,6 +52,7 @@ func (p *Preseed) Visit(other Preseed) {
 		p.TTL = other.TTL
 	}
 	p.Visited = other.Visited
+	p.Metadata = maps.Clone(other.Metadata)
 }
 
 func (p *Preseed) Valid() bool {
@@ -66,10 +69,13 @@ func (p *Preseed) ToAttribute(source GraphModel, metadata ...string) Attribute {
 
 func (p *Preseed) Synonymous() []filters.Filter {
 	switch p.Class() {
-	case "whois":
+	case "whois", "edgar":
 		// match other whois attributes with the same values
 		return []filters.Filter{
-			filters.NewFilter("type", filters.OperatorStartsWith, "whois"),
+			filters.NewFilter("", filters.OperatorOr, []filters.Filter{
+				filters.NewFilter("type", filters.OperatorStartsWith, "whois"),
+				filters.NewFilter("type", filters.OperatorStartsWith, "edgar"),
+			}),
 			filters.NewFilter("title", filters.OperatorEqual, p.Title),
 			filters.NewFilter("value", filters.OperatorEqual, p.Value),
 		}
