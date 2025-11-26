@@ -1671,6 +1671,134 @@ components:
       - BaseRelationship
       - relationshipType
       type: object
+    capability_schedule:
+      description: Scheduled execution configuration for capabilities
+      properties:
+        BaseModel:
+          type: object
+        capabilityName:
+          description: Capability name to execute
+          type: string
+        clientId:
+          description: Aegis agent client ID (only for Aegis capabilities)
+          type: string
+        config:
+          description: Capability configuration parameters including credentials
+          type: object
+        createdAt:
+          description: Creation timestamp
+          type: string
+        endDate:
+          description: Schedule end date in RFC3339 format (optional)
+          type: string
+        key:
+          description: DynamoDB partition key
+          type: string
+        lastExecution:
+          description: Last execution timestamp
+          type: string
+        nextExecution:
+          description: Calculated next execution time
+          type: string
+        scheduleId:
+          description: Unique identifier for this schedule
+          type: string
+        startDate:
+          description: Schedule start date in RFC3339 format
+          type: string
+        status:
+          description: Schedule status (active, paused, or expired)
+          type: string
+        targetKey:
+          description: Asset or target key for capability execution
+          type: string
+        updatedAt:
+          description: Last modification timestamp
+          type: string
+        username:
+          description: Account owner email
+          type: string
+        weeklySchedule:
+          description: Weekly execution schedule configuration
+          type: object
+      required:
+      - BaseModel
+      - capabilityName
+      - config
+      - createdAt
+      - key
+      - scheduleId
+      - startDate
+      - status
+      - targetKey
+      - updatedAt
+      - username
+      - weeklySchedule
+      type: object
+    capabilityschedule:
+      description: Scheduled execution configuration for capabilities
+      properties:
+        BaseModel:
+          type: object
+        capabilityName:
+          description: Capability name to execute
+          type: string
+        clientId:
+          description: Aegis agent client ID (only for Aegis capabilities)
+          type: string
+        config:
+          description: Capability configuration parameters including credentials
+          type: object
+        createdAt:
+          description: Creation timestamp
+          type: string
+        endDate:
+          description: Schedule end date in RFC3339 format (optional)
+          type: string
+        key:
+          description: DynamoDB partition key
+          type: string
+        lastExecution:
+          description: Last execution timestamp
+          type: string
+        nextExecution:
+          description: Calculated next execution time
+          type: string
+        scheduleId:
+          description: Unique identifier for this schedule
+          type: string
+        startDate:
+          description: Schedule start date in RFC3339 format
+          type: string
+        status:
+          description: Schedule status (active, paused, or expired)
+          type: string
+        targetKey:
+          description: Asset or target key for capability execution
+          type: string
+        updatedAt:
+          description: Last modification timestamp
+          type: string
+        username:
+          description: Account owner email
+          type: string
+        weeklySchedule:
+          description: Weekly execution schedule configuration
+          type: object
+      required:
+      - BaseModel
+      - capabilityName
+      - config
+      - createdAt
+      - key
+      - scheduleId
+      - startDate
+      - status
+      - targetKey
+      - updatedAt
+      - username
+      - weeklySchedule
+      type: object
     claimspecialidentity:
       description: Represents an Active Directory relationship between two AD objects,
         supporting all BloodHound relationship types.
