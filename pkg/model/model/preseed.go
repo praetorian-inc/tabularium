@@ -52,7 +52,7 @@ func (p *Preseed) Visit(other Preseed) {
 		p.TTL = other.TTL
 	}
 	p.Visited = other.Visited
-	maps.Copy(p.Metadata, other.Metadata)
+	p.Metadata = maps.Clone(other.Metadata)
 }
 
 func (p *Preseed) Valid() bool {
