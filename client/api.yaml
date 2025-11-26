@@ -3919,6 +3919,10 @@ components:
           description: Unique key identifying the preseed record.
           example: '#preseed#whois#registrant_email#test@example.com'
           type: string
+        metadata:
+          description: Additional metadata associated with the preseed record.
+          example: '{}'
+          type: object
         status:
           description: Status of the preseed record.
           example: A
