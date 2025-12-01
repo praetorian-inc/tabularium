@@ -116,6 +116,10 @@ func (p *ParkedDomain) Merge(update ParkedDomain, fieldsToUpdate []string) {
 	}
 
 	if slices.Contains(fieldsToUpdate, "auto_renew") {
+
+		// TODO:
+		// perform the actions needed to update Cloudflare Auto-renew flag
+
 		p.AutoRenew = update.AutoRenew
 	}
 
