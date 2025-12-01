@@ -42,6 +42,7 @@ const (
 	BitbucketCredential             CredentialType = "bitbucket"               // Bitbucket API key
 	BuiltWithCredential             CredentialType = "builtwith"               // Built with credentials
 	CloudflareCredential            CredentialType = "cloudflare"              // Cloudflare API key
+	FastlyCredential                CredentialType = "fastly"                  // Fastly API token
 	DigitalOceanCredential          CredentialType = "digitalocean"            // DigitalOcean API key
 	GithubCredential                CredentialType = "github"                  // Github API key
 	GitlabCredential                CredentialType = "gitlab"                  // Gitlab API key
