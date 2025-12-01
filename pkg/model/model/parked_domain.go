@@ -94,7 +94,8 @@ func (p *ParkedDomain) Merge(update ParkedDomain, fieldsToUpdate []string) {
 
 		// TODO:
 		// perform the actions needed to update Netlify to park it in the new category, or
-		// delete the site if the category is none
+		// delete the site if the category is none.
+		// We may do it here, or in the service, or in the handler
 
 		p.ParkedCategory = update.ParkedCategory
 	}
@@ -118,7 +119,8 @@ func (p *ParkedDomain) Merge(update ParkedDomain, fieldsToUpdate []string) {
 	if slices.Contains(fieldsToUpdate, "auto_renew") {
 
 		// TODO:
-		// perform the actions needed to update Cloudflare Auto-renew flag
+		// perform the actions needed to update Cloudflare Auto-renew flag.
+		// We may do it here, or in the service, or in the handler.
 
 		p.AutoRenew = update.AutoRenew
 	}
