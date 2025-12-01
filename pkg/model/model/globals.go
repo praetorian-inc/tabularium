@@ -231,6 +231,9 @@ const (
 	// system user for globally shared records
 	SystemUser string = "global"
 
+	// red team user for red team records
+	RedTeamUser string = "redteam"
+
 	// webpage:state
 	Unanalyzed    string = "unanalyzed"
 	Interesting   string = "interesting"
