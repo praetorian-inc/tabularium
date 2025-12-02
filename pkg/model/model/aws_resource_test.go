@@ -2,10 +2,9 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
 	"slices"
 	"testing"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -81,7 +80,7 @@ func TestAWSResource_GetIPs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			registry.CallHooks(tt.resource)
+			model.CallHooks(tt.resource)
 			got := tt.resource.GetIPs()
 			assert.Equal(t, tt.want, got)
 			assert.Equal(t, got, tt.resource.IPs)

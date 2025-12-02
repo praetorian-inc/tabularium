@@ -2,15 +2,16 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"strings"
 
 	"github.com/knqyf263/go-cpe/common"
 	"github.com/knqyf263/go-cpe/naming"
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 type CPE struct {
-	registry.BaseModel
+	model.BaseModel
 	Part      string `neo4j:"part" json:"part" desc:"CPE part (h=hardware, o=os, a=application)." example:"a"`
 	Vendor    string `neo4j:"vendor" json:"vendor" desc:"Vendor name." example:"microsoft"`
 	Product   string `neo4j:"product" json:"product" desc:"Product name." example:"windows_10"`
@@ -25,7 +26,7 @@ type CPE struct {
 }
 
 func init() {
-	registry.Registry.MustRegisterModel(&CPE{})
+	shared.Registry.MustRegisterModel(&CPE{})
 }
 
 func NewCPE(cpe string) (CPE, error) {

@@ -1,12 +1,12 @@
 package model
 
 import (
-	"github.com/praetorian-inc/tabularium/pkg/registry"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"strings"
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&IamRelationship{})
+	shared.Registry.MustRegisterModel(&IamRelationship{})
 }
 
 type IamRelationship struct {

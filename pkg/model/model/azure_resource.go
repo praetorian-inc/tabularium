@@ -2,9 +2,9 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"strings"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 const (
@@ -18,7 +18,7 @@ type AzureResource struct {
 
 func init() {
 	MustRegisterLabel(AzureResourceLabel)
-	registry.Registry.MustRegisterModel(&AzureResource{})
+	shared.Registry.MustRegisterModel(&AzureResource{})
 }
 
 func NewAzureResource(name, accountRef string, rtype CloudResourceType, properties map[string]any) (AzureResource, error) {
@@ -36,7 +36,7 @@ func NewAzureResource(name, accountRef string, rtype CloudResourceType, properti
 	r.Region = r.GetRegion()
 	r.ResourceGroup = r.GetResourceGroup()
 	r.Defaulted()
-	registry.CallHooks(&r)
+	model.CallHooks(&r)
 	return r, nil
 }
 
@@ -58,8 +58,8 @@ func (a *AzureResource) Defaulted() {
 	a.BaseAsset.Defaulted()
 }
 
-func (a *AzureResource) GetHooks() []registry.Hook {
-	hooks := []registry.Hook{
+func (a *AzureResource) GetHooks() []model.Hook {
+	hooks := []model.Hook{
 		useGroupAndIdentifier(a, &a.AccountRef, &a.Name),
 		{
 			Call: func() error {

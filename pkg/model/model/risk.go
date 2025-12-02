@@ -4,12 +4,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"net/url"
 	"regexp"
 	"strings"
 
 	"github.com/praetorian-inc/tabularium/pkg/model/beta"
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 // Risk is an instance of a vulnerability. A risk may be associated with multiple targets.
@@ -17,7 +18,7 @@ import (
 // Note this is not really the industry standard definition of risk and vulnerability.
 // They are referred to as such in this context for historical reasons.
 type Risk struct {
-	registry.BaseModel
+	model.BaseModel
 	Username string `neo4j:"username" json:"username" desc:"Chariot username associated with the risk." example:"user@example.com"`
 	Key      string `neo4j:"key" json:"key" desc:"Unique key identifying the risk." example:"#risk#example.com#CVE-2023-12345"`
 	// Attributes
@@ -40,9 +41,9 @@ type Risk struct {
 }
 
 func init() {
-	registry.Registry.MustRegisterModel(&Risk{})
-	registry.Registry.MustRegisterModel(&MLProperties{})
-	registry.Registry.MustRegisterModel(&RiskDefinition{})
+	shared.Registry.MustRegisterModel(&Risk{})
+	shared.Registry.MustRegisterModel(&MLProperties{})
+	shared.Registry.MustRegisterModel(&RiskDefinition{})
 }
 
 // GetDescription returns a description for the Risk model.
@@ -51,7 +52,7 @@ func (r *Risk) GetDescription() string {
 }
 
 type MLProperties struct {
-	registry.BaseModel
+	model.BaseModel
 	Logit           *float32 `neo4j:"logit,omitempty" json:"logit,omitempty" desc:"Logit value from an ML model prediction." example:"0.75"`
 	ProofSufficient *bool    `neo4j:"proofSufficient,omitempty" json:"proofSufficient,omitempty" desc:"Indicates if ML model considers proof sufficient for auto-triage." example:"true"`
 	Agent           string   `neo4j:"-" json:"agent,omitempty" desc:"Name of the agent that provided the ML properties." example:"autotriage"`
@@ -63,7 +64,7 @@ func (mlp *MLProperties) GetDescription() string {
 }
 
 type RiskDefinition struct {
-	registry.BaseModel
+	model.BaseModel
 	Description    string `json:"Description" desc:"Description of the risk or vulnerability." example:"This vulnerability allows..."`
 	Impact         string `json:"Impact" desc:"Potential impact if the risk is exploited." example:"Remote code execution."`
 	Recommendation string `json:"Recommendation" desc:"Recommended actions to mitigate the risk." example:"Apply vendor patch XYZ."`
@@ -251,8 +252,8 @@ func (r *Risk) Defaulted() {
 	r.TTL = Future(14 * 24)
 }
 
-func (r *Risk) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (r *Risk) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				r.formatName()
@@ -289,7 +290,7 @@ func NewRiskWithDNS(target Target, name, dns, status string) Risk {
 		Target: target,
 	}
 	r.Defaulted()
-	registry.CallHooks(&r)
+	model.CallHooks(&r)
 	return r
 }
 

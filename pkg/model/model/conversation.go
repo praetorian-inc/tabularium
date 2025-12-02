@@ -2,11 +2,12 @@ package model
 
 import (
 	"github.com/google/uuid"
-	"github.com/praetorian-inc/tabularium/pkg/registry"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 )
 
 type Conversation struct {
-	registry.BaseModel
+	model.BaseModel
 	baseTableModel
 	Username string `dynamodbav:"username" json:"username" desc:"Username who owns the conversation." example:"user@example.com"`
 	Key      string `dynamodbav:"key" json:"key" desc:"Unique key for the conversation." example:"#conversation#example-conversation#550e8400-e29b-41d4-a716-446655440000"`
@@ -17,7 +18,7 @@ type Conversation struct {
 }
 
 func init() {
-	registry.Registry.MustRegisterModel(&Conversation{})
+	shared.Registry.MustRegisterModel(&Conversation{})
 }
 
 func (c *Conversation) GetKey() string {
@@ -32,8 +33,8 @@ func (c *Conversation) Defaulted() {
 	c.Created = Now()
 }
 
-func (c *Conversation) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (c *Conversation) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				if c.Key == "" {
@@ -56,6 +57,6 @@ func NewConversation(topic string) Conversation {
 		Topic: topic,
 	}
 	conv.Defaulted()
-	registry.CallHooks(&conv)
+	model.CallHooks(&conv)
 	return conv
 }

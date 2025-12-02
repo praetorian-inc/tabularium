@@ -5,12 +5,13 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"net/url"
 	"regexp"
 	"strings"
 
 	"github.com/praetorian-inc/tabularium/pkg/lib/normalize"
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 var webPageKeyRegex = regexp.MustCompile(`^#webpage#https?://.+(##.*)?$`)
@@ -50,7 +51,7 @@ type WebpageCodeArtifact struct {
 }
 
 type Webpage struct {
-	registry.BaseModel
+	model.BaseModel
 	Username  string                `neo4j:"username" json:"username" desc:"The username associated with this webpage, if authenticated." example:"user@example.com"`
 	Key       string                `neo4j:"key" json:"key" desc:"Unique key identifying the webpage." example:"#webpage#https://example.com#parentKey"`
 	Created   string                `neo4j:"created" json:"created" desc:"Timestamp when the webpage was first discovered (RFC3339)." example:"2023-10-27T10:00:00Z"`
@@ -99,7 +100,7 @@ type WebpageResponse struct {
 const WebpageLabel = "Webpage"
 
 func init() {
-	registry.Registry.MustRegisterModel(&Webpage{})
+	shared.Registry.MustRegisterModel(&Webpage{})
 }
 
 func (w *Webpage) GetDescription() string {
@@ -250,8 +251,8 @@ func (w *Webpage) Defaulted() {
 	w.Metadata = map[string]any{}
 }
 
-func (w *Webpage) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (w *Webpage) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				if w.URL != "" {
@@ -296,13 +297,13 @@ func NewWebpage(url url.URL, parent *WebApplication, options ...WebpageOption) W
 	w.Parent = parent
 	w.Defaulted()
 	// We run hooks twice to ensure construction and analysis are run
-	registry.CallHooks(&w)
+	model.CallHooks(&w)
 
 	for _, option := range options {
 		option(&w)
 	}
 
-	registry.CallHooks(&w)
+	model.CallHooks(&w)
 	return w
 }
 

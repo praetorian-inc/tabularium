@@ -2,16 +2,16 @@ package model
 
 import (
 	"fmt"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&Scanner{})
+	shared.Registry.MustRegisterModel(&Scanner{})
 }
 
 type Scanner struct {
-	registry.BaseModel
+	model.BaseModel
 	baseTableModel
 	Username string `dynamodbav:"username" json:"username" desc:"Chariot username associated with the account." example:"user@example.com"`
 	Key      string `dynamodbav:"key" json:"key" desc:"Unique key for the scanner record." example:"#scanner#ip"`
@@ -29,8 +29,8 @@ func (a *Scanner) Defaulted() {
 	a.Visited = Now()
 }
 
-func (a *Scanner) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (a *Scanner) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				a.Key = fmt.Sprintf("#scanner#%s", a.IP)
@@ -45,6 +45,6 @@ func NewScanner(ip string) Scanner {
 		IP: ip,
 	}
 	s.Defaulted()
-	registry.CallHooks(&s)
+	model.CallHooks(&s)
 	return s
 }

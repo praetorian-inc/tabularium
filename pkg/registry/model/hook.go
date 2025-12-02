@@ -1,4 +1,4 @@
-package registry
+package model
 
 // Hook represents a function that can be called as part of a model's lifecycle.
 type Hook struct {

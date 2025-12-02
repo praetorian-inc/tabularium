@@ -1,18 +1,19 @@
 package model
 
 import (
-	"github.com/praetorian-inc/tabularium/pkg/registry"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&AegisManagement{})
-	registry.Registry.MustRegisterModel(&AegisParameter{})
+	shared.Registry.MustRegisterModel(&AegisManagement{})
+	shared.Registry.MustRegisterModel(&AegisParameter{})
 }
 
 // AegisManagement represents a management capability for Aegis infrastructure operations
 // This closely mirrors AgoraCapability but is specifically for management tasks
 type AegisManagement struct {
-	registry.BaseModel
+	model.BaseModel
 	Name          string           `json:"name" desc:"The name of the management capability" example:"tunnel_management"`
 	Title         string           `json:"title" desc:"The pretty name of the management capability" example:"Cloudflare Tunnel Management"`
 	Target        string           `json:"target" desc:"The target of the management capability" example:"agent"`
@@ -35,7 +36,7 @@ func (a *AegisManagement) GetDescription() string {
 // AegisParameter represents a parameter for Aegis management capabilities
 // This closely mirrors AgoraParameter but is specifically for management tasks
 type AegisParameter struct {
-	registry.BaseModel
+	model.BaseModel
 	Name        string `json:"name" desc:"The name of the parameter" example:"tunnel_name"`
 	Description string `json:"description" desc:"A description of the parameter suitable for human or LLM use" example:"The name of the Cloudflare tunnel to manage"`
 	Default     string `json:"default,omitempty" desc:"A string representation of the default value of the parameter" example:"default-tunnel"`

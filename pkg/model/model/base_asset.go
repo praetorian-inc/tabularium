@@ -1,17 +1,17 @@
 package model
 
 import (
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"maps"
 	"reflect"
 	"slices"
 	"strings"
 	"time"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 type BaseAsset struct {
-	registry.BaseModel
+	model.BaseModel
 	Username string `neo4j:"username" json:"username" desc:"The username associated with this asset." example:"user@example.com"`
 	Key      string `neo4j:"key" json:"key" desc:"Unique key identifying the asset." example:"#asset#dns#name"`
 	// Attributes
@@ -33,7 +33,7 @@ type BaseAsset struct {
 }
 
 func init() {
-	registry.Registry.MustRegisterModel(&Metadata{})
+	shared.Registry.MustRegisterModel(&Metadata{})
 }
 
 func (a *BaseAsset) GetKey() string {
@@ -199,7 +199,7 @@ func NewBaseAsset(identifier, group string) BaseAsset {
 // The goal is to replace all 1:1 relationships and enums currently represented by attributes with a property
 // of the asset itself.
 type Metadata struct {
-	registry.BaseModel
+	model.BaseModel
 	ASNumber string `neo4j:"asnumber,omitempty" json:"asnumber,omitempty" desc:"Autonomous System number." example:"AS15169"`
 	ASName   string `neo4j:"asname,omitempty" json:"asname,omitempty" desc:"Autonomous System name." example:"GOOGLE"`
 	ASRange  string `neo4j:"asrange,omitempty" json:"asrange,omitempty" desc:"Autonomous System IP range." example:"172.217.0.0/16"`

@@ -2,13 +2,13 @@ package model
 
 import (
 	"fmt"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&Data{})
-	registry.Registry.MustRegisterModel(&Statistic{})
+	shared.Registry.MustRegisterModel(&Data{})
+	shared.Registry.MustRegisterModel(&Statistic{})
 }
 
 const StatisticNow = "now"
@@ -19,7 +19,7 @@ func (d *Data) GetDescription() string {
 }
 
 type Data struct {
-	registry.BaseModel
+	model.BaseModel
 	// all supported types of data. an individual statistic may use one or more.
 	Count  int                `dynamodbav:"count,omitempty" json:"count,omitempty" desc:"A singular count value." example:"150"`
 	Counts map[string]int     `dynamodbav:"counts,omitempty" json:"counts,omitempty" desc:"A map of named counts." example:"{\"active\": 100, \"pending\": 50}"`
@@ -32,7 +32,7 @@ func (s *Statistic) GetDescription() string {
 }
 
 type Statistic struct {
-	registry.BaseModel
+	model.BaseModel
 	baseTableModel
 	Username string `dynamodbav:"username" json:"username" desc:"Chariot username associated with the statistic." example:"user@example.com"`
 	Key      string `dynamodbav:"key" json:"key" desc:"Unique key for the statistic record." example:"#statistic#asset_count#global#2023-10-27T00:00:00Z#all"`
@@ -49,8 +49,8 @@ func (s *Statistic) Defaulted() {
 	s.TTL = Future(90 * 24)
 }
 
-func (s *Statistic) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (s *Statistic) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				tipe := s.Type
@@ -76,7 +76,7 @@ func NewStatistic(tipe, name, value, created string) Statistic {
 		Created: created,
 	}
 	s.Defaulted()
-	registry.CallHooks(&s)
+	model.CallHooks(&s)
 	return s
 }
 

@@ -2,11 +2,11 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"log/slog"
 	"strconv"
 	"strings"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 type ResultContext struct {
@@ -19,7 +19,7 @@ type ResultContext struct {
 	Origin        TargetWrapper     `json:"origin" desc:"The origin for this chain of jobs. Defaults to target unless set here."`
 	Queue         string            `json:"queue,omitempty" desc:"Target queue for the job."`
 	Capabilities  []string          `json:"capabilities,omitempty" desc:"List of specific capabilities to run for this job."`
-  FullScan     bool              `json:"full,omitempty" desc:"Whether a full scan was performed or not."`
+	FullScan      bool              `json:"full,omitempty" desc:"Whether a full scan was performed or not."`
 	AgentClientID string            `json:"agent_client_id,omitempty" desc:"Aegis agent client ID that performed the scan."`
 }
 
@@ -94,13 +94,13 @@ func (rc *ResultContext) SpawnJob(source string, target Target, config map[strin
 }
 
 type Result struct {
-	registry.BaseModel
-	Context ResultContext    `json:"context" desc:"The context associated with this result."`
-	Items   []registry.Model `json:"items" desc:"The actual result items."`
+	model.BaseModel
+	Context ResultContext `json:"context" desc:"The context associated with this result."`
+	Items   []model.Model `json:"items" desc:"The actual result items."`
 }
 
 func init() {
-	registry.Registry.MustRegisterModel(&Result{})
+	shared.Registry.MustRegisterModel(&Result{})
 }
 
 // GetDescription returns a description for the Result model.

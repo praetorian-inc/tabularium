@@ -3,11 +3,11 @@ package model
 import (
 	"encoding/gob"
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"regexp"
 	"slices"
 	"strings"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 const CloudResourceLabel = "CloudResource"
@@ -16,7 +16,7 @@ var specialCharRegex = regexp.MustCompile(`[^a-zA-Z0-9\-_]`) // to conform with 
 
 func init() {
 	MustRegisterLabel(CloudResourceLabel)
-	registry.Registry.MustRegisterModel(&CloudResource{})
+	shared.Registry.MustRegisterModel(&CloudResource{})
 
 	// register the type for properties
 	gob.Register(map[string]any{})
@@ -58,8 +58,8 @@ func (c *CloudResource) GetDescription() string {
 	return fmt.Sprintf("%s (%s)", c.Name, c.Provider)
 }
 
-func (a *CloudResource) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (a *CloudResource) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				labels := append(a.Labels, resourceLabels[a.ResourceType]...)

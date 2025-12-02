@@ -2,9 +2,8 @@ package model
 
 import (
 	"encoding/gob"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
 	"time"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 func init() {
@@ -66,7 +65,7 @@ type Partitioned interface {
 // TableModel is a noop interface that is used to make DynamoDB inserts type-safe
 type TableModel interface {
 	TableModel()
-	registry.Model
+	model.Model
 }
 
 type baseTableModel struct{}
@@ -74,14 +73,14 @@ type baseTableModel struct{}
 func (baseTableModel) TableModel() {}
 
 type GraphModel interface {
-	registry.Model
+	model.Model
 	HasKey
 	GetLabels() []string
 	Valid() bool
 }
 
 type GraphRelationship interface {
-	registry.Model
+	model.Model
 	Label() string
 	Nodes() (source GraphModel, target GraphModel)
 	Base() *BaseRelationship

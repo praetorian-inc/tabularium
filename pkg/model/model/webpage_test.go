@@ -6,6 +6,7 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -13,7 +14,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -705,7 +705,7 @@ func TestWebpageConstructorOptions(t *testing.T) {
 func TestWebpageHooks(t *testing.T) {
 	t.Run("construction hook - key generation", func(t *testing.T) {
 		webpage := Webpage{URL: testBaseURL + "/very/long/path/with/parameters"}
-		err := registry.CallHooks(&webpage)
+		err := model.CallHooks(&webpage)
 		assert.NoError(t, err)
 		assert.Equal(t, "#webpage#"+testBaseURL+"/very/long/path/with/parameters", webpage.Key)
 	})
@@ -713,7 +713,7 @@ func TestWebpageHooks(t *testing.T) {
 	t.Run("construction hook - key truncation", func(t *testing.T) {
 		longPath := strings.Repeat("a", 2100)
 		webpage := Webpage{URL: testBaseURL + "/" + longPath}
-		err := registry.CallHooks(&webpage)
+		err := model.CallHooks(&webpage)
 		assert.NoError(t, err)
 		assert.LessOrEqual(t, len(webpage.Key), 2048)
 	})

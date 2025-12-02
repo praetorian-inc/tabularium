@@ -2,18 +2,18 @@ package model
 
 import (
 	"fmt"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 )
 
 const RecordTTLInHours = 24 * 90 // 90 days
 
 func init() {
-	registry.Registry.MustRegisterModel(&JobRecord{})
+	shared.Registry.MustRegisterModel(&JobRecord{})
 }
 
 type JobRecord struct {
-	registry.BaseModel
+	model.BaseModel
 	baseTableModel
 	Username   string `dynamodbav:"username" json:"username" desc:"Chariot username associated with the account." example:"user@example.com"`
 	Key        string `dynamodbav:"key" json:"key" desc:"Unique key for the job." example:"#job#example.com#asset#portscan"`
@@ -31,8 +31,8 @@ func (r *JobRecord) GetKey() string {
 	return r.Key
 }
 
-func (r *JobRecord) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (r *JobRecord) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				r.Key = fmt.Sprintf("%s%s", RecordSearchKeyPrefix(Job{Key: r.JobKey}), r.RecordTime)
@@ -51,7 +51,7 @@ func NewRecord(job Job) JobRecord {
 		Full:       job.Full,
 		TTL:        Future(RecordTTLInHours),
 	}
-	registry.CallHooks(&record)
+	model.CallHooks(&record)
 	return record
 }
 

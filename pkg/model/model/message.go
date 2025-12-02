@@ -2,7 +2,8 @@ package model
 
 import (
 	"github.com/google/uuid"
-	"github.com/praetorian-inc/tabularium/pkg/registry"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 )
 
 const (
@@ -15,7 +16,7 @@ const (
 )
 
 type Message struct {
-	registry.BaseModel
+	model.BaseModel
 	baseTableModel
 	Username       string `dynamodbav:"username" json:"username" desc:"Username who sent the message." example:"user@example.com"`
 	Key            string `dynamodbav:"key" json:"key" desc:"Unique key for the message." example:"#message#550e8400-e29b-41d4-a716-446655440000#1sB5tZfLipTVWQWHVKnDFS6kFRK"`
@@ -30,7 +31,7 @@ type Message struct {
 }
 
 func init() {
-	registry.Registry.MustRegisterModel(&Message{})
+	shared.Registry.MustRegisterModel(&Message{})
 }
 
 func (m *Message) GetKey() string {
@@ -50,8 +51,8 @@ func (m *Message) Defaulted() {
 	}
 }
 
-func (m *Message) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (m *Message) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				if m.Key == "" {
@@ -79,7 +80,6 @@ func NewMessage(conversationID, role, content, username string) Message {
 		Username:       username,
 	}
 	msg.Defaulted()
-	registry.CallHooks(&msg)
+	model.CallHooks(&msg)
 	return msg
 }
-

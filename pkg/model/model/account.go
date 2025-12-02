@@ -3,16 +3,16 @@ package model
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&Account{})
+	shared.Registry.MustRegisterModel(&Account{})
 }
 
 type Account struct {
-	registry.BaseModel
+	model.BaseModel
 	baseTableModel
 	Username string `dynamodbav:"username" json:"username" desc:"Chariot username associated with the account." example:"user@example.com"`
 	Key      string `dynamodbav:"key" json:"key" desc:"Unique key for the account record." example:"#account#name#member#value"`
@@ -39,8 +39,8 @@ func (a *Account) GetKey() string {
 	return a.Key
 }
 
-func (a *Account) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (a *Account) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				a.Key = fmt.Sprintf("#account#%s#%s#%s", a.Name, a.Member, a.Value)
@@ -58,7 +58,7 @@ func NewAccount(name, member, value string, secret map[string]string) Account {
 		Secret: secret,
 	}
 	a.Defaulted()
-	registry.CallHooks(&a)
+	model.CallHooks(&a)
 	return a
 }
 

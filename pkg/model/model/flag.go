@@ -2,13 +2,13 @@ package model
 
 import (
 	"fmt"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 )
 
 // Flag - praetorian-controlled booleans used to enable/disable features
 type Flag struct {
-	registry.BaseModel
+	model.BaseModel
 	baseTableModel
 	Username string `dynamodbav:"username" json:"username" desc:"Chariot username associated with the flag." example:"user@example.com"`
 	Key      string `dynamodbav:"key" json:"key" desc:"Unique key for the flag." example:"#flag#feature-x"`
@@ -16,11 +16,11 @@ type Flag struct {
 }
 
 func init() {
-	registry.Registry.MustRegisterModel(&Flag{})
+	shared.Registry.MustRegisterModel(&Flag{})
 }
 
-func (f *Flag) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (f *Flag) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				f.Key = fmt.Sprintf("#flag#%s", f.Name)
@@ -35,7 +35,7 @@ func NewFlag(name string) Flag {
 		Name: name,
 	}
 	f.Defaulted()
-	registry.CallHooks(&f)
+	model.CallHooks(&f)
 	return f
 }
 

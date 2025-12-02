@@ -2,14 +2,14 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"regexp"
 	"strings"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&Repository{})
+	shared.Registry.MustRegisterModel(&Repository{})
 }
 
 type Repository struct {
@@ -67,8 +67,8 @@ func (r *Repository) Defaulted() {
 	r.Class = "repository"
 }
 
-func (r *Repository) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (r *Repository) GetHooks() []model.Hook {
+	return []model.Hook{
 		useGroupAndIdentifier(r, &r.URL, &r.Name),
 		{
 			Call:        r.formatURL,
@@ -131,7 +131,7 @@ func NewRepository(repoURL string) Repository {
 	}
 
 	repository.Defaulted()
-	if err := registry.CallHooks(&repository); err != nil {
+	if err := model.CallHooks(&repository); err != nil {
 		return Repository{}
 	}
 

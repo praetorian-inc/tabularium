@@ -2,9 +2,10 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 
 	"github.com/google/uuid"
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 type CredentialCategory string
@@ -106,7 +107,7 @@ type CredentialResponse struct {
 }
 
 type Credential struct {
-	registry.BaseModel
+	model.BaseModel
 	Username     string             `neo4j:"username" json:"username" desc:"Username associated with the credential"`
 	CredentialID string             `neo4j:"credentialId" json:"credentialId" desc:"UUID for the credential"`
 	Key          string             `neo4j:"key" json:"key" desc:"Key of the credential (#credential#category#type#credentialId)"`
@@ -119,8 +120,8 @@ type Credential struct {
 	Updated      string             `neo4j:"updated" json:"updated" desc:"Timestamp when the credential was last updated"`
 }
 
-func (c *Credential) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (c *Credential) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				c.Key = fmt.Sprintf("#credential#%s#%s#%s", c.Category, c.Type, c.CredentialID)
@@ -145,7 +146,7 @@ func NewCredential(accountKey string, category CredentialCategory, credType Cred
 		Name:         fmt.Sprintf("%s %s", category, credType),
 	}
 	c.Defaulted()
-	registry.CallHooks(&c)
+	model.CallHooks(&c)
 	return &c
 }
 
@@ -174,5 +175,5 @@ func (c *Credential) SetName(name string) {
 }
 
 func init() {
-	registry.Registry.MustRegisterModel(&Credential{})
+	shared.Registry.MustRegisterModel(&Credential{})
 }

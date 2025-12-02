@@ -2,13 +2,13 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"strings"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 type Attribute struct {
-	registry.BaseModel
+	model.BaseModel
 	Username string `neo4j:"username" json:"username" desc:"Chariot username associated with the attribute." example:"user@example.com"`
 	Key      string `neo4j:"key" json:"key" desc:"Unique key identifying the attribute." example:"#attribute#open_port#80#asset#example.com#example.com"`
 	// Attributes
@@ -28,7 +28,7 @@ type Attribute struct {
 const AttributeLabel = "Attribute"
 
 func init() {
-	registry.Registry.MustRegisterModel(&Attribute{})
+	shared.Registry.MustRegisterModel(&Attribute{})
 }
 
 func (a *Attribute) GetKey() string {
@@ -39,7 +39,6 @@ func (a *Attribute) GetLabels() []string {
 	return []string{AttributeLabel, TTLLabel}
 }
 
-
 func (a *Attribute) Asset() Asset {
 	parts := strings.Split(a.Source, "#")
 	if len(parts) != 4 {
@@ -47,7 +46,6 @@ func (a *Attribute) Asset() Asset {
 	}
 	return NewAsset(parts[2], parts[3])
 }
-
 
 func (a *Attribute) Valid() bool {
 	return a.Key != ""
@@ -88,8 +86,8 @@ func (a *Attribute) Defaulted() {
 	a.TTL = Future(14 * 24)
 }
 
-func (a *Attribute) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (a *Attribute) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				if a.Parent.Model == nil {
@@ -112,7 +110,7 @@ func NewAttribute(name, value string, parent GraphModel) Attribute {
 		Parent: NewGraphModelWrapper(parent),
 	}
 	a.Defaulted()
-	registry.CallHooks(&a)
+	model.CallHooks(&a)
 	return a
 }
 

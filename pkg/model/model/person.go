@@ -2,14 +2,14 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"regexp"
 	"strings"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&Person{})
+	shared.Registry.MustRegisterModel(&Person{})
 }
 
 var (
@@ -23,7 +23,7 @@ func (p *Person) GetDescription() string {
 }
 
 type Person struct {
-	registry.BaseModel
+	model.BaseModel
 	Username string `neo4j:"username" json:"username" desc:"Chariot username associated with the person record." example:"user@example.com"`
 	Key      string `neo4j:"key" json:"key" desc:"Unique key identifying the person." example:"#person#john.doe@example.com#John Doe"`
 

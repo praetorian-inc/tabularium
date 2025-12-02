@@ -2,8 +2,8 @@ package model
 
 import (
 	"fmt"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 )
 
 func (br *BaseRelationship) GetDescription() string {
@@ -12,7 +12,7 @@ func (br *BaseRelationship) GetDescription() string {
 
 type BaseRelationship struct {
 	// Source and Target are used internally for graph construction, not stored directly.
-	registry.BaseModel
+	model.BaseModel
 	Source         GraphModel `neo4j:"-" json:"-"`
 	Target         GraphModel `neo4j:"-" json:"-"`
 	Created        string     `neo4j:"created" json:"created" desc:"Timestamp when the relationship was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
@@ -24,16 +24,16 @@ type BaseRelationship struct {
 }
 
 func init() {
-	registry.Registry.MustRegisterModel(&BaseRelationship{})
-	registry.Registry.MustRegisterModel(&Discovered{})
-	registry.Registry.MustRegisterModel(&HasVulnerability{})
-	registry.Registry.MustRegisterModel(&InstanceOf{})
-	registry.Registry.MustRegisterModel(&HasAttribute{})
-	registry.Registry.MustRegisterModel(&HasPort{})
-	registry.Registry.MustRegisterModel(&HasTechnology{})
-	registry.Registry.MustRegisterModel(&HasCredential{})
-	registry.Registry.MustRegisterModel(&HasWebpage{})
-	registry.Registry.MustRegisterModel(&ScannedBy{})
+	shared.Registry.MustRegisterModel(&BaseRelationship{})
+	shared.Registry.MustRegisterModel(&Discovered{})
+	shared.Registry.MustRegisterModel(&HasVulnerability{})
+	shared.Registry.MustRegisterModel(&InstanceOf{})
+	shared.Registry.MustRegisterModel(&HasAttribute{})
+	shared.Registry.MustRegisterModel(&HasPort{})
+	shared.Registry.MustRegisterModel(&HasTechnology{})
+	shared.Registry.MustRegisterModel(&HasCredential{})
+	shared.Registry.MustRegisterModel(&HasWebpage{})
+	shared.Registry.MustRegisterModel(&ScannedBy{})
 }
 
 func (br *BaseRelationship) GetKey() string {

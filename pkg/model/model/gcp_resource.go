@@ -2,9 +2,9 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"strings"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 const (
@@ -17,7 +17,7 @@ type GCPResource struct {
 
 func init() {
 	MustRegisterLabel(GCPResourceLabel)
-	registry.Registry.MustRegisterModel(&GCPResource{})
+	shared.Registry.MustRegisterModel(&GCPResource{})
 }
 
 func NewGCPResource(name, accountRef string, rtype CloudResourceType, properties map[string]any) (GCPResource, error) {
@@ -34,7 +34,7 @@ func NewGCPResource(name, accountRef string, rtype CloudResourceType, properties
 	r.DisplayName = r.GetDisplayName()
 	r.Region = r.GetRegion()
 	r.Defaulted()
-	registry.CallHooks(&r)
+	model.CallHooks(&r)
 	return r, nil
 }
 
@@ -53,8 +53,8 @@ func (a *GCPResource) GetDisplayName() string {
 	return a.Name
 }
 
-func (a *GCPResource) GetHooks() []registry.Hook {
-	hooks := []registry.Hook{
+func (a *GCPResource) GetHooks() []model.Hook {
+	hooks := []model.Hook{
 		useGroupAndIdentifier(a, &a.AccountRef, &a.Name),
 		{
 			Call: func() error {

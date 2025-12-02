@@ -2,10 +2,11 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 const (
@@ -20,7 +21,7 @@ type AWSResource struct {
 
 func init() {
 	MustRegisterLabel(AWSResourceLabel)
-	registry.Registry.MustRegisterModel(&AWSResource{})
+	shared.Registry.MustRegisterModel(&AWSResource{})
 }
 
 // NewAWSResource creates an AWSResource from the given ARN, resource type, account reference, and properties.
@@ -43,7 +44,7 @@ func NewAWSResource(name, accountRef string, rtype CloudResourceType, properties
 	}
 
 	r.Defaulted()
-	registry.CallHooks(&r)
+	model.CallHooks(&r)
 	return r, nil
 }
 
@@ -54,8 +55,8 @@ func (a *AWSResource) Defaulted() {
 	a.BaseAsset.Defaulted()
 }
 
-func (a *AWSResource) GetHooks() []registry.Hook {
-	hooks := []registry.Hook{
+func (a *AWSResource) GetHooks() []model.Hook {
+	hooks := []model.Hook{
 		useGroupAndIdentifier(a, &a.AccountRef, &a.Name),
 		{
 			Call: func() error {

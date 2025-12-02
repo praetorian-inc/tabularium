@@ -1,7 +1,9 @@
-package registry
+package wrapper
 
 import (
 	"encoding/json"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"os"
 	"testing"
 
@@ -11,7 +13,7 @@ import (
 
 // TestModelForWrapper is a simple model for testing the Wrapper
 type TestModelForWrapper struct {
-	BaseModel
+	model.BaseModel
 	Name  string `json:"name"`
 	Value int    `json:"value"`
 	Type  string `json:"type"`
@@ -27,7 +29,7 @@ func (m *TestModelForWrapper) GetKey() string {
 
 // AnotherTestModel is another model type for testing type resolution
 type AnotherTestModel struct {
-	BaseModel
+	model.BaseModel
 	ID    string `json:"id"`
 	Label string `json:"label"`
 }
@@ -41,8 +43,8 @@ func (m *AnotherTestModel) GetKey() string {
 }
 
 func TestMain(m *testing.M) {
-	Registry.MustRegisterModel(&TestModelForWrapper{})
-	Registry.MustRegisterModel(&AnotherTestModel{})
+	shared.Registry.MustRegisterModel(&TestModelForWrapper{})
+	shared.Registry.MustRegisterModel(&AnotherTestModel{})
 	os.Exit(m.Run())
 }
 
@@ -56,7 +58,7 @@ func TestWrapper_UnmarshalJSON(t *testing.T) {
 			}
 		}`
 
-		var wrapper Wrapper[Model]
+		var wrapper Wrapper[model.Model]
 		err := json.Unmarshal([]byte(input), &wrapper)
 
 		require.NoError(t, err)
@@ -77,7 +79,7 @@ func TestWrapper_UnmarshalJSON(t *testing.T) {
 			}
 		}`
 
-		var wrapper Wrapper[Model]
+		var wrapper Wrapper[model.Model]
 		err := json.Unmarshal([]byte(input), &wrapper)
 
 		require.NoError(t, err)
@@ -94,7 +96,7 @@ func TestWrapper_UnmarshalJSON(t *testing.T) {
 			"type": "testmodelforwrapper"
 		}`
 
-		var wrapper Wrapper[Model]
+		var wrapper Wrapper[model.Model]
 		err := json.Unmarshal([]byte(input), &wrapper)
 
 		require.NoError(t, err)
@@ -112,7 +114,7 @@ func TestWrapper_UnmarshalJSON(t *testing.T) {
 			}
 		}`
 
-		var wrapper Wrapper[Model]
+		var wrapper Wrapper[model.Model]
 		wrapper.Type = "testmodelforwrapper"
 		err := json.Unmarshal([]byte(input), &wrapper)
 
@@ -134,7 +136,7 @@ func TestWrapper_UnmarshalJSON(t *testing.T) {
 			}
 		}`
 
-		var wrapper Wrapper[Model]
+		var wrapper Wrapper[model.Model]
 		err := json.Unmarshal([]byte(input), &wrapper)
 
 		require.NoError(t, err)
@@ -152,7 +154,7 @@ func TestWrapper_UnmarshalJSON(t *testing.T) {
 			"model": {}
 		}`
 
-		var wrapper Wrapper[Model]
+		var wrapper Wrapper[model.Model]
 		err := json.Unmarshal([]byte(input), &wrapper)
 
 		require.NoError(t, err)
@@ -168,7 +170,7 @@ func TestWrapper_UnmarshalJSON(t *testing.T) {
 			"model": "not-a-map"
 		}`
 
-		var wrapper Wrapper[Model]
+		var wrapper Wrapper[model.Model]
 		err := json.Unmarshal([]byte(input), &wrapper)
 
 		require.NoError(t, err)
@@ -182,7 +184,7 @@ func TestWrapper_UnmarshalJSON_Errors(t *testing.T) {
 	t.Run("invalid JSON", func(t *testing.T) {
 		input := `{invalid json`
 
-		var wrapper Wrapper[Model]
+		var wrapper Wrapper[model.Model]
 		err := json.Unmarshal([]byte(input), &wrapper)
 
 		require.Error(t, err)
@@ -196,7 +198,7 @@ func TestWrapper_UnmarshalJSON_Errors(t *testing.T) {
 			"value": 42
 		}`
 
-		var wrapper Wrapper[Model]
+		var wrapper Wrapper[model.Model]
 		err := json.Unmarshal([]byte(input), &wrapper)
 
 		require.Error(t, err)
@@ -211,7 +213,7 @@ func TestWrapper_UnmarshalJSON_Errors(t *testing.T) {
 			}
 		}`
 
-		var wrapper Wrapper[Model]
+		var wrapper Wrapper[model.Model]
 		err := json.Unmarshal([]byte(input), &wrapper)
 
 		require.Error(t, err)
@@ -226,7 +228,7 @@ func TestWrapper_UnmarshalJSON_Errors(t *testing.T) {
 			}
 		}`
 
-		var wrapper Wrapper[Model]
+		var wrapper Wrapper[model.Model]
 		err := json.Unmarshal([]byte(input), &wrapper)
 
 		require.Error(t, err)
@@ -241,7 +243,7 @@ func TestWrapper_UnmarshalJSON_Errors(t *testing.T) {
 			}
 		}`
 
-		var wrapper Wrapper[Model]
+		var wrapper Wrapper[model.Model]
 		err := json.Unmarshal([]byte(input), &wrapper)
 
 		require.Error(t, err)
@@ -256,7 +258,7 @@ func TestWrapper_UnmarshalJSON_Errors(t *testing.T) {
 			}
 		}`
 
-		var wrapper Wrapper[Model]
+		var wrapper Wrapper[model.Model]
 		err := json.Unmarshal([]byte(input), &wrapper)
 
 		require.Error(t, err)
@@ -271,7 +273,7 @@ func TestWrapper_UnmarshalJSON_Errors(t *testing.T) {
 			}
 		}`
 
-		var wrapper Wrapper[Model]
+		var wrapper Wrapper[model.Model]
 		err := json.Unmarshal([]byte(input), &wrapper)
 
 		require.Error(t, err)
@@ -288,7 +290,7 @@ func TestWrapper_UnmarshalJSON_Errors(t *testing.T) {
 			}
 		}`
 
-		var wrapper Wrapper[Model]
+		var wrapper Wrapper[model.Model]
 		err := json.Unmarshal([]byte(input), &wrapper)
 
 		// This should actually succeed since the type is registered
@@ -297,19 +299,19 @@ func TestWrapper_UnmarshalJSON_Errors(t *testing.T) {
 }
 
 func TestWrapper_MarshalUnmarshal(t *testing.T) {
-	wrapper := Wrapper[Model]{
+	wrapper := Wrapper[model.Model]{
 		Model: &TestModelForWrapper{},
 	}
 	data, err := json.Marshal(wrapper)
 	require.NoError(t, err)
-	out := Wrapper[Model]{}
+	out := Wrapper[model.Model]{}
 	err = json.Unmarshal(data, &out)
 	require.NoError(t, err)
 	assert.Equal(t, "testmodelforwrapper", out.Type)
 }
 
 func TestWrapper_MarshalNil(t *testing.T) {
-	wrapper := Wrapper[Model]{}
+	wrapper := Wrapper[model.Model]{}
 	_, err := json.Marshal(wrapper)
 	require.NoError(t, err)
 }

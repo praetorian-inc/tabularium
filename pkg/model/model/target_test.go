@@ -2,9 +2,9 @@ package model
 
 import (
 	"encoding/json"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"testing"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/stretchr/testify/assert"
@@ -399,9 +399,9 @@ func TestTargetMarshal_Unmarshal(t *testing.T) {
 // attempts to prevent a footgun when using a type embedded in other types - accidentally return the base type from
 // WithStatus instead of the outer type
 func TestTargetWithStatusTyping(t *testing.T) {
-	types := registry.GetTypes[Target](registry.Registry)
+	types := model.GetTypes[Target](shared.Registry)
 	for _, tipe := range types {
-		v, ok := registry.Registry.MakeType(tipe)
+		v, ok := shared.Registry.MakeType(tipe)
 		require.True(t, ok)
 
 		before, ok := v.(Target)
@@ -414,9 +414,9 @@ func TestTargetWithStatusTyping(t *testing.T) {
 }
 
 func TestTargetWithStatusDoesNotModifyOriginal(t *testing.T) {
-	types := registry.GetTypes[Target](registry.Registry)
+	types := model.GetTypes[Target](shared.Registry)
 	for _, tipe := range types {
-		v, ok := registry.Registry.MakeType(tipe)
+		v, ok := shared.Registry.MakeType(tipe)
 		require.True(t, ok)
 
 		before, ok := v.(Target)

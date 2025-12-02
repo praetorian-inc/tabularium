@@ -1,13 +1,16 @@
 package model
 
-import "github.com/praetorian-inc/tabularium/pkg/registry"
+import (
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
+)
 
 func init() {
-	registry.Registry.MustRegisterModel(&DummyInsertable{})
+	shared.Registry.MustRegisterModel(&DummyInsertable{})
 }
 
 type DummyInsertable struct {
-	registry.BaseModel
+	model.BaseModel
 	Merged  bool
 	Merges  int
 	Visited bool

@@ -1,4 +1,4 @@
-package registry
+package model
 
 import (
 	"encoding/gob"
@@ -6,34 +6,6 @@ import (
 	"reflect"
 	"strings"
 )
-
-// Registry is a singleton type registry for this process
-var Registry *TypeRegistry
-
-// init sets up the singleton registry
-func init() {
-	Registry = NewTypeRegistry()
-}
-
-func GenericName(item any) (string, error) {
-	tipe := reflect.TypeOf(item)
-
-	model := new(Model)
-	rType := reflect.TypeOf(model).Elem()
-	if !tipe.Implements(rType) {
-		return "", fmt.Errorf("type %q does not implement Model", tipe.Name())
-	}
-
-	return strings.ToLower(tipe.Elem().Name()), nil
-}
-
-func Name(model Model) string {
-	tipe := reflect.TypeOf(model)
-	if tipe.Kind() == reflect.Ptr {
-		tipe = tipe.Elem()
-	}
-	return strings.ToLower(tipe.Name())
-}
 
 // TypeRegistry holds information about all registered types
 type TypeRegistry struct {
@@ -113,16 +85,4 @@ func (r *TypeRegistry) MakeType(name string) (Model, bool) {
 // GetAllTypes returns all registered types
 func (r *TypeRegistry) GetAllTypes() map[string]reflect.Type {
 	return r.types
-}
-
-// GetTypes retrieves all type names from a registry that have type T, or implement T
-func GetTypes[T Model](r *TypeRegistry) []string {
-	out := []string{}
-	for name, tipe := range r.GetAllTypes() {
-		tt := reflect.TypeOf((*T)(nil)).Elem()
-		if tt.AssignableTo(tipe) || (tt.Kind() == reflect.Interface && tipe.Implements(tt)) {
-			out = append(out, name)
-		}
-	}
-	return out
 }

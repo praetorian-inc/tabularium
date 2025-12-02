@@ -1,25 +1,28 @@
 package model
 
-import "github.com/praetorian-inc/tabularium/pkg/registry"
+import (
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
+)
 
 // NoInput represents a capability that requires no input target.
 // This is a sentinel type used for capabilities that operate solely on parameters.
 type NoInput struct {
-	registry.BaseModel
+	model.BaseModel
 	Status          string `json:"status" dynamodbav:"status"`
 	Key             string `json:"key" dynamodbav:"key"`
 	IdentifierValue string `json:"identifier" dynamodbav:"identifier"`
 }
 
 func init() {
-	registry.Registry.MustRegisterModel(&NoInput{})
+	shared.Registry.MustRegisterModel(&NoInput{})
 }
 
 func NewNoInput(identifier string) *NoInput {
 	n := &NoInput{
 		IdentifierValue: identifier,
 	}
-	registry.CallHooks(n)
+	model.CallHooks(n)
 	return n
 }
 func (n *NoInput) WithStatus(s string) Target {
@@ -41,8 +44,8 @@ func (n *NoInput) GetKey() string       { return n.Key }
 func (n *NoInput) GetDescription() string {
 	return "Sentinel target for capabilities that require no input target."
 }
-func (n *NoInput) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (n *NoInput) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				n.Key = "noinput"
