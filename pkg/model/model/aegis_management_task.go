@@ -3,19 +3,20 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&AegisManagementTask{}, "aegis-mgmt")
+	shared.Registry.MustRegisterModel(&AegisManagementTask{}, "aegis-mgmt")
 }
 
 // AegisManagementTask represents a task for Aegis infrastructure management operations
 type AegisManagementTask struct {
-	registry.BaseModel
+	model.BaseModel
 	baseTableModel
 	Username                  string            `dynamodbav:"username" json:"username" desc:"Username who initiated the Aegis management task." example:"user@example.com"`
 	Key                       string            `dynamodbav:"key" json:"key" desc:"Unique key for the Aegis management task." example:"#aegis-mgmt#user@example.com#tunnel_management#2024-01-15T10:30:00Z"`
@@ -113,8 +114,8 @@ func (amt *AegisManagementTask) Defaulted() {
 }
 
 // GetHooks returns hooks for the Aegis management task
-func (amt *AegisManagementTask) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (amt *AegisManagementTask) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				if amt.Key == "" && amt.Username != "" && amt.AegisManagementCapability != "" {
@@ -143,6 +144,6 @@ func NewAegisManagementTask(username, capability, clientID string, parameters ma
 		HealthCheck:               healthCheck,
 	}
 	task.Defaulted()
-	registry.CallHooks(&task)
+	model.CallHooks(&task)
 	return task
 }

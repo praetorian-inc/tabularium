@@ -2,12 +2,12 @@ package model
 
 import (
 	"fmt"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 )
 
 type HistoryRecord struct {
-	registry.BaseModel
+	model.BaseModel
 	From               string   `json:"from,omitempty" neo4j:"from,omitempty" desc:"The previous state or value." example:"TL"`
 	To                 string   `json:"to,omitempty" neo4j:"to,omitempty" desc:"The new state or value." example:"OL"`
 	By                 string   `json:"by,omitempty" neo4j:"by,omitempty" desc:"Identifier of the user or system that made the change." example:"user@example.com"`
@@ -20,12 +20,12 @@ type HistoryRecord struct {
 }
 
 func init() {
-	registry.Registry.MustRegisterModel(&HistoryRecord{})
-	registry.Registry.MustRegisterModel(&History{})
+	shared.Registry.MustRegisterModel(&HistoryRecord{})
+	shared.Registry.MustRegisterModel(&History{})
 }
 
 type History struct {
-	registry.BaseModel
+	model.BaseModel
 	History []HistoryRecord `neo4j:"history" json:"history,omitempty" desc:"List of history records detailing changes."`
 	// Remove is used internally for managing history edits via API/UI, not persisted.
 	Remove *int `neo4j:"-" json:"remove,omitempty" desc:"Index of the history record to remove (used for updates, not stored)." example:"0"`

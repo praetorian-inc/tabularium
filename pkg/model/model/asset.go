@@ -2,11 +2,12 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"net"
 	"regexp"
 	"strings"
 
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -19,7 +20,7 @@ type Asset struct {
 }
 
 func init() {
-	registry.Registry.MustRegisterModel(&Asset{})
+	shared.Registry.MustRegisterModel(&Asset{})
 }
 
 var (
@@ -162,7 +163,7 @@ func (a *Asset) DomainVerificationJob(parentJob *Job, config ...string) Job {
 	}
 	job.SetStatus(Queued)
 	job.SetCapability("whois")
-	registry.CallHooks(&job)
+	model.CallHooks(&job)
 
 	if job.Target.Model != nil {
 		template := fmt.Sprintf("#job#%%s#%s#%s", job.Target.Model.Identifier(), job.GetCapability())
@@ -203,8 +204,8 @@ func (a *Asset) Attribute(name, value string) Attribute {
 	return NewAttribute(name, value, a)
 }
 
-func (a *Asset) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (a *Asset) GetHooks() []model.Hook {
+	return []model.Hook{
 		useGroupAndIdentifier(a, &a.DNS, &a.Name),
 		{
 			Call: func() error {
@@ -229,7 +230,7 @@ func NewAsset(dns, name string) Asset {
 	}
 
 	a.Defaulted()
-	registry.CallHooks(&a)
+	model.CallHooks(&a)
 
 	return a
 }

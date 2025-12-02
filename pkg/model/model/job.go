@@ -3,14 +3,15 @@ package model
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/praetorian-inc/tabularium/pkg/registry"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"maps"
 	"slices"
 	"strings"
 )
 
 type Job struct {
-	registry.BaseModel
+	model.BaseModel
 	baseTableModel
 	Username string `dynamodbav:"username" json:"username" desc:"Username who initiated or owns the job." example:"user@example.com"`
 	Key      string `dynamodbav:"key" json:"key" desc:"Unique key for the job." example:"#job#example.com#asset#portscan"`
@@ -44,14 +45,14 @@ type Job struct {
 	Parent                TargetWrapper     `dynamodbav:"parent" json:"parent,omitempty" desc:"Optional parent target from which this job was spawned."`
 	RateLimit             RateLimit         `dynamodbav:"-" json:"-"`
 	// internal
-	Async  bool                  `dynamodbav:"-" json:"-"`
-	stream chan []registry.Model `dynamodbav:"-" json:"-"`
+	Async  bool               `dynamodbav:"-" json:"-"`
+	stream chan []model.Model `dynamodbav:"-" json:"-"`
 	// records the original status of the job when Chariot received/created it.
 	originalStatus string `dynamodbav:"-" json:"-"`
 }
 
 func init() {
-	registry.Registry.MustRegisterModel(&Job{})
+	shared.Registry.MustRegisterModel(&Job{})
 }
 
 func (job *Job) GetKey() string {
@@ -142,8 +143,8 @@ func (job *Job) Defaulted() {
 	job.SetStatus(Queued)
 }
 
-func (job *Job) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (job *Job) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				if job.Target.Model != nil {
@@ -183,11 +184,11 @@ func (job *Job) Parameters() map[string]string {
 	return params
 }
 
-func (job *Job) Send(items ...registry.Model) {
+func (job *Job) Send(items ...model.Model) {
 	job.stream <- items
 }
 
-func (job *Job) Stream() <-chan []registry.Model {
+func (job *Job) Stream() <-chan []model.Model {
 	return job.stream
 }
 
@@ -198,7 +199,7 @@ func (job *Job) IsDelayed() bool {
 // Ensures the job's stream is open. Necessary when Unmarshaling a job from JSON.
 func (job *Job) Open() {
 	if job.stream == nil {
-		job.stream = make(chan []registry.Model)
+		job.stream = make(chan []model.Model)
 	}
 }
 
@@ -210,10 +211,10 @@ func NewJob(source string, target Target) Job {
 	job := Job{
 		Source: source,
 		Target: TargetWrapper{Model: target},
-		stream: make(chan []registry.Model),
+		stream: make(chan []model.Model),
 	}
 	job.Defaulted()
-	registry.CallHooks(&job)
+	model.CallHooks(&job)
 	return job
 }
 
@@ -226,7 +227,7 @@ func NewSystemJob(source, id string) Job {
 		Queue:   Standard,
 		Key:     fmt.Sprintf("#job#%s#system#%s", id, source),
 		Target:  TargetWrapper{Model: &t},
-		stream:  make(chan []registry.Model),
+		stream:  make(chan []model.Model),
 	}
 	j.SetStatus(Queued)
 	j.SetCapability(source)

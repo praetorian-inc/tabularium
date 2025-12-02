@@ -1,6 +1,7 @@
-package registry
+package model
 
 import (
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -43,9 +44,9 @@ func (m *getTypesTestModelA) GetTestValue() string {
 }
 
 func init() {
-	Registry.MustRegisterModel(&getTypesTestModelA{})
-	Registry.MustRegisterModel(&getTypesTestModelB{})
-	Registry.MustRegisterModel(&getTypesTestModelC{})
+	shared.Registry.MustRegisterModel(&getTypesTestModelA{})
+	shared.Registry.MustRegisterModel(&getTypesTestModelB{})
+	shared.Registry.MustRegisterModel(&getTypesTestModelC{})
 }
 
 func TestGetTypes_ConcreteTypes(t *testing.T) {
@@ -57,21 +58,21 @@ func TestGetTypes_ConcreteTypes(t *testing.T) {
 		{
 			name: "get specific concrete type A",
 			testFunc: func() []string {
-				return GetTypes[*getTypesTestModelA](Registry)
+				return GetTypes[*getTypesTestModelA](shared.Registry)
 			},
 			expected: []string{"gettypestestmodela"},
 		},
 		{
 			name: "get specific concrete type B",
 			testFunc: func() []string {
-				return GetTypes[*getTypesTestModelB](Registry)
+				return GetTypes[*getTypesTestModelB](shared.Registry)
 			},
 			expected: []string{"gettypestestmodelb"},
 		},
 		{
 			name: "get specific concrete type C",
 			testFunc: func() []string {
-				return GetTypes[*getTypesTestModelC](Registry)
+				return GetTypes[*getTypesTestModelC](shared.Registry)
 			},
 			expected: []string{"gettypestestmodelc"},
 		},
@@ -87,13 +88,13 @@ func TestGetTypes_ConcreteTypes(t *testing.T) {
 
 func TestGetTypes_InterfaceImplementation(t *testing.T) {
 	t.Run("get types implementing test interface", func(t *testing.T) {
-		result := GetTypes[getTypesTestInterface](Registry)
+		result := GetTypes[getTypesTestInterface](shared.Registry)
 		expected := []string{"gettypestestmodela"}
 		assert.ElementsMatch(t, expected, result)
 	})
 
 	t.Run("get types implementing Model interface", func(t *testing.T) {
-		result := GetTypes[Model](Registry)
+		result := GetTypes[Model](shared.Registry)
 		assert.Contains(t, result, "gettypestestmodela")
 		assert.Contains(t, result, "gettypestestmodelb")
 		assert.Contains(t, result, "gettypestestmodelc")
@@ -114,7 +115,7 @@ func TestGetTypes_EdgeCases(t *testing.T) {
 			NonExistentMethod() string
 		}
 
-		result := GetTypes[nonExistentInterface](Registry)
+		result := GetTypes[nonExistentInterface](shared.Registry)
 		assert.Empty(t, result)
 	})
 

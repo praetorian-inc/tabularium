@@ -2,13 +2,13 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"regexp"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&Integration{})
+	shared.Registry.MustRegisterModel(&Integration{})
 }
 
 type Integration struct {
@@ -56,8 +56,8 @@ func (i *Integration) Defaulted() {
 	i.Source = AccountSource
 }
 
-func (i *Integration) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (i *Integration) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				i.Key = fmt.Sprintf("#integration#%s#%s", i.Name, i.Value)
@@ -83,7 +83,7 @@ func NewIntegration(name, value string) Integration {
 	}
 
 	ia.Defaulted()
-	registry.CallHooks(&ia)
+	model.CallHooks(&ia)
 	return ia
 }
 

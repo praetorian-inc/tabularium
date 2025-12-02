@@ -2,13 +2,13 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"strings"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 type Condition struct {
-	registry.BaseModel
+	model.BaseModel
 	baseTableModel
 	Username string `dynamodbav:"username" json:"username" desc:"Chariot username associated with the condition." example:"system"`
 	Key      string `dynamodbav:"key" json:"key" desc:"Unique key for the condition." example:"#condition#exposure-open_port-80"`
@@ -21,7 +21,7 @@ type Condition struct {
 }
 
 func init() {
-	registry.Registry.MustRegisterModel(&Condition{})
+	shared.Registry.MustRegisterModel(&Condition{})
 }
 
 func AttributeConditions(attribute Attribute) []Condition {
@@ -41,7 +41,7 @@ func NewCondition(name, value string) Condition {
 		Value: value,
 	}
 	c.Defaulted()
-	registry.CallHooks(&c)
+	model.CallHooks(&c)
 	return c
 }
 
@@ -69,8 +69,8 @@ func (c *Condition) Defaulted() {
 	c.Updated = Now()
 }
 
-func (c *Condition) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (c *Condition) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				c.Key = fmt.Sprintf("#condition#%s", alertName(c.Name, c.Value))

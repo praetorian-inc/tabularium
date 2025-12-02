@@ -1,9 +1,10 @@
 package model
 
 import (
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"testing"
 
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -114,7 +115,7 @@ func TestNewADObject_FromAlias(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ad, ok := registry.Registry.MakeType(tt.alias)
+			ad, ok := shared.Registry.MakeType(tt.alias)
 			require.True(t, ok)
 			assert.NotNil(t, ad)
 
@@ -178,7 +179,7 @@ func TestADObject_GetHooks(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ad := NewADObject(tt.domain, tt.objectID, NO_DISTINGUISHED_NAME, tt.label)
 
-			err := registry.CallHooks(&ad)
+			err := model.CallHooks(&ad)
 			require.NoError(t, err, "Hook should execute without error")
 
 			assert.Equal(t, tt.expectedKey, ad.Key, "Hook should generate correct key")
@@ -330,13 +331,13 @@ func TestADObject_Visit(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ad := tt.existing
 
-			err := registry.CallHooks(&ad)
+			err := model.CallHooks(&ad)
 			require.NoError(t, err, "Hook should execute without error")
 
-			err = registry.CallHooks(tt.visiting)
+			err = model.CallHooks(tt.visiting)
 			require.NoError(t, err, "Hook should execute without error")
 
-			err = registry.CallHooks(&tt.expected)
+			err = model.CallHooks(&tt.expected)
 			require.NoError(t, err, "Hook should execute without error")
 
 			ad.Visit(tt.visiting)
@@ -394,7 +395,7 @@ func TestADObject_IsClass(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ad := ADObject{Label: tt.label}
-			err := registry.CallHooks(&ad)
+			err := model.CallHooks(&ad)
 			require.NoError(t, err, "Hook should execute without error")
 
 			result := ad.IsClass(tt.checkClass)
@@ -436,7 +437,7 @@ func TestADObject_SIDValidation(t *testing.T) {
 			ad := ADObject{}
 			ad.ObjectID = tt.objectID
 
-			err := registry.CallHooks(&ad)
+			err := model.CallHooks(&ad)
 
 			require.NoError(t, err, "Hook should execute without error")
 			assert.Equal(t, tt.expectedSID, ad.SID, tt.description)

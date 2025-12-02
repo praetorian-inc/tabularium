@@ -1,8 +1,10 @@
-package registry
+package wrapper
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"reflect"
 	"slices"
 	"strings"
@@ -13,7 +15,7 @@ import (
 
 // Wrapper allows us to unmarshal into a Model interface based on the type registry
 // Wrapper is generic, which allows us to use it for interfaces that implement Model
-type Wrapper[T Model] struct {
+type Wrapper[T model.Model] struct {
 	Model          T      `dynamodbav:"model" json:"model"`
 	Type           string `dynamodbav:"type" json:"type"`
 	SkipDefaulting bool   `dynamodbav:"-" json:"-"`
@@ -23,7 +25,7 @@ func (t Wrapper[T]) MarshalJSON() ([]byte, error) {
 	type Alias Wrapper[T]
 	alias := Alias(t)
 	if alias.Type == "" && reflect.ValueOf(alias.Model).IsValid() {
-		alias.Type = Name(t.Model)
+		alias.Type = model.Name(t.Model)
 	}
 	return json.Marshal(alias)
 }
@@ -67,7 +69,7 @@ func (t Wrapper[T]) MarshalDynamoDBAttributeValue() (types.AttributeValue, error
 	type Alias Wrapper[T]
 	alias := Alias(t)
 	if alias.Type == "" && reflect.ValueOf(alias.Model).IsValid() {
-		alias.Type = Name(t.Model)
+		alias.Type = model.Name(t.Model)
 	}
 	return attributevalue.Marshal(alias)
 }
@@ -158,12 +160,12 @@ func (t *Wrapper[T]) getType(props map[string]any) (string, error) {
 
 func (t *Wrapper[T]) fromProps(props map[string]any) error {
 	tipe := t.Type
-	tipes := GetTypes[T](Registry)
+	tipes := model.GetTypes[T](shared.Registry)
 	if !slices.Contains(tipes, strings.ToLower(tipe)) {
 		return fmt.Errorf("provided type %q not known or does not implement %T", tipe, t.Model)
 	}
 
-	model, ok := Registry.MakeType(tipe)
+	model, ok := shared.Registry.MakeType(tipe)
 	if !ok {
 		return fmt.Errorf("failed to make type %v", tipe)
 	}

@@ -1,16 +1,17 @@
 package model
 
 import (
-	"github.com/praetorian-inc/tabularium/pkg/registry"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&CommandResult{})
+	shared.Registry.MustRegisterModel(&CommandResult{})
 }
 
 // CommandResult represents the success/failure status of an Aegis capability execution
 type CommandResult struct {
-	registry.BaseModel
+	model.BaseModel
 	Capability   string `json:"capability" desc:"The Aegis capability that was executed" example:"praetorian.aegis.Windows.ad.pingcastle"`
 	Command      string `json:"command,omitempty" desc:"The actual command that was executed" example:"adduser testuser"`
 	Success      bool   `json:"success" desc:"Whether the capability executed successfully" example:"true"`

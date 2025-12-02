@@ -5,6 +5,8 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"log/slog"
 	"net/url"
 	"regexp"
@@ -12,7 +14,6 @@ import (
 
 	"github.com/praetorian-inc/tabularium/pkg/lib/normalize"
 	"github.com/praetorian-inc/tabularium/pkg/model/attacksurface"
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 type BurpMetadata struct {
@@ -57,7 +58,7 @@ var webAppKeyRegex = regexp.MustCompile(`^#webapplication#https?://[^?#]+$`)
 
 func init() {
 	MustRegisterLabel(WebApplicationLabel)
-	registry.Registry.MustRegisterModel(&WebApplication{})
+	shared.Registry.MustRegisterModel(&WebApplication{})
 }
 
 func (w *WebApplication) GetDescription() string {
@@ -72,8 +73,8 @@ func (w *WebApplication) GetLabels() []string {
 	return labels
 }
 
-func (w *WebApplication) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (w *WebApplication) GetHooks() []model.Hook {
+	return []model.Hook{
 		useGroupAndIdentifier(w, &w.Name, &w.PrimaryURL),
 		{
 			Call: func() error {
@@ -287,7 +288,7 @@ func NewWebApplication(primaryURL, name string) WebApplication {
 	}
 
 	w.Defaulted()
-	registry.CallHooks(&w)
+	model.CallHooks(&w)
 
 	return w
 }

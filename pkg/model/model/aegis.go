@@ -1,15 +1,14 @@
 package model
 
 import (
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"log/slog"
 	"strings"
 	"time"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&AegisAgent{})
+	shared.Registry.MustRegisterModel(&AegisAgent{})
 }
 
 // CloudflaredStatus represents the cloudflared status information

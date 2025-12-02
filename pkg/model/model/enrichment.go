@@ -2,8 +2,8 @@ package model
 
 import (
 	"encoding/json"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 )
 
 const (
@@ -15,16 +15,16 @@ const (
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&Enrichment{})
-	registry.Registry.MustRegisterModel(&CvssMetrics{})
-	registry.Registry.MustRegisterModel(&Epss{})
-	registry.Registry.MustRegisterModel(&Ssvc{})
-	registry.Registry.MustRegisterModel(&Weakness{})
-	registry.Registry.MustRegisterModel(&MitreTechnique{})
-	registry.Registry.MustRegisterModel(&Exploits{})
-	registry.Registry.MustRegisterModel(&ThreatActor{})
-	registry.Registry.MustRegisterModel(&ExploitCounts{})
-	registry.Registry.MustRegisterModel(&ExploitTimeline{})
+	shared.Registry.MustRegisterModel(&Enrichment{})
+	shared.Registry.MustRegisterModel(&CvssMetrics{})
+	shared.Registry.MustRegisterModel(&Epss{})
+	shared.Registry.MustRegisterModel(&Ssvc{})
+	shared.Registry.MustRegisterModel(&Weakness{})
+	shared.Registry.MustRegisterModel(&MitreTechnique{})
+	shared.Registry.MustRegisterModel(&Exploits{})
+	shared.Registry.MustRegisterModel(&ThreatActor{})
+	shared.Registry.MustRegisterModel(&ExploitCounts{})
+	shared.Registry.MustRegisterModel(&ExploitTimeline{})
 }
 
 // GetDescription returns a description for the CvssMetrics model.
@@ -33,7 +33,7 @@ func (c *CvssMetrics) GetDescription() string {
 }
 
 type CvssMetrics struct {
-	registry.BaseModel
+	model.BaseModel
 	Version             string   `json:"version" desc:"CVSS version (e.g., v2, v3.0, v3.1, v4.0)." example:"v3.1"`
 	Type                string   `json:"type" desc:"Type of CVSS metric (Primary or Secondary)." example:"Primary"`
 	MetricGroup         string   `json:"metric_group" desc:"Metric group (Base, Temporal, Threat)." example:"Base"`
@@ -55,7 +55,7 @@ func (e *Epss) GetDescription() string {
 }
 
 type Epss struct {
-	registry.BaseModel
+	model.BaseModel
 	Score      *float32 `json:"score,omitempty" desc:"EPSS score (probability of exploitation)." example:"0.95"`
 	Percentile *float32 `json:"percentile,omitempty" desc:"EPSS percentile rank." example:"0.99"`
 }
@@ -66,7 +66,7 @@ func (s *Ssvc) GetDescription() string {
 }
 
 type Ssvc struct {
-	registry.BaseModel
+	model.BaseModel
 	Source          *string `json:"source,omitempty" desc:"Source of the SSVC assessment." example:"CISA"`
 	Exploitation    *string `json:"exploitation,omitempty" desc:"SSVC exploitation status." example:"active"`
 	TechnicalImpact *string `json:"technical_impact,omitempty" desc:"SSVC technical impact level." example:"total"`
@@ -79,7 +79,7 @@ func (w *Weakness) GetDescription() string {
 }
 
 type Weakness struct {
-	registry.BaseModel
+	model.BaseModel
 	Source *string `json:"source,omitempty" desc:"Source of the weakness information (e.g., NVD)." example:"NVD"`
 	Type   *string `json:"type,omitempty" desc:"Type of weakness classification (Primary or Secondary)." example:"Primary"`
 	Value  *string `json:"value,omitempty" desc:"Weakness identifier (e.g., CWE ID)." example:"CWE-79"`
@@ -93,7 +93,7 @@ func (m *MitreTechnique) GetDescription() string {
 }
 
 type MitreTechnique struct {
-	registry.BaseModel
+	model.BaseModel
 	Id           *string   `json:"id,omitempty" desc:"MITRE ATT&CK technique ID." example:"T1566"`
 	Name         *string   `json:"name,omitempty" desc:"MITRE ATT&CK technique name." example:"Phishing"`
 	Domain       *string   `json:"domain,omitempty" desc:"MITRE ATT&CK domain." example:"enterprise-attack"`
@@ -108,7 +108,7 @@ func (e *Exploits) GetDescription() string {
 }
 
 type Exploits struct {
-	registry.BaseModel
+	model.BaseModel
 	Counts   ExploitCounts   `json:"counts,omitempty" desc:"Counts of various exploit-related indicators."`
 	Timeline ExploitTimeline `json:"timeline,omitempty" desc:"Timeline of exploit-related events."`
 }
@@ -119,7 +119,7 @@ func (t *ThreatActor) GetDescription() string {
 }
 
 type ThreatActor struct {
-	registry.BaseModel
+	model.BaseModel
 	Name       string   `json:"name" desc:"Name of the threat actor group." example:"APT28"`
 	Alias      []string `json:"aliases" desc:"Known aliases for the threat actor." example:"[\"Fancy Bear\", \"Sofacy Group\"]"`
 	Country    *string  `json:"country,omitempty" desc:"Country associated with the threat actor." example:"RU"`
@@ -132,7 +132,7 @@ func (e *ExploitCounts) GetDescription() string {
 }
 
 type ExploitCounts struct {
-	registry.BaseModel
+	model.BaseModel
 	Exploits           int `json:"exploits" desc:"Total number of known exploits." example:"5"`
 	Botnets            int `json:"botnets" desc:"Number of botnets associated with exploits." example:"1"`
 	RansomwareFamilies int `json:"ransomware_families" desc:"Number of ransomware families associated with exploits." example:"2"`
@@ -145,7 +145,7 @@ func (e *ExploitTimeline) GetDescription() string {
 }
 
 type ExploitTimeline struct {
-	registry.BaseModel
+	model.BaseModel
 	CisaKevDateAdded                        *string `json:"cisa_kev_date_added,omitempty" desc:"Date added to CISA KEV catalog (RFC3339)." example:"2023-01-10T00:00:00Z"`
 	CisaKevDateDue                          *string `json:"cisa_kev_date_due,omitempty" desc:"Due date for patching according to CISA KEV (RFC3339)." example:"2023-01-31T00:00:00Z"`
 	FirstExploitPublished                   *string `json:"first_exploit_published,omitempty" desc:"Date the first exploit was published (RFC3339)." example:"2022-12-01T00:00:00Z"`
@@ -169,7 +169,7 @@ func (e *Enrichment) GetDescription() string {
 }
 
 type Enrichment struct {
-	registry.BaseModel
+	model.BaseModel
 	Id              string           `json:"id" desc:"Unique identifier for the enrichment data (often CVE ID)." example:"CVE-2023-12345"`
 	Name            string           `json:"name" desc:"Common name or title (e.g., from KEV)." example:"Microsoft Exchange Server Remote Code Execution Vulnerability"`
 	IsKev           bool             `json:"is_kev" desc:"Indicates if the vulnerability is listed in the CISA KEV catalog." example:"true"`

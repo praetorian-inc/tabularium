@@ -2,10 +2,10 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"strconv"
 	"strings"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 type PortProtocol string
@@ -16,7 +16,7 @@ const (
 )
 
 type Port struct {
-	registry.BaseModel
+	model.BaseModel
 	Username   string            `neo4j:"username" json:"username" desc:"Chariot username associated with the port." example:"user@example.com"`
 	Key        string            `neo4j:"key" json:"key" desc:"Unique key identifying the port." example:"#port#tcp#80#asset#example.com#example.com"`
 	Source     string            `neo4j:"source" json:"source" desc:"Key of the parent asset this port belongs to." example:"#asset#example.com#example.com"`
@@ -34,7 +34,7 @@ type Port struct {
 const PortLabel = "Port"
 
 func init() {
-	registry.Registry.MustRegisterModel(&Port{})
+	shared.Registry.MustRegisterModel(&Port{})
 }
 
 func (p *Port) GetKey() string {
@@ -125,8 +125,8 @@ func (p *Port) Defaulted() {
 	p.TTL = Future(14 * 24)
 }
 
-func (p *Port) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (p *Port) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				if p.Parent.Model == nil {
@@ -147,7 +147,7 @@ func NewPort(protocol string, portNumber int, parent GraphModel) Port {
 		Parent:   NewGraphModelWrapper(parent),
 	}
 	p.Defaulted()
-	registry.CallHooks(&p)
+	model.CallHooks(&p)
 	return p
 }
 

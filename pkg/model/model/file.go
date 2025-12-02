@@ -4,9 +4,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"unicode/utf8"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 type SmartBytes []byte
@@ -65,7 +65,7 @@ func needsEncoding(data []byte) bool {
 }
 
 type File struct {
-	registry.BaseModel
+	model.BaseModel
 	baseTableModel
 	Username string `dynamodbav:"username" json:"username" desc:"Chariot username associated with the file." example:"user@example.com"`
 	Key      string `dynamodbav:"key" json:"key" desc:"Unique key for the file record." example:"#file#proofs/scan.txt"`
@@ -78,7 +78,7 @@ type File struct {
 }
 
 func init() {
-	registry.Registry.MustRegisterModel(&File{})
+	shared.Registry.MustRegisterModel(&File{})
 }
 
 func (f *File) GetKey() string {
@@ -90,8 +90,8 @@ func (f *File) Defaulted() {
 	f.Overwrite = true
 }
 
-func (f *File) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (f *File) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				f.Key = fmt.Sprintf("#file#%s", f.Name)
@@ -106,7 +106,7 @@ func NewFile(name string) File {
 		Name: name,
 	}
 	f.Defaulted()
-	registry.CallHooks(&f)
+	model.CallHooks(&f)
 	return f
 }
 

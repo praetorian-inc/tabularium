@@ -2,10 +2,11 @@ package model
 
 import (
 	"encoding/json"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/wrapper"
 	"strings"
 	"testing"
 
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -208,11 +209,11 @@ func TestAsset_Unmarshall(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var a registry.Wrapper[Assetlike]
+			var a wrapper.Wrapper[Assetlike]
 			err := json.Unmarshal([]byte(tt.data), &a)
 			require.NoError(t, err)
 
-			registry.CallHooks(a.Model)
+			model.CallHooks(a.Model)
 			assert.Equal(t, tt.valid, a.Model.Valid())
 		})
 	}

@@ -1,7 +1,8 @@
 package model
 
 import (
-	"github.com/praetorian-inc/tabularium/pkg/registry"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"reflect"
@@ -10,8 +11,8 @@ import (
 )
 
 func TestAssetlike_Implementations(t *testing.T) {
-	for name := range registry.Registry.GetAllTypes() {
-		item, ok := registry.Registry.MakeType(name)
+	for name := range shared.Registry.GetAllTypes() {
+		item, ok := shared.Registry.MakeType(name)
 		require.True(t, ok)
 
 		graphModel, ok := item.(GraphModel)
@@ -29,8 +30,8 @@ func TestAssetlike_Implementations(t *testing.T) {
 }
 
 func TestObjectLabelsMatchNames(t *testing.T) {
-	for name := range registry.Registry.GetAllTypes() {
-		model, ok := registry.Registry.MakeType(name)
+	for name := range shared.Registry.GetAllTypes() {
+		model, ok := shared.Registry.MakeType(name)
 		require.True(t, ok)
 
 		tipe := reflect.TypeOf(model)
@@ -48,7 +49,7 @@ func TestObjectLabelsMatchNames(t *testing.T) {
 			continue // NoInput does not actually get put into Neo4j, it just needs to satisfy the GraphModel interface to work with Chariot
 		}
 
-		registry.CallHooks(graphModel)
+		model.CallHooks(graphModel)
 
 		assert.Contains(t, graphModel.GetLabels(), name, "%s does not have a label that matches its name", name)
 	}

@@ -3,10 +3,10 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"strings"
 	"testing"
 
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -259,7 +259,7 @@ func TestWebApplicationVisitBurpMetadata(t *testing.T) {
 }
 
 func TestWebApplicationRegistryIntegration(t *testing.T) {
-	model, found := registry.Registry.MakeType("webapplication")
+	model, found := shared.Registry.MakeType("webapplication")
 	assert.True(t, found)
 	assert.IsType(t, &WebApplication{}, model)
 

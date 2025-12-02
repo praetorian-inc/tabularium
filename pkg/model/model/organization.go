@@ -2,14 +2,14 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"regexp"
 	"strings"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&Organization{})
+	shared.Registry.MustRegisterModel(&Organization{})
 }
 
 var (
@@ -24,7 +24,7 @@ func (o *Organization) GetDescription() string {
 
 // Organization represents enriched organization data from Apollo.io
 type Organization struct {
-	registry.BaseModel
+	model.BaseModel
 	Username string `neo4j:"username" json:"username" desc:"Chariot username associated with the organization record." example:"user@example.com"`
 	Key      string `neo4j:"key" json:"key" desc:"Unique key identifying the organization." example:"#organization#example.com#Example Corp"`
 

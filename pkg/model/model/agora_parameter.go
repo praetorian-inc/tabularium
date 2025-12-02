@@ -2,17 +2,17 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"strconv"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&AgoraParameter{})
+	shared.Registry.MustRegisterModel(&AgoraParameter{})
 }
 
 type AgoraParameter struct {
-	registry.BaseModel
+	model.BaseModel
 	Name        string `json:"name" desc:"The name of the parameter" example:"rate_limit"`
 	Description string `json:"description" desc:"A description of the parameter suitable for human or LLM use" example:"The rate limit for the capability"`
 	Default     string `json:"default,omitempty" desc:"A string representation of the default value of the parameter" example:"1.2.3.4"`

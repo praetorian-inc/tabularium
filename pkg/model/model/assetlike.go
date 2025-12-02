@@ -1,6 +1,8 @@
 package model
 
-import "github.com/praetorian-inc/tabularium/pkg/registry"
+import (
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+)
 
 type Assetlike interface {
 	Target
@@ -14,8 +16,8 @@ type Assetlike interface {
 	SetStatus(string)
 }
 
-func useGroupAndIdentifier(asset Assetlike, groupDst, identifierDst *string) registry.Hook {
-	return registry.Hook{
+func useGroupAndIdentifier(asset Assetlike, groupDst, identifierDst *string) model.Hook {
+	return model.Hook{
 		Call: func() error {
 			copyGroupAndIdentifier(asset, groupDst, identifierDst)
 			reuseGroupOrIdentifierIfSeed(asset, groupDst, identifierDst)
@@ -25,8 +27,8 @@ func useGroupAndIdentifier(asset Assetlike, groupDst, identifierDst *string) reg
 	}
 }
 
-func setGroupAndIdentifier(asset Assetlike, groupDst, identifierDst *string) registry.Hook {
-	return registry.Hook{
+func setGroupAndIdentifier(asset Assetlike, groupDst, identifierDst *string) model.Hook {
+	return model.Hook{
 		Call: func() error {
 			asset.GetBase().Group = *groupDst
 			asset.GetBase().Identifier = *identifierDst

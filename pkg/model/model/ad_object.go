@@ -3,10 +3,10 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"regexp"
 	"strings"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 // AD Object Type Label constants
@@ -53,7 +53,7 @@ func init() {
 		MustRegisterLabel(label)
 	}
 
-	registry.Registry.MustRegisterModel(&ADObject{}, ADLabels...)
+	shared.Registry.MustRegisterModel(&ADObject{}, ADLabels...)
 }
 
 var (
@@ -62,7 +62,7 @@ var (
 
 type ADObject struct {
 	BaseAsset
-	registry.ModelAlias
+	model.ModelAlias
 	Label           string   `neo4j:"label" json:"label" desc:"Primary label of the object." example:"ADUser"`
 	SecondaryLabels []string `neo4j:"-" json:"labels" desc:"Secondary labels of the object." example:"ADLocalGroup"`
 	Domain          string   `neo4j:"domain" json:"domain" desc:"AD domain this object belongs to." example:"example.local"`
@@ -138,8 +138,8 @@ func (ad *ADObject) Defaulted() {
 	ad.BaseAsset.Defaulted()
 }
 
-func (ad *ADObject) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (ad *ADObject) GetHooks() []model.Hook {
+	return []model.Hook{
 		useGroupAndIdentifier(ad, &ad.Domain, &ad.ObjectID),
 		{
 			Call: func() error {
@@ -196,7 +196,7 @@ func NewADObject(domain, objectID, distinguishedName, objectLabel string) ADObje
 	}
 
 	ad.Defaulted()
-	registry.CallHooks(&ad)
+	model.CallHooks(&ad)
 	ad.TTL = 0
 
 	return ad

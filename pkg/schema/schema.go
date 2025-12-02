@@ -2,6 +2,8 @@ package schema
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"os"
 	"reflect"
 	"sort"
@@ -9,12 +11,11 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	_ "github.com/praetorian-inc/tabularium/pkg/model/model" // Ensure init() functions run
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 // GenerateOpenAPISchema creates an OpenAPI v3 document based on registered models.
 func GenerateOpenAPISchema() (*openapi3.T, error) {
-	types := registry.Registry.GetAllTypes()
+	types := shared.Registry.GetAllTypes()
 
 	doc := &openapi3.T{
 		OpenAPI: "3.1.0",
@@ -58,7 +59,7 @@ func GenerateOpenAPISchema() (*openapi3.T, error) {
 		// Add description from the Model interface (guaranteed by registry)
 		// Create a zero-value pointer instance of the type to call the method
 		modelPtrInstance := reflect.New(typ).Interface()
-		modelWithDesc := modelPtrInstance.(registry.Model) // Type assertion is now safe
+		modelWithDesc := modelPtrInstance.(model.Model) // Type assertion is now safe
 		openapiSchema.Description = modelWithDesc.GetDescription()
 
 		for i := 0; i < typ.NumField(); i++ {

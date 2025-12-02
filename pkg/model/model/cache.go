@@ -2,15 +2,16 @@ package model
 
 import (
 	"encoding/json"
-	"github.com/praetorian-inc/tabularium/pkg/registry"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&Cache{})
+	shared.Registry.MustRegisterModel(&Cache{})
 }
 
 type Cache struct {
-	registry.BaseModel
+	model.BaseModel
 	baseTableModel
 	Username string          `dynamodbav:"username" json:"username" desc:"Chariot username associated with the account." example:"user@example.com"`
 	Key      string          `dynamodbav:"key" json:"key" desc:"Unique key for the cache record." example:"#cache#ipv4scan#127.0.0.1"`
@@ -28,8 +29,8 @@ func (a *Cache) Defaulted() {
 	a.TTL = Future(12)
 }
 
-func (a *Cache) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (a *Cache) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				a.Key = "#cache"
@@ -47,6 +48,6 @@ func NewCache(keys ...string) Cache {
 		Keys: keys,
 	}
 	a.Defaulted()
-	registry.CallHooks(&a)
+	model.CallHooks(&a)
 	return a
 }

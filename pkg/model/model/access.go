@@ -2,12 +2,12 @@ package model
 
 import (
 	"fmt"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&Access{})
+	shared.Registry.MustRegisterModel(&Access{})
 }
 
 type ChariotAccessType string
@@ -20,7 +20,7 @@ const (
 )
 
 type Access struct {
-	registry.BaseModel
+	model.BaseModel
 	baseTableModel
 	Username string `dynamodbav:"username" json:"username" desc:"Chariot username associated with the account." example:"user@example.com"`
 	Key      string `dynamodbav:"key" json:"key" desc:"Unique key for the access record." example:"#access#type#value#id"`
@@ -41,8 +41,8 @@ func (a *Access) Defaulted() {
 	a.Updated = Now()
 }
 
-func (a *Access) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (a *Access) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				a.Key = fmt.Sprintf("#access#%s", a.Sub)
@@ -60,6 +60,6 @@ func NewAccess(sub string, tipe ChariotAccessType, value string) Access {
 		Value: value,
 	}
 	a.Defaulted()
-	registry.CallHooks(&a)
+	model.CallHooks(&a)
 	return a
 }

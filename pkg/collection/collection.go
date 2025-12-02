@@ -1,6 +1,8 @@
 package collection
 
 import (
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"log/slog"
 	"reflect"
 	"slices"
@@ -8,36 +10,35 @@ import (
 
 	"github.com/praetorian-inc/tabularium/pkg/lib/plural"
 	modelpkg "github.com/praetorian-inc/tabularium/pkg/model/model"
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 // Collection is a universal container type for registered types
 type Collection struct {
-	Label string                      `json:"-"`
-	Items map[string][]registry.Model `json:"items"`
-	Count int                         `json:"count"`
+	Label string                   `json:"-"`
+	Items map[string][]model.Model `json:"items"`
+	Count int                      `json:"count"`
 }
 
 // init lazily initializes Collection
 func (c *Collection) init() {
 	if c.Items == nil {
-		c.Items = map[string][]registry.Model{}
+		c.Items = map[string][]model.Model{}
 	}
 }
 
-func (c *Collection) Add(model registry.Model) {
+func (c *Collection) Add(m model.Model) {
 	c.init()
 
-	if ok := addInterface[modelpkg.Seedable](c, model); ok {
+	if ok := addInterface[modelpkg.Seedable](c, m); ok {
 		return
 	}
 
-	name := plural.Plural(registry.Name(model))
-	c.Items[name] = append(c.Items[name], model)
+	name := plural.Plural(model.Name(m))
+	c.Items[name] = append(c.Items[name], m)
 	c.Count++
 }
 
-func addInterface[T registry.Model](c *Collection, model registry.Model) bool {
+func addInterface[T model.Model](c *Collection, model model.Model) bool {
 	interfaceType := reflect.TypeOf((*T)(nil)).Elem()
 	modelType := reflect.TypeOf(model)
 
@@ -59,7 +60,7 @@ func addInterface[T registry.Model](c *Collection, model registry.Model) bool {
 	return false
 }
 
-func hasLabel(c *Collection, model registry.Model) bool {
+func hasLabel(c *Collection, model model.Model) bool {
 	graphModel, ok := model.(modelpkg.GraphModel)
 	if !ok {
 		return false
@@ -68,10 +69,10 @@ func hasLabel(c *Collection, model registry.Model) bool {
 }
 
 // Get retrieves all Items from a collection that have type T, or implement T
-func Get[T registry.Model](c *Collection) []T {
+func Get[T model.Model](c *Collection) []T {
 	c.init()
 	out := []T{}
-	for _, name := range registry.GetTypes[T](registry.Registry) {
+	for _, name := range model.GetTypes[T](shared.Registry) {
 		for _, item := range c.Items[plural.Plural(name)] {
 			i, ok := item.(T)
 			if !ok {

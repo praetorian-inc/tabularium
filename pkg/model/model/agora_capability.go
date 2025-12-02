@@ -2,10 +2,11 @@ package model
 
 import (
 	"encoding/json"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"strings"
 
 	"github.com/praetorian-inc/tabularium/pkg/model/attacksurface"
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 // Category represents capability categories
@@ -176,7 +177,7 @@ func (p *Platform) UnmarshalJSON(data []byte) error {
 }
 
 type AgoraCapability struct {
-	registry.BaseModel
+	model.BaseModel
 	Name          string                `json:"name" desc:"The name of the capability" example:"portscan"`
 	Title         string                `json:"title" desc:"The pretty name of the capability" example:"AWS"`
 	Target        string                `json:"target" desc:"The target of the capability" example:"asset"`
@@ -193,7 +194,7 @@ type AgoraCapability struct {
 }
 
 func init() {
-	registry.Registry.MustRegisterModel(&AgoraCapability{})
+	shared.Registry.MustRegisterModel(&AgoraCapability{})
 }
 
 // GetDescription returns a description for the AgoraCapability model.

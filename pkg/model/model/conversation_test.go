@@ -1,10 +1,10 @@
 package model
 
 import (
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
 	"strings"
 	"testing"
 
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -45,7 +45,7 @@ func TestConversation_Hooks(t *testing.T) {
 	conv := &Conversation{}
 
 	// Call hooks manually
-	registry.CallHooks(conv)
+	model.CallHooks(conv)
 
 	assert.NotEmpty(t, conv.Key)
 	assert.True(t, strings.HasPrefix(conv.Key, "#conversation#"))
@@ -64,7 +64,7 @@ func TestConversation_Hooks_ExistingKey(t *testing.T) {
 		Key: existingKey,
 	}
 
-	registry.CallHooks(conv)
+	model.CallHooks(conv)
 
 	// Should not change existing key
 	assert.Equal(t, existingKey, conv.Key)

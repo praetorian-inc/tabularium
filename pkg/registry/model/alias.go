@@ -1,4 +1,4 @@
-package registry
+package model
 
 type Alias interface {
 	SetAlias(string)

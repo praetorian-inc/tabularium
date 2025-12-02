@@ -2,14 +2,15 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&CapabilitySchedule{}, "capability_schedule")
+	shared.Registry.MustRegisterModel(&CapabilitySchedule{}, "capability_schedule")
 }
 
 // WeeklySchedule defines execution times for each day of the week
@@ -40,8 +41,8 @@ const (
 
 // CapabilitySchedule represents a scheduled execution configuration for any capability
 type CapabilitySchedule struct {
-	baseTableModel     // Embed for TableModel interface
-	registry.BaseModel // Embed BaseModel for default implementations
+	baseTableModel  // Embed for TableModel interface
+	model.BaseModel // Embed BaseModel for default implementations
 
 	ScheduleID string `json:"scheduleId" dynamodbav:"schedule_id" desc:"Unique identifier for this schedule"`
 

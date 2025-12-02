@@ -3,14 +3,14 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"time"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 // Setting defines the structure for storing settings
 type Setting struct {
-	registry.BaseModel
+	model.BaseModel
 	baseTableModel
 	Username     string    `dynamodbav:"username" json:"username" desc:"Chariot username associated with the setting (if user-specific)." example:"user@example.com"`
 	Key          string    `dynamodbav:"key" json:"key" desc:"Unique key for the setting." example:"#setting#notification_email"`
@@ -21,12 +21,12 @@ type Setting struct {
 }
 
 func init() {
-	registry.Registry.MustRegisterModel(&Setting{})
-	registry.Registry.MustRegisterModel(&Configuration{})
+	shared.Registry.MustRegisterModel(&Setting{})
+	shared.Registry.MustRegisterModel(&Configuration{})
 }
 
-func (s *Setting) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (s *Setting) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				s.Key = fmt.Sprintf("#setting#%s", s.Name)
@@ -43,7 +43,7 @@ func NewSetting(name string, value any) Setting {
 		LastModified: time.Now().UTC(),
 	}
 	s.Defaulted()
-	registry.CallHooks(&s)
+	model.CallHooks(&s)
 	return s
 }
 
@@ -67,8 +67,8 @@ func (s *Setting) GetDescription() string {
 // Configuration stores configuration settings managed by Praetorian.
 type Configuration Setting
 
-func (c *Configuration) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (c *Configuration) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				c.Key = fmt.Sprintf("#configuration#%s", c.Name)
@@ -84,7 +84,7 @@ func NewConfiguration(name string, value any) Configuration {
 		Value:        value,
 		LastModified: time.Now().UTC(),
 	}
-	registry.CallHooks(&c)
+	model.CallHooks(&c)
 	return c
 }
 

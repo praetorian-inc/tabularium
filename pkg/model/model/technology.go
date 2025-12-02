@@ -2,14 +2,14 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"regexp"
 	"strings"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&Technology{})
+	shared.Registry.MustRegisterModel(&Technology{})
 }
 
 var technologyKeyRegex = regexp.MustCompile(`^#technology#cpe:2\.3(:[^:]+){11}$`)
@@ -17,7 +17,7 @@ var technologyKeyRegex = regexp.MustCompile(`^#technology#cpe:2\.3(:[^:]+){11}$`
 // This is so we can have CPE as a field as well
 type AliasCPE = CPE
 type Technology struct {
-	registry.BaseModel
+	model.BaseModel
 	Username string `neo4j:"username" json:"username" desc:"Chariot username associated with the technology record." example:"user@example.com"`
 	Key      string `neo4j:"key" json:"key" desc:"Unique key identifying the technology (based on CPE string)." example:"#technology#cpe:2.3:a:apache:http_server:2.4.50:*:*:*:*:*:*:*"`
 	// Attributes
@@ -95,8 +95,8 @@ func (t *Technology) Defaulted() {
 	t.Visited = Now()
 }
 
-func (t *Technology) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (t *Technology) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				t.Key = fmt.Sprintf("#technology#%s", t.CPE)
@@ -112,7 +112,7 @@ func NewTechnologyWithCPE(cpe CPE) Technology {
 		CPE:      cpe.String(),
 	}
 	t.Defaulted()
-	registry.CallHooks(&t)
+	model.CallHooks(&t)
 	return t
 }
 

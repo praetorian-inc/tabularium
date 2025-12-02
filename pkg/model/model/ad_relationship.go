@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/praetorian-inc/tabularium/pkg/registry"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 )
 
 // AD Relationship type labels (matching BloodHound exactly)
@@ -247,7 +247,7 @@ var ADRelationshipLabels = []string{
 }
 
 func init() {
-	registry.Registry.MustRegisterModel(&ADRelationship{}, ADRelationshipLabels...)
+	shared.Registry.MustRegisterModel(&ADRelationship{}, ADRelationshipLabels...)
 }
 
 type ADRelationship struct {

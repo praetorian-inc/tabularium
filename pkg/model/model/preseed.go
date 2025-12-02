@@ -2,16 +2,16 @@ package model
 
 import (
 	"fmt"
+	"github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"maps"
 	"strings"
 
 	"github.com/praetorian-inc/tabularium/pkg/model/filters"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 type Preseed struct {
-	registry.BaseModel
+	model.BaseModel
 	Username   string            `neo4j:"username" json:"username" desc:"Chariot username associated with the preseed record." example:"user@example.com"`
 	Key        string            `neo4j:"key" json:"key" desc:"Unique key identifying the preseed record." example:"#preseed#whois#registrant_email#test@example.com"`
 	Type       string            `neo4j:"type" json:"type" desc:"Type of the preseed data." example:"whois"`
@@ -27,7 +27,7 @@ type Preseed struct {
 }
 
 func init() {
-	registry.Registry.MustRegisterModel(&Preseed{})
+	shared.Registry.MustRegisterModel(&Preseed{})
 }
 
 const PreseedLabel = "Preseed"
@@ -125,8 +125,8 @@ func (p *Preseed) Defaulted() {
 	p.Display = generatePreseedDisplay(p.Type)
 }
 
-func (p *Preseed) GetHooks() []registry.Hook {
-	return []registry.Hook{
+func (p *Preseed) GetHooks() []model.Hook {
+	return []model.Hook{
 		{
 			Call: func() error {
 				keyTemplate := fmt.Sprintf("#preseed#%s#%s#%%s", p.Type, p.Title)
@@ -145,7 +145,7 @@ func NewPreseed(preseedType, title, value string) Preseed {
 		Value: value,
 	}
 	p.Defaulted()
-	registry.CallHooks(&p)
+	model.CallHooks(&p)
 	return p
 }
 

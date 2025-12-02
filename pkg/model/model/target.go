@@ -2,7 +2,7 @@ package model
 
 import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/praetorian-inc/tabularium/pkg/registry"
+	"github.com/praetorian-inc/tabularium/pkg/registry/wrapper"
 )
 
 // Target represents any entity that can be the subject of a security capability or job.
@@ -92,20 +92,20 @@ type Target interface {
 	IsPrivate() bool
 }
 
-type TargetWrapper registry.Wrapper[Target]
+type TargetWrapper wrapper.Wrapper[Target]
 
 func (t TargetWrapper) MarshalJSON() ([]byte, error) {
-	return (registry.Wrapper[Target])(t).MarshalJSON()
+	return (wrapper.Wrapper[Target])(t).MarshalJSON()
 }
 
 func (t *TargetWrapper) UnmarshalJSON(data []byte) error {
-	return (*registry.Wrapper[Target])(t).UnmarshalJSON(data)
+	return (*wrapper.Wrapper[Target])(t).UnmarshalJSON(data)
 }
 
 func (t TargetWrapper) MarshalDynamoDBAttributeValue() (types.AttributeValue, error) {
-	return (registry.Wrapper[Target])(t).MarshalDynamoDBAttributeValue()
+	return (wrapper.Wrapper[Target])(t).MarshalDynamoDBAttributeValue()
 }
 
 func (t *TargetWrapper) UnmarshalDynamoDBAttributeValue(av types.AttributeValue) error {
-	return (*registry.Wrapper[Target])(t).UnmarshalDynamoDBAttributeValue(av)
+	return (*wrapper.Wrapper[Target])(t).UnmarshalDynamoDBAttributeValue(av)
 }

@@ -1,19 +1,19 @@
 package collection
 
 import (
+	model2 "github.com/praetorian-inc/tabularium/pkg/registry/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry/shared"
 	"reflect"
 	"testing"
 
 	"github.com/praetorian-inc/tabularium/pkg/lib/plural"
 	"github.com/praetorian-inc/tabularium/pkg/model/model"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 // testModelA is a simple implementation of registry.Model for testing.
 type testModelA struct {
-	registry.BaseModel
+	model2.BaseModel
 	ID   int
 	Name string
 }
@@ -24,7 +24,7 @@ func (tm *testModelA) GetDescription() string {
 
 // testModelB is another simple implementation of registry.Model for testing.
 type testModelB struct {
-	registry.BaseModel
+	model2.BaseModel
 	Value float64
 }
 
@@ -34,7 +34,7 @@ func (tm *testModelB) GetDescription() string {
 
 // testModelC is an empty struct implementing registry.Model for testing edge cases.
 type testModelC struct {
-	registry.BaseModel
+	model2.BaseModel
 }
 
 func (tm *testModelC) GetDescription() string {
@@ -45,7 +45,7 @@ func (tm *testModelC) GetDescription() string {
 // not fully present in the registry during a Get operation.
 // It must still implement registry.Model to be added to a collection.
 type unregisteredModel struct {
-	registry.BaseModel
+	model2.BaseModel
 	Data string
 }
 
@@ -55,7 +55,7 @@ func (um *unregisteredModel) GetDescription() string { return "Unregistered" }
 // for scenarios where a registered type is queried but not present in the collection.
 // It implements registry.Model.
 type getTestAuxiliaryModel struct {
-	registry.BaseModel
+	model2.BaseModel
 	DummyField int
 }
 
@@ -65,7 +65,7 @@ func (gtam *getTestAuxiliaryModel) GetDescription() string {
 
 // testInterface is an interface that testModelA implements.
 type testInterface interface {
-	registry.Model
+	model2.Model
 	GetName() string
 }
 
@@ -75,14 +75,14 @@ func (tm *testModelA) GetName() string {
 
 func init() {
 	// Ensure a clean registry for this test package
-	registry.Registry = registry.NewTypeRegistry()
+	shared.Registry = model2.NewTypeRegistry()
 
 	// Register all test models
-	registry.Registry.MustRegisterModel(&testModelA{})
-	registry.Registry.MustRegisterModel(&testModelB{})
-	registry.Registry.MustRegisterModel(&testModelC{})
-	registry.Registry.MustRegisterModel(&unregisteredModel{})
-	registry.Registry.MustRegisterModel(&getTestAuxiliaryModel{})
+	shared.Registry.MustRegisterModel(&testModelA{})
+	shared.Registry.MustRegisterModel(&testModelB{})
+	shared.Registry.MustRegisterModel(&testModelC{})
+	shared.Registry.MustRegisterModel(&unregisteredModel{})
+	shared.Registry.MustRegisterModel(&getTestAuxiliaryModel{})
 }
 
 func TestNewCollection(t *testing.T) {
@@ -106,7 +106,7 @@ func TestCollection_AddAndCount(t *testing.T) {
 	if c.Count != 1 {
 		t.Errorf("Count after adding one item, got %d, want %d", c.Count, 1)
 	}
-	nameA := plural.Plural(registry.Name(modelA1))
+	nameA := plural.Plural(model2.Name(modelA1))
 	if len(c.Items[nameA]) != 1 || !reflect.DeepEqual(c.Items[nameA][0], modelA1) {
 		t.Errorf("Add() did not add modelA1 correctly. Items: %v", c.Items)
 	}
@@ -123,7 +123,7 @@ func TestCollection_AddAndCount(t *testing.T) {
 	if c.Count != 3 {
 		t.Errorf("Count after adding item of different type, got %d, want %d", c.Count, 3)
 	}
-	nameB := plural.Plural(registry.Name(modelB1))
+	nameB := plural.Plural(model2.Name(modelB1))
 	if len(c.Items[nameB]) != 1 || !reflect.DeepEqual(c.Items[nameB][0], modelB1) {
 		t.Errorf("Add() did not add modelB1 correctly. Items: %v", c.Items)
 	}
