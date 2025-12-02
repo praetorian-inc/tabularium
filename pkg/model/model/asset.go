@@ -23,10 +23,10 @@ func init() {
 }
 
 var (
-	aws      = regexp.MustCompile(`^arn:aws:`)
-	s3       = regexp.MustCompile(`^(s3://)([^/]+)/?$`)
-	domain   = regexp.MustCompile(`^(https?://)?((xn--[a-zA-Z0-9-]+|[a-zA-Z0-9-]+)\.)+([a-zA-Z]{2,})$`)
-	assetKey = regexp.MustCompile(`^#asset(#[^#]+){2,}$`)
+	aws         = regexp.MustCompile(`^arn:aws:`)
+	s3          = regexp.MustCompile(`^(s3://)([^/]+)/?$`)
+	DomainRegex = regexp.MustCompile(`^(https?://)?((xn--[a-zA-Z0-9-]+|[a-zA-Z0-9-]+)\.)+([a-zA-Z]{2,})$`)
+	assetKey    = regexp.MustCompile(`^#asset(#[^#]+){2,}$`)
 )
 
 const AssetLabel = "Asset"
@@ -65,7 +65,7 @@ func (a *Asset) GetClass() string {
 			return "cidr", err == nil
 		},
 		func(s string) (string, bool) {
-			if !domain.MatchString(s) {
+			if !DomainRegex.MatchString(s) {
 				return "", false
 			}
 
@@ -74,7 +74,7 @@ func (a *Asset) GetClass() string {
 			return "tld", len(parts) == 2 && icann && !strings.Contains(s, "/")
 		},
 		func(s string) (string, bool) {
-			return "domain", domain.MatchString(s)
+			return "domain", DomainRegex.MatchString(s)
 		},
 	}
 
