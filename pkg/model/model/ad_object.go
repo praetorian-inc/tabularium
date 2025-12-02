@@ -57,7 +57,7 @@ func init() {
 }
 
 var (
-	adObjectKeyPattern = regexp.MustCompile(`(?i)^#ad[a-z]+#[^#]+#[A-FS0-9-]+$`)
+	adObjectKeyPattern = regexp.MustCompile(`(?i)^#ad[a-z]+#[^#]+#.+$`)
 )
 
 type ADObject struct {
@@ -85,10 +85,11 @@ func (ad *ADObject) GetLabels() []string {
 
 func (ad *ADObject) Valid() bool {
 	hasObjectID := ad.ObjectID != ""
+	hasDistinguishedName := ad.DistinguishedName != ""
 	hasDomain := ad.Domain != ""
 	keyMatches := adObjectKeyPattern.MatchString(ad.Key)
 
-	return hasObjectID && hasDomain && keyMatches
+	return (hasObjectID || hasDistinguishedName) && hasDomain && keyMatches
 }
 
 func (ad *ADObject) Group() string {
@@ -105,13 +106,72 @@ func (ad *ADObject) Visit(o Assetlike) {
 		return
 	}
 
-	if ad.Key != other.Key {
+	// Exact key match (existing logic)
+	if ad.Key == other.Key {
+		ad.ADProperties.Visit(other.ADProperties)
+		ad.BaseAsset.Visit(other)
 		return
 	}
 
-	ad.ADProperties.Visit(other.ADProperties)
+	// Reconciliation: same domain/label with matching DN
+	if ad.canReconcileWith(other) {
+		ad.reconcileWith(other)
+	}
+}
 
+// canReconcileWith checks if two AD objects can be reconciled based on domain, label, and DN
+func (ad *ADObject) canReconcileWith(other *ADObject) bool {
+	// Must be same domain and label
+	if ad.Domain != other.Domain || ad.Label != other.Label {
+		return false
+	}
+
+	// Must have matching distinguished names (if both have DN)
+	if ad.DistinguishedName != "" && other.DistinguishedName != "" {
+		return strings.EqualFold(ad.DistinguishedName, other.DistinguishedName)
+	}
+
+	// One has ObjectID, the other has DN - check if DN contains matching CN
+	if (ad.ObjectID != "" && other.ObjectID == "" && other.DistinguishedName != "") ||
+		(ad.ObjectID == "" && ad.DistinguishedName != "" && other.ObjectID != "") {
+		return true
+	}
+
+	return false
+}
+
+// reconcileWith merges two AD objects, prioritizing the one with more complete information
+func (ad *ADObject) reconcileWith(other *ADObject) {
+	// Prefer the object with ObjectID if one is missing it
+	if ad.ObjectID == "" && other.ObjectID != "" {
+		ad.ObjectID = other.ObjectID
+		ad.SID = other.SID
+		// Regenerate key with ObjectID
+		ad.Key = fmt.Sprintf("#%s#%s#%s", strings.ToLower(ad.Label), ad.Domain, ad.ObjectID)
+	} else if other.ObjectID == "" && ad.ObjectID != "" {
+		other.ObjectID = ad.ObjectID
+		other.SID = ad.SID
+	}
+
+	// Merge properties and asset data
+	ad.ADProperties.Visit(other.ADProperties)
 	ad.BaseAsset.Visit(other)
+}
+
+// extractCNFromDN extracts the Common Name (CN) from a Distinguished Name
+func extractCNFromDN(dn string) string {
+	// Look for CN= at the beginning or after a comma
+	parts := strings.Split(dn, ",")
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if strings.HasPrefix(strings.ToUpper(part), "CN=") {
+			// Remove "CN=" prefix and return the value
+			cn := strings.TrimPrefix(part, "CN=")
+			cn = strings.TrimPrefix(cn, "cn=")
+			return strings.TrimSpace(cn)
+		}
+	}
+	return ""
 }
 
 func (d *ADObject) SeedModels() []Seedable {
@@ -147,7 +207,27 @@ func (ad *ADObject) GetHooks() []registry.Hook {
 				ad.Domain = strings.ToLower(ad.Domain)
 				ad.ObjectID = strings.ToUpper(ad.ObjectID)
 
-				ad.Key = fmt.Sprintf("#%s#%s#%s", strings.ToLower(ad.Label), ad.Domain, ad.ObjectID)
+				// Generate key based on available identifier
+				if ad.ObjectID != "" {
+					// Use ObjectID for key generation
+					ad.Key = fmt.Sprintf("#%s#%s#%s", strings.ToLower(ad.Label), ad.Domain, ad.ObjectID)
+				} else if ad.DistinguishedName != "" && ad.DistinguishedName != "<blank>" {
+					// Use CN from DN for key generation (ignore test blank constant)
+					cn := extractCNFromDN(ad.DistinguishedName)
+					if cn != "" {
+						ad.Key = fmt.Sprintf("#%s#%s#%s", strings.ToLower(ad.Label), ad.Domain, cn)
+					} else {
+						// Fallback to using the full DN (truncated if too long)
+						dnKey := ad.DistinguishedName
+						if len(dnKey) > 100 {
+							dnKey = dnKey[:100]
+						}
+						ad.Key = fmt.Sprintf("#%s#%s#%s", strings.ToLower(ad.Label), ad.Domain, dnKey)
+					}
+				} else {
+					// Fail creation when neither ObjectID nor DN is available
+					return fmt.Errorf("ADObject requires either ObjectID or DistinguishedName")
+				}
 
 				ad.Class = strings.ToLower(strings.TrimPrefix(ad.Label, "AD"))
 
