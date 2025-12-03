@@ -30,6 +30,7 @@ func TestAsset_Class(t *testing.T) {
 
 		// SelfSource
 		{"subdomain.example.com", "subdomain.example.com", SelfSource, "domain", false},
+		{"münchen.de", "münchen.de", SelfSource, "tld", false},
 		{"example.com", "0.0.0.0", SelfSource, "ipv4", false},
 		{"example.com", "2001::0000", SelfSource, "ipv6", false},
 		{"example.com", "192.168.0.1", SelfSource, "ipv4", true},
@@ -293,4 +294,55 @@ func TestAsset_RFC1918(t *testing.T) {
 		assert.Equal(t, a.ASNumber, "")
 		assert.Equal(t, a.ASName, "")
 	})
+}
+
+func TestAsset_Punycode(t *testing.T) {
+	tests := []struct {
+		name     string
+		domain   string
+		expected string
+	}{
+		{
+			name:     "no unicode",
+			domain:   "example.com",
+			expected: "example.com",
+		},
+		{
+			name:     "german domain",
+			domain:   "münchen.de",
+			expected: "xn--mnchen-3ya.de",
+		},
+		{
+			name:     "french domain",
+			domain:   "français.fr",
+			expected: "xn--franais-xxa.fr",
+		},
+		{
+			name:     "arabic domain",
+			domain:   "مثال.مصر",
+			expected: "xn--mgbh0fb.xn--wgbh1c",
+		},
+		{
+			name:     "chinese domain",
+			domain:   "例子.中国",
+			expected: "xn--fsqu00a.xn--fiqs8s",
+		},
+		{
+			name:     "japanese domain",
+			domain:   "東京.jp",
+			expected: "xn--1lqs71d.jp",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			asset := NewAsset(tt.domain, tt.domain)
+
+			assert.True(t, asset.Valid(), "asset is invalid")
+			assert.Equal(t, tt.expected, asset.DNS)
+			assert.Equal(t, tt.expected, asset.Name)
+			assert.Equal(t, tt.expected, asset.Group())
+			assert.Equal(t, tt.expected, asset.Identifier())
+		})
+	}
 }

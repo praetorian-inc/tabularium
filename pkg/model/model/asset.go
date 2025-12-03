@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"golang.org/x/net/idna"
 	"net"
 	"regexp"
 	"strings"
@@ -23,10 +24,10 @@ func init() {
 }
 
 var (
-	aws         = regexp.MustCompile(`^arn:aws:`)
-	s3          = regexp.MustCompile(`^(s3://)([^/]+)/?$`)
-	DomainRegex = regexp.MustCompile(`^(https?://)?((xn--[a-zA-Z0-9-]+|[a-zA-Z0-9-]+)\.)+([a-zA-Z]{2,})$`)
-	assetKey    = regexp.MustCompile(`^#asset(#[^#]+){2,}$`)
+	aws      = regexp.MustCompile(`^arn:aws:`)
+	s3       = regexp.MustCompile(`^(s3://)([^/]+)/?$`)
+	domain   = regexp.MustCompile(`^(https?://)?((xn--[a-zA-Z0-9-]+|[a-zA-Z0-9-]+)\.)+([a-zA-Z]{2,})$`)
+	assetKey = regexp.MustCompile(`^#asset(#[^#]+){2,}$`)
 )
 
 const AssetLabel = "Asset"
@@ -65,7 +66,7 @@ func (a *Asset) GetClass() string {
 			return "cidr", err == nil
 		},
 		func(s string) (string, bool) {
-			if !DomainRegex.MatchString(s) {
+			if !domain.MatchString(s) {
 				return "", false
 			}
 
@@ -74,7 +75,7 @@ func (a *Asset) GetClass() string {
 			return "tld", len(parts) == 2 && icann && !strings.Contains(s, "/")
 		},
 		func(s string) (string, bool) {
-			return "domain", DomainRegex.MatchString(s)
+			return "domain", domain.MatchString(s)
 		},
 	}
 
@@ -205,6 +206,23 @@ func (a *Asset) Attribute(name, value string) Attribute {
 
 func (a *Asset) GetHooks() []registry.Hook {
 	return []registry.Hook{
+		{
+			Description: "normalize unicode characters with punycode",
+			Call: func() error {
+				var err error
+				a.DNS, err = idna.ToASCII(a.DNS)
+				if err != nil {
+					return err
+				}
+
+				a.Name, err = idna.ToASCII(a.Name)
+				if err != nil {
+					return err
+				}
+
+				return nil
+			},
+		},
 		useGroupAndIdentifier(a, &a.DNS, &a.Name),
 		{
 			Call: func() error {
