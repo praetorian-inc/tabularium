@@ -19,28 +19,31 @@ type ResultContext struct {
 	Origin        TargetWrapper     `json:"origin" desc:"The origin for this chain of jobs. Defaults to target unless set here."`
 	Queue         string            `json:"queue,omitempty" desc:"Target queue for the job."`
 	Capabilities  []string          `json:"capabilities,omitempty" desc:"List of specific capabilities to run for this job."`
-  FullScan     bool              `json:"full,omitempty" desc:"Whether a full scan was performed or not."`
+	FullScan      bool              `json:"full,omitempty" desc:"Whether a full scan was performed or not."`
 	AgentClientID string            `json:"agent_client_id,omitempty" desc:"Aegis agent client ID that performed the scan."`
 }
 
-func _importEntity(entity string, config map[string]string) bool {
-	if value, ok := config[entity]; ok {
-		parsed, err := strconv.ParseBool(value)
-		if err != nil {
-			slog.Error(fmt.Sprintf("Error parsing %s config value", entity), "error", err)
-			return false
-		}
-		return parsed
-	}
-	return true
-}
-
 func (rc *ResultContext) ImportAssets() bool {
-	return _importEntity("importAssets", rc.Config)
+	return rc.parseConfigBoolean("importAssets")
 }
 
 func (rc *ResultContext) ImportVulnerabilities() bool {
-	return _importEntity("importVulnerabilities", rc.Config)
+	return rc.parseConfigBoolean("importVulnerabilities")
+}
+
+func (rc *ResultContext) parseConfigBoolean(entity string) bool {
+	value, ok := rc.Config[entity]
+	if !ok {
+		return true
+	}
+
+	parsed, err := strconv.ParseBool(value)
+	if err != nil {
+		slog.Error(fmt.Sprintf("Error parsing %s config value", entity), "error", err)
+		return false
+	}
+
+	return parsed
 }
 
 func (rc *ResultContext) GetParent() Target {

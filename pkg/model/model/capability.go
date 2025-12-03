@@ -27,7 +27,7 @@ type Capability interface {
 	Invoke() error
 	// Timeout returns the maximum amount of time this capability should be allowed to run
 	Timeout() int
-	// Cleanup cleans up the capability after execution
+	// HasGlobalConfig indicates if the capability's configuration file is shared across all instances of the capability
 	HasGlobalConfig() bool
 	// Full returns how often the capability should execute a full scan. This is used to determine if job.Full is set to true.
 	Full() time.Duration
