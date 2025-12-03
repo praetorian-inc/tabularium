@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"golang.org/x/net/idna"
 	"net"
 	"regexp"
 	"strings"
@@ -205,6 +206,23 @@ func (a *Asset) Attribute(name, value string) Attribute {
 
 func (a *Asset) GetHooks() []registry.Hook {
 	return []registry.Hook{
+		{
+			Description: "normalize unicode characters with punycode",
+			Call: func() error {
+				var err error
+				a.DNS, err = idna.ToASCII(a.DNS)
+				if err != nil {
+					return err
+				}
+
+				a.Name, err = idna.ToASCII(a.Name)
+				if err != nil {
+					return err
+				}
+
+				return nil
+			},
+		},
 		useGroupAndIdentifier(a, &a.DNS, &a.Name),
 		{
 			Call: func() error {
