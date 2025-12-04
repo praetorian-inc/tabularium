@@ -13,6 +13,7 @@ import (
 
 type Asset struct {
 	BaseAsset
+	LabelSettableEmbed
 	// Attributes
 	DNS     string `neo4j:"dns" json:"dns" desc:"The DNS name, or group identifier associated with this asset." example:"example.com"`
 	Name    string `neo4j:"name" json:"name" desc:"Name of the asset, or the same value as DNS if this asset represents the group." example:"169.254.169.254"`
@@ -121,15 +122,37 @@ func (a *Asset) GetPartitionKey() string {
 	return a.Name
 }
 
+func (a *Asset) Merge(o Assetlike) {
+	other, ok := o.(*Asset)
+	if !ok {
+		return
+	}
+
+	if a.Source != SeedSource && other.Source == SeedSource {
+		a.promoteToSeed()
+	}
+
+	a.BaseAsset.Merge(other)
+}
+
 func (a *Asset) Visit(o Assetlike) {
 	other, ok := o.(*Asset)
 	if !ok {
 		return
 	}
 
+	if a.Source != SeedSource && other.Source == SeedSource {
+		a.promoteToSeed()
+	}
+
 	a.BaseAsset.Visit(other)
 	// allow asset enrichments to control asset privateness
 	a.Private = other.Private
+}
+
+func (a *Asset) promoteToSeed() {
+	a.PendingLabelAddition = SeedLabel
+	a.Source = SeedSource
 }
 
 func (a *Asset) Spawn(dns, name string) Asset {

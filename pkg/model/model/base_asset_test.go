@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAsset_Visit(t *testing.T) {
+func TestBaseAsset_Visit(t *testing.T) {
 	tests := []struct {
 		name       string
 		baseAsset  BaseAsset
@@ -822,9 +822,9 @@ func TestMetadata_VisitOrigin(t *testing.T) {
 
 func TestBaseAsset_GetPartitionKey(t *testing.T) {
 	tests := []struct {
-		name       string
-		baseAsset  BaseAsset
-		wantKey    string
+		name      string
+		baseAsset BaseAsset
+		wantKey   string
 	}{
 		{
 			name: "returns identifier when set",
