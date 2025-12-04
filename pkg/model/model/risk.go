@@ -37,6 +37,7 @@ type Risk struct {
 	History
 	MLProperties
 	Tags
+	OriginationData
 }
 
 func init() {
@@ -115,6 +116,7 @@ func (r *Risk) Merge(update Risk) {
 		r.ProofSufficient = update.ProofSufficient
 	}
 	r.Tags.Merge(update.Tags)
+	r.OriginationData.Merge(update.OriginationData)
 }
 
 func (r *Risk) Visit(n Risk) {
@@ -130,6 +132,7 @@ func (r *Risk) Visit(n Risk) {
 
 	r.Comment = n.Comment
 	r.Tags.Visit(n.Tags)
+	r.OriginationData.Visit(n.OriginationData)
 }
 
 func (r *Risk) SetSeverity(state string) {
