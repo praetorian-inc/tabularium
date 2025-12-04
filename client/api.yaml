@@ -4203,6 +4203,8 @@ components:
           type: object
         MLProperties:
           type: object
+        OriginationData:
+          type: object
         Tags:
           type: object
         beta:
@@ -4266,6 +4268,7 @@ components:
       - BaseModel
       - History
       - MLProperties
+      - OriginationData
       - Tags
       - beta
       - created
