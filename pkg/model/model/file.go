@@ -69,6 +69,7 @@ type File struct {
 	baseTableModel
 	Username string `dynamodbav:"username" json:"username" desc:"Chariot username associated with the file." example:"user@example.com"`
 	Key      string `dynamodbav:"key" json:"key" desc:"Unique key for the file record." example:"#file#proofs/scan.txt"`
+	TTL      int64  `dynamodbav:"ttl" json:"ttl" desc:"Time-to-live for the file record (Unix timestamp)." example:"1706353200"`
 	// Attributes
 	Name         string     `dynamodbav:"name" json:"name" desc:"Name or path of the file." example:"proofs/scan.txt"`
 	Updated      string     `dynamodbav:"updated" json:"updated" desc:"Timestamp when the file record was last updated (RFC3339)." example:"2023-10-27T11:00:00Z"`
@@ -88,6 +89,7 @@ func (f *File) GetKey() string {
 func (f *File) Defaulted() {
 	f.Updated = Now()
 	f.Overwrite = true
+	f.TTL = Future(12)
 }
 
 func (f *File) GetHooks() []registry.Hook {
