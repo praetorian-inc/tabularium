@@ -169,10 +169,8 @@ func (w *WebApplication) Merge(other Assetlike) {
 		return
 	}
 
-	// This invokes a LabelAddition (see GetLabels)
 	if w.Source != SeedSource && otherApp.Source == SeedSource {
-		w.PendingLabelAddition = SeedLabel
-		w.Source = SeedSource
+		w.promoteToSeed()
 	}
 
 	if otherApp.Name != "" {
@@ -222,6 +220,15 @@ func (w *WebApplication) Visit(other Assetlike) {
 	if otherApp.ApiDefinitionContentPath != "" {
 		w.ApiDefinitionContentPath = otherApp.ApiDefinitionContentPath
 	}
+
+	if w.Source != SeedSource && otherApp.Source == SeedSource {
+		w.promoteToSeed()
+	}
+}
+
+func (w *WebApplication) promoteToSeed() {
+	w.PendingLabelAddition = SeedLabel
+	w.Source = SeedSource
 }
 
 func (w *WebApplication) Attribute(name, value string) Attribute {
@@ -245,6 +252,7 @@ func (w *WebApplication) Hydrate(data []byte) error {
 		return nil
 	}
 
+	w.ApiDefinitionContentPath = w.GetHydratableFilepath()
 	if err := json.Unmarshal(data, &w.WebApplicationDetails.ApiDefinitionContent); err != nil {
 		return fmt.Errorf("failed to hydrate WebApplication details: %w", err)
 	}

@@ -1444,6 +1444,8 @@ components:
       properties:
         BaseAsset:
           type: object
+        LabelSettableEmbed:
+          type: object
         dns:
           description: The DNS name, or group identifier associated with this asset.
           example: example.com
@@ -1460,6 +1462,7 @@ components:
           type: boolean
       required:
       - BaseAsset
+      - LabelSettableEmbed
       - dns
       - name
       - private
@@ -1670,6 +1673,134 @@ components:
       required:
       - BaseRelationship
       - relationshipType
+      type: object
+    capability_schedule:
+      description: Scheduled execution configuration for capabilities
+      properties:
+        BaseModel:
+          type: object
+        capabilityName:
+          description: Capability name to execute
+          type: string
+        clientId:
+          description: Aegis agent client ID (only for Aegis capabilities)
+          type: string
+        config:
+          description: Capability configuration parameters including credentials
+          type: object
+        createdAt:
+          description: Creation timestamp
+          type: string
+        endDate:
+          description: Schedule end date in RFC3339 format (optional)
+          type: string
+        key:
+          description: DynamoDB partition key
+          type: string
+        lastExecution:
+          description: Last execution timestamp
+          type: string
+        nextExecution:
+          description: Calculated next execution time
+          type: string
+        scheduleId:
+          description: Unique identifier for this schedule
+          type: string
+        startDate:
+          description: Schedule start date in RFC3339 format
+          type: string
+        status:
+          description: Schedule status (active, paused, or expired)
+          type: string
+        targetKey:
+          description: Asset or target key for capability execution
+          type: string
+        updatedAt:
+          description: Last modification timestamp
+          type: string
+        username:
+          description: Account owner email
+          type: string
+        weeklySchedule:
+          description: Weekly execution schedule configuration
+          type: object
+      required:
+      - BaseModel
+      - capabilityName
+      - config
+      - createdAt
+      - key
+      - scheduleId
+      - startDate
+      - status
+      - targetKey
+      - updatedAt
+      - username
+      - weeklySchedule
+      type: object
+    capabilityschedule:
+      description: Scheduled execution configuration for capabilities
+      properties:
+        BaseModel:
+          type: object
+        capabilityName:
+          description: Capability name to execute
+          type: string
+        clientId:
+          description: Aegis agent client ID (only for Aegis capabilities)
+          type: string
+        config:
+          description: Capability configuration parameters including credentials
+          type: object
+        createdAt:
+          description: Creation timestamp
+          type: string
+        endDate:
+          description: Schedule end date in RFC3339 format (optional)
+          type: string
+        key:
+          description: DynamoDB partition key
+          type: string
+        lastExecution:
+          description: Last execution timestamp
+          type: string
+        nextExecution:
+          description: Calculated next execution time
+          type: string
+        scheduleId:
+          description: Unique identifier for this schedule
+          type: string
+        startDate:
+          description: Schedule start date in RFC3339 format
+          type: string
+        status:
+          description: Schedule status (active, paused, or expired)
+          type: string
+        targetKey:
+          description: Asset or target key for capability execution
+          type: string
+        updatedAt:
+          description: Last modification timestamp
+          type: string
+        username:
+          description: Account owner email
+          type: string
+        weeklySchedule:
+          description: Weekly execution schedule configuration
+          type: object
+      required:
+      - BaseModel
+      - capabilityName
+      - config
+      - createdAt
+      - key
+      - scheduleId
+      - startDate
+      - status
+      - targetKey
+      - updatedAt
+      - username
+      - weeklySchedule
       type: object
     claimspecialidentity:
       description: Represents an Active Directory relationship between two AD objects,
@@ -2939,6 +3070,10 @@ components:
           description: Primary DNS associated with the job's target.
           example: example.com
           type: string
+        finished:
+          description: Timestamp when the job was finished (RFC3339).
+          example: "2023-10-27T10:05:00Z"
+          type: string
         full:
           description: Indicates if this is a full scan job.
           example: "false"
@@ -2961,6 +3096,10 @@ components:
         parent:
           description: Optional parent target from which this job was spawned.
           type: object
+        partition:
+          description: The partition of the job.
+          example: user@example.com##asset#test#0.0.0.0
+          type: string
         retries:
           description: The number of times this job has been retried.
           type: integer
@@ -2972,12 +3111,17 @@ components:
           description: Sensitive configuration parameters (credentials, tokens, keys).
           type: object
         source:
-          description: The source or capability that generated this job.
-          example: portscan
+          description: The source or capability that generated this job, ordered by
+            updated
+          example: portscan#2023-10-27T10:05:00Z
+          type: string
+        started:
+          description: Timestamp when the job was started (RFC3339).
+          example: "2023-10-27T10:05:00Z"
           type: string
         status:
-          description: Current status of the job (e.g., JQ#portscan).
-          example: JQ#portscan
+          description: Current status of the job (e.g., JQ#2023-10-27T10:05:00Z).
+          example: JQ#2023-10-27T10:05:00Z
           type: string
         target:
           description: The primary target of the job.
@@ -3006,15 +3150,57 @@ components:
       - config
       - created
       - dns
+      - finished
       - key
       - origin
       - retries
       - secret
       - source
+      - started
       - status
       - target
       - ttl
       - updated
+      - username
+      type: object
+    jobrecord:
+      description: Represents a record of a job. Used to track when a job was last
+        successfully completed.
+      properties:
+        BaseModel:
+          type: object
+        full:
+          description: Whether the record is full.
+          example: "true"
+          type: boolean
+        jobKey:
+          description: Key of the job that was recorded
+          example: '#job#example.com#asset#portscan'
+          type: string
+        key:
+          description: Unique key for the job.
+          example: '#job#example.com#asset#portscan'
+          type: string
+        recordTime:
+          description: Timestamp when the recorded job was last updated (RFC3339).
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        ttl:
+          description: Time-to-live for the record record (Unix timestamp).
+          example: "1706353200"
+          format: int64
+          type: integer
+        username:
+          description: Chariot username associated with the account.
+          example: user@example.com
+          type: string
+      required:
+      - BaseModel
+      - full
+      - jobKey
+      - key
+      - recordTime
+      - ttl
       - username
       type: object
     key:
@@ -3864,6 +4050,10 @@ components:
           description: Unique key identifying the preseed record.
           example: '#preseed#whois#registrant_email#test@example.com'
           type: string
+        metadata:
+          description: Additional metadata associated with the preseed record.
+          example: '{}'
+          type: object
         status:
           description: Status of the preseed record.
           example: A
@@ -4016,6 +4206,8 @@ components:
           type: object
         MLProperties:
           type: object
+        OriginationData:
+          type: object
         Tags:
           type: object
         beta:
@@ -4079,6 +4271,7 @@ components:
       - BaseModel
       - History
       - MLProperties
+      - OriginationData
       - Tags
       - beta
       - created
@@ -4148,6 +4341,25 @@ components:
       required:
       - BaseRelationship
       - relationshipType
+      type: object
+    scannedby:
+      description: Represents the relationship indicating an asset was discovered/scanned
+        by an Aegis agent, enabling network reachability tracking.
+      properties:
+        BaseRelationship:
+          type: object
+        scan_time:
+          description: Timestamp when the scan was performed (RFC3339).
+          example: "2023-10-27T12:00:00Z"
+          type: string
+        scan_type:
+          description: Type of scan performed (e.g., nmap, ping).
+          example: nmap
+          type: string
+      required:
+      - BaseRelationship
+      - scan_time
+      - scan_type
       type: object
     scanner:
       description: Represents a record of access to chariot
@@ -4400,49 +4612,6 @@ components:
       - username
       - visited
       type: object
-    threat:
-      description: Represents a known threat, such as a malware family or campaign.
-      properties:
-        BaseModel:
-          type: object
-        created:
-          description: Timestamp associated with the threat data creation (often includes
-            feed name).
-          example: '#threat#vulncheck#2023-11-01T00:00:00Z'
-          type: string
-        data:
-          description: The actual threat intelligence data.
-          example: '{"cvss": 9.8, "exploits": ["metasploit"]}'
-          type: object
-        feed:
-          description: The feed this threat was found in
-          type: string
-        key:
-          description: Unique key identifying the threat record.
-          example: '#threat#vulncheck#CVE-2023-12345'
-          type: string
-        source:
-          description: Identifier for the source of the threat data (e.g., CVE ID).
-          example: CVE-2023-12345
-          type: string
-        updated:
-          description: Timestamp when the threat record was last updated (RFC3339).
-          example: "2023-11-10T12:00:00Z"
-          type: string
-        username:
-          description: Chariot username associated with the threat data.
-          example: system
-          type: string
-      required:
-      - BaseModel
-      - created
-      - data
-      - feed
-      - key
-      - source
-      - updated
-      - username
-      type: object
     threatactor:
       description: Represents a threat actor group for a vulnerability.
       properties:
@@ -4492,10 +4661,18 @@ components:
       properties:
         BaseModel:
           type: object
+        created:
+          description: Date the vulnerability was first created/published (from NVD).
+          example: "2023-11-01T00:00:00Z"
+          type: string
         cvss:
           description: Highest CVSS base score associated with the vulnerability.
           example: "9.8"
           type: number
+        data:
+          description: Full enrichment data as JSON string.
+          example: '{"cvss": 9.8, "exploits": [...]}'
+          type: string
         epss:
           description: EPSS score (probability of exploitation).
           example: "0.95"
@@ -4504,6 +4681,10 @@ components:
           description: Indicates if there is known public exploit code available.
           example: "true"
           type: boolean
+        feed:
+          description: Threat feed source (e.g., cisa-kev).
+          example: cisa-kev
+          type: string
         id:
           description: Identifier for the vulnerability (e.g., CVE ID).
           example: CVE-2023-12345
@@ -4512,6 +4693,14 @@ components:
           description: Indicates if the vulnerability is listed in the CISA KEV catalog.
           example: "true"
           type: boolean
+        kevDateAdded:
+          description: Date added to CISA KEV catalog.
+          example: "2024-03-15"
+          type: string
+        kevDueDate:
+          description: CISA KEV remediation due date.
+          example: "2024-04-05"
+          type: string
         key:
           description: Unique key identifying the vulnerability.
           example: '#vulnerability#CVE-2023-12345'
@@ -4519,6 +4708,10 @@ components:
         title:
           description: Title associated with the vulnerability.
           example: Title
+          type: string
+        updated:
+          description: Date the vulnerability was last updated (from NVD).
+          example: "2023-11-10T12:00:00Z"
           type: string
         username:
           description: Chariot username associated with the vulnerability record (usually

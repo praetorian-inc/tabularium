@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"golang.org/x/net/idna"
 	"net"
 	"regexp"
 	"strings"
@@ -12,6 +13,7 @@ import (
 
 type Asset struct {
 	BaseAsset
+	LabelSettableEmbed
 	// Attributes
 	DNS     string `neo4j:"dns" json:"dns" desc:"The DNS name, or group identifier associated with this asset." example:"example.com"`
 	Name    string `neo4j:"name" json:"name" desc:"Name of the asset, or the same value as DNS if this asset represents the group." example:"169.254.169.254"`
@@ -65,6 +67,10 @@ func (a *Asset) GetClass() string {
 			return "cidr", err == nil
 		},
 		func(s string) (string, bool) {
+			if !domain.MatchString(s) {
+				return "", false
+			}
+
 			tld, icann := publicsuffix.PublicSuffix(s)
 			parts := strings.Split(strings.TrimSuffix(s, tld), ".")
 			return "tld", len(parts) == 2 && icann && !strings.Contains(s, "/")
@@ -112,15 +118,41 @@ func (a *Asset) Valid() bool {
 	return assetKey.MatchString(a.Key)
 }
 
+func (a *Asset) GetPartitionKey() string {
+	return a.Name
+}
+
+func (a *Asset) Merge(o Assetlike) {
+	other, ok := o.(*Asset)
+	if !ok {
+		return
+	}
+
+	if a.Source != SeedSource && other.Source == SeedSource {
+		a.promoteToSeed()
+	}
+
+	a.BaseAsset.Merge(other)
+}
+
 func (a *Asset) Visit(o Assetlike) {
 	other, ok := o.(*Asset)
 	if !ok {
 		return
 	}
 
+	if a.Source != SeedSource && other.Source == SeedSource {
+		a.promoteToSeed()
+	}
+
 	a.BaseAsset.Visit(other)
 	// allow asset enrichments to control asset privateness
 	a.Private = other.Private
+}
+
+func (a *Asset) promoteToSeed() {
+	a.PendingLabelAddition = SeedLabel
+	a.Source = SeedSource
 }
 
 func (a *Asset) Spawn(dns, name string) Asset {
@@ -143,9 +175,7 @@ func (a *Asset) DomainVerificationJob(parentJob *Job, config ...string) Job {
 
 	copy := *a
 	job := Job{
-		Source:  "whois",
 		Target:  TargetWrapper{Model: &copy},
-		Status:  fmt.Sprintf("%s#%s", Queued, "whois"),
 		Config:  make(map[string]string),
 		Created: Now(),
 		Updated: Now(),
@@ -154,10 +184,12 @@ func (a *Asset) DomainVerificationJob(parentJob *Job, config ...string) Job {
 		Parent:  parentJob.Target,
 		Full:    true,
 	}
+	job.SetStatus(Queued)
+	job.SetCapability("whois")
 	registry.CallHooks(&job)
 
 	if job.Target.Model != nil {
-		template := fmt.Sprintf("#job#%%s#%s#%s", job.Target.Model.Identifier(), job.Source)
+		template := fmt.Sprintf("#job#%%s#%s#%s", job.Target.Model.Identifier(), job.GetCapability())
 		if len(template) <= 1024 {
 			shortenedDNS := job.Target.Model.Group()[:min(1024-len(template), len(job.Target.Model.Group()))]
 			job.DNS = shortenedDNS
@@ -165,7 +197,7 @@ func (a *Asset) DomainVerificationJob(parentJob *Job, config ...string) Job {
 		}
 	}
 
-	job.Config["source"] = parentJob.Source
+	job.Config["source"] = parentJob.GetCapability()
 	for i := 0; i < len(config); i += 2 {
 		job.Config[config[i]] = config[i+1]
 	}
@@ -197,6 +229,23 @@ func (a *Asset) Attribute(name, value string) Attribute {
 
 func (a *Asset) GetHooks() []registry.Hook {
 	return []registry.Hook{
+		{
+			Description: "normalize unicode characters with punycode",
+			Call: func() error {
+				var err error
+				a.DNS, err = idna.ToASCII(a.DNS)
+				if err != nil {
+					return err
+				}
+
+				a.Name, err = idna.ToASCII(a.Name)
+				if err != nil {
+					return err
+				}
+
+				return nil
+			},
+		},
 		useGroupAndIdentifier(a, &a.DNS, &a.Name),
 		{
 			Call: func() error {

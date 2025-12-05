@@ -17,7 +17,7 @@ func init() {
 }
 
 type Notification interface {
-	Push(risk Risk)
+	Push(risk Risk) error
 	CreateTicket(risk Risk, templateID string) (Attribute, error)
 	AssociateTicket(risk Risk, ticketID string) (Attribute, error)
 	ValidateCredentials() (map[string]any, error)
@@ -30,7 +30,7 @@ type Export interface {
 // Filter returns a boolean to indicate whether processing of this entity should be stopped
 // Methods of Filter may modify the input entity
 type Filter interface {
-	Asset(asset *Asset) bool
+	Asset(asset Assetlike) bool
 	Risk(risk *Risk) bool
 }
 
@@ -54,6 +54,13 @@ type HasURL interface {
 // If the resource does not have a secret, it will return an empty string
 type HasSecret interface {
 	GetSecret() string
+}
+
+// Partitioned is an interface for models that support custom partition key generation.
+// This is used for load distribution across SQS FIFO message groups or similar partitioning needs.
+// Models that don't implement this interface will fall back to using their Key for partitioning.
+type Partitioned interface {
+	GetPartitionKey() string
 }
 
 // TableModel is a noop interface that is used to make DynamoDB inserts type-safe

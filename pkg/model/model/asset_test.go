@@ -10,6 +10,100 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestAsset_Visit(t *testing.T) {
+	tests := []struct {
+		name     string
+		existing Asset
+		update   Asset
+		expected Asset
+	}{
+		{
+			name:     "basic visit",
+			existing: Asset{DNS: "example.com", Name: "1.2.3.4"},
+			update:   Asset{DNS: "example.com", Name: "1.2.3.4"},
+			expected: Asset{DNS: "example.com", Name: "1.2.3.4"},
+		},
+		{
+			name:     "update private",
+			existing: Asset{DNS: "example.com", Name: "1.2.3.4"},
+			update:   Asset{DNS: "example.com", Name: "1.2.3.4", Private: true},
+			expected: Asset{DNS: "example.com", Name: "1.2.3.4", Private: true},
+		},
+		{
+			name:     "update private (reverse)",
+			existing: Asset{DNS: "example.com", Name: "1.2.3.4", Private: true},
+			update:   Asset{DNS: "example.com", Name: "1.2.3.4"},
+			expected: Asset{DNS: "example.com", Name: "1.2.3.4"},
+		},
+		{
+			name:     "promote to seed",
+			existing: Asset{DNS: "example.com", Name: "1.2.3.4"},
+			update:   Asset{DNS: "example.com", Name: "1.2.3.4", BaseAsset: BaseAsset{Source: SeedSource}},
+			expected: Asset{DNS: "example.com", Name: "1.2.3.4", BaseAsset: BaseAsset{Source: SeedSource}},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.existing.Visit(&tt.update)
+
+			assert.Equal(t, tt.expected.Created, tt.existing.Created)
+			assert.Equal(t, tt.expected.Visited, tt.existing.Visited)
+			assert.Equal(t, tt.expected.Source, tt.existing.Source)
+			assert.Equal(t, tt.expected.Private, tt.existing.Private)
+			assert.Equal(t, tt.expected.Origins, tt.existing.Origins)
+			assert.Equal(t, tt.expected.GetLabels(), tt.existing.GetLabels())
+		})
+	}
+}
+
+func TestAsset_Merge(t *testing.T) {
+	tests := []struct {
+		name     string
+		existing Asset
+		update   Asset
+		expected Asset
+	}{
+		{
+			name:     "basic merge",
+			existing: Asset{DNS: "example.com", Name: "1.2.3.4"},
+			update:   Asset{DNS: "example.com", Name: "1.2.3.4"},
+			expected: Asset{DNS: "example.com", Name: "1.2.3.4"},
+		},
+		{
+			name:     "update private should not happen",
+			existing: Asset{DNS: "example.com", Name: "1.2.3.4"},
+			update:   Asset{DNS: "example.com", Name: "1.2.3.4", Private: true},
+			expected: Asset{DNS: "example.com", Name: "1.2.3.4"},
+		},
+		{
+			name:     "update private should not happen (reverse)",
+			existing: Asset{DNS: "example.com", Name: "1.2.3.4", Private: true},
+			update:   Asset{DNS: "example.com", Name: "1.2.3.4"},
+			expected: Asset{DNS: "example.com", Name: "1.2.3.4", Private: true},
+		},
+		{
+			name:     "promote to seed",
+			existing: Asset{DNS: "example.com", Name: "1.2.3.4"},
+			update:   Asset{DNS: "example.com", Name: "1.2.3.4", BaseAsset: BaseAsset{Source: SeedSource}},
+			expected: Asset{DNS: "example.com", Name: "1.2.3.4", BaseAsset: BaseAsset{Source: SeedSource}},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.existing.Merge(&tt.update)
+
+			assert.Equal(t, tt.expected.Created, tt.existing.Created)
+			assert.Equal(t, tt.expected.Visited, tt.existing.Visited)
+			assert.Equal(t, tt.expected.Source, tt.existing.Source)
+			assert.Equal(t, tt.expected.Private, tt.existing.Private)
+			assert.Equal(t, tt.expected.Origins, tt.existing.Origins)
+			assert.Equal(t, tt.expected.GetLabels(), tt.existing.GetLabels())
+		})
+	}
+}
+
 func TestAsset_Class(t *testing.T) {
 	tests := []struct {
 		dns         string
@@ -30,6 +124,7 @@ func TestAsset_Class(t *testing.T) {
 
 		// SelfSource
 		{"subdomain.example.com", "subdomain.example.com", SelfSource, "domain", false},
+		{"münchen.de", "münchen.de", SelfSource, "tld", false},
 		{"example.com", "0.0.0.0", SelfSource, "ipv4", false},
 		{"example.com", "2001::0000", SelfSource, "ipv6", false},
 		{"example.com", "192.168.0.1", SelfSource, "ipv4", true},
@@ -266,7 +361,7 @@ func TestAsset_DomainVerificationJob(t *testing.T) {
 
 			assert.Equal(t, job.Target.Model.Group(), tt.seed.DNS)
 			assert.Equal(t, job.Target.Model.GetStatus(), tt.seed.Status)
-			assert.Equal(t, job.Source, "whois")
+			assert.Equal(t, job.GetCapability(), "whois")
 			assert.True(t, job.Full)
 		})
 	}
@@ -293,4 +388,55 @@ func TestAsset_RFC1918(t *testing.T) {
 		assert.Equal(t, a.ASNumber, "")
 		assert.Equal(t, a.ASName, "")
 	})
+}
+
+func TestAsset_Punycode(t *testing.T) {
+	tests := []struct {
+		name     string
+		domain   string
+		expected string
+	}{
+		{
+			name:     "no unicode",
+			domain:   "example.com",
+			expected: "example.com",
+		},
+		{
+			name:     "german domain",
+			domain:   "münchen.de",
+			expected: "xn--mnchen-3ya.de",
+		},
+		{
+			name:     "french domain",
+			domain:   "français.fr",
+			expected: "xn--franais-xxa.fr",
+		},
+		{
+			name:     "arabic domain",
+			domain:   "مثال.مصر",
+			expected: "xn--mgbh0fb.xn--wgbh1c",
+		},
+		{
+			name:     "chinese domain",
+			domain:   "例子.中国",
+			expected: "xn--fsqu00a.xn--fiqs8s",
+		},
+		{
+			name:     "japanese domain",
+			domain:   "東京.jp",
+			expected: "xn--1lqs71d.jp",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			asset := NewAsset(tt.domain, tt.domain)
+
+			assert.True(t, asset.Valid(), "asset is invalid")
+			assert.Equal(t, tt.expected, asset.DNS)
+			assert.Equal(t, tt.expected, asset.Name)
+			assert.Equal(t, tt.expected, asset.Group())
+			assert.Equal(t, tt.expected, asset.Identifier())
+		})
+	}
 }

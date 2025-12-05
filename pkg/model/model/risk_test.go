@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/praetorian-inc/tabularium/pkg/model/beta"
@@ -259,4 +260,188 @@ func TestRisk_TagsMerge(t *testing.T) {
 		original.Merge(update)
 		assert.Equal(t, tags, original.Tags)
 	})
+}
+
+func TestRisk_MergePreservesCreated(t *testing.T) {
+	t.Run("Created is preserved when existing risk has Created and update has Created", func(t *testing.T) {
+		existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", TriageInfo)
+		originalCreated := "2023-01-01T00:00:00Z"
+		existingRisk.Created = originalCreated
+
+		update := Risk{
+			Status:  OpenHigh,
+			Created: "2023-12-31T23:59:59Z",
+		}
+
+		existingRisk.Merge(update)
+
+		assert.Equal(t, originalCreated, existingRisk.Created)
+		assert.NotEqual(t, update.Created, existingRisk.Created)
+	})
+
+	t.Run("Created is set when existing risk has no Created but update has Created", func(t *testing.T) {
+		existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", TriageInfo)
+		existingRisk.Created = ""
+
+		updateCreated := "2023-06-15T12:00:00Z"
+		update := Risk{
+			Status:  OpenHigh,
+			Created: updateCreated,
+		}
+
+		existingRisk.Merge(update)
+
+		assert.Equal(t, updateCreated, existingRisk.Created)
+	})
+
+	t.Run("Created is preserved when existing risk has Created but update has empty Created", func(t *testing.T) {
+		existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", TriageInfo)
+		originalCreated := "2023-01-01T00:00:00Z"
+		existingRisk.Created = originalCreated
+
+		update := Risk{
+			Status:  OpenHigh,
+			Created: "",
+		}
+
+		existingRisk.Merge(update)
+
+		assert.Equal(t, originalCreated, existingRisk.Created)
+	})
+
+	t.Run("Created is preserved when both existing and update have empty Created", func(t *testing.T) {
+		existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", TriageInfo)
+		existingRisk.Created = ""
+
+		update := Risk{
+			Status:  OpenHigh,
+			Created: "",
+		}
+
+		existingRisk.Merge(update)
+
+		assert.Empty(t, existingRisk.Created)
+	})
+
+	t.Run("Updated is set correctly when status changes", func(t *testing.T) {
+		existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", TriageInfo)
+		originalCreated := "2023-01-01T00:00:00Z"
+		originalUpdated := "2023-01-02T00:00:00Z"
+		existingRisk.Created = originalCreated
+		existingRisk.Updated = originalUpdated
+
+		update := Risk{
+			Status:  OpenHigh,
+			Created: "2023-12-31T23:59:59Z",
+		}
+
+		existingRisk.Merge(update)
+
+		assert.Equal(t, originalCreated, existingRisk.Created)
+		assert.NotEqual(t, originalUpdated, existingRisk.Updated)
+		assert.NotEmpty(t, existingRisk.Updated)
+	})
+
+	t.Run("Created preservation does not affect other merge behavior", func(t *testing.T) {
+		existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", TriageInfo)
+		originalCreated := "2023-01-01T00:00:00Z"
+		existingRisk.Created = originalCreated
+		existingRisk.Status = TriageInfo
+
+		update := Risk{
+			Status:  OpenHigh,
+			Created: "2023-12-31T23:59:59Z",
+			Tags:    Tags{Tags: []string{"new-tag"}},
+		}
+
+		existingRisk.Merge(update)
+
+		assert.Equal(t, originalCreated, existingRisk.Created)
+		assert.Equal(t, OpenHigh, existingRisk.Status)
+		assert.Equal(t, update.Tags, existingRisk.Tags)
+		assert.NotEmpty(t, existingRisk.Updated)
+	})
+
+	t.Run("Merge with full Risk object from API", func(t *testing.T) {
+		existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", TriageInfo)
+		originalCreated := "2023-01-01T10:00:00Z"
+		existingRisk.Created = originalCreated
+		existingRisk.Updated = "2023-01-02T10:00:00Z"
+
+		fullRiskUpdate := Risk{
+			Key:     existingRisk.Key,
+			Name:    existingRisk.Name,
+			Status:  OpenHigh,
+			Comment: "Updated comment",
+			Created: "2023-12-31T23:59:59Z",
+			Updated: "2023-12-31T23:59:59Z",
+			Tags:    Tags{Tags: []string{"api-tag"}},
+		}
+
+		existingRisk.Merge(fullRiskUpdate)
+
+		assert.Equal(t, originalCreated, existingRisk.Created)
+		assert.Equal(t, OpenHigh, existingRisk.Status)
+		assert.Equal(t, fullRiskUpdate.Tags, existingRisk.Tags)
+		assert.NotEqual(t, fullRiskUpdate.Updated, existingRisk.Updated)
+		assert.NotEmpty(t, existingRisk.Updated)
+	})
+
+	t.Run("Visit with Remediated risk triggers Set which calls Merge", func(t *testing.T) {
+		existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", RemediatedHigh)
+		originalCreated := "2023-01-01T00:00:00Z"
+		existingRisk.Created = originalCreated
+		existingRisk.Updated = "2023-01-02T00:00:00Z"
+		existingRisk.Visited = "2023-01-02T00:00:00Z"
+
+		newRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", TriageHigh)
+		newRiskCreated := "2023-12-31T23:59:59Z"
+		newRisk.Created = newRiskCreated
+		newRisk.Visited = "2023-12-31T23:59:59Z"
+
+		existingRisk.Visit(newRisk)
+
+		assert.Equal(t, originalCreated, existingRisk.Created, "Created should be preserved when Visit triggers Set->Merge")
+		assert.Equal(t, OpenHigh, existingRisk.Status, "Status should change from Remediated to Open")
+		assert.Equal(t, newRisk.Visited, existingRisk.Visited, "Visited should be updated from new risk")
+		assert.NotEmpty(t, existingRisk.Updated, "Updated should be set when status changes")
+	})
+}
+
+func TestRisk_SetPlexTracID(t *testing.T) {
+	asset := NewAsset("example.com", "example.com")
+	risk := NewRisk(&asset, "test-risk", TriageInfo)
+	require.Empty(t, risk.PlextracID)
+
+	risk.SetPlexTracID(123, 456, 789)
+	require.Equal(t, "#123#456#789", risk.PlextracID)
+}
+
+func TestRisk_MergeOrigins(t *testing.T) {
+	target := NewAsset("example.com", "example.com")
+	original := NewRisk(&target, "test-risk", TriageInfo)
+	original.Origins = []string{"first-origin"}
+
+	newRisk := NewRisk(&target, "test-risk", TriageInfo)
+	newRisk.Origins = []string{"second-origin"}
+
+	original.Merge(newRisk)
+
+	assert.Len(t, original.Origins, 1)
+	assert.Contains(t, original.Origins, "second-origin")
+}
+
+func TestRisk_VisitOrigins(t *testing.T) {
+	target := NewAsset("example.com", "example.com")
+	original := NewRisk(&target, "test-risk", TriageInfo)
+	original.Origins = []string{"first-origin"}
+
+	newRisk := NewRisk(&target, "test-risk", TriageInfo)
+	newRisk.Origins = []string{"second-origin"}
+
+	original.Visit(newRisk)
+
+	assert.Len(t, original.Origins, 2)
+	assert.Contains(t, original.Origins, "first-origin")
+	assert.Contains(t, original.Origins, "second-origin")
 }

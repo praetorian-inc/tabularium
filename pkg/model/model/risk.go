@@ -37,6 +37,7 @@ type Risk struct {
 	History
 	MLProperties
 	Tags
+	OriginationData
 }
 
 func init() {
@@ -105,7 +106,7 @@ func (r *Risk) Merge(update Risk) {
 		r.setStatus(update.Status)
 		r.Updated = Now()
 	}
-	if update.Created != "" {
+	if r.Created == "" {
 		r.Created = update.Created
 	}
 	if !r.Is(Triage) {
@@ -115,6 +116,7 @@ func (r *Risk) Merge(update Risk) {
 		r.ProofSufficient = update.ProofSufficient
 	}
 	r.Tags.Merge(update.Tags)
+	r.OriginationData.Merge(update.OriginationData)
 }
 
 func (r *Risk) Visit(n Risk) {
@@ -130,6 +132,7 @@ func (r *Risk) Visit(n Risk) {
 
 	r.Comment = n.Comment
 	r.Tags.Visit(n.Tags)
+	r.OriginationData.Visit(n.OriginationData)
 }
 
 func (r *Risk) SetSeverity(state string) {
@@ -231,11 +234,11 @@ func (r *Risk) SetUsername(username string) {
 	r.Username = username
 }
 
-func GeneratePlexTracID(clientID, reportID, findingID string) string {
-	return fmt.Sprintf("#%s#%s#%s", clientID, reportID, findingID)
+func GeneratePlexTracID(clientID, reportID, findingID int) string {
+	return fmt.Sprintf("#%d#%d#%d", clientID, reportID, findingID)
 }
 
-func (r *Risk) SetPlexTracID(clientID, reportID, findingID string) {
+func (r *Risk) SetPlexTracID(clientID, reportID, findingID int) {
 	r.PlextracID = GeneratePlexTracID(clientID, reportID, findingID)
 }
 

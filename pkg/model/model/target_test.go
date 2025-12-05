@@ -402,13 +402,29 @@ func TestTargetWithStatusTyping(t *testing.T) {
 	types := registry.GetTypes[Target](registry.Registry)
 	for _, tipe := range types {
 		v, ok := registry.Registry.MakeType(tipe)
-		assert.True(t, ok)
+		require.True(t, ok)
 
 		before, ok := v.(Target)
-		assert.True(t, ok)
+		require.True(t, ok)
 
 		after := before.WithStatus("test")
 
 		assert.IsType(t, before, after, "ensure that the WithStatus() method for %T returns an object of type %T", before, before)
+	}
+}
+
+func TestTargetWithStatusDoesNotModifyOriginal(t *testing.T) {
+	types := registry.GetTypes[Target](registry.Registry)
+	for _, tipe := range types {
+		v, ok := registry.Registry.MakeType(tipe)
+		require.True(t, ok)
+
+		before, ok := v.(Target)
+		require.True(t, ok)
+
+		after := before.WithStatus("new-status")
+
+		assert.NotEqual(t, before.GetStatus(), "new-status", "%T.WithStatus modified original object's status", before)
+		assert.Equal(t, after.GetStatus(), "new-status", "%T.WithStatus failed to modify new object's object's status", after)
 	}
 }

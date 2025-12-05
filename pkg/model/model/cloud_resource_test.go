@@ -23,7 +23,7 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Set initial status
-		original.BaseAsset.Status = "A"
+		original.BaseAsset.Status = Active
 
 		// Call WithStatus
 		result := original.WithStatus("AH")
@@ -45,7 +45,7 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Verify the original wasn't modified
-		if original.BaseAsset.Status != "A" {
+		if original.BaseAsset.Status != Active {
 			t.Errorf("Original status was modified, got %s, expected A", original.BaseAsset.Status)
 		}
 	})
@@ -68,7 +68,7 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Set initial status
-		original.BaseAsset.Status = "A"
+		original.BaseAsset.Status = Active
 
 		// Call WithStatus
 		result := original.WithStatus("AL")
@@ -90,7 +90,7 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Verify the original wasn't modified
-		if original.BaseAsset.Status != "A" {
+		if original.BaseAsset.Status != Active {
 			t.Errorf("Original status was modified, got %s, expected A", original.BaseAsset.Status)
 		}
 	})
@@ -111,10 +111,10 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Set initial status
-		original.BaseAsset.Status = "A"
+		original.BaseAsset.Status = Active
 
 		// Call WithStatus
-		result := original.WithStatus("AP")
+		result := original.WithStatus(ActivePassive)
 
 		// Verify the result is still a *GCPResource
 		gcpResult, ok := result.(*GCPResource)
@@ -123,7 +123,7 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Verify the status was updated
-		if gcpResult.BaseAsset.Status != "AP" {
+		if gcpResult.BaseAsset.Status != ActivePassive {
 			t.Errorf("Status not updated, got %s, expected AP", gcpResult.BaseAsset.Status)
 		}
 
@@ -133,7 +133,7 @@ func TestCloudResource_WithStatus_TypePreservation(t *testing.T) {
 		}
 
 		// Verify the original wasn't modified
-		if original.BaseAsset.Status != "A" {
+		if original.BaseAsset.Status != Active {
 			t.Errorf("Original status was modified, got %s, expected A", original.BaseAsset.Status)
 		}
 	})
@@ -525,16 +525,16 @@ func TestCloudResource_TTLUpdateLogic(t *testing.T) {
 			t.Logf("✅ TTL update worked: existing TTL updated from 9999 to %d", resource1.BaseAsset.TTL)
 		}
 
-		// Test case 3: TTL should NOT be updated when source has zero TTL
+		// Test case 3: TTL should be updated to 0 when other's TTL is 0
 		resource1.BaseAsset.TTL = 7777 // Valid existing TTL
 		resource2.BaseAsset.TTL = 0    // Zero TTL (uninitialized)
 
 		resource1.Visit(resource2)
 
-		if resource1.BaseAsset.TTL != 7777 {
-			t.Errorf("❌ TTL preservation failed: expected 7777, got %d", resource1.BaseAsset.TTL)
+		if resource1.BaseAsset.TTL != 0 {
+			t.Errorf("❌ TTL update failed: expected 0, got %d", resource1.BaseAsset.TTL)
 		} else {
-			t.Logf("✅ TTL preservation worked: existing TTL preserved when source has zero TTL")
+			t.Logf("✅ TTL update succeded: TTL updated to 0")
 		}
 	})
 

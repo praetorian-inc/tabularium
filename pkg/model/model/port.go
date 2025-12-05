@@ -88,8 +88,9 @@ func (p *Port) GetStatus() string {
 }
 
 func (p *Port) WithStatus(status string) Target {
-	p.Status = status
-	return p
+	cp := *p
+	cp.Status = status
+	return &cp
 }
 
 func (p *Port) IsStatus(value string) bool {
@@ -108,6 +109,13 @@ func (p *Port) Identifier() string {
 func (p *Port) IsPrivate() bool {
 	parent := p.Asset()
 	return parent.IsPrivate()
+}
+
+// GetPartitionKey returns the parent asset's name for partitioning.
+// This ensures all ports on the same asset are partitioned together,
+// allowing efficient processing of related port scanning jobs.
+func (p *Port) GetPartitionKey() string {
+	return p.Asset().Name
 }
 
 func (p *Port) Defaulted() {

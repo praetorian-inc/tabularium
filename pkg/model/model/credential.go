@@ -28,11 +28,11 @@ const (
 	AWSCredential                     CredentialType = "aws"
 	GCloudCredential                  CredentialType = "gcloud"
 	AzureCredential                   CredentialType = "azure"
-	SSHKeyCredential                  CredentialType = "ssh-key"                // SSH private key
-	JSONCredential                    CredentialType = "json-credential"        // Generic JSON credential format
-	AegisConfigCredential             CredentialType = "aegis-config"           // Aegis config credential
-	ActiveDirectoryCredential         CredentialType = "active-directory"       // Active Directory credentials (username, password, domain) for Aegis capabilities
-	BurpSuiteAuthenticationCredential CredentialType = "burp-authentication"    // Internal BurpSuite instance authentication credentials
+	SSHKeyCredential                  CredentialType = "ssh-key"             // SSH private key
+	JSONCredential                    CredentialType = "json-credential"     // Generic JSON credential format
+	AegisConfigCredential             CredentialType = "aegis-config"        // Aegis config credential
+	ActiveDirectoryCredential         CredentialType = "active-directory"    // Active Directory credentials (username, password, domain) for Aegis capabilities
+	BurpSuiteAuthenticationCredential CredentialType = "burp-authentication" // Internal BurpSuite instance authentication credentials
 
 	// API Keys
 	ApolloCredential                CredentialType = "apollo_api" // Apollo.io API key
@@ -42,6 +42,7 @@ const (
 	BitbucketCredential             CredentialType = "bitbucket"               // Bitbucket API key
 	BuiltWithCredential             CredentialType = "builtwith"               // Built with credentials
 	CloudflareCredential            CredentialType = "cloudflare"              // Cloudflare API key
+	FastlyCredential                CredentialType = "fastly"                  // Fastly API token
 	DigitalOceanCredential          CredentialType = "digitalocean"            // DigitalOcean API key
 	GithubCredential                CredentialType = "github"                  // Github API key
 	GitlabCredential                CredentialType = "gitlab"                  // Gitlab API key
@@ -59,6 +60,7 @@ const (
 	WhoxyCredential                 CredentialType = "whoxy"                   // Whoxy API key
 	XpanseCredential                CredentialType = "xpanse"                  // Xpanse credentials
 	InteractSHCredential            CredentialType = "interactsh"
+	RedTeamGcpCredential            CredentialType = "red_team_gcp_service_account_key" // GCP service account key for Red Team deployments
 
 	LegacyCloudCredential CredentialType = "legacy-cloud" // Legacy cloud credentials (AWS, GCP, Azure)
 

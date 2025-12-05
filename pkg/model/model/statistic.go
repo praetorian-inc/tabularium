@@ -53,7 +53,15 @@ func (s *Statistic) GetHooks() []registry.Hook {
 	return []registry.Hook{
 		{
 			Call: func() error {
-				s.Key = fmt.Sprintf("#statistic#%s#%s#%s#%s", s.Type, s.Name, s.Created, s.Value)
+				tipe := s.Type
+				name := s.Name
+				value := s.Value
+				created := s.Created
+
+				template := fmt.Sprintf("#statistic#%s#%s#%s#%%s", tipe, name, created)
+				shortenedValue := value[:min(1024-len(template), len(value))]
+
+				s.Key = fmt.Sprintf(template, shortenedValue)
 				return nil
 			},
 		},

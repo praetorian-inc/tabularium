@@ -151,8 +151,9 @@ func (p *Person) GetStatus() string {
 }
 
 func (p *Person) WithStatus(status string) Target {
-	p.Status = status
-	return p
+	cp := *p
+	cp.Status = status
+	return &cp
 }
 
 func (p *Person) Group() string {
