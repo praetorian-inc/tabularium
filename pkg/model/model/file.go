@@ -89,7 +89,7 @@ func (f *File) GetKey() string {
 func (f *File) Defaulted() {
 	f.Updated = Now()
 	f.Overwrite = true
-	f.TTL = Future(12)
+	f.TTL = 0
 }
 
 func (f *File) GetHooks() []registry.Hook {
