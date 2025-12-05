@@ -39,3 +39,14 @@ func GetLabel(label string) string {
 	}
 	return cases.Title(language.English).String(lowercase)
 }
+
+func RemoveSeedLabel(labels []string) []string {
+	seedlessLabels := []string{}
+	for _, l := range labels {
+		if l != SeedLabel {
+			seedlessLabels = append(seedlessLabels, l)
+		}
+	}
+
+	return seedlessLabels
+}

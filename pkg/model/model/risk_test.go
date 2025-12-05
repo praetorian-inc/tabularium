@@ -416,3 +416,32 @@ func TestRisk_SetPlexTracID(t *testing.T) {
 	risk.SetPlexTracID(123, 456, 789)
 	require.Equal(t, "#123#456#789", risk.PlextracID)
 }
+
+func TestRisk_MergeOrigins(t *testing.T) {
+	target := NewAsset("example.com", "example.com")
+	original := NewRisk(&target, "test-risk", TriageInfo)
+	original.Origins = []string{"first-origin"}
+
+	newRisk := NewRisk(&target, "test-risk", TriageInfo)
+	newRisk.Origins = []string{"second-origin"}
+
+	original.Merge(newRisk)
+
+	assert.Len(t, original.Origins, 1)
+	assert.Contains(t, original.Origins, "second-origin")
+}
+
+func TestRisk_VisitOrigins(t *testing.T) {
+	target := NewAsset("example.com", "example.com")
+	original := NewRisk(&target, "test-risk", TriageInfo)
+	original.Origins = []string{"first-origin"}
+
+	newRisk := NewRisk(&target, "test-risk", TriageInfo)
+	newRisk.Origins = []string{"second-origin"}
+
+	original.Visit(newRisk)
+
+	assert.Len(t, original.Origins, 2)
+	assert.Contains(t, original.Origins, "first-origin")
+	assert.Contains(t, original.Origins, "second-origin")
+}
