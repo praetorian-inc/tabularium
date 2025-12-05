@@ -18,6 +18,7 @@ func init() {
 
 type Notification interface {
 	Push(risk Risk) error
+	PushThreatNotification(vuln Vulnerability) error
 	CreateTicket(risk Risk, templateID string) (Attribute, error)
 	AssociateTicket(risk Risk, ticketID string) (Attribute, error)
 	ValidateCredentials() (map[string]any, error)
