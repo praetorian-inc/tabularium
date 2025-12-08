@@ -158,6 +158,12 @@ func (ad *ADObject) GetHooks() []registry.Hook {
 				return nil
 			},
 		},
+		{
+			Call: func() error {
+				ad.TTL = 0
+				return nil
+			},
+		},
 		setGroupAndIdentifier(ad, &ad.Domain, &ad.ObjectID),
 	}
 }
@@ -197,7 +203,6 @@ func NewADObject(domain, objectID, distinguishedName, objectLabel string) ADObje
 
 	ad.Defaulted()
 	registry.CallHooks(&ad)
-	ad.TTL = 0
 
 	return ad
 }
