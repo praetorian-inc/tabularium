@@ -154,7 +154,6 @@ func (ad *ADObject) GetHooks() []registry.Hook {
 				if strings.HasPrefix(ad.ObjectID, "S-") {
 					ad.SID = ad.ObjectID
 				}
-				ad.TTL = 0
 
 				return nil
 			},
