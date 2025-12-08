@@ -522,10 +522,10 @@ func TestAWSResource_Visit(t *testing.T) {
 	require.NoError(t, err)
 
 	other, err := NewAWSResource("arn:aws:organizations::992382775570:account/o-a6zw2rb1jz/992382775570", "992382775570", AWSAccount, nil)
-	other.OrgPolicyName = "other-file"
+	other.OrgPolicyFilename = "other-file"
 	require.NoError(t, err)
 
 	existing.Merge(&other)
 
-	assert.Equal(t, existing.OrgPolicyName, "other-file")
+	assert.Equal(t, existing.OrgPolicyFilename, "other-file")
 }

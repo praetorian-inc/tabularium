@@ -16,8 +16,8 @@ const (
 type AWSResource struct {
 	CloudResource
 
-	OrgPolicyName string `neo4j:"orgPolicyName" json:"orgPolicyName"`
-	OrgPolicy     []byte `neo4j:"-" json:"orgPolicy"`
+	OrgPolicyFilename string `neo4j:"orgPolicyFilename" json:"orgPolicyFilename"`
+	OrgPolicy         []byte `neo4j:"-" json:"orgPolicy"`
 }
 
 func init() {
@@ -85,7 +85,7 @@ func (a *AWSResource) WithStatus(status string) Target {
 
 func (c *AWSResource) SetOrgPolicy(policy []byte) {
 	c.OrgPolicy = policy
-	c.OrgPolicyName = c.BuildOrgPolicyFilename()
+	c.OrgPolicyFilename = c.BuildOrgPolicyFilename()
 }
 
 func (c *AWSResource) GetOrgPolicy() []byte {
@@ -93,7 +93,7 @@ func (c *AWSResource) GetOrgPolicy() []byte {
 }
 
 func (c *AWSResource) HydratableFilepath() string {
-	return c.OrgPolicyName
+	return c.OrgPolicyFilename
 }
 
 func (c *AWSResource) Hydrate(data []byte) error {
@@ -109,7 +109,7 @@ func (c *AWSResource) HydratedFile() File {
 	file := NewFile(c.BuildOrgPolicyFilename())
 	file.Bytes = c.OrgPolicy
 
-	c.OrgPolicyName = file.Name
+	c.OrgPolicyFilename = file.Name
 	return file
 }
 
@@ -117,7 +117,7 @@ func (c *AWSResource) Dehydrate() Hydratable {
 	dehydrated := *c
 
 	if dehydrated.OrgPolicy != nil {
-		dehydrated.OrgPolicyName = c.BuildOrgPolicyFilename()
+		dehydrated.OrgPolicyFilename = c.BuildOrgPolicyFilename()
 	}
 
 	dehydrated.OrgPolicy = nil
@@ -134,8 +134,8 @@ func (a *AWSResource) Visit(other Assetlike) {
 		return
 	}
 
-	if otherResource.OrgPolicyName != "" {
-		a.OrgPolicyName = otherResource.OrgPolicyName
+	if otherResource.OrgPolicyFilename != "" {
+		a.OrgPolicyFilename = otherResource.OrgPolicyFilename
 	}
 
 	a.CloudResource.Visit(&otherResource.CloudResource)
@@ -148,8 +148,8 @@ func (a *AWSResource) Merge(other Assetlike) {
 		return
 	}
 
-	if otherResource.OrgPolicyName != "" {
-		a.OrgPolicyName = otherResource.OrgPolicyName
+	if otherResource.OrgPolicyFilename != "" {
+		a.OrgPolicyFilename = otherResource.OrgPolicyFilename
 	}
 
 	a.CloudResource.Merge(&otherResource.CloudResource)
