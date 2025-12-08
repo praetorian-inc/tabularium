@@ -503,7 +503,7 @@ func TestAWSResource_HydrateDehydrate(t *testing.T) {
 
 	gotFilepath = resource.HydratableFilepath()
 	expectedFilepath := "awsresource/992382775570/arn_aws_organizations__992382775570_account_o-a6zw2rb1jz_992382775570/org-policies.json"
-	assert.Equal(t, gotFilepath, expectedFilepath)
+	assert.Equal(t, expectedFilepath, gotFilepath)
 
 	expectedFile := NewFile(expectedFilepath)
 	expectedFile.Bytes = []byte(`{"dummy": "test policy"}`)

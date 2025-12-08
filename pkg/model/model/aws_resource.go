@@ -97,7 +97,7 @@ func (c *AWSResource) HydratableFilepath() string {
 }
 
 func (c *AWSResource) Hydrate(data []byte) error {
-	c.OrgPolicy = data
+	c.SetOrgPolicy(data)
 	return nil
 }
 
