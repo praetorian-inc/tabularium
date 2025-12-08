@@ -1444,6 +1444,8 @@ components:
       properties:
         BaseAsset:
           type: object
+        LabelSettableEmbed:
+          type: object
         dns:
           description: The DNS name, or group identifier associated with this asset.
           example: example.com
@@ -1460,6 +1462,7 @@ components:
           type: boolean
       required:
       - BaseAsset
+      - LabelSettableEmbed
       - dns
       - name
       - private

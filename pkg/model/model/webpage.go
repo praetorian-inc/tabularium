@@ -77,7 +77,8 @@ type WebpageDetails struct {
 }
 
 type WebpageRequest struct {
-	RawURL         string              `json:"raw_url" desc:"The raw URL of the request." example:"https://example.com/path?query=value"`
+	OriginalURL    string              `json:"original_url" desc:"The original URL of the request before taking into account redirects like Location headers." example:"https://example.com/path?query=value"`
+	RawURL         string              `json:"raw_url" desc:"The raw URL of the request after any redirects." example:"https://example.com/path?query=value"`
 	Method         string              `json:"method" desc:"HTTP method used for the request (e.g., GET, POST)." example:"GET"`
 	Headers        map[string][]string `json:"headers" desc:"Headers sent in the request." example:"{\"User-Agent\": [\"TabulariumCrawler/1.0\"]}"`
 	Body           string              `json:"body" desc:"Body content of the request, if applicable." example:"{\"key\": \"value\"}"`
