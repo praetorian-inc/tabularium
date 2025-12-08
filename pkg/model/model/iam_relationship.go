@@ -6,22 +6,22 @@ import (
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&IamRelationship{})
+	registry.Registry.MustRegisterModel(&IAMRelationship{})
 }
 
-type IamRelationship struct {
+type IAMRelationship struct {
 	*BaseRelationship
 	Permission string `neo4j:"permission" json:"permission"`
 }
 
-func NewIamRelationship(source, target GraphModel, label string) *IamRelationship {
-	return &IamRelationship{
+func NewIAMRelationship(source, target GraphModel, label string) *IAMRelationship {
+	return &IAMRelationship{
 		BaseRelationship: NewBaseRelationship(source, target, label),
 		Permission:       label,
 	}
 }
 
-func (ir *IamRelationship) Label() string {
+func (ir *IAMRelationship) Label() string {
 	sanitized := specialCharRegex.ReplaceAllString(ir.Permission, "_")
 	return strings.ToUpper(sanitized)
 }
