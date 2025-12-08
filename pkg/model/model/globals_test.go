@@ -285,7 +285,7 @@ func TestHydratableModels(t *testing.T) {
 		err = resource.Hydrate(policyBytes)
 		require.NoError(t, err)
 
-		expectedPath := resource.GetOrgPolicyFilename()
+		expectedPath := resource.OrgPolicyName
 		assert.Equal(t, expectedPath, resource.HydratableFilepath())
 
 		file := resource.HydratedFile()
@@ -304,7 +304,7 @@ func TestHydratableModels(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, policyBytes, newInstance.OrgPolicy)
-		assert.Equal(t, newInstance.GetOrgPolicyFilename(), newInstance.HydratableFilepath())
+		assert.Equal(t, newInstance.OrgPolicyName, newInstance.HydratableFilepath())
 	})
 
 	t.Run("file hydration flow", func(t *testing.T) {

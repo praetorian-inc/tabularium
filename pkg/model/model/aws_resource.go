@@ -16,8 +16,8 @@ const (
 type AWSResource struct {
 	CloudResource
 
-	orgPolicyName string `neo4j:"orgPolicyName" json:"orgPolicyName"`
-	orgPolicy     []byte `neo4j:"-" json:"orgPolicy"`
+	OrgPolicyName string `neo4j:"orgPolicyName" json:"orgPolicyName"`
+	OrgPolicy     []byte `neo4j:"-" json:"orgPolicy"`
 }
 
 func init() {
@@ -84,43 +84,43 @@ func (a *AWSResource) WithStatus(status string) Target {
 }
 
 func (c *AWSResource) SetOrgPolicy(policy []byte) {
-	c.orgPolicy = policy
-	c.orgPolicyName = c.BuildOrgPolicyFilename()
+	c.OrgPolicy = policy
+	c.OrgPolicyName = c.BuildOrgPolicyFilename()
 }
 
 func (c *AWSResource) GetOrgPolicy() []byte {
-	return c.orgPolicy
+	return c.OrgPolicy
 }
 
 func (c *AWSResource) HydratableFilepath() string {
-	return c.orgPolicyName
+	return c.OrgPolicyName
 }
 
 func (c *AWSResource) Hydrate(data []byte) error {
-	c.orgPolicy = data
+	c.OrgPolicy = data
 	return nil
 }
 
 func (c *AWSResource) HydratedFile() File {
-	if c.orgPolicy == nil {
+	if c.OrgPolicy == nil {
 		return File{}
 	}
 
 	file := NewFile(c.BuildOrgPolicyFilename())
-	file.Bytes = c.orgPolicy
+	file.Bytes = c.OrgPolicy
 
-	c.orgPolicyName = file.Name
+	c.OrgPolicyName = file.Name
 	return file
 }
 
 func (c *AWSResource) Dehydrate() Hydratable {
 	dehydrated := *c
 
-	if dehydrated.orgPolicy != nil {
-		dehydrated.orgPolicyName = c.BuildOrgPolicyFilename()
+	if dehydrated.OrgPolicy != nil {
+		dehydrated.OrgPolicyName = c.BuildOrgPolicyFilename()
 	}
 
-	dehydrated.orgPolicy = nil
+	dehydrated.OrgPolicy = nil
 	return &dehydrated
 }
 
@@ -134,8 +134,8 @@ func (a *AWSResource) Visit(other Assetlike) {
 		return
 	}
 
-	if otherResource.orgPolicyName != "" {
-		a.orgPolicyName = otherResource.orgPolicyName
+	if otherResource.OrgPolicyName != "" {
+		a.OrgPolicyName = otherResource.OrgPolicyName
 	}
 
 	a.CloudResource.Visit(&otherResource.CloudResource)
@@ -148,8 +148,8 @@ func (a *AWSResource) Merge(other Assetlike) {
 		return
 	}
 
-	if otherResource.orgPolicyName != "" {
-		a.orgPolicyName = otherResource.orgPolicyName
+	if otherResource.OrgPolicyName != "" {
+		a.OrgPolicyName = otherResource.OrgPolicyName
 	}
 
 	a.CloudResource.Merge(&otherResource.CloudResource)
