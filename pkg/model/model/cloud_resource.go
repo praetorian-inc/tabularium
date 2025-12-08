@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/gob"
 	"fmt"
+	"maps"
 	"regexp"
 	"slices"
 	"strings"
@@ -143,11 +144,7 @@ func (c *CloudResource) Visit(other *CloudResource) {
 		c.Properties = make(map[string]any)
 	}
 	if other.Properties != nil {
-		for k, v := range other.Properties {
-			if _, exists := c.Properties[k]; !exists {
-				c.Properties[k] = v
-			}
-		}
+		maps.Copy(c.Properties, other.Properties)
 	}
 	c.OriginationData.Visit(other.OriginationData)
 }

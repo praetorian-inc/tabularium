@@ -196,8 +196,6 @@ func (a *GCPResource) NewAssets() []Asset {
 	return assets
 }
 
-// TODO: worth revisiting logic; currently properties only include public
-// IsPrivate determines if this GCP resource is private based on its IP/URL
 func (a *GCPResource) IsPrivate() bool {
 	return false
 }

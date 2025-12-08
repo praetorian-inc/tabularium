@@ -1550,9 +1550,12 @@ components:
           items:
             type: integer
           type: array
+        orgPolicyFilename:
+          type: string
       required:
       - CloudResource
       - orgPolicy
+      - orgPolicyFilename
       type: object
     azureresource:
       description: ' ()'
