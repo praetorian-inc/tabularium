@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
@@ -59,6 +60,22 @@ func init() {
 var (
 	adObjectKeyPattern = regexp.MustCompile(`(?i)^#ad[a-z]+#[^#]+#[A-FS0-9-]+$`)
 )
+
+const TierZeroTag = "tier-zero"
+
+var TierZeroSIDSuffixes = []string{
+	"-500", // Administrator Account
+	"-512", // Domain Admins
+	"-516", // Domain Controllers
+	"-518", // Schema Admins
+	"-519", // Enterprise Admins
+	"-526", // Key Admins
+	"-527", // Enterprise Key Admins
+	"-551", // Backup Operators
+	"-544", // Administrators
+}
+
+var TierZeroObjectIDSuffix = "-S-1-5-9" // Enterprise Domain Controllers
 
 type ADObject struct {
 	BaseAsset
@@ -155,10 +172,32 @@ func (ad *ADObject) GetHooks() []registry.Hook {
 					ad.SID = ad.ObjectID
 				}
 
+				ad.checkIfTierZero()
 				return nil
 			},
 		},
 		setGroupAndIdentifier(ad, &ad.Domain, &ad.ObjectID),
+	}
+}
+
+func (ad *ADObject) checkIfTierZero() {
+	if slices.Contains(ad.Tags.Tags, TierZeroTag) {
+		return
+	}
+
+	if strings.HasSuffix(ad.ObjectID, TierZeroObjectIDSuffix) {
+		ad.Tags.Tags = append(ad.Tags.Tags, TierZeroTag)
+		return
+	}
+
+	if ad.SID == "" {
+		return
+	}
+	for _, suffix := range TierZeroSIDSuffixes {
+		if strings.HasSuffix(ad.SID, suffix) {
+			ad.Tags.Tags = append(ad.Tags.Tags, TierZeroTag)
+			return
+		}
 	}
 }
 
