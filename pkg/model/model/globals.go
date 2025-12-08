@@ -97,6 +97,7 @@ type AgentSendable interface {
 }
 
 type Hydratable interface {
+	registry.Model
 	Hydrate([]byte) error
 	HydratableFilepath() string
 	HydratedFile() File

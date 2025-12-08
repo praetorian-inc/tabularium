@@ -181,7 +181,6 @@ func (a *AzureResource) WithStatus(status string) Target {
 	return &ret
 }
 
-// IsPrivate determines if this Azure resource is private based on its IP/URL
 func (a *AzureResource) IsPrivate() bool {
 	return false
 }

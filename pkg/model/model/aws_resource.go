@@ -15,7 +15,9 @@ const (
 
 type AWSResource struct {
 	CloudResource
-	OrgPolicy []byte `neo4j:"-" json:"orgPolicy"`
+
+	OrgPolicyFilename string `neo4j:"orgPolicyFilename" json:"orgPolicyFilename"`
+	OrgPolicy         []byte `neo4j:"-" json:"orgPolicy"`
 }
 
 func init() {
@@ -81,43 +83,59 @@ func (a *AWSResource) WithStatus(status string) Target {
 	return &ret
 }
 
-func (c *AWSResource) HydratableFilepath() string {
-	if c.OrgPolicy == nil {
-		return SKIP_HYDRATION
-	}
-	return c.GetOrgPolicyFilename()
+func (c *AWSResource) SetOrgPolicy(policy []byte) {
+	c.OrgPolicy = policy
+	c.OrgPolicyFilename = c.BuildOrgPolicyFilename()
 }
 
-func (a *AWSResource) GetOrgPolicyFilename() string {
-	return fmt.Sprintf("awsresource/%s/%s/org-policies.json", a.AccountRef, RemoveReservedCharacters(a.Identifier()))
+func (c *AWSResource) GetOrgPolicy() []byte {
+	return c.OrgPolicy
+}
+
+func (c *AWSResource) HydratableFilepath() string {
+	return c.OrgPolicyFilename
 }
 
 func (c *AWSResource) Hydrate(data []byte) error {
-	c.OrgPolicy = data
+	c.SetOrgPolicy(data)
 	return nil
 }
 
 func (c *AWSResource) HydratedFile() File {
-	filepath := c.HydratableFilepath()
-	if filepath == "" {
+	if c.OrgPolicy == nil {
 		return File{}
 	}
 
-	file := NewFile(filepath)
+	file := NewFile(c.BuildOrgPolicyFilename())
 	file.Bytes = c.OrgPolicy
+
+	c.OrgPolicyFilename = file.Name
 	return file
 }
 
 func (c *AWSResource) Dehydrate() Hydratable {
 	dehydrated := *c
+
+	if dehydrated.OrgPolicy != nil {
+		dehydrated.OrgPolicyFilename = c.BuildOrgPolicyFilename()
+	}
+
 	dehydrated.OrgPolicy = nil
 	return &dehydrated
+}
+
+func (a *AWSResource) BuildOrgPolicyFilename() string {
+	return fmt.Sprintf("awsresource/%s/%s/org-policies.json", a.AccountRef, RemoveReservedCharacters(a.Identifier()))
 }
 
 func (a *AWSResource) Visit(other Assetlike) {
 	otherResource, ok := other.(*AWSResource)
 	if !ok {
 		return
+	}
+
+	if otherResource.OrgPolicyFilename != "" {
+		a.OrgPolicyFilename = otherResource.OrgPolicyFilename
 	}
 
 	a.CloudResource.Visit(&otherResource.CloudResource)
@@ -128,6 +146,10 @@ func (a *AWSResource) Merge(other Assetlike) {
 	otherResource, ok := other.(*AWSResource)
 	if !ok {
 		return
+	}
+
+	if otherResource.OrgPolicyFilename != "" {
+		a.OrgPolicyFilename = otherResource.OrgPolicyFilename
 	}
 
 	a.CloudResource.Merge(&otherResource.CloudResource)
@@ -217,7 +239,6 @@ func (a *AWSResource) extractService() string {
 	return "Unknown Service"
 }
 
-// IsPrivate determines if this AWS resource is private based on its IP/URL
 func (a *AWSResource) IsPrivate() bool {
 	return false
 }
