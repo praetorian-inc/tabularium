@@ -64,18 +64,17 @@ var (
 const TierZeroTag = "tier-zero"
 
 var TierZeroSIDSuffixes = []string{
-	"-500", // Administrator Account
-	"-512", // Domain Admins
-	"-516", // Domain Controllers
-	"-518", // Schema Admins
-	"-519", // Enterprise Admins
-	"-526", // Key Admins
-	"-527", // Enterprise Key Admins
-	"-551", // Backup Operators
-	"-544", // Administrators
+	"-500",   // Administrator Account
+	"-512",   // Domain Admins
+	"-516",   // Domain Controllers
+	"-518",   // Schema Admins
+	"-519",   // Enterprise Admins
+	"-1-5-9", // Enterprise Domain Controllers
+	"-526",   // Key Admins
+	"-527",   // Enterprise Key Admins
+	"-551",   // Backup Operators
+	"-544",   // Administrators
 }
-
-var TierZeroObjectIDSuffix = "-S-1-5-9" // Enterprise Domain Controllers
 
 type ADObject struct {
 	BaseAsset
@@ -172,7 +171,7 @@ func (ad *ADObject) GetHooks() []registry.Hook {
 					ad.SID = ad.ObjectID
 				}
 
-				ad.checkIfTierZero()
+				ad.tagIfTierZero()
 				return nil
 			},
 		},
@@ -180,13 +179,8 @@ func (ad *ADObject) GetHooks() []registry.Hook {
 	}
 }
 
-func (ad *ADObject) checkIfTierZero() {
+func (ad *ADObject) tagIfTierZero() {
 	if slices.Contains(ad.Tags.Tags, TierZeroTag) {
-		return
-	}
-
-	if strings.HasSuffix(ad.ObjectID, TierZeroObjectIDSuffix) {
-		ad.Tags.Tags = append(ad.Tags.Tags, TierZeroTag)
 		return
 	}
 

@@ -675,8 +675,8 @@ func TestADObject_TierZeroTagging(t *testing.T) {
 		description   string
 	}{
 		{
-			name:          "Enterprise Domain Controllers (-S-1-5-9)",
-			objectID:      "SOME.CORP-S-1-5-9",
+			name:          "Enterprise Domain Controllers (1-5-9)",
+			objectID:      "S-1-5-9",
 			shouldHaveTag: true,
 			description:   "Should tag Enterprise Domain Controllers",
 		},
