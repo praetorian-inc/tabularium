@@ -64,16 +64,16 @@ var (
 const TierZeroTag = "tier-zero"
 
 var TierZeroSIDSuffixes = []string{
-	"-500",   // Administrator Account
-	"-512",   // Domain Admins
-	"-516",   // Domain Controllers
-	"-518",   // Schema Admins
-	"-519",   // Enterprise Admins
-	"-1-5-9", // Enterprise Domain Controllers
-	"-526",   // Key Admins
-	"-527",   // Enterprise Key Admins
-	"-551",   // Backup Operators
-	"-544",   // Administrators
+	"S-1-5-9", // Enterprise Domain Controllers
+	"-500",    // Administrator Account
+	"-512",    // Domain Admins
+	"-516",    // Domain Controllers
+	"-518",    // Schema Admins
+	"-519",    // Enterprise Admins
+	"-526",    // Key Admins
+	"-527",    // Enterprise Key Admins
+	"-544",    // Administrators
+	"-551",    // Backup Operators
 }
 
 type ADObject struct {
