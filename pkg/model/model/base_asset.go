@@ -114,7 +114,7 @@ func (a *BaseAsset) Visit(o Assetlike) {
 	if a.IsStatus(Active) && a.TTL != 0 {
 		a.TTL = other.TTL
 	}
-	if other.Source == SeedSource {
+	if IsPermanentSource(other.Source) {
 		a.TTL = 0
 	}
 	if other.TTL == 0 {
@@ -130,7 +130,7 @@ func (a *BaseAsset) Visit(o Assetlike) {
 }
 
 func (a *BaseAsset) System() bool {
-	return a.Source != SeedSource && a.Source != AccountSource
+	return !IsPermanentSource(a.Source)
 }
 
 func (a *BaseAsset) State() string {
