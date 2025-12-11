@@ -252,8 +252,8 @@ func init() {
 
 type ADRelationship struct {
 	*BaseRelationship
-	RelationshipType string `neo4j:"relationshipType" json:"relationshipType"`
-	Enforced         *bool  `neo4j:"enforced" json:"enforced,omitempty" desc:"Whether GPO link is enforced (no override). Only applicable to GPLink relationships" example:"true"`
+	RelationshipType string       `neo4j:"relationshipType" json:"relationshipType"`
+	Enforced         *GobSafeBool `neo4j:"enforced" json:"enforced,omitempty" desc:"Whether GPO link is enforced (no override). Only applicable to GPLink relationships" example:"true"`
 }
 
 func (ar *ADRelationship) GetDescription() string {
@@ -279,6 +279,11 @@ func (ar *ADRelationship) Visit(o GraphRelationship) {
 	}
 
 	ar.BaseRelationship.Visit(other)
+}
+
+func (ar *ADRelationship) SetEnforced(value bool) {
+	gsb := GobSafeBool(value)
+	ar.Enforced = &gsb
 }
 
 func NewADRelationship(source, target GraphModel, label string) GraphRelationship {
