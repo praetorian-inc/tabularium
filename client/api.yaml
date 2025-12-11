@@ -4664,6 +4664,8 @@ components:
       properties:
         BaseModel:
           type: object
+        ThreatNotificationMetadata:
+          type: object
         created:
           description: Date the vulnerability was first created/published (from NVD).
           example: "2023-11-01T00:00:00Z"
@@ -4727,6 +4729,7 @@ components:
           type: integer
       required:
       - BaseModel
+      - ThreatNotificationMetadata
       - exploit
       - id
       - kev
