@@ -253,6 +253,7 @@ func init() {
 type ADRelationship struct {
 	*BaseRelationship
 	RelationshipType string `neo4j:"-" json:"relationshipType"`
+	Enforced         *bool  `neo4j:"enforced" json:"enforced,omitempty" desc:"Whether GPO link is enforced (no override). Only applicable to GPLink relationships" example:"true"`
 }
 
 func (ar *ADRelationship) GetDescription() string {
