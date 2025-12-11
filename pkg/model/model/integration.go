@@ -54,6 +54,7 @@ func (i *Integration) WithStatus(status string) Target {
 func (i *Integration) Defaulted() {
 	i.BaseAsset.Defaulted()
 	i.Source = AccountSource
+	i.TTL = 0
 }
 
 func (i *Integration) GetHooks() []registry.Hook {
@@ -93,6 +94,7 @@ func NewCloudOrIntegration(name, value string) Assetlike {
 		a := NewAsset(name, value)
 		a.Source = AccountSource
 		a.Class = a.GetClass()
+		a.TTL = 0
 		return &a
 	} else {
 		a := NewIntegration(name, value)
