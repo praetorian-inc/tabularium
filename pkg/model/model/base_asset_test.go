@@ -138,6 +138,28 @@ func TestBaseAsset_Visit(t *testing.T) {
 			},
 			wantTags: []string{"tag1", "tag2", "tag3"},
 		},
+		{
+			name: "existing: non permanent source, other: permanent source",
+			baseAsset: BaseAsset{
+				Source: "self",
+			},
+			otherAsset: BaseAsset{
+				Source: AccountSource,
+				TTL:    0,
+			},
+			wantTTL: true,
+		},
+		{
+			name: "existing: non permanent source, other: permanent source",
+			baseAsset: BaseAsset{
+				Source: "self",
+			},
+			otherAsset: BaseAsset{
+				Source: SeedSource,
+				TTL:    0,
+			},
+			wantTTL: true,
+		},
 	}
 
 	for _, tt := range tests {
