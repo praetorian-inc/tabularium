@@ -315,6 +315,7 @@ func (w *Webpage) CreateParent() *WebApplication {
 
 	baseURL := fmt.Sprintf("%s://%s", parsedURL.Scheme, parsedURL.Host)
 	webapp := NewWebApplication(baseURL, baseURL)
+	webapp.Status = Pending
 	return &webapp
 }
 
