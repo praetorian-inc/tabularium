@@ -12,11 +12,22 @@ func init() {
 	registry.Registry.MustRegisterModel(&Repository{})
 }
 
+type RepositoryTag struct {
+	Name        string `neo4j:"name,omitempty" json:"name,omitempty" desc:"Tag name." example:"latest"`
+	Digest      string `neo4j:"digest,omitempty" json:"digest,omitempty" desc:"Tag digest." example:"sha256:abc123"`
+	LastUpdated string `neo4j:"last_updated,omitempty" json:"last_updated,omitempty" desc:"Tag last updated timestamp." example:"2023-01-01T00:00:00Z"`
+}
+
 type Repository struct {
 	BaseAsset
-	URL  string `neo4j:"url,omitempty" json:"url,omitempty" desc:"Repository URL." example:"https://github.com/praetorian-inc/tabularium"`
-	Org  string `neo4j:"org,omitempty" json:"org,omitempty" desc:"Organization name." example:"praetorian-inc"`
-	Name string `neo4j:"name,omitempty" json:"name,omitempty" desc:"Repository name." example:"praetorian-inc/tabularium"`
+	URL         string          `neo4j:"url,omitempty" json:"url,omitempty" desc:"Repository URL." example:"https://github.com/praetorian-inc/tabularium"`
+	Org         string          `neo4j:"org,omitempty" json:"org,omitempty" desc:"Organization name." example:"praetorian-inc"`
+	Name        string          `neo4j:"name,omitempty" json:"name,omitempty" desc:"Repository name." example:"praetorian-inc/tabularium"`
+	PullCount   int             `neo4j:"pull_count,omitempty" json:"pull_count,omitempty" desc:"Number of pulls for Docker Hub repositories." example:"1000"`
+	StarCount   int             `neo4j:"star_count,omitempty" json:"star_count,omitempty" desc:"Number of stars for Docker Hub repositories." example:"50"`
+	Private     bool            `neo4j:"private,omitempty" json:"private,omitempty" desc:"Whether the repository is private." example:"false"`
+	LastUpdated string          `neo4j:"last_updated,omitempty" json:"last_updated,omitempty" desc:"Last updated timestamp." example:"2023-01-01T00:00:00Z"`
+	Tags        []RepositoryTag `neo4j:"tags,omitempty" json:"tags,omitempty" desc:"Tags in the repository." example:"[{\"name\":\"latest\",\"digest\":\"sha256:abc123\"}]"`
 }
 
 const (
@@ -49,7 +60,7 @@ func (r *Repository) IsClass(value string) bool {
 }
 
 func (r *Repository) IsPrivate() bool {
-	return false
+	return r.Private
 }
 
 func (r *Repository) Attribute(name, value string) Attribute {
