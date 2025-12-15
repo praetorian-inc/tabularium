@@ -41,6 +41,18 @@ func TestAsset_Visit(t *testing.T) {
 			update:   Asset{DNS: "example.com", Name: "1.2.3.4", BaseAsset: BaseAsset{Source: SeedSource}},
 			expected: Asset{DNS: "example.com", Name: "1.2.3.4", BaseAsset: BaseAsset{Source: SeedSource}},
 		},
+		{
+			name:     "visit propagates tags",
+			existing: Asset{DNS: "example.com", Name: "1.2.3.4", BaseAsset: BaseAsset{Tags: Tags{Tags: []string{"production", "web"}}}},
+			update:   Asset{DNS: "example.com", Name: "1.2.3.4", BaseAsset: BaseAsset{Tags: Tags{Tags: []string{"critical", "monitored"}}}},
+			expected: Asset{DNS: "example.com", Name: "1.2.3.4", BaseAsset: BaseAsset{Tags: Tags{Tags: []string{"production", "web", "critical", "monitored"}}}},
+		},
+		{
+			name:     "visit with duplicate tags",
+			existing: Asset{DNS: "example.com", Name: "1.2.3.4", BaseAsset: BaseAsset{Tags: Tags{Tags: []string{"production", "web"}}}},
+			update:   Asset{DNS: "example.com", Name: "1.2.3.4", BaseAsset: BaseAsset{Tags: Tags{Tags: []string{"production", "critical"}}}},
+			expected: Asset{DNS: "example.com", Name: "1.2.3.4", BaseAsset: BaseAsset{Tags: Tags{Tags: []string{"production", "web", "critical"}}}},
+		},
 	}
 
 	for _, tt := range tests {
@@ -53,6 +65,7 @@ func TestAsset_Visit(t *testing.T) {
 			assert.Equal(t, tt.expected.Private, tt.existing.Private)
 			assert.Equal(t, tt.expected.Origins, tt.existing.Origins)
 			assert.Equal(t, tt.expected.GetLabels(), tt.existing.GetLabels())
+			assert.Equal(t, tt.expected.Tags.Tags, tt.existing.Tags.Tags)
 		})
 	}
 }

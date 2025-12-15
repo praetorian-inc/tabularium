@@ -29,6 +29,7 @@ type Port struct {
 	Capability string            `neo4j:"capability" json:"capability,omitempty" desc:"Capability that discovered this port." example:"portscan"`
 	TTL        int64             `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the port record (Unix timestamp)." example:"1706353200"`
 	Parent     GraphModelWrapper `neo4j:"-" json:"parent" desc:"Port parent asset."`
+	Tags
 }
 
 const PortLabel = "Port"
@@ -77,6 +78,7 @@ func (p *Port) Visit(other Port) {
 		p.Service = other.Service
 	}
 	p.Parent = other.Parent
+	p.Tags.Visit(other.Tags)
 }
 
 func (p *Port) IsClass(value string) bool {
