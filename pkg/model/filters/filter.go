@@ -81,6 +81,7 @@ func (f *Filter) UnmarshalJSON(data []byte) error {
 const (
 	OperatorEqual              = "="
 	OperatorContains           = "CONTAINS"
+	OperatorLike               = "LIKE"
 	OperatorLessThan           = "<"
 	OperatorLessThanEqualTo    = "<="
 	OperatorGreaterThan        = ">"
