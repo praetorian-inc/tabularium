@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/gob"
+	"slices"
 	"time"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
@@ -18,6 +19,7 @@ func init() {
 
 type Notification interface {
 	Push(risk Risk) error
+	PushThreatNotification(vuln Vulnerability) error
 	CreateTicket(risk Risk, templateID string) (Attribute, error)
 	AssociateTicket(risk Risk, ticketID string) (Attribute, error)
 	ValidateCredentials() (map[string]any, error)
@@ -263,6 +265,15 @@ func Now() string {
 
 func Future(hours int) int64 {
 	return time.Now().UTC().Add(time.Duration(hours) * time.Hour).Unix()
+}
+
+var permanentSources = []string{
+	SeedSource,
+	AccountSource,
+}
+
+func IsPermanentSource(source string) bool {
+	return slices.Contains(permanentSources, source)
 }
 
 var AgentDataTypes = map[string]map[string]bool{
