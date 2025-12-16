@@ -4294,6 +4294,8 @@ components:
       properties:
         BaseModel:
           type: object
+        Tags:
+          type: object
         capability:
           description: Capability that discovered this port.
           example: portscan
@@ -4344,6 +4346,7 @@ components:
           type: string
       required:
       - BaseModel
+      - Tags
       - created
       - key
       - parent
