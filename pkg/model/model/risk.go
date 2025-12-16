@@ -159,8 +159,12 @@ func (r *Risk) Proof(bits []byte) File {
 	return file
 }
 
+func (r *Risk) DefinitionFilepath() string {
+	return fmt.Sprintf("definitions/%s", r.Name)
+}
+
 func (r *Risk) Definition(definition RiskDefinition) File {
-	file := NewFile(fmt.Sprintf("definitions/%s", r.Name))
+	file := NewFile(r.DefinitionFilepath())
 	file.Overwrite = false
 
 	body := ""
