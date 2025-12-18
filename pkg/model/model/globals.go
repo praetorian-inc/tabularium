@@ -227,9 +227,9 @@ const (
 	Synchronous string = "synchronous"
 
 	// praetorian-ai agent constants
-	AffiliationAgentName string = "affiliation"
-	AutoTriageAgentName  string = "autotriage"
-	ScreenshotAgentName  string = "screenshotter"
+	AffiliationAgentName    string = "affiliation"
+	AutoTriageAgentName     string = "autotriage"
+	RiskDefinitionAgentName string = "auto-vuln-hydration"
 
 	// system user for globally shared records
 	SystemUser string = "global"

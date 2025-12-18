@@ -123,10 +123,6 @@ func (w *Webpage) Valid() bool {
 	return webPageKeyRegex.MatchString(w.Key)
 }
 
-func (w *Webpage) GetAgent() string {
-	return ScreenshotAgentName
-}
-
 func (w *Webpage) SetUsername(username string) {
 	w.Username = username
 }
