@@ -190,6 +190,9 @@ func (e *Enrichment) Vulnerability() Vulnerability {
 	v.Kev = e.IsKev
 	v.Exploit = e.Exploits != nil && e.Exploits.Counts.Exploits > 0
 	v.Title = &e.Name
+	if v.Title == nil || *v.Title == "" {
+		v.Title = &e.Id
+	}
 
 	if e.Published != "" {
 		v.Created = &e.Published
