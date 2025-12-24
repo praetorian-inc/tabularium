@@ -123,10 +123,6 @@ func (w *Webpage) Valid() bool {
 	return webPageKeyRegex.MatchString(w.Key)
 }
 
-func (w *Webpage) GetAgent() string {
-	return ScreenshotAgentName
-}
-
 func (w *Webpage) SetUsername(username string) {
 	w.Username = username
 }
@@ -315,6 +311,7 @@ func (w *Webpage) CreateParent() *WebApplication {
 
 	baseURL := fmt.Sprintf("%s://%s", parsedURL.Scheme, parsedURL.Host)
 	webapp := NewWebApplication(baseURL, baseURL)
+	webapp.Status = Pending
 	return &webapp
 }
 

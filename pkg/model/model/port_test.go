@@ -122,19 +122,114 @@ func TestPort_IsClass(t *testing.T) {
 }
 
 func TestPort_Visit(t *testing.T) {
-	asset := Asset{}
-	port1 := NewPort("tcp", 80, &asset)
-	port2 := Port{
-		Status:  "inactive",
-		Service: "http",
-		TTL:     12345,
+	tests := []struct {
+		name     string
+		existing Port
+		update   Port
+		validate func(*testing.T, Port)
+	}{
+		{
+			name: "basic visit updates status, service, and TTL",
+			existing: func() Port {
+				asset := Asset{}
+				return NewPort("tcp", 80, &asset)
+			}(),
+			update: Port{
+				Status:  "inactive",
+				Service: "http",
+				TTL:     12345,
+			},
+			validate: func(t *testing.T, p Port) {
+				assert.Equal(t, "inactive", p.Status)
+				assert.Equal(t, "http", p.Service)
+				assert.Equal(t, int64(12345), p.TTL)
+			},
+		},
+		{
+			name: "visit propagates tags without duplicates",
+			existing: func() Port {
+				asset := Asset{}
+				port := NewPort("tcp", 80, &asset)
+				port.Tags = Tags{Tags: []string{"production", "web"}}
+				return port
+			}(),
+			update: Port{
+				Tags: Tags{Tags: []string{"critical", "monitored"}},
+			},
+			validate: func(t *testing.T, p Port) {
+				assert.Equal(t, []string{"production", "web", "critical", "monitored"}, p.Tags.Tags)
+			},
+		},
+		{
+			name: "visit with duplicate tags only adds new ones",
+			existing: func() Port {
+				asset := Asset{}
+				port := NewPort("tcp", 443, &asset)
+				port.Tags = Tags{Tags: []string{"production", "web"}}
+				return port
+			}(),
+			update: Port{
+				Tags: Tags{Tags: []string{"production", "critical"}},
+			},
+			validate: func(t *testing.T, p Port) {
+				assert.Equal(t, []string{"production", "web", "critical"}, p.Tags.Tags)
+			},
+		},
+		{
+			name: "visit with empty tags preserves existing",
+			existing: func() Port {
+				asset := Asset{}
+				port := NewPort("tcp", 22, &asset)
+				port.Tags = Tags{Tags: []string{"ssh", "admin"}}
+				return port
+			}(),
+			update: Port{
+				Status: Active,
+			},
+			validate: func(t *testing.T, p Port) {
+				assert.Equal(t, []string{"ssh", "admin"}, p.Tags.Tags)
+			},
+		},
+		{
+			name: "visit updates service and propagates tags",
+			existing: func() Port {
+				asset := Asset{}
+				port := NewPort("tcp", 3306, &asset)
+				port.Tags = Tags{Tags: []string{"database"}}
+				return port
+			}(),
+			update: Port{
+				Service: "mysql",
+				Tags:    Tags{Tags: []string{"production", "critical"}},
+			},
+			validate: func(t *testing.T, p Port) {
+				assert.Equal(t, "mysql", p.Service)
+				assert.Equal(t, []string{"database", "production", "critical"}, p.Tags.Tags)
+			},
+		},
+		{
+			name: "visit does not update status when pending",
+			existing: func() Port {
+				asset := Asset{}
+				port := NewPort("tcp", 80, &asset)
+				port.Status = Active
+				return port
+			}(),
+			update: Port{
+				Status: Pending,
+			},
+			validate: func(t *testing.T, p Port) {
+				assert.Equal(t, Active, p.Status)
+			},
+		},
 	}
 
-	port1.Visit(port2)
-
-	assert.Equal(t, "inactive", port1.Status)
-	assert.Equal(t, "http", port1.Service)
-	assert.Equal(t, int64(12345), port1.TTL)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.existing.Visit(tt.update)
+			tt.validate(t, tt.existing)
+		})
+	}
 }
 
 func TestPortConditions(t *testing.T) {

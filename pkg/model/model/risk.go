@@ -1,10 +1,8 @@
 package model
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"regexp"
 	"strings"
 
@@ -161,8 +159,12 @@ func (r *Risk) Proof(bits []byte) File {
 	return file
 }
 
+func (r *Risk) DefinitionFilepath() string {
+	return fmt.Sprintf("definitions/%s", r.Name)
+}
+
 func (r *Risk) Definition(definition RiskDefinition) File {
-	file := NewFile(fmt.Sprintf("definitions/%s", r.Name))
+	file := NewFile(r.DefinitionFilepath())
 	file.Overwrite = false
 
 	body := ""
@@ -202,13 +204,6 @@ func (r *Risk) State() string {
 		return ""
 	}
 	return string(r.Status[0])
-}
-
-func (r *Risk) Link(username string) string {
-	username = fmt.Sprintf("\"%s\"", username)
-	return fmt.Sprintf("https://chariot.praetorian.com/%s/vulnerabilities?vulnerabilityDrawerKey=%s&drawerOrder=%%5B%%22vulnerability%%22%%5D",
-		url.PathEscape(base64.StdEncoding.EncodeToString([]byte(username))),
-		url.QueryEscape(r.Key))
 }
 
 func (r *Risk) Attribute(name, value string) Attribute {

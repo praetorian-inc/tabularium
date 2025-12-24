@@ -14,6 +14,7 @@ func TestIntegration_NewIntegration(t *testing.T) {
 	assert.True(t, ia.IsClass("github"))
 	assert.Equal(t, "github", ia.Group())
 	assert.Equal(t, "https://github.com/praetorian-inc", ia.Identifier())
+	assert.Equal(t, int64(0), ia.TTL)
 
 	// Check BaseAsset defaults for just first repo asset
 	assert.Equal(t, Active, ia.Status)
@@ -26,6 +27,7 @@ func TestIntegration_NewIntegration(t *testing.T) {
 	assert.True(t, ia.IsClass("insightvm"))
 	assert.Equal(t, "insightvm", ia.Group())
 	assert.Equal(t, "https://insightvm.praetorian.com", ia.Identifier())
+	assert.Equal(t, int64(0), ia.TTL)
 
 	ia = NewIntegration("burp-enterprise", "https://burp-enterprise.praetorian.com")
 	assert.Equal(t, "burp-enterprise", ia.Name)
@@ -34,6 +36,7 @@ func TestIntegration_NewIntegration(t *testing.T) {
 	assert.True(t, ia.IsClass("burp-enterprise"))
 	assert.Equal(t, "burp-enterprise", ia.Group())
 	assert.Equal(t, "https://burp-enterprise.praetorian.com", ia.Identifier())
+	assert.Equal(t, int64(0), ia.TTL)
 }
 
 func TestIntegration_Valid(t *testing.T) {
@@ -70,6 +73,7 @@ func TestNewCloudOrIntegration(t *testing.T) {
 	assert.True(t, ia.IsClass("github"))
 	assert.Equal(t, "github", ia.Group())
 	assert.Equal(t, "https://github.com/praetorian-inc", ia.Identifier())
+	assert.Equal(t, int64(0), ia.GetBase().TTL)
 
 	ia = NewCloudOrIntegration("amazon", "123456789012")
 	assert.Equal(t, "amazon", ia.Group())
@@ -78,6 +82,7 @@ func TestNewCloudOrIntegration(t *testing.T) {
 	assert.True(t, ia.IsClass("amazon"))
 	assert.Equal(t, "amazon", ia.Group())
 	assert.Equal(t, "123456789012", ia.Identifier())
+	assert.Equal(t, int64(0), ia.GetBase().TTL)
 
 	ia = NewCloudOrIntegration("gcp", "123456789012")
 	assert.Equal(t, "gcp", ia.Group())
@@ -86,6 +91,7 @@ func TestNewCloudOrIntegration(t *testing.T) {
 	assert.True(t, ia.IsClass("gcp"))
 	assert.Equal(t, "gcp", ia.Group())
 	assert.Equal(t, "123456789012", ia.Identifier())
+	assert.Equal(t, int64(0), ia.GetBase().TTL)
 
 	ia = NewCloudOrIntegration("azure", "123456789012")
 	assert.Equal(t, "azure", ia.Group())
@@ -94,4 +100,5 @@ func TestNewCloudOrIntegration(t *testing.T) {
 	assert.True(t, ia.IsClass("azure"))
 	assert.Equal(t, "azure", ia.Group())
 	assert.Equal(t, "123456789012", ia.Identifier())
+	assert.Equal(t, int64(0), ia.GetBase().TTL)
 }
