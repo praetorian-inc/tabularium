@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/gob"
+	"regexp"
 	"slices"
 	"time"
 
@@ -300,3 +301,6 @@ const LargeArtifactsUploadExpiration = 6 * 24 * time.Hour
 const GenericPraetorianAegisInstallerMsi = "PraetorianAegisInstaller_generic.msi"
 const GenericPraetorianAegisInstallerDeb = "PraetorianAegisInstaller_generic.deb"
 const GenericPraetorianAegisInstallerRpm = "PraetorianAegisInstaller_generic.rpm"
+
+var CVERegex = regexp.MustCompile(`(?i)^cve-\d{4}-\d+$`)
+var CVEExtractRegex = regexp.MustCompile(`(?i)^(cve-\d{4}-\d+)`)
