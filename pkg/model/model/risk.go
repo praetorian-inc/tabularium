@@ -267,10 +267,8 @@ func (r *Risk) GetHooks() []registry.Hook {
 	}
 }
 
-var cveRegex = regexp.MustCompile(`(?i)^cve-\d+-\d+$`)
-
 func (r *Risk) formatName() {
-	if cveRegex.MatchString(r.Name) {
+	if CVERegex.MatchString(r.Name) {
 		r.Name = strings.ToUpper(r.Name)
 		return
 	}
