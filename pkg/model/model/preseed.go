@@ -57,6 +57,28 @@ func (p *Preseed) Visit(other Preseed) {
 	p.Metadata = maps.Clone(other.Metadata)
 }
 
+func (p *Preseed) Merge(update Preseed) {
+	// Track status change with comment in history
+	if p.History.Update(p.Status, update.Status, update.Username, update.Comment, update.History) {
+		p.Status = update.Status
+	}
+
+	// Handle TTL for non-active preseeds
+	if !p.IsStatus(Active) {
+		p.TTL = 0
+	}
+
+	// Merge metadata
+	if update.Metadata != nil && len(update.Metadata) > 0 {
+		if p.Metadata == nil {
+			p.Metadata = make(map[string]string)
+		}
+		for k, v := range update.Metadata {
+			p.Metadata[k] = v
+		}
+	}
+}
+
 func (p *Preseed) Valid() bool {
 	return p.Key != ""
 }
