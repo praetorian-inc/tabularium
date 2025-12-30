@@ -46,6 +46,9 @@ func (p *Preseed) Class() string {
 	return strings.Split(p.Type, "+")[0]
 }
 
+// Visit handles system-initiated updates without history tracking.
+// Used when capabilities or automated processes update preseed state.
+// For user-initiated updates with comments, use Merge() instead.
 func (p *Preseed) Visit(other Preseed) {
 	if other.Status != Pending {
 		p.Status = other.Status
@@ -57,6 +60,9 @@ func (p *Preseed) Visit(other Preseed) {
 	p.Metadata = maps.Clone(other.Metadata)
 }
 
+// Merge handles user-initiated updates with history tracking.
+// Tracks status changes and comments in History for audit trails.
+// For system-initiated updates without history, use Visit() instead.
 func (p *Preseed) Merge(update Preseed) {
 	// Track status change with comment in history
 	if p.History.Update(p.Status, update.Status, update.Username, update.Comment, update.History) {
