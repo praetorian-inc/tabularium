@@ -24,6 +24,8 @@ type Preseed struct {
 	Capability string            `neo4j:"capability" json:"capability,omitempty" desc:"Capability associated with processing this preseed record." example:"whois-lookup"`
 	Metadata   map[string]string `neo4j:"metadata" json:"metadata,omitempty" desc:"Additional metadata associated with the preseed record." example:"{}"`
 	TTL        int64             `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the preseed record (Unix timestamp)." example:"1706353200"`
+	Comment    string            `neo4j:"-" json:"comment,omitempty" desc:"User-provided comment about the preseed." example:"Verified registrant information"`
+	History
 }
 
 func init() {
