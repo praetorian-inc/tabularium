@@ -8,6 +8,7 @@ import (
 )
 
 const (
+	GCPProvider      = "gcp"
 	GCPResourceLabel = "GCPResource"
 )
 
@@ -24,7 +25,7 @@ func NewGCPResource(name, accountRef string, rtype CloudResourceType, properties
 	r := GCPResource{
 		CloudResource: CloudResource{
 			Name:         name,
-			Provider:     "gcp",
+			Provider:     GCPProvider,
 			Properties:   properties,
 			ResourceType: rtype,
 			AccountRef:   accountRef,
