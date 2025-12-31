@@ -97,29 +97,6 @@ func TestPreseedVisit(t *testing.T) {
 	assert.Equal(t, "value", p1.Metadata["test"])
 }
 
-func TestPreseed_HasCommentField(t *testing.T) {
-	p := Preseed{
-		Comment: "test comment",
-	}
-	assert.Equal(t, "test comment", p.Comment)
-}
-
-func TestPreseed_HasHistoryField(t *testing.T) {
-	p := Preseed{
-		History: History{
-			History: []HistoryRecord{
-				{
-					By:      "user@example.com",
-					Comment: "test comment",
-					Updated: "2024-01-01T00:00:00Z",
-				},
-			},
-		},
-	}
-	assert.Equal(t, 1, len(p.History.History))
-	assert.Equal(t, "test comment", p.History.History[0].Comment)
-}
-
 func TestPreseed_Merge_StatusChangeWithComment(t *testing.T) {
 	p := NewPreseed("whois", "registrant_email", "test@example.com")
 	p.Status = Active
