@@ -4365,9 +4365,15 @@ components:
       properties:
         BaseModel:
           type: object
+        History:
+          type: object
         capability:
           description: Capability associated with processing this preseed record.
           example: whois-lookup
+          type: string
+        comment:
+          description: User-provided comment about the preseed.
+          example: Verified registrant information
           type: string
         created:
           description: Timestamp when the preseed record was created (RFC3339).
@@ -4417,6 +4423,7 @@ components:
           type: string
       required:
       - BaseModel
+      - History
       - created
       - display
       - key
