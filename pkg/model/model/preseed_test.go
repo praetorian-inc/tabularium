@@ -96,3 +96,72 @@ func TestPreseedVisit(t *testing.T) {
 	assert.Contains(t, p1.Metadata, "test")
 	assert.Equal(t, "value", p1.Metadata["test"])
 }
+
+func TestPreseed_Merge_StatusChangeWithComment(t *testing.T) {
+	p := NewPreseed("whois", "registrant_email", "test@example.com")
+	p.Status = Active
+	p.Username = "system"
+
+	update := Preseed{
+		Status:   Frozen,
+		Comment:  "Marked inactive after verification",
+		Username: "user@example.com",
+	}
+
+	p.Merge(update)
+
+	assert.Equal(t, Frozen, p.Status)
+	assert.Equal(t, 1, len(p.History.History))
+	assert.Equal(t, Active, p.History.History[0].From)
+	assert.Equal(t, Frozen, p.History.History[0].To)
+	assert.Equal(t, "user@example.com", p.History.History[0].By)
+	assert.Equal(t, "Marked inactive after verification", p.History.History[0].Comment)
+}
+
+func TestPreseed_Merge_CommentOnlyUpdate(t *testing.T) {
+	p := NewPreseed("whois", "registrant_email", "test@example.com")
+	p.Status = Active
+
+	update := Preseed{
+		Status:   Active, // Same status
+		Comment:  "Added clarification note",
+		Username: "user@example.com",
+	}
+
+	p.Merge(update)
+
+	assert.Equal(t, Active, p.Status) // Status unchanged
+	assert.Equal(t, 1, len(p.History.History))
+	assert.Equal(t, "", p.History.History[0].From) // No status change
+	assert.Equal(t, "", p.History.History[0].To)
+	assert.Equal(t, "Added clarification note", p.History.History[0].Comment)
+}
+
+func TestPreseed_Merge_TTLHandling(t *testing.T) {
+	p := NewPreseed("whois", "registrant_email", "test@example.com")
+	p.Status = Active
+	p.TTL = Future(14 * 24)
+
+	update := Preseed{
+		Status: Deleted,
+	}
+
+	p.Merge(update)
+
+	assert.Equal(t, Deleted, p.Status)
+	assert.Equal(t, int64(0), p.TTL) // TTL cleared for non-active status
+}
+
+func TestPreseed_Merge_MetadataHandling(t *testing.T) {
+	p := NewPreseed("whois", "registrant_email", "test@example.com")
+	p.Metadata = map[string]string{"key1": "value1"}
+
+	update := Preseed{
+		Metadata: map[string]string{"key2": "value2"},
+	}
+
+	p.Merge(update)
+
+	assert.Equal(t, "value1", p.Metadata["key1"]) // Existing preserved
+	assert.Equal(t, "value2", p.Metadata["key2"]) // New added
+}
