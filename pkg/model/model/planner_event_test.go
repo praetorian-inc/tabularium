@@ -89,3 +89,77 @@ func TestPlannerSubagentCompletion_NoStructuredOutput(t *testing.T) {
 	assert.Equal(t, "completed", decoded.Status)
 	assert.Nil(t, decoded.StructuredOutput)
 }
+
+func TestPlannerEvent_SubagentCompletion(t *testing.T) {
+	event := PlannerEvent{
+		Type:           "subagent_completion",
+		Username:       "test-user",
+		User:           "test@example.com",
+		ConversationID: "conv_parent_123",
+		SubagentCompletion: &PlannerSubagentCompletion{
+			SubagentID:           "subagent_abc",
+			ParentConversationID: "conv_parent_123",
+			AgentMode:            "query",
+			Status:               "finalized",
+			FinalResponse:        "Task completed",
+			ToolCallCount:        3,
+			ExecutionTime:        1500,
+			StructuredOutput: &FinalizeOutput{
+				Summary: "Completed successfully",
+				Data: map[string]interface{}{
+					"result": "success",
+				},
+				Recommendations: []string{"Next step A", "Next step B"},
+			},
+		},
+	}
+
+	bytes, err := json.Marshal(event)
+	require.NoError(t, err)
+
+	var decoded PlannerEvent
+	err = json.Unmarshal(bytes, &decoded)
+	require.NoError(t, err)
+
+	assert.Equal(t, "subagent_completion", decoded.Type)
+	assert.NotNil(t, decoded.SubagentCompletion)
+	assert.Equal(t, "subagent_abc", decoded.SubagentCompletion.SubagentID)
+	assert.Equal(t, "finalized", decoded.SubagentCompletion.Status)
+}
+
+func TestPlannerEvent_MultipleEventTypes(t *testing.T) {
+	// Test that old event types still work
+	jobEvent := PlannerEvent{
+		Type:           "job_completion",
+		Username:       "test-user",
+		ConversationID: "conv_123",
+		JobCompletion: &PlannerJobCompletion{
+			JobKey:      "job_key",
+			Source:      "nuclei",
+			Target:      "example.com",
+			Status:      "JC",
+			CompletedAt: "2026-01-08T15:00:00Z",
+		},
+	}
+
+	bytes, err := json.Marshal(jobEvent)
+	require.NoError(t, err)
+	assert.NotNil(t, bytes)
+
+	// Test new subagent event type
+	subagentEvent := PlannerEvent{
+		Type:           "subagent_completion",
+		Username:       "test-user",
+		ConversationID: "conv_456",
+		SubagentCompletion: &PlannerSubagentCompletion{
+			SubagentID:    "sub_789",
+			AgentMode:     "query",
+			Status:        "completed",
+			FinalResponse: "Done",
+		},
+	}
+
+	bytes2, err := json.Marshal(subagentEvent)
+	require.NoError(t, err)
+	assert.NotNil(t, bytes2)
+}

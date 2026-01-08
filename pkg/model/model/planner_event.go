@@ -13,6 +13,9 @@ type PlannerEvent struct {
 
 	// User message event
 	UserMessage *PlannerUserMessage `json:"userMessage,omitempty"`
+
+	// Subagent completion event
+	SubagentCompletion *PlannerSubagentCompletion `json:"subagentCompletion,omitempty"`
 }
 
 type PlannerJobCompletion struct {
