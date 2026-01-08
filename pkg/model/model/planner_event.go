@@ -38,3 +38,16 @@ type FinalizeOutput struct {
 	Data            map[string]interface{} `json:"data,omitempty"`
 	Recommendations []string               `json:"recommendations,omitempty"`
 }
+
+// PlannerSubagentCompletion contains the result of a subagent execution
+type PlannerSubagentCompletion struct {
+	SubagentID           string          `json:"subagentId"`
+	ParentConversationID string          `json:"parentConversationId"`
+	AgentMode            string          `json:"agentMode"`
+	Status               string          `json:"status"` // "finalized", "completed", "timeout", "failed"
+	FinalResponse        string          `json:"finalResponse"`
+	ToolCallCount        int             `json:"toolCallCount"`
+	ExecutionTime        int             `json:"executionTimeMs"`
+	StructuredOutput     *FinalizeOutput `json:"structuredOutput,omitempty"`
+	Error                string          `json:"error,omitempty"`
+}
