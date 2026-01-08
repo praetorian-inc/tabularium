@@ -31,3 +31,10 @@ type PlannerUserMessage struct {
 	Message string `json:"message"`
 	Mode    string `json:"mode,omitempty"`
 }
+
+// FinalizeOutput contains structured output from a finalize tool call
+type FinalizeOutput struct {
+	Summary         string                 `json:"summary"`
+	Data            map[string]interface{} `json:"data,omitempty"`
+	Recommendations []string               `json:"recommendations,omitempty"`
+}
