@@ -180,3 +180,16 @@ func TestConversation_TopicField(t *testing.T) {
 		})
 	}
 }
+
+func TestConversationParentLink(t *testing.T) {
+	parent := NewConversation("parent topic")
+	child := Conversation{
+		Topic:              "child topic",
+		ParentConversation: parent.UUID,
+	}
+	child.Defaulted()
+	registry.CallHooks(&child)
+
+	assert.NotEmpty(t, child.UUID, "child should have UUID")
+	assert.Equal(t, parent.UUID, child.ParentConversation, "child should link to parent")
+}
