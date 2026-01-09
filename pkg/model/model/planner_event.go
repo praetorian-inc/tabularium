@@ -13,6 +13,15 @@ type PlannerEvent struct {
 
 	// User message event
 	UserMessage *PlannerUserMessage `json:"userMessage,omitempty"`
+
+	// Parent conversation for subagent events
+	ParentConversation string `json:"parentConversation,omitempty"`
+
+	// Subagent execution event
+	SubagentExecution *SubagentExecution `json:"subagentExecution,omitempty"`
+
+	// Subagent completion event
+	SubagentCompletion *SubagentCompletion `json:"subagentCompletion,omitempty"`
 }
 
 type PlannerJobCompletion struct {
@@ -30,4 +39,18 @@ type PlannerJobCompletion struct {
 type PlannerUserMessage struct {
 	Message string `json:"message"`
 	Mode    string `json:"mode,omitempty"`
+}
+
+type SubagentExecution struct {
+	Agent   string         `json:"agent"`   // Agent type to spawn
+	Task    string         `json:"task"`    // Task description
+	Context map[string]any `json:"context"` // Optional context data
+}
+
+type SubagentCompletion struct {
+	Agent   string `json:"agent"`           // Agent type that executed
+	Task    string `json:"task"`            // Original task
+	Status  string `json:"status"`          // "success" or "error"
+	Results string `json:"results"`         // Subagent output/summary
+	Error   string `json:"error,omitempty"` // Error message if failed
 }
