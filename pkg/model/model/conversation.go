@@ -15,6 +15,18 @@ type Conversation struct {
 	Created            string `dynamodbav:"created" json:"created" desc:"Timestamp when the conversation was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
 	Topic              string `dynamodbav:"topic" json:"topic" desc:"Topic extracted from first message (first 256 chars)." example:"Find all active assets in my infrastructure"`
 	ParentConversation string `dynamodbav:"parent_conversation,omitempty" json:"parent_conversation,omitempty" desc:"UUID of parent conversation for subagent hierarchies." example:"550e8400-e29b-41d4-a716-446655440000"`
+	// Blocking tool support
+	Status          string           `dynamodbav:"status,omitempty" json:"status,omitempty" desc:"active or suspended"`
+	PendingToolCall *PendingToolCall `dynamodbav:"pending_tool_call,omitempty" json:"pendingToolCall,omitempty" desc:"Pending tool call when suspended"`
+}
+
+// PendingToolCall tracks a suspended tool call awaiting async completion
+type PendingToolCall struct {
+	ToolCallID  string `dynamodbav:"tool_call_id" json:"toolCallId"`
+	ToolName    string `dynamodbav:"tool_name" json:"toolName"`
+	PendingID   string `dynamodbav:"pending_id" json:"pendingId"`
+	EventType   string `dynamodbav:"event_type" json:"eventType"`
+	SuspendedAt string `dynamodbav:"suspended_at" json:"suspendedAt"`
 }
 
 func init() {
