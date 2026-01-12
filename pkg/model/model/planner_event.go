@@ -22,6 +22,13 @@ type PlannerEvent struct {
 
 	// Subagent completion event
 	SubagentCompletion *SubagentCompletion `json:"subagentCompletion,omitempty"`
+
+	// Unified agent execution (new)
+	AgentExecution *AgentExecution `json:"agentExecution,omitempty"`
+	Parent         *ParentContext  `json:"parent,omitempty"`
+
+	// Unified completion (new)
+	Completion *CompletionEvent `json:"completion,omitempty"`
 }
 
 type PlannerJobCompletion struct {
@@ -53,4 +60,33 @@ type SubagentCompletion struct {
 	Status  string `json:"status"`          // "success" or "error"
 	Results string `json:"results"`         // Subagent output/summary
 	Error   string `json:"error,omitempty"` // Error message if failed
+}
+
+// AgentExecution is the unified event for all agent invocations.
+// Replaces separate planner_execution and subagent_execution events.
+type AgentExecution struct {
+	Agent        string         `json:"agent"`                   // Agent type
+	Message      string         `json:"message"`                 // Task/prompt
+	Context      map[string]any `json:"context,omitempty"`       // Optional context
+	TargetEntity map[string]any `json:"targetEntity,omitempty"`  // For capability agents
+	Blocking     bool           `json:"blocking"`                // Suspend conversation?
+	ToolCallID   string         `json:"toolCallId,omitempty"`    // For blocking: tool to complete
+}
+
+// ParentContext tracks the parent conversation for subagent calls
+type ParentContext struct {
+	ConversationID string `json:"conversationId"`
+	ToolCallID     string `json:"toolCallId"`
+	Blocking       bool   `json:"blocking"`
+}
+
+// CompletionEvent is the unified completion for all async operations
+type CompletionEvent struct {
+	PendingID      string `json:"pendingId"`
+	ConversationID string `json:"conversationId"`
+	ToolCallID     string `json:"toolCallId,omitempty"`
+	Blocking       bool   `json:"blocking"`
+	Status         string `json:"status"` // "success" or "error"
+	Result         string `json:"result"`
+	Error          string `json:"error,omitempty"`
 }
