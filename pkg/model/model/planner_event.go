@@ -49,9 +49,10 @@ type PlannerUserMessage struct {
 }
 
 type SubagentExecution struct {
-	Agent   string         `json:"agent"`   // Agent type to spawn
-	Task    string         `json:"task"`    // Task description
-	Context map[string]any `json:"context"` // Optional context data
+	Agent        string         `json:"agent"`                  // Agent type to spawn
+	Task         string         `json:"task"`                   // Task description
+	Context      map[string]any `json:"context"`                // Optional context data
+	TargetEntity map[string]any `json:"targetEntity,omitempty"` // For capability agents
 }
 
 type SubagentCompletion struct {
