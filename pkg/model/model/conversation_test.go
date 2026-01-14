@@ -144,6 +144,19 @@ func TestConversation_SecurityScenarios(t *testing.T) {
 	}
 }
 
+func TestConversation_ParentID(t *testing.T) {
+	parentConvID := "550e8400-e29b-41d4-a716-446655440000"
+	topic := "Subagent: test-agent"
+
+	conv := NewConversation(topic)
+	conv.ParentID = parentConvID
+
+	assert.Equal(t, topic, conv.Topic)
+	assert.Equal(t, parentConvID, conv.ParentID)
+	assert.NotEmpty(t, conv.UUID)
+	assert.True(t, conv.Valid())
+}
+
 func TestConversation_TopicField(t *testing.T) {
 	testCases := []struct {
 		name     string
