@@ -2237,6 +2237,10 @@ components:
           description: Unique key for the conversation.
           example: '#conversation#example-conversation#550e8400-e29b-41d4-a716-446655440000'
           type: string
+        parent_id:
+          description: UUID of the parent conversation (for subagent conversations).
+          example: 550e8400-e29b-41d4-a716-446655440000
+          type: string
         topic:
           description: Topic extracted from first message (first 256 chars).
           example: Find all active assets in my infrastructure
