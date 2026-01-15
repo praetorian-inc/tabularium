@@ -19,12 +19,7 @@ const (
 	DefaultMaxRequestsPerWebpage = 100
 	ERR_PORT                     = -1
 	DEFAULT_URL_PATH             = "/"
-	PARAMETERS_IDENTIFIED        = "parameters-identified"
-	WEB_LOGIN_IDENTIFIED         = "login-identified"
-	WEB_SECRET_IDENTIFIED        = "web-secret-identified"
 	DISPLAY_RESPONSE_FILE_PATH   = "file-path"
-	SCREENSHOT                   = "screenshot"
-	SC_RESOURCES                 = "resources"
 )
 
 const (
@@ -49,6 +44,14 @@ type WebpageCodeArtifact struct {
 	Secret string `json:"secret" desc:"The secret id of the code artifact" example:"#file#source.zip"`
 }
 
+// EndpointFingerprint captures API/service fingerprinting data
+// Denormalized into Webpage for efficient querying
+type EndpointFingerprint struct {
+	Type    string   `json:"type" neo4j:"type" desc:"Fingerprint type (llm, authentication, etc.)" example:"llm"`
+	Service string   `json:"service" neo4j:"service" desc:"Detected service name" example:"ollama"`
+	Models  []string `json:"models" neo4j:"models" desc:"LLM-specific detected model names" example:"[\"llama2\", \"mistral\"]"`
+}
+
 type Webpage struct {
 	registry.BaseModel
 	Username  string                `neo4j:"username" json:"username" desc:"The username associated with this webpage, if authenticated." example:"user@example.com"`
@@ -60,9 +63,19 @@ type Webpage struct {
 	Source    []string              `neo4j:"source" json:"source" desc:"Sources that identified this webpage (e.g., seed, crawl)" example:"[\"crawl\", \"login\"]"`
 	Artifacts []WebpageCodeArtifact `neo4j:"artifacts" json:"artifacts" desc:"Source code repositories or files for analysis (e.g., repositories, file keys)"`
 	Private   bool                  `neo4j:"private" json:"private" desc:"Whether the webpage is on a public web server." example:"false"`
+
+	// Typed fields (promoted from Metadata)
+	Screenshot string `neo4j:"screenshot" json:"screenshot" desc:"Path to screenshot file" example:"webpage/example.com/443/screenshot.jpeg"`
+	Resources  string `neo4j:"resources" json:"resources" desc:"Path to network resources zip" example:"webpage/example.com/443/network_resources.zip"`
+
+	// Endpoint fingerprinting
+	EndpointFingerprint *EndpointFingerprint `neo4j:"endpoint_fingerprint" json:"endpoint_fingerprint,omitempty" desc:"API/service fingerprint data"`
+
 	History
 	// Neo4j fields
 	URL             string                `neo4j:"url" json:"url" desc:"The basic URL of the webpage." example:"https://example.com/path"`
+	// Deprecated: Use typed fields (Screenshot, Resources, EndpointFingerprint) instead.
+	// Kept for backward compatibility during migration.
 	Metadata        map[string]any        `neo4j:"metadata" json:"metadata" dynamodbav:"metadata" desc:"Additional metadata associated with the webpage." example:"{\"title\": \"Example Domain\"}"`
 	SSOIdentified   map[string]SSOWebpage `neo4j:"sso_identified" json:"sso_identified" desc:"SSO providers that have identified this webpage with their last seen timestamps." example:"{\"okta\": {\"last_seen\": \"2023-10-27T11:00:00Z\", \"id\": \"1234567890\", \"name\": \"Chariot\"}}"`
 	DetailsFilepath string                `neo4j:"details_filepath" json:"details_filepath" dynamodbav:"details_filepath" desc:"The path to the details file for the webpage." example:"webpage/1234567890/details-1234567890.json"`
@@ -204,6 +217,16 @@ func (w *Webpage) Merge(other Webpage) {
 	}
 	if other.Parent != nil {
 		w.Parent = other.Parent
+	}
+	// New typed field merges
+	if other.Screenshot != "" {
+		w.Screenshot = other.Screenshot
+	}
+	if other.Resources != "" {
+		w.Resources = other.Resources
+	}
+	if other.EndpointFingerprint != nil {
+		w.EndpointFingerprint = other.EndpointFingerprint
 	}
 	w.MergeSSOIdentified(other)
 	w.MergeMetadata(other)
