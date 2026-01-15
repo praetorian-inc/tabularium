@@ -218,6 +218,16 @@ func (w *Webpage) Merge(other Webpage) {
 	if other.Parent != nil {
 		w.Parent = other.Parent
 	}
+	// New typed field merges
+	if other.Screenshot != "" {
+		w.Screenshot = other.Screenshot
+	}
+	if other.Resources != "" {
+		w.Resources = other.Resources
+	}
+	if other.EndpointFingerprint != nil {
+		w.EndpointFingerprint = other.EndpointFingerprint
+	}
 	w.MergeSSOIdentified(other)
 	w.MergeMetadata(other)
 	w.MergeSource(other)
