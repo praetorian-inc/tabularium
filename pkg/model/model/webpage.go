@@ -19,12 +19,7 @@ const (
 	DefaultMaxRequestsPerWebpage = 100
 	ERR_PORT                     = -1
 	DEFAULT_URL_PATH             = "/"
-	PARAMETERS_IDENTIFIED        = "parameters-identified"
-	WEB_LOGIN_IDENTIFIED         = "login-identified"
-	WEB_SECRET_IDENTIFIED        = "web-secret-identified"
 	DISPLAY_RESPONSE_FILE_PATH   = "file-path"
-	SCREENSHOT                   = "screenshot"
-	SC_RESOURCES                 = "resources"
 )
 
 const (
