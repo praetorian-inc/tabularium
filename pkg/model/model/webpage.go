@@ -68,9 +68,19 @@ type Webpage struct {
 	Source    []string              `neo4j:"source" json:"source" desc:"Sources that identified this webpage (e.g., seed, crawl)" example:"[\"crawl\", \"login\"]"`
 	Artifacts []WebpageCodeArtifact `neo4j:"artifacts" json:"artifacts" desc:"Source code repositories or files for analysis (e.g., repositories, file keys)"`
 	Private   bool                  `neo4j:"private" json:"private" desc:"Whether the webpage is on a public web server." example:"false"`
+
+	// Typed fields (promoted from Metadata)
+	Screenshot string `neo4j:"screenshot" json:"screenshot" desc:"Path to screenshot file" example:"webpage/example.com/443/screenshot.jpeg"`
+	Resources  string `neo4j:"resources" json:"resources" desc:"Path to network resources zip" example:"webpage/example.com/443/network_resources.zip"`
+
+	// Endpoint fingerprinting
+	EndpointFingerprint *EndpointFingerprint `neo4j:"endpoint_fingerprint" json:"endpoint_fingerprint,omitempty" desc:"API/service fingerprint data"`
+
 	History
 	// Neo4j fields
 	URL             string                `neo4j:"url" json:"url" desc:"The basic URL of the webpage." example:"https://example.com/path"`
+	// Deprecated: Use typed fields (Screenshot, Resources, EndpointFingerprint) instead.
+	// Kept for backward compatibility during migration.
 	Metadata        map[string]any        `neo4j:"metadata" json:"metadata" dynamodbav:"metadata" desc:"Additional metadata associated with the webpage." example:"{\"title\": \"Example Domain\"}"`
 	SSOIdentified   map[string]SSOWebpage `neo4j:"sso_identified" json:"sso_identified" desc:"SSO providers that have identified this webpage with their last seen timestamps." example:"{\"okta\": {\"last_seen\": \"2023-10-27T11:00:00Z\", \"id\": \"1234567890\", \"name\": \"Chariot\"}}"`
 	DetailsFilepath string                `neo4j:"details_filepath" json:"details_filepath" dynamodbav:"details_filepath" desc:"The path to the details file for the webpage." example:"webpage/1234567890/details-1234567890.json"`
