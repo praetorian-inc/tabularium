@@ -18,3 +18,18 @@ func (t *GraphModelWrapper) UnmarshalJSON(data []byte) error {
 func (t *GraphModelWrapper) UnmarshalDynamoDBAttributeValue(av types.AttributeValue) error {
 	return (*registry.Wrapper[GraphModel])(t).UnmarshalDynamoDBAttributeValue(av)
 }
+
+// GraphRelationshipWrapper for serializing GraphRelationship interface
+type GraphRelationshipWrapper registry.Wrapper[GraphRelationship]
+
+func NewGraphRelationshipWrapper(rel GraphRelationship) GraphRelationshipWrapper {
+	return GraphRelationshipWrapper{Type: registry.Name(rel), Model: rel}
+}
+
+func (t *GraphRelationshipWrapper) UnmarshalJSON(data []byte) error {
+	return (*registry.Wrapper[GraphRelationship])(t).UnmarshalJSON(data)
+}
+
+func (t *GraphRelationshipWrapper) UnmarshalDynamoDBAttributeValue(av types.AttributeValue) error {
+	return (*registry.Wrapper[GraphRelationship])(t).UnmarshalDynamoDBAttributeValue(av)
+}

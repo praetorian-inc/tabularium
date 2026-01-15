@@ -18,6 +18,22 @@ type Collection struct {
 	Count int                         `json:"count"`
 }
 
+// NewCollectionFromRelationship builds a collection from a relationship's nodes.
+func NewCollectionFromRelationship(rel modelpkg.GraphRelationship) *Collection {
+	collection := &Collection{}
+	if rel == nil {
+		return collection
+	}
+	source, target := rel.Nodes()
+	if source != nil {
+		collection.Add(source)
+	}
+	if target != nil {
+		collection.Add(target)
+	}
+	return collection
+}
+
 // init lazily initializes Collection
 func (c *Collection) init() {
 	if c.Items == nil {

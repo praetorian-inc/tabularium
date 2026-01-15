@@ -13,14 +13,14 @@ func (br *BaseRelationship) GetDescription() string {
 type BaseRelationship struct {
 	// Source and Target are used internally for graph construction, not stored directly.
 	registry.BaseModel
-	Source         GraphModel `neo4j:"-" json:"-"`
-	Target         GraphModel `neo4j:"-" json:"-"`
-	Created        string     `neo4j:"created" json:"created" desc:"Timestamp when the relationship was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
-	Visited        string     `neo4j:"visited" json:"visited" desc:"Timestamp when the relationship was last visited or confirmed (RFC3339)." example:"2023-10-27T11:00:00Z"`
-	Capability     string     `neo4j:"capability" json:"capability" desc:"The capability or tool that discovered/created this relationship." example:"portscan"`
-	Key            string     `neo4j:"key" json:"key" desc:"Unique key identifying the relationship." example:"<source_key>#DISCOVERED#<target_key>"`
-	AttachmentPath string     `neo4j:"attachmentPath" json:"attachmentPath"`
-	Attachment     File       `neo4j:"-" json:"attachment"`
+	Source         GraphModelWrapper `neo4j:"-" json:"source"`
+	Target         GraphModelWrapper `neo4j:"-" json:"target"`
+	Created        string            `neo4j:"created" json:"created" desc:"Timestamp when the relationship was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
+	Visited        string            `neo4j:"visited" json:"visited" desc:"Timestamp when the relationship was last visited or confirmed (RFC3339)." example:"2023-10-27T11:00:00Z"`
+	Capability     string            `neo4j:"capability" json:"capability" desc:"The capability or tool that discovered/created this relationship." example:"portscan"`
+	Key            string            `neo4j:"key" json:"key" desc:"Unique key identifying the relationship." example:"<source_key>#DISCOVERED#<target_key>"`
+	AttachmentPath string            `neo4j:"attachmentPath" json:"attachmentPath"`
+	Attachment     File              `neo4j:"-" json:"attachment"`
 }
 
 func init() {
@@ -61,14 +61,26 @@ func (base *BaseRelationship) Valid() bool {
 	return base.Key != ""
 }
 
+func (base *BaseRelationship) Defaulted() {
+	if base == nil {
+		return
+	}
+	if base.Created == "" {
+		base.Created = Now()
+	}
+	if base.Visited == "" {
+		base.Visited = Now()
+	}
+}
+
 func (base *BaseRelationship) Nodes() (GraphModel, GraphModel) {
-	return base.Source, base.Target
+	return base.Source.Model, base.Target.Model
 }
 
 func NewBaseRelationship(source, target GraphModel, label string) *BaseRelationship {
 	return &BaseRelationship{
-		Source:  source,
-		Target:  target,
+		Source:  NewGraphModelWrapper(source),
+		Target:  NewGraphModelWrapper(target),
 		Created: Now(),
 		Visited: Now(),
 		Key:     fmt.Sprintf("%s#%s%s", source.GetKey(), label, target.GetKey()),
@@ -95,6 +107,13 @@ func (d Discovered) Label() string {
 	return DiscoveredLabel
 }
 
+func (d *Discovered) Defaulted() {
+	if d.BaseRelationship == nil {
+		d.BaseRelationship = &BaseRelationship{}
+	}
+	d.BaseRelationship.Defaulted()
+}
+
 func (hv *HasVulnerability) GetDescription() string {
 	return "Represents the relationship indicating an asset has a specific vulnerability."
 }
@@ -113,6 +132,13 @@ const HasVulnerabilityLabel = "HAS_VULNERABILITY"
 
 func (a HasVulnerability) Label() string {
 	return HasVulnerabilityLabel
+}
+
+func (hv *HasVulnerability) Defaulted() {
+	if hv.BaseRelationship == nil {
+		hv.BaseRelationship = &BaseRelationship{}
+	}
+	hv.BaseRelationship.Defaulted()
 }
 
 func (hv *HasVulnerability) HydratableFilepath() string {
@@ -157,6 +183,13 @@ func (a InstanceOf) Label() string {
 	return InstanceOfLabel
 }
 
+func (io *InstanceOf) Defaulted() {
+	if io.BaseRelationship == nil {
+		io.BaseRelationship = &BaseRelationship{}
+	}
+	io.BaseRelationship.Defaulted()
+}
+
 const HasAttributeLabel = "HAS_ATTRIBUTE"
 
 // GetDescription returns a description for the HasAttribute relationship model.
@@ -176,6 +209,13 @@ func NewHasAttribute(source, target GraphModel) GraphRelationship {
 
 func (a HasAttribute) Label() string {
 	return HasAttributeLabel
+}
+
+func (ha *HasAttribute) Defaulted() {
+	if ha.BaseRelationship == nil {
+		ha.BaseRelationship = &BaseRelationship{}
+	}
+	ha.BaseRelationship.Defaulted()
 }
 
 const HasPortLabel = "HAS_PORT"
@@ -199,6 +239,13 @@ func (hp HasPort) Label() string {
 	return HasPortLabel
 }
 
+func (hp *HasPort) Defaulted() {
+	if hp.BaseRelationship == nil {
+		hp.BaseRelationship = &BaseRelationship{}
+	}
+	hp.BaseRelationship.Defaulted()
+}
+
 const HasTechnologyLabel = "HAS_TECHNOLOGY"
 
 // GetDescription returns a description for the HasTechnology relationship model.
@@ -218,6 +265,13 @@ func NewHasTechnology(source, target GraphModel) GraphRelationship {
 
 func (a HasTechnology) Label() string {
 	return HasTechnologyLabel
+}
+
+func (ht *HasTechnology) Defaulted() {
+	if ht.BaseRelationship == nil {
+		ht.BaseRelationship = &BaseRelationship{}
+	}
+	ht.BaseRelationship.Defaulted()
 }
 
 const HasCredentialLabel = "HAS_CREDENTIAL"
@@ -241,6 +295,13 @@ func (hc *HasCredential) Label() string {
 	return HasCredentialLabel
 }
 
+func (hc *HasCredential) Defaulted() {
+	if hc.BaseRelationship == nil {
+		hc.BaseRelationship = &BaseRelationship{}
+	}
+	hc.BaseRelationship.Defaulted()
+}
+
 const HasWebpageLabel = "HAS_WEBPAGE"
 
 type HasWebpage struct {
@@ -260,6 +321,13 @@ func (hw HasWebpage) Label() string {
 // GetDescription returns a description for the HasWebpage relationship model.
 func (hw *HasWebpage) GetDescription() string {
 	return "Represents the relationship indicating a web application has a specific webpage."
+}
+
+func (hw *HasWebpage) Defaulted() {
+	if hw.BaseRelationship == nil {
+		hw.BaseRelationship = &BaseRelationship{}
+	}
+	hw.BaseRelationship.Defaulted()
 }
 
 const ScannedByLabel = "SCANNED_BY"
@@ -288,4 +356,14 @@ func (s ScannedBy) Label() string {
 // GetDescription returns a description for the ScannedBy relationship model.
 func (s *ScannedBy) GetDescription() string {
 	return "Represents the relationship indicating an asset was discovered/scanned by an Aegis agent, enabling network reachability tracking."
+}
+
+func (s *ScannedBy) Defaulted() {
+	if s.BaseRelationship == nil {
+		s.BaseRelationship = &BaseRelationship{}
+	}
+	s.BaseRelationship.Defaulted()
+	if s.ScanTime == "" {
+		s.ScanTime = Now()
+	}
 }

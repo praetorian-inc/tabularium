@@ -81,12 +81,13 @@ func submodels(model Model) []Model {
 	modelType := reflect.TypeOf((*Model)(nil)).Elem()
 	valType := val.Type()
 
-	for _, structField := range reflect.VisibleFields(valType) {
+	for i := 0; i < valType.NumField(); i++ {
+		structField := valType.Field(i)
 		if !structField.IsExported() {
 			continue
 		}
 
-		field := val.FieldByIndex(structField.Index)
+		field := val.Field(i)
 		fieldType := field.Type()
 
 		if (field.Kind() == reflect.Pointer || field.Kind() == reflect.Interface) && field.IsZero() {

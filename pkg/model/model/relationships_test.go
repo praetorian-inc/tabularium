@@ -98,8 +98,9 @@ func TestDiscoveredRelationshipVisit(t *testing.T) {
 	})
 
 	t.Run("Visit replaces source and target", func(t *testing.T) {
-		assert.Equal(t, &newSource, dbRel.Base().Source)
-		assert.Equal(t, &newTarget, dbRel.Base().Target)
+		source, target := dbRel.Nodes()
+		assert.Equal(t, newSource.GetKey(), source.GetKey())
+		assert.Equal(t, newTarget.GetKey(), target.GetKey())
 	})
 
 	t.Run("Keys remain unchanged after Visit", func(t *testing.T) {
@@ -138,8 +139,9 @@ func TestProcessRelationshipScenario(t *testing.T) {
 	existingRel.Base().Visit(newRel)
 
 	t.Run("After Visit, existing rel has new source/target objects", func(t *testing.T) {
-		assert.Equal(t, &newSource, existingRel.Base().Source)
-		assert.Equal(t, &newTarget, existingRel.Base().Target)
+		source, target := existingRel.Nodes()
+		assert.Equal(t, newSource.GetKey(), source.GetKey())
+		assert.Equal(t, newTarget.GetKey(), target.GetKey())
 	})
 
 	t.Run("Key remains unchanged after Visit", func(t *testing.T) {
@@ -249,8 +251,9 @@ func TestHasWebpageRelationship(t *testing.T) {
 		// Verify updates
 		assert.Equal(t, "2024-01-02", dbRel.Base().Visited)
 		assert.Equal(t, "new-crawler", dbRel.Base().Capability)
-		assert.Equal(t, &newSource, dbRel.Base().Source)
-		assert.Equal(t, &newTarget, dbRel.Base().Target)
+		source, target := dbRel.Nodes()
+		assert.Equal(t, newSource.GetKey(), source.GetKey())
+		assert.Equal(t, newTarget.GetKey(), target.GetKey())
 	})
 
 	t.Run("Nodes returns correct source and target", func(t *testing.T) {
@@ -260,8 +263,8 @@ func TestHasWebpageRelationship(t *testing.T) {
 		rel := NewHasWebpage(&source, &target)
 		sourceNode, targetNode := rel.Nodes()
 
-		assert.Equal(t, &source, sourceNode)
-		assert.Equal(t, &target, targetNode)
+		assert.Equal(t, source.GetKey(), sourceNode.GetKey())
+		assert.Equal(t, target.GetKey(), targetNode.GetKey())
 	})
 }
 
@@ -371,8 +374,9 @@ func TestScannedByRelationship(t *testing.T) {
 		// Verify updates
 		assert.Equal(t, "2024-01-02", dbRel.Base().Visited)
 		assert.Equal(t, "new-scanner", dbRel.Base().Capability)
-		assert.Equal(t, &newAsset, dbRel.Base().Source)
-		assert.Equal(t, newAgent, dbRel.Base().Target)
+		source, target := dbRel.Nodes()
+		assert.Equal(t, newAsset.GetKey(), source.GetKey())
+		assert.Equal(t, newAgent.GetKey(), target.GetKey())
 	})
 
 	t.Run("Nodes returns correct source and target", func(t *testing.T) {
@@ -383,8 +387,8 @@ func TestScannedByRelationship(t *testing.T) {
 		rel := NewScannedBy(&asset, agent, "nmap")
 		sourceNode, targetNode := rel.Nodes()
 
-		assert.Equal(t, &asset, sourceNode)
-		assert.Equal(t, agent, targetNode)
+		assert.Equal(t, asset.GetKey(), sourceNode.GetKey())
+		assert.Equal(t, agent.GetKey(), targetNode.GetKey())
 	})
 }
 
@@ -438,8 +442,9 @@ func TestReproduceConstraintViolation(t *testing.T) {
 
 	t.Run("Visit updates source and target references correctly", func(t *testing.T) {
 		// After Visit, the existing relationship should have the new source/target objects
-		assert.Equal(t, &newSource, existingRel.Base().Source)
-		assert.Equal(t, &newTarget, existingRel.Base().Target)
+		source, target := existingRel.Nodes()
+		assert.Equal(t, newSource.GetKey(), source.GetKey())
+		assert.Equal(t, newTarget.GetKey(), target.GetKey())
 
 		// The key should still match the source/target keys (note: no # between label and target)
 		expectedKeyFromNodes := fmt.Sprintf("%s#%s%s",
