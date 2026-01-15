@@ -15,6 +15,7 @@ import (
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -263,6 +264,63 @@ func TestWebpageMerge(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestWebpageMerge_EndpointFingerprint(t *testing.T) {
+	base := Webpage{
+		URL: "https://example.com",
+	}
+
+	other := Webpage{
+		URL: "https://example.com",
+		EndpointFingerprint: &EndpointFingerprint{
+			Type:    "llm",
+			Service: "ollama",
+			Models:  []string{"llama2", "mistral"},
+		},
+	}
+
+	base.Merge(other)
+
+	require.NotNil(t, base.EndpointFingerprint)
+	assert.Equal(t, "llm", base.EndpointFingerprint.Type)
+	assert.Equal(t, "ollama", base.EndpointFingerprint.Service)
+	assert.Equal(t, []string{"llama2", "mistral"}, base.EndpointFingerprint.Models)
+}
+
+func TestWebpageMerge_TypedFields(t *testing.T) {
+	base := Webpage{
+		URL: "https://example.com",
+	}
+
+	other := Webpage{
+		URL:        "https://example.com",
+		Screenshot: "webpage/example.com/443/screenshot.jpeg",
+		Resources:  "webpage/example.com/443/network_resources.zip",
+	}
+
+	base.Merge(other)
+
+	assert.Equal(t, "webpage/example.com/443/screenshot.jpeg", base.Screenshot)
+	assert.Equal(t, "webpage/example.com/443/network_resources.zip", base.Resources)
+}
+
+func TestWebpageMerge_TypedFieldsPreserveExisting(t *testing.T) {
+	base := Webpage{
+		URL:        "https://example.com",
+		Screenshot: "existing/screenshot.jpeg",
+	}
+
+	other := Webpage{
+		URL:       "https://example.com",
+		Resources: "new/resources.zip",
+		// Screenshot is empty - should NOT overwrite
+	}
+
+	base.Merge(other)
+
+	assert.Equal(t, "existing/screenshot.jpeg", base.Screenshot) // Preserved
+	assert.Equal(t, "new/resources.zip", base.Resources)         // Updated
 }
 
 func TestWebpageRequestManagement(t *testing.T) {
