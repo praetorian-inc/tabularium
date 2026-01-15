@@ -49,6 +49,14 @@ type WebpageCodeArtifact struct {
 	Secret string `json:"secret" desc:"The secret id of the code artifact" example:"#file#source.zip"`
 }
 
+// EndpointFingerprint captures API/service fingerprinting data
+// Denormalized into Webpage for efficient querying
+type EndpointFingerprint struct {
+	Type    string   `json:"type" neo4j:"type" desc:"Fingerprint type (llm, authentication, etc.)" example:"llm"`
+	Service string   `json:"service" neo4j:"service" desc:"Detected service name" example:"ollama"`
+	Models  []string `json:"models" neo4j:"models" desc:"LLM-specific detected model names" example:"[\"llama2\", \"mistral\"]"`
+}
+
 type Webpage struct {
 	registry.BaseModel
 	Username  string                `neo4j:"username" json:"username" desc:"The username associated with this webpage, if authenticated." example:"user@example.com"`
