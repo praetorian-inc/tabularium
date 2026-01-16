@@ -237,6 +237,45 @@ func (r *Risk) SetPlexTracID(clientID, reportID, findingID int) {
 	r.PlextracID = GeneratePlexTracID(clientID, reportID, findingID)
 }
 
+// Target interface implementation
+
+// GetStatus implements Target interface
+func (r *Risk) GetStatus() string {
+	return r.Status
+}
+
+// WithStatus implements Target interface
+func (r *Risk) WithStatus(status string) Target {
+	newRisk := *r
+	newRisk.Status = status
+	return &newRisk
+}
+
+// Group implements Target interface
+func (r *Risk) Group() string {
+	return r.DNS
+}
+
+// Identifier implements Target interface
+func (r *Risk) Identifier() string {
+	return r.Key
+}
+
+// IsStatus implements Target interface
+func (r *Risk) IsStatus(status string) bool {
+	return strings.HasPrefix(r.Status, status)
+}
+
+// IsClass implements Target interface
+func (r *Risk) IsClass(class string) bool {
+	return strings.Contains(strings.ToLower(r.Name), strings.ToLower(class))
+}
+
+// IsPrivate implements Target interface
+func (r *Risk) IsPrivate() bool {
+	return false // Risks are always external in this context
+}
+
 func NewRisk(target Target, name, status string) Risk {
 	return NewRiskWithDNS(target, name, target.Group(), status)
 }
