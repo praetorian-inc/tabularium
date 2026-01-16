@@ -21,6 +21,7 @@ func init() {
 	registry.Registry.MustRegisterModel(&Ssvc{})
 	registry.Registry.MustRegisterModel(&Weakness{})
 	registry.Registry.MustRegisterModel(&MitreTechnique{})
+	registry.Registry.MustRegisterModel(&CustomTechnique{})
 	registry.Registry.MustRegisterModel(&Exploits{})
 	registry.Registry.MustRegisterModel(&ThreatActor{})
 	registry.Registry.MustRegisterModel(&ExploitCounts{})
@@ -100,6 +101,37 @@ type MitreTechnique struct {
 	Subtechnique *bool     `json:"subtechnique,omitempty" desc:"Indicates if this is a sub-technique." example:"false"`
 	Tactics      *[]string `json:"tactics,omitempty" desc:"List of MITRE ATT&CK tactics associated with the technique." example:"[\"initial-access\"]"`
 	Url          *string   `json:"url,omitempty" desc:"URL for more information about the technique." example:"https://attack.mitre.org/techniques/T1566/"`
+}
+
+// GetDescription returns a description for the CustomTechnique model.
+func (c *CustomTechnique) GetDescription() string {
+	return "Represents a custom (non-MITRE) technique for attack path modeling."
+}
+
+type CustomTechnique struct {
+	registry.BaseModel
+	Key          string  `json:"key" desc:"Unique identifier for the custom technique." example:"CUSTOM-a1b2c3d4" neo4j:"key"`
+	Name         string  `json:"name" desc:"Display name of the custom technique." example:"CoerceToTGT" neo4j:"name"`
+	Description  string  `json:"description" desc:"Explanation of what the technique does." example:"Coerces a target machine to request a TGT." neo4j:"description"`
+	ReferenceURL *string `json:"reference_url,omitempty" desc:"URL for more information about the technique." example:"https://example.com/technique" neo4j:"reference_url"`
+	Source       string  `json:"source" desc:"Source of the technique (always 'custom')." example:"custom" neo4j:"source"`
+	CreatedBy    string  `json:"created_by" desc:"Account that created this technique." example:"acme-corp" neo4j:"created_by"`
+	CreatedAt    string  `json:"created_at" desc:"Timestamp when the technique was created (RFC3339)." example:"2026-01-12T15:00:00Z" neo4j:"created_at"`
+}
+
+// GetKey returns the unique key for the custom technique.
+func (c *CustomTechnique) GetKey() string {
+	return c.Key
+}
+
+// GetLabels returns the Neo4j labels for this model.
+func (c *CustomTechnique) GetLabels() []string {
+	return []string{"CustomTechnique"}
+}
+
+// Valid validates that the CustomTechnique has all required fields.
+func (c *CustomTechnique) Valid() bool {
+	return c.Key != "" && c.Name != "" && c.Source != ""
 }
 
 // GetDescription returns a description for the Exploits model.
