@@ -45,6 +45,8 @@ type Capability interface {
 	ValidateCredentials() error
 	// Static returns whether this capability should always be executed from static IPs if available, or nil if no particular behavior is desired
 	Static() *bool
+	// BypassFrozen returns whether this capability should run even if the account is frozen, or nil if the default behavior is desired
+	BypassFrozen() *bool
 	// CheckAffiliation checks if the supplied asset is currently enumerated within the integrated account
 	CheckAffiliation(Asset) (bool, error)
 	// Integration returns whether this capability is an integration
