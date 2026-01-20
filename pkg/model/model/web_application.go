@@ -190,7 +190,7 @@ func (w *WebApplication) mergeDetails(otherApp *WebApplication) {
 		w.promoteToSeed()
 	}
 
-	if otherApp.Name != "" && w.Name == w.PrimaryURL {
+	if otherApp.Name != "" && (w.Name == w.PrimaryURL || otherApp.Name != otherApp.PrimaryURL) {
 		w.Name = otherApp.Name
 	}
 	if otherApp.BurpSiteID != "" {
