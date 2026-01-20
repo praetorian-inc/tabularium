@@ -44,12 +44,11 @@ type WebpageCodeArtifact struct {
 	Secret string `json:"secret" desc:"The secret id of the code artifact" example:"#file#source.zip"`
 }
 
-// EndpointFingerprint captures API/service fingerprinting data
-// Denormalized into Webpage for efficient querying
 type EndpointFingerprint struct {
-	Type    string   `json:"type" neo4j:"type" desc:"Fingerprint type (llm, authentication, etc.)" example:"llm"`
-	Service string   `json:"service" neo4j:"service" desc:"Detected service name" example:"ollama"`
-	Models  []string `json:"models" neo4j:"models" desc:"LLM-specific detected model names" example:"[\"llama2\", \"mistral\"]"`
+	Type      string   `json:"type" neo4j:"type" desc:"Fingerprint type (llm, authentication, etc.)" example:"llm"`
+	Component string   `json:"component" neo4j:"component" desc:"Detected component name for this specific endpoint" example:"okta"`
+	Service   string   `json:"service" neo4j:"service" desc:"Detected overall web application's service" example:"ollama"`
+	Models    []string `json:"models" neo4j:"models" desc:"LLM-specific detected model names" example:"[\"llama2\", \"mistral\"]"`
 }
 
 type Webpage struct {
@@ -218,7 +217,6 @@ func (w *Webpage) Merge(other Webpage) {
 	if other.Parent != nil {
 		w.Parent = other.Parent
 	}
-	// New typed field merges
 	if other.Screenshot != "" {
 		w.Screenshot = other.Screenshot
 	}
