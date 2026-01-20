@@ -54,6 +54,7 @@ const (
 	BurpSuiteCredential             CredentialType = "portswigger"             // Customer BurpSuite API key
 	BurpSuiteInternalCredential     CredentialType = "burp-internal"           // Internal BurpSuite instance API creds
 	QualysCredential                CredentialType = "qualys"                  // Qualys credentials
+	HackerOneCredential             CredentialType = "hackerone"               // HackerOne API credentials
 	ShodanCredential                CredentialType = "shodan"                  // Shodan API key
 	TenableVMCredential             CredentialType = "tenable-vm"              // Tenable API key
 	WizCredential                   CredentialType = "wiz"                     // Wiz credentials
