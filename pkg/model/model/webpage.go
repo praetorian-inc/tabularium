@@ -73,7 +73,7 @@ type Webpage struct {
 
 	History
 	// Neo4j fields
-	URL             string                `neo4j:"url" json:"url" desc:"The basic URL of the webpage." example:"https://example.com/path"`
+	URL string `neo4j:"url" json:"url" desc:"The basic URL of the webpage." example:"https://example.com/path"`
 	// Deprecated: Use typed fields (Screenshot, Resources, EndpointFingerprint) instead.
 	// Kept for backward compatibility during migration.
 	Metadata        map[string]any        `neo4j:"metadata" json:"metadata" dynamodbav:"metadata" desc:"Additional metadata associated with the webpage." example:"{\"title\": \"Example Domain\"}"`
@@ -333,7 +333,11 @@ func (w *Webpage) CreateParent() *WebApplication {
 	}
 
 	baseURL := fmt.Sprintf("%s://%s", parsedURL.Scheme, parsedURL.Host)
-	webapp := NewWebApplication(baseURL, baseURL)
+	webappName := baseURL
+	if w.EndpointFingerprint != nil && w.EndpointFingerprint.Service != "" {
+		webappName = w.EndpointFingerprint.Service
+	}
+	webapp := NewWebApplication(baseURL, webappName)
 	webapp.Status = Pending
 	return &webapp
 }

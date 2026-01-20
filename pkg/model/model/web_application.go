@@ -168,34 +168,11 @@ func (w *WebApplication) Merge(other Assetlike) {
 	if !ok {
 		return
 	}
-
-	if w.Source != SeedSource && otherApp.Source == SeedSource {
-		w.promoteToSeed()
-	}
-
-	if otherApp.Name != "" {
-		w.Name = otherApp.Name
-	}
+	w.mergeDetails(otherApp)
 	for _, u := range otherApp.URLs {
 		if !slices.Contains(w.URLs, u) {
 			w.URLs = append(w.URLs, u)
 		}
-
-	}
-	if otherApp.BurpType != "" {
-		w.BurpType = otherApp.BurpType
-	}
-	if otherApp.BurpSiteID != "" {
-		w.BurpSiteID = otherApp.BurpSiteID
-	}
-	if otherApp.BurpFolderID != "" {
-		w.BurpFolderID = otherApp.BurpFolderID
-	}
-	if otherApp.BurpScheduleID != "" {
-		w.BurpScheduleID = otherApp.BurpScheduleID
-	}
-	if otherApp.ApiDefinitionContentPath != "" {
-		w.ApiDefinitionContentPath = otherApp.ApiDefinitionContentPath
 	}
 }
 
@@ -205,7 +182,15 @@ func (w *WebApplication) Visit(other Assetlike) {
 	if !ok {
 		return
 	}
-	if otherApp.Name != "" {
+	w.mergeDetails(otherApp)
+}
+
+func (w *WebApplication) mergeDetails(otherApp *WebApplication) {
+	if w.Source != SeedSource && otherApp.Source == SeedSource {
+		w.promoteToSeed()
+	}
+
+	if otherApp.Name != "" && w.Name == w.PrimaryURL {
 		w.Name = otherApp.Name
 	}
 	if otherApp.BurpSiteID != "" {
@@ -219,10 +204,6 @@ func (w *WebApplication) Visit(other Assetlike) {
 	}
 	if otherApp.ApiDefinitionContentPath != "" {
 		w.ApiDefinitionContentPath = otherApp.ApiDefinitionContentPath
-	}
-
-	if w.Source != SeedSource && otherApp.Source == SeedSource {
-		w.promoteToSeed()
 	}
 }
 
