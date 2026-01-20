@@ -25,6 +25,7 @@ type PlannerJobCompletion struct {
 	TotalCount  int                      `json:"totalCount"`
 	Comment     string                   `json:"comment,omitempty"`
 	CompletedAt string                   `json:"completedAt"`
+	Summary     any                      `json:"summary,omitempty"`
 }
 
 type PlannerUserMessage struct {

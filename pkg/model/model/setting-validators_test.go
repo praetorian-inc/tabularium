@@ -119,3 +119,54 @@ func TestRateLimitValidator(t *testing.T) {
 		})
 	}
 }
+
+func TestBlockedCapabilitiesValidator(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   any
+		wantErr bool
+	}{
+		{
+			name: "not a list",
+			input: map[string]any{
+				"test": "test",
+			},
+			wantErr: true,
+		},
+		{
+			name:    "empty list",
+			input:   []string{},
+			wantErr: true,
+		},
+		{
+			name: "an int list with entries",
+			input: map[string]any{
+				"capabilities": []int{1, 2},
+			},
+			wantErr: true,
+		},
+		{
+			name: "a string list with entries",
+			input: map[string]any{
+				"capabilities": []string{"nuclei", "fingerprint"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "an any list with entries",
+			input: map[string]any{
+				"capabilities": []any{"nuclei", "fingerprint"},
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := blockedCapabilitiesValidator(tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("blockedCapabilitiesValidator() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
