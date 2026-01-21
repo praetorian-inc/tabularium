@@ -45,10 +45,9 @@ type WebpageCodeArtifact struct {
 }
 
 type EndpointFingerprint struct {
-	Type      string   `json:"type" neo4j:"type" desc:"Fingerprint type (llm, authentication, etc.)" example:"llm"`
-	Component string   `json:"component" neo4j:"component" desc:"Detected component name for this specific endpoint" example:"okta"`
-	Service   string   `json:"service" neo4j:"service" desc:"Detected overall web application's service" example:"ollama"`
-	Models    []string `json:"models" neo4j:"models" desc:"LLM-specific detected model names" example:"[\"llama2\", \"mistral\"]"`
+	Type      string `json:"type,omitempty" neo4j:"type" desc:"Fingerprint type (llm, authentication, etc.)" example:"llm"`
+	Component string `json:"component,omitempty" neo4j:"component" desc:"Detected component name for this specific endpoint" example:"okta"`
+	Service   string `json:"service,omitempty" neo4j:"service" desc:"Detected overall web application's service" example:"ollama"`
 }
 
 type Webpage struct {
@@ -62,23 +61,16 @@ type Webpage struct {
 	Source    []string              `neo4j:"source" json:"source" desc:"Sources that identified this webpage (e.g., seed, crawl)" example:"[\"crawl\", \"login\"]"`
 	Artifacts []WebpageCodeArtifact `neo4j:"artifacts" json:"artifacts" desc:"Source code repositories or files for analysis (e.g., repositories, file keys)"`
 	Private   bool                  `neo4j:"private" json:"private" desc:"Whether the webpage is on a public web server." example:"false"`
-
-	// Typed fields (promoted from Metadata)
-	Screenshot string `neo4j:"screenshot" json:"screenshot" desc:"Path to screenshot file" example:"webpage/example.com/443/screenshot.jpeg"`
-	Resources  string `neo4j:"resources" json:"resources" desc:"Path to network resources zip" example:"webpage/example.com/443/network_resources.zip"`
-
-	// Endpoint fingerprinting
-	EndpointFingerprint *EndpointFingerprint `neo4j:"endpoint_fingerprint" json:"endpoint_fingerprint,omitempty" desc:"API/service fingerprint data"`
-
 	History
 	// Neo4j fields
-	URL string `neo4j:"url" json:"url" desc:"The basic URL of the webpage." example:"https://example.com/path"`
-	// Deprecated: Use typed fields (Screenshot, Resources, EndpointFingerprint) instead.
-	// Kept for backward compatibility during migration.
-	Metadata        map[string]any        `neo4j:"metadata" json:"metadata" dynamodbav:"metadata" desc:"Additional metadata associated with the webpage." example:"{\"title\": \"Example Domain\"}"`
+	URL             string                `neo4j:"url" json:"url" desc:"The basic URL of the webpage." example:"https://example.com/path"`
+	Metadata        map[string]any        `neo4j:"metadata" json:"metadata" dynamodbav:"metadata" desc:"Deprecated: Additional metadata associated with the webpage." example:"{\"title\": \"Example Domain\"}"`
 	SSOIdentified   map[string]SSOWebpage `neo4j:"sso_identified" json:"sso_identified" desc:"SSO providers that have identified this webpage with their last seen timestamps." example:"{\"okta\": {\"last_seen\": \"2023-10-27T11:00:00Z\", \"id\": \"1234567890\", \"name\": \"Chariot\"}}"`
 	DetailsFilepath string                `neo4j:"details_filepath" json:"details_filepath" dynamodbav:"details_filepath" desc:"The path to the details file for the webpage." example:"webpage/1234567890/details-1234567890.json"`
-	// S3 fields
+	Screenshot      string                `neo4j:"screenshot" json:"screenshot" desc:"Path to screenshot file" example:"webpage/example.com/443/screenshot.jpeg"`
+	Resources       string                `neo4j:"resources" json:"resources" desc:"Path to network resources zip" example:"webpage/example.com/443/network_resources.zip"`
+	EndpointFingerprint
+	// S3 / Hydratable fields
 	WebpageDetails
 	// Not Saved but useful for internal processing
 	Parent *WebApplication `neo4j:"-" json:"parent" desc:"The parent entity from which this webpage was discovered. Only used for creating a relationship. Pointer for easy reference"`
@@ -223,8 +215,14 @@ func (w *Webpage) Merge(other Webpage) {
 	if other.Resources != "" {
 		w.Resources = other.Resources
 	}
-	if other.EndpointFingerprint != nil {
-		w.EndpointFingerprint = other.EndpointFingerprint
+	if other.Type != "" {
+		w.Type = other.Type
+	}
+	if other.Component != "" {
+		w.Component = other.Component
+	}
+	if other.Service != "" {
+		w.Service = other.Service
 	}
 	w.MergeSSOIdentified(other)
 	w.MergeMetadata(other)
@@ -332,8 +330,8 @@ func (w *Webpage) CreateParent() *WebApplication {
 
 	baseURL := fmt.Sprintf("%s://%s", parsedURL.Scheme, parsedURL.Host)
 	webappName := baseURL
-	if w.EndpointFingerprint != nil && w.EndpointFingerprint.Service != "" {
-		webappName = w.EndpointFingerprint.Service
+	if w.Service != "" {
+		webappName = w.Service
 	}
 	webapp := NewWebApplication(baseURL, webappName)
 	webapp.Status = Pending

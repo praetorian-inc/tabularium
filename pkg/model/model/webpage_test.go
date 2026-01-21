@@ -15,7 +15,6 @@ import (
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -273,19 +272,16 @@ func TestWebpageMerge_EndpointFingerprint(t *testing.T) {
 
 	other := Webpage{
 		URL: "https://example.com",
-		EndpointFingerprint: &EndpointFingerprint{
+		EndpointFingerprint: EndpointFingerprint{
 			Type:    "llm",
 			Service: "ollama",
-			Models:  []string{"llama2", "mistral"},
 		},
 	}
 
 	base.Merge(other)
 
-	require.NotNil(t, base.EndpointFingerprint)
-	assert.Equal(t, "llm", base.EndpointFingerprint.Type)
-	assert.Equal(t, "ollama", base.EndpointFingerprint.Service)
-	assert.Equal(t, []string{"llama2", "mistral"}, base.EndpointFingerprint.Models)
+	assert.Equal(t, "llm", base.Type)
+	assert.Equal(t, "ollama", base.Service)
 }
 
 func TestWebpageMerge_TypedFields(t *testing.T) {
