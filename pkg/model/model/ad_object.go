@@ -128,6 +128,7 @@ func (ad *ADObject) Visit(o Assetlike) {
 	ad.ADProperties.Visit(other.ADProperties)
 
 	ad.BaseAsset.Visit(other)
+	ad.TTL = 0
 }
 
 func (d *ADObject) SeedModels() []Seedable {

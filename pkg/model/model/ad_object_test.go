@@ -324,6 +324,30 @@ func TestADObject_Visit(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "nonzero TTL set back to 0",
+			existing: ADObject{
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
+				BaseAsset: BaseAsset{
+					TTL: 10,
+				},
+			},
+			visiting: &ADObject{
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
+				BaseAsset: BaseAsset{
+					TTL: 20,
+				},
+			},
+			expected: ADObject{
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
+				BaseAsset: BaseAsset{
+					TTL: 0,
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
