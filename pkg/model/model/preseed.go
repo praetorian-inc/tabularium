@@ -151,7 +151,7 @@ func (p *Preseed) Defaulted() {
 	p.Status = Pending
 	p.Visited = Now()
 	p.Created = Now()
-	p.TTL = Future(14 * 24)
+	p.TTL = Future(30 * 24)
 	p.Display = generatePreseedDisplay(p.Type)
 }
 

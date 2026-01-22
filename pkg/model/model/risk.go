@@ -246,7 +246,7 @@ func (r *Risk) Defaulted() {
 	r.Created = Now()
 	r.Updated = Now()
 	r.Visited = Now()
-	r.TTL = Future(14 * 24)
+	r.TTL = Future(30 * 24)
 }
 
 func (r *Risk) GetHooks() []registry.Hook {
