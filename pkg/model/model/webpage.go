@@ -232,6 +232,9 @@ func (w *Webpage) Merge(other Webpage) {
 	if other.Service != "" {
 		w.Service = other.Service
 	}
+	if len(other.GeneratorConfigs) > 0 {
+		w.GeneratorConfigs = other.GeneratorConfigs
+	}
 	w.MergeSSOIdentified(other)
 	w.MergeMetadata(other)
 	w.MergeSource(other)
