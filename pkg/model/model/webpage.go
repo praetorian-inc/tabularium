@@ -44,9 +44,6 @@ type WebpageCodeArtifact struct {
 	Secret string `json:"secret" desc:"The secret id of the code artifact" example:"#file#source.zip"`
 }
 
-// GeneratorConfig holds configuration for an Augustus generator.
-// Julius populates this with fully-resolved config from probe YAML files.
-// Fields match augustus/pkg/generator.Config for direct compatibility.
 type GeneratorConfig struct {
 	Type         string            `json:"type" neo4j:"type" desc:"Generator type (ollama, openai, rest)"`
 	Endpoint     string            `json:"endpoint" neo4j:"endpoint" desc:"API endpoint URL"`
