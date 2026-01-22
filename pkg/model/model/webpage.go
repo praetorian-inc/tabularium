@@ -44,10 +44,18 @@ type WebpageCodeArtifact struct {
 	Secret string `json:"secret" desc:"The secret id of the code artifact" example:"#file#source.zip"`
 }
 
+// GeneratorConfig holds configuration for an Augustus generator.
+// Julius populates this with fully-resolved config from probe YAML files.
+type GeneratorConfig struct {
+	Generator string         `json:"generator" desc:"Augustus generator name (e.g., ollama.OllamaChat, openai.OpenAI)"`
+	Config    map[string]any `json:"config" desc:"Generator configuration with resolved variables ($TARGET, $MODEL)"`
+}
+
 type EndpointFingerprint struct {
-	Type      string `json:"type,omitempty" neo4j:"type" desc:"Fingerprint type (llm, authentication, etc.)" example:"llm"`
-	Component string `json:"component,omitempty" neo4j:"component" desc:"Detected component name for this specific endpoint" example:"okta"`
-	Service   string `json:"service,omitempty" neo4j:"service" desc:"Detected overall web application's service" example:"ollama"`
+	Type             string            `json:"type,omitempty" neo4j:"type" desc:"Fingerprint type (llm, authentication, etc.)" example:"llm"`
+	Component        string            `json:"component,omitempty" neo4j:"component" desc:"Detected component name for this specific endpoint" example:"okta"`
+	Service          string            `json:"service,omitempty" neo4j:"service" desc:"Detected overall web application's service" example:"ollama"`
+	GeneratorConfigs []GeneratorConfig `json:"generator_configs,omitempty" neo4j:"generator_configs" desc:"Augustus generator configurations from Julius fingerprinting"`
 }
 
 type Webpage struct {
