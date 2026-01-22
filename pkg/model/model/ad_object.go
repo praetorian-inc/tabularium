@@ -172,6 +172,8 @@ func (ad *ADObject) GetHooks() []registry.Hook {
 					ad.SID = ad.ObjectID
 				}
 
+				ad.TTL = 0
+
 				ad.tagIfTierZero()
 				return nil
 			},
@@ -231,7 +233,6 @@ func NewADObject(domain, objectID, distinguishedName, objectLabel string) ADObje
 
 	ad.Defaulted()
 	registry.CallHooks(&ad)
-	ad.TTL = 0
 
 	return ad
 }
