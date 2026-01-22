@@ -90,7 +90,7 @@ func NewTechnology(cpe string) (Technology, error) {
 }
 
 func (t *Technology) Defaulted() {
-	t.TTL = Future(14 * 24)
+	t.TTL = Future(30 * 24)
 	t.Created = Now()
 	t.Visited = Now()
 }
