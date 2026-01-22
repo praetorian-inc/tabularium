@@ -772,3 +772,9 @@ func TestADObject_TierZeroTagging(t *testing.T) {
 		})
 	}
 }
+
+func TestDefaultedADObject(t *testing.T) {
+	object := ADObject{}
+	object.Defaulted()
+	assert.Zero(t, object.TTL, "TTL should be zero for defaulted AD object")
+}

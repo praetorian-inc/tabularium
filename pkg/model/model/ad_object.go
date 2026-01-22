@@ -152,6 +152,7 @@ func (ad *ADObject) WithStatus(status string) Target {
 
 func (ad *ADObject) Defaulted() {
 	ad.BaseAsset.Defaulted()
+	ad.TTL = 0
 }
 
 func (ad *ADObject) GetHooks() []registry.Hook {
