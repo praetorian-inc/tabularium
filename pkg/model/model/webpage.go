@@ -46,9 +46,18 @@ type WebpageCodeArtifact struct {
 
 // GeneratorConfig holds configuration for an Augustus generator.
 // Julius populates this with fully-resolved config from probe YAML files.
+// Fields match augustus/pkg/generator.Config for direct compatibility.
 type GeneratorConfig struct {
-	Generator string         `json:"generator" desc:"Augustus generator name (e.g., ollama.OllamaChat, openai.OpenAI)"`
-	Config    map[string]any `json:"config" desc:"Generator configuration with resolved variables ($TARGET, $MODEL)"`
+	Type         string            `json:"type" neo4j:"type" desc:"Generator type (ollama, openai, rest)"`
+	Endpoint     string            `json:"endpoint" neo4j:"endpoint" desc:"API endpoint URL"`
+	APIKey       string            `json:"api_key,omitempty" neo4j:"api_key" desc:"API key for authentication"`
+	Model        string            `json:"model,omitempty" neo4j:"model" desc:"Model name to use"`
+	Method       string            `json:"method,omitempty" neo4j:"method" desc:"HTTP method (for REST generator)"`
+	Headers      map[string]string `json:"headers,omitempty" neo4j:"headers" desc:"Custom HTTP headers"`
+	Body         string            `json:"body,omitempty" neo4j:"body" desc:"Request body template"`
+	ResponsePath string            `json:"response_path,omitempty" neo4j:"response_path" desc:"JSONPath to extract response"`
+	ResponseType string            `json:"content_type,omitempty" neo4j:"content_type" desc:"Expected response content type"`
+	Proxy        string            `json:"proxy,omitempty" neo4j:"proxy" desc:"Proxy URL"`
 }
 
 type EndpointFingerprint struct {
