@@ -3096,6 +3096,10 @@ components:
         parent:
           description: Optional parent target from which this job was spawned.
           type: object
+        parent_span_id:
+          description: Parent span identifier for jobs spawned from other jobs.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          type: string
         partition:
           description: The partition of the job.
           example: user@example.com##asset#test#0.0.0.0
@@ -3115,6 +3119,10 @@ components:
             updated
           example: portscan#2023-10-27T10:05:00Z
           type: string
+        span_id:
+          description: Unique identifier for this job's span in the trace.
+          example: 660e8400-e29b-41d4-a716-446655440001
+          type: string
         started:
           description: Timestamp when the job was started (RFC3339).
           example: "2023-10-27T10:05:00Z"
@@ -3126,6 +3134,11 @@ components:
         target:
           description: The primary target of the job.
           type: object
+        trace_id:
+          description: Root trace identifier for correlating all events in a request
+            chain.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          type: string
         ttl:
           description: Time-to-live for the job record (Unix timestamp).
           example: "1706353200"
@@ -4642,6 +4655,88 @@ components:
       - aliases
       - categories
       - name
+      type: object
+    trace:
+      description: Represents a trace event for job lifecycle and collector operations,
+        enabling observability and customer-facing trace queries.
+      properties:
+        BaseModel:
+          type: object
+        capability:
+          description: Capability that generated this event.
+          example: portscan
+          type: string
+        created:
+          description: Timestamp when this trace record was created (RFC3339).
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        duration:
+          description: Duration of the operation in milliseconds.
+          example: "1234"
+          format: int64
+          type: integer
+        error:
+          description: Error message if the operation failed.
+          example: connection timeout
+          type: string
+        event_type:
+          description: Type of trace event (e.g., trace.job.created, trace.collector.http.request).
+          example: trace.job.created
+          type: string
+        job_key:
+          description: Associated job key for job lifecycle events.
+          example: '#job#example.com#asset#portscan'
+          type: string
+        key:
+          description: Unique key for the trace event.
+          example: '#trace#abc-123#span-001'
+          type: string
+        metadata:
+          description: Additional event-specific metadata.
+          example: '{"http_status": "200"}'
+          type: object
+        parent_span_id:
+          description: Parent span identifier for building trace trees.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          type: string
+        span_id:
+          description: Unique identifier for this specific event/span.
+          example: 660e8400-e29b-41d4-a716-446655440001
+          type: string
+        status:
+          description: Result status (e.g., success, error, timeout).
+          example: success
+          type: string
+        target_key:
+          description: Target asset key for the operation.
+          example: '#asset#ipv4#192.168.1.1'
+          type: string
+        timestamp:
+          description: When this event occurred (RFC3339).
+          example: "2023-10-27T10:00:00Z"
+          type: string
+        trace_id:
+          description: Root trace identifier shared by all events in a request chain.
+          example: 550e8400-e29b-41d4-a716-446655440000
+          type: string
+        ttl:
+          description: Time-to-live for this trace record (Unix timestamp).
+          example: "1706353200"
+          format: int64
+          type: integer
+        username:
+          description: Username who owns this trace event.
+          example: user@example.com
+          type: string
+      required:
+      - BaseModel
+      - created
+      - event_type
+      - key
+      - span_id
+      - timestamp
+      - trace_id
+      - username
       type: object
     trustedforntauth:
       description: Represents an Active Directory relationship between two AD objects,
