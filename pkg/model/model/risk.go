@@ -129,6 +129,10 @@ func (r *Risk) Visit(n Risk) {
 	}
 
 	r.Comment = n.Comment
+	// Handle severity updates when comment is set and risk is in Triage
+	if r.Comment != "" && r.Is(Triage) && r.Severity() != n.Severity() {
+		r.SetSeverity(n.Status)
+	}
 	r.Tags.Visit(n.Tags)
 	r.OriginationData.Visit(n.OriginationData)
 }

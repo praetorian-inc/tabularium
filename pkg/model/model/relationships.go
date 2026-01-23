@@ -26,6 +26,7 @@ type BaseRelationship struct {
 func init() {
 	registry.Registry.MustRegisterModel(&BaseRelationship{})
 	registry.Registry.MustRegisterModel(&Discovered{})
+	registry.Registry.MustRegisterModel(&Enriched{})
 	registry.Registry.MustRegisterModel(&HasVulnerability{})
 	registry.Registry.MustRegisterModel(&InstanceOf{})
 	registry.Registry.MustRegisterModel(&HasAttribute{})
@@ -93,6 +94,26 @@ const DiscoveredLabel = "DISCOVERED"
 
 func (d Discovered) Label() string {
 	return DiscoveredLabel
+}
+
+func (e *Enriched) GetDescription() string {
+	return "Represents an enrichment relationship between risks (e.g., a risk enriched by secret detection)."
+}
+
+type Enriched struct {
+	*BaseRelationship
+}
+
+func NewEnriched(source, target GraphModel) GraphRelationship {
+	return &Enriched{
+		BaseRelationship: NewBaseRelationship(source, target, EnrichedLabel),
+	}
+}
+
+const EnrichedLabel = "ENRICHED"
+
+func (e Enriched) Label() string {
+	return EnrichedLabel
 }
 
 func (hv *HasVulnerability) GetDescription() string {
