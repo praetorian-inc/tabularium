@@ -38,6 +38,10 @@ type Job struct {
 	Queue                 string            `dynamodbav:"-" desc:"Target queue for the job." example:"standard"`
 	Conversation          string            `dynamodbav:"conversation,omitempty" json:"conversation,omitempty" desc:"UUID of the conversation that initiated this job." example:"550e8400-e29b-41d4-a716-446655440000"`
 	User                  string            `dynamodbav:"user,omitempty" json:"user,omitempty" desc:"User who initiated this job." example:"user@example.com"`
+	// Trace context for distributed tracing
+	TraceID      string `dynamodbav:"trace_id,omitempty" json:"trace_id,omitempty" desc:"Root trace identifier for correlating all events in a request chain." example:"550e8400-e29b-41d4-a716-446655440000"`
+	SpanID       string `dynamodbav:"span_id,omitempty" json:"span_id,omitempty" desc:"Unique identifier for this job's span in the trace." example:"660e8400-e29b-41d4-a716-446655440001"`
+	ParentSpanID string `dynamodbav:"parent_span_id,omitempty" json:"parent_span_id,omitempty" desc:"Parent span identifier for jobs spawned from other jobs." example:"550e8400-e29b-41d4-a716-446655440000"`
 	Partition             string            `dynamodbav:"partition,omitempty" json:"partition,omitempty" desc:"The partition of the job." example:"user@example.com##asset#test#0.0.0.0"`
 	Origin                TargetWrapper     `dynamodbav:"origin" json:"origin" desc:"The job that originally started this chain of jobs."`
 	Target                TargetWrapper     `dynamodbav:"target" json:"target" desc:"The primary target of the job."`
