@@ -39,7 +39,6 @@ func (a *Attribute) GetLabels() []string {
 	return []string{AttributeLabel, TTLLabel}
 }
 
-
 func (a *Attribute) Asset() Asset {
 	parts := strings.Split(a.Source, "#")
 	if len(parts) != 4 {
@@ -47,7 +46,6 @@ func (a *Attribute) Asset() Asset {
 	}
 	return NewAsset(parts[2], parts[3])
 }
-
 
 func (a *Attribute) Valid() bool {
 	return a.Key != ""
@@ -85,7 +83,7 @@ func (a *Attribute) Defaulted() {
 	a.Metadata = map[string]string{}
 	a.Visited = Now()
 	a.Created = Now()
-	a.TTL = Future(14 * 24)
+	a.TTL = Future(30 * 24)
 }
 
 func (a *Attribute) GetHooks() []registry.Hook {
