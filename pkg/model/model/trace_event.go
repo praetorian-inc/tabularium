@@ -11,14 +11,15 @@ import (
 const (
 	EventJobStart   = "job_start"
 	EventJobEnd     = "job_end"
+	EventJobQueued  = "job_queued"
 	EventAgentStart = "agent_start"
 	EventAgentEnd   = "agent_end"
 	EventTaskStart  = "task_start"
 	EventTaskEnd    = "task_end"
 )
 
-// JobEvent represents a single telemetry event in a trace.
-type JobEvent struct {
+// TraceEvent represents a single telemetry event in a trace.
+type TraceEvent struct {
 	registry.BaseModel
 	baseTableModel
 
@@ -51,23 +52,23 @@ type JobEvent struct {
 }
 
 func init() {
-	registry.Registry.MustRegisterModel(&JobEvent{})
+	registry.Registry.MustRegisterModel(&TraceEvent{})
 }
 
-func (e *JobEvent) GetKey() string {
+func (e *TraceEvent) GetKey() string {
 	return e.Key
 }
 
-func (e *JobEvent) GetDescription() string {
-	return "Represents a telemetry event in a job execution trace."
+func (e *TraceEvent) GetDescription() string {
+	return "Represents a telemetry event in a trace."
 }
 
-// NewJobEvent creates a new event with generated IDs and prefixed timestamp.
-func NewJobEvent(username, traceID, spanID, parentSpanID, eventType string) JobEvent {
+// NewTraceEvent creates a new event with generated IDs and prefixed timestamp.
+func NewTraceEvent(username, traceID, spanID, parentSpanID, eventType string) TraceEvent {
 	eventID := uuid.New().String()
 	timestamp := Now()
 
-	event := JobEvent{
+	event := TraceEvent{
 		Username:     username,
 		TraceID:      traceID,
 		SpanID:       spanID,

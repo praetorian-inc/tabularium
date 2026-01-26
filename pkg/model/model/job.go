@@ -217,12 +217,22 @@ func NewJob(source string, target Target) Job {
 		stream: make(chan []registry.Model),
 	}
 	job.Defaulted()
-	// Initialize trace context for root jobs
+	registry.CallHooks(&job)
+	return job
+}
+
+// Traced enables telemetry tracing for this job and its children.
+// Only traced jobs emit TraceEvents. Call this for manually-triggered jobs.
+func (job *Job) Traced() *Job {
 	if job.TraceID == "" {
 		job.TraceID = NewTraceID()
 	}
-	registry.CallHooks(&job)
 	return job
+}
+
+// IsTraced returns true if this job has tracing enabled.
+func (job *Job) IsTraced() bool {
+	return job.TraceID != ""
 }
 
 func NewSystemJob(source, id string) Job {
