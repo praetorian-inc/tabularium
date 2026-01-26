@@ -7,7 +7,6 @@ import (
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
-// Event type constants
 const (
 	EventJobStart   = "job_start"
 	EventJobEnd     = "job_end"
@@ -52,7 +51,7 @@ type TraceEvent struct {
 }
 
 func init() {
-	registry.Registry.MustRegisterModel(&TraceEvent{})
+	registry.Registry.MustRegisterModel(&TraceEvent{}, "event")
 }
 
 func (e *TraceEvent) GetKey() string {
@@ -82,12 +81,10 @@ func NewTraceEvent(username, traceID, spanID, parentSpanID, eventType string) Tr
 	return event
 }
 
-// NewTraceID generates a new trace ID.
 func NewTraceID() string {
 	return uuid.New().String()
 }
 
-// NewSpanID generates a new span ID.
 func NewSpanID() string {
 	return uuid.New().String()
 }
