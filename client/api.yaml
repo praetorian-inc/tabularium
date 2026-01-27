@@ -5230,6 +5230,8 @@ components:
       properties:
         BaseModel:
           type: object
+        EndpointFingerprint:
+          type: object
         History:
           type: object
         WebpageDetails:
@@ -5253,7 +5255,7 @@ components:
           example: '#webpage#https://example.com#parentKey'
           type: string
         metadata:
-          description: Additional metadata associated with the webpage.
+          description: 'Deprecated: Additional metadata associated with the webpage.'
           example: '{"title": "Example Domain"}'
           type: object
         parent:
@@ -5264,6 +5266,14 @@ components:
           description: Whether the webpage is on a public web server.
           example: "false"
           type: boolean
+        resources:
+          description: Path to network resources zip
+          example: webpage/example.com/443/network_resources.zip
+          type: string
+        screenshot:
+          description: Path to screenshot file
+          example: webpage/example.com/443/screenshot.jpeg
+          type: string
         source:
           description: Sources that identified this webpage (e.g., seed, crawl)
           example: '["crawl", "login"]'
@@ -5300,6 +5310,7 @@ components:
           type: string
       required:
       - BaseModel
+      - EndpointFingerprint
       - History
       - WebpageDetails
       - artifacts
@@ -5309,6 +5320,8 @@ components:
       - metadata
       - parent
       - private
+      - resources
+      - screenshot
       - source
       - sso_identified
       - status

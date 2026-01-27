@@ -182,7 +182,7 @@ func (a *BaseAsset) Defaulted() {
 	a.Source = SelfSource
 	a.Created = Now()
 	a.Visited = Now()
-	a.TTL = Future(14 * 24)
+	a.TTL = Future(30 * 24)
 }
 
 func NewBaseAsset(identifier, group string) BaseAsset {
