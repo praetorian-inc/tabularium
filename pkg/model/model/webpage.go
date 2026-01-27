@@ -279,7 +279,7 @@ func (w *Webpage) Defaulted() {
 	w.Status = Active
 	w.Created = Now()
 	w.Visited = Now()
-	w.TTL = Future(7 * 24)
+	w.TTL = Future(30 * 24)
 	w.Metadata = map[string]any{}
 }
 

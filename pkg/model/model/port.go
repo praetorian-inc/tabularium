@@ -124,7 +124,7 @@ func (p *Port) Defaulted() {
 	p.Status = Active
 	p.Visited = Now()
 	p.Created = Now()
-	p.TTL = Future(14 * 24)
+	p.TTL = Future(30 * 24)
 }
 
 func (p *Port) GetHooks() []registry.Hook {

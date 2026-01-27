@@ -50,7 +50,7 @@ func (c *CloudResource) Defaulted() {
 	c.Status = Active
 	c.Created = Now()
 	c.Visited = Now()
-	c.TTL = Future(7 * 24) // 1 week
+	c.TTL = Future(30 * 24) // 30 days
 	if c.Properties == nil {
 		c.Properties = make(map[string]any)
 	}

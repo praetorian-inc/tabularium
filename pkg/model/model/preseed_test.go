@@ -140,7 +140,7 @@ func TestPreseed_Merge_CommentOnlyUpdate(t *testing.T) {
 func TestPreseed_Merge_TTLHandling(t *testing.T) {
 	p := NewPreseed("whois", "registrant_email", "test@example.com")
 	p.Status = Active
-	p.TTL = Future(14 * 24)
+	p.TTL = Future(30 * 24)
 
 	update := Preseed{
 		Status: Deleted,
