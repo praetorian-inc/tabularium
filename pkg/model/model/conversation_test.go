@@ -193,3 +193,28 @@ func TestConversation_TopicField(t *testing.T) {
 		})
 	}
 }
+
+func TestConversation_TraceIDField_Accessible(t *testing.T) {
+	conv := &Conversation{}
+	traceID := "550e8400-e29b-41d4-a716-446655440000"
+
+	conv.TraceID = traceID
+
+	assert.Equal(t, traceID, conv.TraceID)
+}
+
+func TestConversation_TraceIDField_EmptyByDefault(t *testing.T) {
+	conv := NewConversation("Test Topic")
+
+	assert.Empty(t, conv.TraceID)
+}
+
+func TestConversation_TraceIDField_PersistsAcrossOperations(t *testing.T) {
+	conv := NewConversation("Test Topic")
+	traceID := "trace-123-456-789"
+	conv.TraceID = traceID
+
+	registry.CallHooks(&conv)
+
+	assert.Equal(t, traceID, conv.TraceID)
+}
