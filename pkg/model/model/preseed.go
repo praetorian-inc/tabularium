@@ -56,7 +56,7 @@ func (p *Preseed) Visit(other Preseed) {
 }
 
 func (p *Preseed) Valid() bool {
-	return p.Key != ""
+	return p.Key != "" && IsValidStatus(p.Status)
 }
 
 func (p *Preseed) ToAttribute(source GraphModel, metadata ...string) Attribute {

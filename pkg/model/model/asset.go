@@ -115,7 +115,7 @@ func (a *Asset) IsPrivate() bool {
 }
 
 func (a *Asset) Valid() bool {
-	return assetKey.MatchString(a.Key)
+	return assetKey.MatchString(a.Key) && IsValidStatus(a.Status)
 }
 
 func (a *Asset) GetPartitionKey() string {
