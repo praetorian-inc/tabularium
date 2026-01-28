@@ -54,7 +54,6 @@ type GeneratorConfig struct {
 	Body         string            `json:"body,omitempty" neo4j:"body" desc:"Request body template"`
 	ResponsePath string            `json:"response_path,omitempty" neo4j:"response_path" desc:"JSONPath to extract response"`
 	ResponseType string            `json:"content_type,omitempty" neo4j:"content_type" desc:"Expected response content type"`
-	Proxy        string            `json:"proxy,omitempty" neo4j:"proxy" desc:"Proxy URL"`
 }
 
 type EndpointFingerprint struct {
