@@ -75,6 +75,18 @@ func (f *Filter) UnmarshalJSON(data []byte) error {
 	}
 
 	*f = Filter(filter)
+
+	for i := range f.Value {
+		num, ok := f.Value[i].(float64)
+		if !ok {
+			continue
+		}
+
+		if num == float64(int64(num)) {
+			f.Value[i] = int64(num)
+		}
+	}
+
 	return nil
 }
 
