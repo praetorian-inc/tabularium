@@ -156,3 +156,29 @@ func TestFilter_Constructors(t *testing.T) {
 		assert.Equal(t, SliceOrValue[any]{"user"}, f2.Value)
 	})
 }
+
+func TestFilter_FloatHandling(t *testing.T) {
+	t.Run("A filter with a float-int parses to an int", func(t *testing.T) {
+		f := NewFilter("float", OperatorEqual, float64(42))
+		bites, err := json.Marshal(f)
+		assert.NoError(t, err)
+
+		err = json.Unmarshal(bites, &f)
+		assert.NoError(t, err)
+
+		assert.Len(t, f.Value, 1)
+		assert.IsType(t, int64(42), f.Value[0])
+	})
+
+	t.Run("A filter with a non-int-float parses to a float", func(t *testing.T) {
+		f := NewFilter("float", OperatorEqual, float64(42.42))
+		bites, err := json.Marshal(f)
+		assert.NoError(t, err)
+
+		err = json.Unmarshal(bites, &f)
+		assert.NoError(t, err)
+
+		assert.Len(t, f.Value, 1)
+		assert.IsType(t, float64(42.42), f.Value[0])
+	})
+}

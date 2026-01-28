@@ -680,6 +680,82 @@ func TestJob_SetStatus_StartedAndFinishedTimes(t *testing.T) {
 	})
 }
 
+func TestJob_Traced(t *testing.T) {
+	target := NewAsset("example.com", "example.com")
+
+	t.Run("NewJob does not auto-initialize TraceID", func(t *testing.T) {
+		job := NewJob("test-source", &target)
+		assert.Empty(t, job.TraceID, "NewJob should not auto-initialize TraceID")
+		assert.False(t, job.IsTraced(), "IsTraced should return false for untraced job")
+	})
+
+	t.Run("Traced initializes TraceID when empty", func(t *testing.T) {
+		job := NewJob("test-source", &target)
+		assert.Empty(t, job.TraceID, "TraceID should be empty before calling Traced")
+
+		result := job.Traced()
+
+		assert.NotEmpty(t, job.TraceID, "TraceID should be set after calling Traced")
+		assert.Same(t, &job, result, "Traced should return pointer to same job for chaining")
+		assert.True(t, job.IsTraced(), "IsTraced should return true after Traced is called")
+	})
+
+	t.Run("Traced does not overwrite existing TraceID", func(t *testing.T) {
+		job := NewJob("test-source", &target)
+		existingTraceID := "existing-trace-id-12345"
+		job.TraceID = existingTraceID
+
+		job.Traced()
+
+		assert.Equal(t, existingTraceID, job.TraceID, "Traced should not overwrite existing TraceID")
+	})
+
+	t.Run("Traced enables method chaining", func(t *testing.T) {
+		job := NewJob("test-source", &target)
+
+		// Should be able to chain Traced with other operations
+		result := job.Traced()
+		assert.NotNil(t, result, "Traced should return non-nil for chaining")
+		assert.NotEmpty(t, result.TraceID, "Chained result should have TraceID set")
+	})
+
+	t.Run("IsTraced returns correct state", func(t *testing.T) {
+		job := NewJob("test-source", &target)
+
+		// Before tracing
+		assert.False(t, job.IsTraced(), "IsTraced should return false when TraceID is empty")
+
+		// After tracing
+		job.Traced()
+		assert.True(t, job.IsTraced(), "IsTraced should return true when TraceID is set")
+	})
+
+	t.Run("SpawnJob does not propagate trace when parent is untraced", func(t *testing.T) {
+		job := NewJob("parent-source", &target)
+		// Do NOT call Traced - parent should have empty TraceID
+
+		context := job.ToContext()
+		newTarget := NewAsset("new.example.com", "new.example.com")
+		spawnedJob := context.SpawnJob("child-source", &newTarget, nil)
+
+		assert.Empty(t, spawnedJob.TraceID, "Spawned job should not have TraceID when parent is untraced")
+		assert.Empty(t, spawnedJob.ParentSpanID, "Spawned job should not have ParentSpanID when parent is untraced")
+	})
+
+	t.Run("SpawnJob propagates trace when parent is traced", func(t *testing.T) {
+		job := NewJob("parent-source", &target)
+		job.Traced() // Enable tracing on parent
+		job.CurrentSpanID = "parent-span-123"
+
+		context := job.ToContext()
+		newTarget := NewAsset("new.example.com", "new.example.com")
+		spawnedJob := context.SpawnJob("child-source", &newTarget, nil)
+
+		assert.Equal(t, job.TraceID, spawnedJob.TraceID, "Spawned job should inherit TraceID from traced parent")
+		assert.Equal(t, "parent-span-123", spawnedJob.ParentSpanID, "Spawned job should have parent's CurrentSpanID as ParentSpanID")
+	})
+}
+
 func TestJob_SourceAndStatusConsistency(t *testing.T) {
 	target := NewAsset("example.com", "example.com")
 

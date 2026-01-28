@@ -15,6 +15,7 @@ type Conversation struct {
 	Created  string `dynamodbav:"created" json:"created" desc:"Timestamp when the conversation was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
 	Topic    string `dynamodbav:"topic" json:"topic" desc:"Topic extracted from first message (first 256 chars)." example:"Find all active assets in my infrastructure"`
 	ParentID string `dynamodbav:"parent_id,omitempty" json:"parent_id,omitempty" desc:"UUID of the parent conversation (for subagent conversations)." example:"550e8400-e29b-41d4-a716-446655440000"`
+	TraceID  string `dynamodbav:"trace_id,omitempty" json:"trace_id,omitempty" desc:"Trace ID for correlating telemetry events across conversation."`
 }
 
 func init() {

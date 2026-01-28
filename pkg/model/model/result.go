@@ -21,6 +21,9 @@ type ResultContext struct {
 	Capabilities  []string          `json:"capabilities,omitempty" desc:"List of specific capabilities to run for this job."`
 	FullScan      bool              `json:"full,omitempty" desc:"Whether a full scan was performed or not."`
 	AgentClientID string            `json:"agent_client_id,omitempty" desc:"Aegis agent client ID that performed the scan."`
+	// Trace context for telemetry propagation
+	TraceID       string `json:"trace_id,omitempty" desc:"Root trace ID for this job chain."`
+	CurrentSpanID string `json:"current_span_id,omitempty" desc:"Current span ID (becomes parent for child jobs)."`
 }
 
 func (rc *ResultContext) ImportAssets() bool {
@@ -92,6 +95,11 @@ func (rc *ResultContext) SpawnJob(source string, target Target, config map[strin
 	job.Origin = rc.Origin
 	if job.Origin.Model == nil {
 		job.Origin = TargetWrapper{Model: rc.GetParent()}
+	}
+	// Propagate trace context
+	if rc.TraceID != "" {
+		job.TraceID = rc.TraceID
+		job.ParentSpanID = rc.CurrentSpanID
 	}
 	return job
 }
