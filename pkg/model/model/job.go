@@ -42,7 +42,7 @@ type Job struct {
 	// Trace context for telemetry (propagated to child jobs)
 	TraceID       string `dynamodbav:"trace_id,omitempty" json:"trace_id,omitempty" desc:"Root trace ID for this job chain."`
 	ParentSpanID  string `dynamodbav:"parent_span_id,omitempty" json:"parent_span_id,omitempty" desc:"Parent span ID from spawning job."`
-	CurrentSpanID string `dynamodbav:"-" json:"-" desc:"Current execution span ID (not persisted, used for context propagation)."`
+	CurrentSpanID string `dynamodbav:"-" json:"current_span_id,omitempty" desc:"Current execution span ID (not persisted to DynamoDB, but serialized through SQS for trace correlation)."`
 	Origin                TargetWrapper     `dynamodbav:"origin" json:"origin" desc:"The job that originally started this chain of jobs."`
 	Target                TargetWrapper     `dynamodbav:"target" json:"target" desc:"The primary target of the job."`
 	Parent                TargetWrapper     `dynamodbav:"parent" json:"parent,omitempty" desc:"Optional parent target from which this job was spawned."`
