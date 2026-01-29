@@ -257,6 +257,7 @@ func (w *Webpage) Dehydrate() Hydratable {
 }
 
 func (w *Webpage) Defaulted() {
+	w.SSOIdentified = make(map[string]SSOWebpage)
 	w.Source = []string{}
 	w.Artifacts = []WebpageCodeArtifact{}
 	w.Status = Active
