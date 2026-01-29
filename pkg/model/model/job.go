@@ -39,6 +39,10 @@ type Job struct {
 	Conversation          string            `dynamodbav:"conversation,omitempty" json:"conversation,omitempty" desc:"UUID of the conversation that initiated this job." example:"550e8400-e29b-41d4-a716-446655440000"`
 	User                  string            `dynamodbav:"user,omitempty" json:"user,omitempty" desc:"User who initiated this job." example:"user@example.com"`
 	Partition             string            `dynamodbav:"partition,omitempty" json:"partition,omitempty" desc:"The partition of the job." example:"user@example.com##asset#test#0.0.0.0"`
+	// Trace context for telemetry (propagated to child jobs)
+	TraceID       string `dynamodbav:"trace_id,omitempty" json:"trace_id,omitempty" desc:"Root trace ID for this job chain."`
+	ParentSpanID  string `dynamodbav:"parent_span_id,omitempty" json:"parent_span_id,omitempty" desc:"Parent span ID from spawning job."`
+	CurrentSpanID string `dynamodbav:"-" json:"current_span_id,omitempty" desc:"Current execution span ID (not persisted to DynamoDB, but serialized through SQS for trace correlation)."`
 	Origin                TargetWrapper     `dynamodbav:"origin" json:"origin" desc:"The job that originally started this chain of jobs."`
 	Target                TargetWrapper     `dynamodbav:"target" json:"target" desc:"The primary target of the job."`
 	Parent                TargetWrapper     `dynamodbav:"parent" json:"parent,omitempty" desc:"Optional parent target from which this job was spawned."`
@@ -217,6 +221,20 @@ func NewJob(source string, target Target) Job {
 	return job
 }
 
+// Traced enables telemetry tracing for this job and its children.
+// Only traced jobs emit TraceEvents. Call this for manually-triggered jobs.
+func (job *Job) Traced() *Job {
+	if job.TraceID == "" {
+		job.TraceID = NewTraceID()
+	}
+	return job
+}
+
+// IsTraced returns true if this job has tracing enabled.
+func (job *Job) IsTraced() bool {
+	return job.TraceID != ""
+}
+
 func NewSystemJob(source, id string) Job {
 	t := NewAsset(id, id) // not needed, but required for target to unmarshal. TODO make this a separate type
 	j := Job{
@@ -256,5 +274,7 @@ func (job *Job) ToContext() ResultContext {
 		Capabilities:  job.Capabilities,
 		FullScan:      job.Full,
 		AgentClientID: agentClientID,
+		TraceID:       job.TraceID,
+		CurrentSpanID: job.CurrentSpanID,
 	}
 }
