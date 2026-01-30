@@ -4632,10 +4632,6 @@ components:
           type: object
         Tags:
           type: object
-        beta:
-          description: Whether the risk is in beta.
-          example: "true"
-          type: boolean
         comment:
           description: User-provided comment about the risk.
           example: Confirmed by manual check
@@ -4695,7 +4691,6 @@ components:
       - MLProperties
       - OriginationData
       - Tags
-      - beta
       - created
       - dns
       - key
