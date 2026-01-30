@@ -52,24 +52,11 @@ components:
       - username
       type: object
     account:
-      description: Represents a Chariot account (linked account), linking a user/system
-        (member) to a specific cloud account or service instance (value). Supports
-        parent/child tenant hierarchies with domain inheritance and user sharing.
+      description: Represents a Chariot account, linking a user/system (member) to
+        a specific cloud account or service instance (value).
       properties:
         BaseModel:
           type: object
-        allowed_domains:
-          description: Domains allowed for this tenant (in addition to inherited).
-          example: '["subsidiary.com"]'
-          items:
-            type: string
-          type: array
-        inherited_domains:
-          description: Domains inherited from parent tenant.
-          example: '["example.com", "acme.com"]'
-          items:
-            type: string
-          type: array
         key:
           description: Unique key for the account record.
           example: '#account#name#member#value'
@@ -82,10 +69,6 @@ components:
           description: The owner of the account.
           example: chariot.customer@example.com
           type: string
-        parent_tenant:
-          description: Email of the parent tenant if this is a child tenant.
-          example: parent@example.com
-          type: string
         secret:
           description: Secret configuration map associated with the account.
           example: '{"service_principal_token": "103713408v0871v"}'
@@ -96,14 +79,6 @@ components:
           items:
             type: integer
           type: array
-        shared_from_parent:
-          description: True if this user account was shared from a parent tenant.
-          example: "true"
-          type: boolean
-        tenant_type:
-          description: 'Tenant type: ''parent'', ''child'', or ''standalone''.'
-          example: child
-          type: string
         ttl:
           description: Time-to-live for the account record (Unix timestamp).
           example: "1706353200"
