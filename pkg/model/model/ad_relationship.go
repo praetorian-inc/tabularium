@@ -6,10 +6,6 @@ import (
 
 // AD Relationship type labels (matching BloodHound exactly)
 const (
-	// Domain Trusts
-	ADSameForestTrust  = "SameForestTrust"
-	ADCrossForestTrust = "CrossForestTrust"
-
 	// Ownership and Control
 	ADOwnsLabel         = "Owns"
 	ADGenericAllLabel   = "GenericAll"

@@ -24,6 +24,8 @@ type Preseed struct {
 	Capability string            `neo4j:"capability" json:"capability,omitempty" desc:"Capability associated with processing this preseed record." example:"whois-lookup"`
 	Metadata   map[string]string `neo4j:"metadata" json:"metadata,omitempty" desc:"Additional metadata associated with the preseed record." example:"{}"`
 	TTL        int64             `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the preseed record (Unix timestamp)." example:"1706353200"`
+	Comment    string            `neo4j:"-" json:"comment,omitempty" desc:"User-provided comment about the preseed." example:"Verified registrant information"`
+	History
 }
 
 func init() {
@@ -44,6 +46,9 @@ func (p *Preseed) Class() string {
 	return strings.Split(p.Type, "+")[0]
 }
 
+// Visit handles system-initiated updates without history tracking.
+// Used when capabilities or automated processes update preseed state.
+// For user-initiated updates with comments, use Merge() instead.
 func (p *Preseed) Visit(other Preseed) {
 	if other.Status != Pending {
 		p.Status = other.Status
@@ -53,6 +58,31 @@ func (p *Preseed) Visit(other Preseed) {
 	}
 	p.Visited = other.Visited
 	p.Metadata = maps.Clone(other.Metadata)
+}
+
+// Merge handles user-initiated updates with history tracking.
+// Tracks status changes and comments in History for audit trails.
+// For system-initiated updates without history, use Visit() instead.
+func (p *Preseed) Merge(update Preseed) {
+	// Track status change with comment in history
+	if p.History.Update(p.Status, update.Status, update.Username, update.Comment, update.History) {
+		p.Status = update.Status
+	}
+
+	// Handle TTL for non-active preseeds
+	if !p.IsStatus(Active) {
+		p.TTL = 0
+	}
+
+	// Merge metadata
+	if update.Metadata != nil && len(update.Metadata) > 0 {
+		if p.Metadata == nil {
+			p.Metadata = make(map[string]string)
+		}
+		for k, v := range update.Metadata {
+			p.Metadata[k] = v
+		}
+	}
 }
 
 func (p *Preseed) Valid() bool {
@@ -121,7 +151,7 @@ func (p *Preseed) Defaulted() {
 	p.Status = Pending
 	p.Visited = Now()
 	p.Created = Now()
-	p.TTL = Future(14 * 24)
+	p.TTL = Future(30 * 24)
 	p.Display = generatePreseedDisplay(p.Type)
 }
 

@@ -8,6 +8,7 @@ import (
 )
 
 const (
+	AzureProvider      = "azure"
 	AzureResourceLabel = "AzureResource"
 )
 
@@ -25,7 +26,7 @@ func NewAzureResource(name, accountRef string, rtype CloudResourceType, properti
 	r := AzureResource{
 		CloudResource: CloudResource{
 			Name:         name,
-			Provider:     "azure",
+			Provider:     AzureProvider,
 			Properties:   properties,
 			ResourceType: rtype,
 			AccountRef:   accountRef,

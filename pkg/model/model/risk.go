@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/praetorian-inc/tabularium/pkg/model/beta"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -19,7 +18,6 @@ type Risk struct {
 	Username string `neo4j:"username" json:"username" desc:"Chariot username associated with the risk." example:"user@example.com"`
 	Key      string `neo4j:"key" json:"key" desc:"Unique key identifying the risk." example:"#risk#example.com#CVE-2023-12345"`
 	// Attributes
-	Beta       bool   `neo4j:"beta" json:"beta" desc:"Whether the risk is in beta." example:"true"`
 	DNS        string `neo4j:"dns" json:"dns" desc:"Primary DNS or group associated with the risk." example:"example.com"`
 	Name       string `neo4j:"name" json:"name" desc:"Name of the risk or vulnerability." example:"CVE-2023-12345"`
 	Source     string `neo4j:"source" json:"source" desc:"Source that identified the risk." example:"nessus"`
@@ -246,7 +244,7 @@ func (r *Risk) Defaulted() {
 	r.Created = Now()
 	r.Updated = Now()
 	r.Visited = Now()
-	r.TTL = Future(14 * 24)
+	r.TTL = Future(30 * 24)
 }
 
 func (r *Risk) GetHooks() []registry.Hook {
@@ -257,20 +255,14 @@ func (r *Risk) GetHooks() []registry.Hook {
 				r.Key = fmt.Sprintf("#risk#%s#%s", r.DNS, r.Name)
 				r.Priority = riskPriority[r.Severity()]
 
-				if b, ok := r.Target.(beta.BetaObject); ok && b.IsBeta() {
-					r.Beta = true
-				}
-
 				return nil
 			},
 		},
 	}
 }
 
-var cveRegex = regexp.MustCompile(`(?i)^cve-\d+-\d+$`)
-
 func (r *Risk) formatName() {
-	if cveRegex.MatchString(r.Name) {
+	if CVERegex.MatchString(r.Name) {
 		r.Name = strings.ToUpper(r.Name)
 		return
 	}
