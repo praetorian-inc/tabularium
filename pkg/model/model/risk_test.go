@@ -4,7 +4,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"testing"
 
-	"github.com/praetorian-inc/tabularium/pkg/model/beta"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -197,28 +196,6 @@ func TestRisk_Valid(t *testing.T) {
 	assert.False(t, missingStatus.Valid())
 	assert.False(t, missingName.Valid())
 	assert.False(t, missingDNS.Valid())
-}
-
-type betaAsset struct {
-	beta.Beta
-	Asset
-}
-
-func NewBetaAsset(dns, name string) betaAsset {
-	return betaAsset{
-		Asset: NewAsset(dns, name),
-	}
-}
-
-func TestRisk_IsBeta(t *testing.T) {
-	normalAsset := NewAsset("example.com", "example.com")
-	betaAsset := NewBetaAsset("example.com", "example.com")
-
-	risk := NewRisk(&normalAsset, "test", TriageInfo)
-	assert.False(t, risk.Beta)
-
-	risk = NewRisk(&betaAsset, "test", TriageInfo)
-	assert.True(t, risk.Beta)
 }
 
 func TestRisk_TagsVist(t *testing.T) {
