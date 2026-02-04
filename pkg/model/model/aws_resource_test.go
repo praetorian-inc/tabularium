@@ -503,7 +503,7 @@ func TestAWSResource_HydrateDehydrate(t *testing.T) {
 
 	gotFilepath = resource.HydratableFilepath()
 	expectedFilepath := "awsresource/992382775570/arn_aws_organizations__992382775570_account_o-a6zw2rb1jz_992382775570/org-policies.json"
-	assert.Equal(t, gotFilepath, expectedFilepath)
+	assert.Equal(t, expectedFilepath, gotFilepath)
 
 	expectedFile := NewFile(expectedFilepath)
 	expectedFile.Bytes = []byte(`{"dummy": "test policy"}`)
@@ -515,4 +515,17 @@ func TestAWSResource_HydrateDehydrate(t *testing.T) {
 	dehydrated, ok := resource.Dehydrate().(*AWSResource)
 	require.True(t, ok, "object is not *AWSResource: %T", resource)
 	assert.Nil(t, dehydrated.OrgPolicy)
+}
+
+func TestAWSResource_Visit(t *testing.T) {
+	existing, err := NewAWSResource("arn:aws:organizations::992382775570:account/o-a6zw2rb1jz/992382775570", "992382775570", AWSAccount, nil)
+	require.NoError(t, err)
+
+	other, err := NewAWSResource("arn:aws:organizations::992382775570:account/o-a6zw2rb1jz/992382775570", "992382775570", AWSAccount, nil)
+	other.OrgPolicyFilename = "other-file"
+	require.NoError(t, err)
+
+	existing.Merge(&other)
+
+	assert.Equal(t, existing.OrgPolicyFilename, "other-file")
 }

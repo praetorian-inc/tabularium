@@ -6,10 +6,6 @@ import (
 
 // AD Relationship type labels (matching BloodHound exactly)
 const (
-	// Domain Trusts
-	ADSameForestTrust  = "SameForestTrust"
-	ADCrossForestTrust = "CrossForestTrust"
-
 	// Ownership and Control
 	ADOwnsLabel         = "Owns"
 	ADGenericAllLabel   = "GenericAll"
@@ -252,7 +248,8 @@ func init() {
 
 type ADRelationship struct {
 	*BaseRelationship
-	RelationshipType string `neo4j:"-" json:"relationshipType"`
+	RelationshipType string       `neo4j:"relationshipType" json:"relationshipType"`
+	Enforced         *GobSafeBool `neo4j:"enforced" json:"enforced,omitempty" desc:"Whether GPO link is enforced (no override). Only applicable to GPLink relationships" example:"true"`
 }
 
 func (ar *ADRelationship) GetDescription() string {
@@ -261,6 +258,28 @@ func (ar *ADRelationship) GetDescription() string {
 
 func (ar *ADRelationship) Label() string {
 	return ar.RelationshipType
+}
+
+func (ar *ADRelationship) Visit(o GraphRelationship) {
+	other, ok := o.(*ADRelationship)
+	if !ok {
+		return
+	}
+
+	if other.Enforced != nil {
+		ar.Enforced = other.Enforced
+	}
+
+	if ar.RelationshipType == "" && other.RelationshipType != "" {
+		ar.RelationshipType = other.RelationshipType
+	}
+
+	ar.BaseRelationship.Visit(other)
+}
+
+func (ar *ADRelationship) SetEnforced(value bool) {
+	gsb := GobSafeBool(value)
+	ar.Enforced = &gsb
 }
 
 func NewADRelationship(source, target GraphModel, label string) GraphRelationship {

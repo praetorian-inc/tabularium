@@ -4,7 +4,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"testing"
 
-	"github.com/praetorian-inc/tabularium/pkg/model/beta"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -197,28 +196,6 @@ func TestRisk_Valid(t *testing.T) {
 	assert.False(t, missingStatus.Valid())
 	assert.False(t, missingName.Valid())
 	assert.False(t, missingDNS.Valid())
-}
-
-type betaAsset struct {
-	beta.Beta
-	Asset
-}
-
-func NewBetaAsset(dns, name string) betaAsset {
-	return betaAsset{
-		Asset: NewAsset(dns, name),
-	}
-}
-
-func TestRisk_IsBeta(t *testing.T) {
-	normalAsset := NewAsset("example.com", "example.com")
-	betaAsset := NewBetaAsset("example.com", "example.com")
-
-	risk := NewRisk(&normalAsset, "test", TriageInfo)
-	assert.False(t, risk.Beta)
-
-	risk = NewRisk(&betaAsset, "test", TriageInfo)
-	assert.True(t, risk.Beta)
 }
 
 func TestRisk_TagsVist(t *testing.T) {
@@ -444,4 +421,125 @@ func TestRisk_VisitOrigins(t *testing.T) {
 	assert.Len(t, original.Origins, 2)
 	assert.Contains(t, original.Origins, "first-origin")
 	assert.Contains(t, original.Origins, "second-origin")
+}
+
+func TestRisk_TargetInterface(t *testing.T) {
+	risk := Risk{
+		Status: "TH",  // Triage High
+		DNS:    "example.com",
+		Key:    "#risk#example.com#CVE-2024-1234",
+		Name:   "swagger-api",
+	}
+
+	// Verify Risk implements Target interface
+	var _ Target = &risk
+
+	// Test GetStatus
+	assert.Equal(t, "TH", risk.GetStatus())
+
+	// Test Group
+	assert.Equal(t, "example.com", risk.Group())
+
+	// Test Identifier
+	assert.Equal(t, "#risk#example.com#CVE-2024-1234", risk.Identifier())
+
+	// Test IsStatus
+	assert.True(t, risk.IsStatus("T"))
+	assert.True(t, risk.IsStatus("TH"))
+	assert.False(t, risk.IsStatus("O"))
+
+	// Test IsClass
+	assert.True(t, risk.IsClass("swagger"))
+	assert.True(t, risk.IsClass("api"))
+	assert.False(t, risk.IsClass("directory"))
+
+	// Test IsPrivate
+	assert.False(t, risk.IsPrivate())
+}
+
+func TestRisk_WithStatus(t *testing.T) {
+	original := Risk{
+		Status: "TL",
+		DNS:    "example.com",
+		Key:    "#risk#example.com#test",
+	}
+
+	// Test WithStatus returns new risk
+	updated := original.WithStatus("TH")
+
+	// Verify new risk has updated status
+	assert.Equal(t, "TH", updated.GetStatus())
+
+	// Verify original unchanged
+	assert.Equal(t, "TL", original.GetStatus())
+
+	// Verify it returns Target interface
+	var _ Target = updated
+}
+
+func TestRisk_VisitSeverityUpdateWhenExistingRiskInTriage(t *testing.T) {
+	// Test that Visit() updates severity when the EXISTING risk (receiver) is in Triage,
+	// not based on whether the INCOMING risk is in Triage.
+	// This is the fix for the bug where n.Is(Triage) should be r.Is(Triage).
+
+	t.Run("existing risk in Triage with comment should update severity", func(t *testing.T) {
+		target := NewAsset("example.com", "example.com")
+
+		// Existing risk in Triage with Medium severity
+		existingRisk := NewRisk(&target, "test-vuln", TriageMedium)
+
+		// Incoming risk NOT in Triage (Open state) with High severity and comment
+		incomingRisk := NewRisk(&target, "test-vuln", OpenHigh)
+		incomingRisk.Comment = "Security team reviewed and escalated"
+		incomingRisk.Visited = "2024-01-22T12:00:00Z"
+
+		// Visit should update severity because existing risk IS in Triage
+		existingRisk.Visit(incomingRisk)
+
+		// Severity should be updated to High (from incoming risk)
+		assert.Equal(t, "H", existingRisk.Severity(), "Severity should update when existing risk is in Triage")
+		assert.Equal(t, "T", existingRisk.State(), "State should remain Triage")
+		assert.Equal(t, "TH", existingRisk.Status, "Status should be TriageHigh")
+		assert.Equal(t, incomingRisk.Comment, existingRisk.Comment, "Comment should be set from incoming risk")
+	})
+
+	t.Run("existing risk NOT in Triage should not update severity", func(t *testing.T) {
+		target := NewAsset("example.com", "example.com")
+
+		// Existing risk in Open state with Medium severity
+		existingRisk := NewRisk(&target, "test-vuln", OpenMedium)
+
+		// Incoming risk in Triage with High severity and comment
+		incomingRisk := NewRisk(&target, "test-vuln", TriageHigh)
+		incomingRisk.Comment = "Automated scan detected high severity"
+		incomingRisk.Visited = "2024-01-22T12:00:00Z"
+
+		// Visit should NOT update severity because existing risk is NOT in Triage
+		existingRisk.Visit(incomingRisk)
+
+		// Severity should remain Medium
+		assert.Equal(t, "M", existingRisk.Severity(), "Severity should not update when existing risk is not in Triage")
+		assert.Equal(t, "O", existingRisk.State(), "State should remain Open")
+		assert.Equal(t, "OM", existingRisk.Status, "Status should remain OpenMedium")
+		assert.Equal(t, incomingRisk.Comment, existingRisk.Comment, "Comment should still be set")
+	})
+
+	t.Run("existing risk in Triage without comment should not update severity", func(t *testing.T) {
+		target := NewAsset("example.com", "example.com")
+
+		// Existing risk in Triage with Medium severity
+		existingRisk := NewRisk(&target, "test-vuln", TriageMedium)
+
+		// Incoming risk with High severity but NO comment
+		incomingRisk := NewRisk(&target, "test-vuln", OpenHigh)
+		incomingRisk.Comment = "" // No comment
+		incomingRisk.Visited = "2024-01-22T12:00:00Z"
+
+		// Visit should NOT update severity because there's no comment
+		existingRisk.Visit(incomingRisk)
+
+		// Severity should remain Medium
+		assert.Equal(t, "M", existingRisk.Severity(), "Severity should not update without comment")
+		assert.Equal(t, "TM", existingRisk.Status, "Status should remain TriageMedium")
+	})
 }

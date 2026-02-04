@@ -1,14 +1,11 @@
 package model
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"regexp"
 	"strings"
 
-	"github.com/praetorian-inc/tabularium/pkg/model/beta"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -21,7 +18,6 @@ type Risk struct {
 	Username string `neo4j:"username" json:"username" desc:"Chariot username associated with the risk." example:"user@example.com"`
 	Key      string `neo4j:"key" json:"key" desc:"Unique key identifying the risk." example:"#risk#example.com#CVE-2023-12345"`
 	// Attributes
-	Beta       bool   `neo4j:"beta" json:"beta" desc:"Whether the risk is in beta." example:"true"`
 	DNS        string `neo4j:"dns" json:"dns" desc:"Primary DNS or group associated with the risk." example:"example.com"`
 	Name       string `neo4j:"name" json:"name" desc:"Name of the risk or vulnerability." example:"CVE-2023-12345"`
 	Source     string `neo4j:"source" json:"source" desc:"Source that identified the risk." example:"nessus"`
@@ -131,6 +127,10 @@ func (r *Risk) Visit(n Risk) {
 	}
 
 	r.Comment = n.Comment
+	// Handle severity updates when comment is set and risk is in Triage
+	if r.Comment != "" && r.Is(Triage) && r.Severity() != n.Severity() {
+		r.SetSeverity(n.Status)
+	}
 	r.Tags.Visit(n.Tags)
 	r.OriginationData.Visit(n.OriginationData)
 }
@@ -161,8 +161,12 @@ func (r *Risk) Proof(bits []byte) File {
 	return file
 }
 
+func (r *Risk) DefinitionFilepath() string {
+	return fmt.Sprintf("definitions/%s", r.Name)
+}
+
 func (r *Risk) Definition(definition RiskDefinition) File {
-	file := NewFile(fmt.Sprintf("definitions/%s", r.Name))
+	file := NewFile(r.DefinitionFilepath())
 	file.Overwrite = false
 
 	body := ""
@@ -204,13 +208,6 @@ func (r *Risk) State() string {
 	return string(r.Status[0])
 }
 
-func (r *Risk) Link(username string) string {
-	username = fmt.Sprintf("\"%s\"", username)
-	return fmt.Sprintf("https://chariot.praetorian.com/%s/vulnerabilities?vulnerabilityDrawerKey=%s&drawerOrder=%%5B%%22vulnerability%%22%%5D",
-		url.PathEscape(base64.StdEncoding.EncodeToString([]byte(username))),
-		url.QueryEscape(r.Key))
-}
-
 func (r *Risk) Attribute(name, value string) Attribute {
 	return NewAttribute(name, value, r)
 }
@@ -242,6 +239,45 @@ func (r *Risk) SetPlexTracID(clientID, reportID, findingID int) {
 	r.PlextracID = GeneratePlexTracID(clientID, reportID, findingID)
 }
 
+// Target interface implementation
+
+// GetStatus implements Target interface
+func (r *Risk) GetStatus() string {
+	return r.Status
+}
+
+// WithStatus implements Target interface
+func (r *Risk) WithStatus(status string) Target {
+	newRisk := *r
+	newRisk.Status = status
+	return &newRisk
+}
+
+// Group implements Target interface
+func (r *Risk) Group() string {
+	return r.DNS
+}
+
+// Identifier implements Target interface
+func (r *Risk) Identifier() string {
+	return r.Key
+}
+
+// IsStatus implements Target interface
+func (r *Risk) IsStatus(status string) bool {
+	return strings.HasPrefix(r.Status, status)
+}
+
+// IsClass implements Target interface
+func (r *Risk) IsClass(class string) bool {
+	return strings.Contains(strings.ToLower(r.Name), strings.ToLower(class))
+}
+
+// IsPrivate implements Target interface
+func (r *Risk) IsPrivate() bool {
+	return false // Risks are always external in this context
+}
+
 func NewRisk(target Target, name, status string) Risk {
 	return NewRiskWithDNS(target, name, target.Group(), status)
 }
@@ -251,7 +287,7 @@ func (r *Risk) Defaulted() {
 	r.Created = Now()
 	r.Updated = Now()
 	r.Visited = Now()
-	r.TTL = Future(14 * 24)
+	r.TTL = Future(30 * 24)
 }
 
 func (r *Risk) GetHooks() []registry.Hook {
@@ -262,20 +298,14 @@ func (r *Risk) GetHooks() []registry.Hook {
 				r.Key = fmt.Sprintf("#risk#%s#%s", r.DNS, r.Name)
 				r.Priority = riskPriority[r.Severity()]
 
-				if b, ok := r.Target.(beta.BetaObject); ok && b.IsBeta() {
-					r.Beta = true
-				}
-
 				return nil
 			},
 		},
 	}
 }
 
-var cveRegex = regexp.MustCompile(`(?i)^cve-\d+-\d+$`)
-
 func (r *Risk) formatName() {
-	if cveRegex.MatchString(r.Name) {
+	if CVERegex.MatchString(r.Name) {
 		r.Name = strings.ToUpper(r.Name)
 		return
 	}

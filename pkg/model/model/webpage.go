@@ -19,12 +19,7 @@ const (
 	DefaultMaxRequestsPerWebpage = 100
 	ERR_PORT                     = -1
 	DEFAULT_URL_PATH             = "/"
-	PARAMETERS_IDENTIFIED        = "parameters-identified"
-	WEB_LOGIN_IDENTIFIED         = "login-identified"
-	WEB_SECRET_IDENTIFIED        = "web-secret-identified"
 	DISPLAY_RESPONSE_FILE_PATH   = "file-path"
-	SCREENSHOT                   = "screenshot"
-	SC_RESOURCES                 = "resources"
 )
 
 const (
@@ -49,6 +44,25 @@ type WebpageCodeArtifact struct {
 	Secret string `json:"secret" desc:"The secret id of the code artifact" example:"#file#source.zip"`
 }
 
+type GeneratorConfig struct {
+	Type         string            `json:"type" neo4j:"type" desc:"Generator type (ollama, openai, rest)"`
+	Endpoint     string            `json:"endpoint" neo4j:"endpoint" desc:"API endpoint URL"`
+	APIKey       string            `json:"api_key,omitempty" neo4j:"api_key" desc:"API key for authentication"`
+	Model        string            `json:"model,omitempty" neo4j:"model" desc:"Model name to use"`
+	Method       string            `json:"method,omitempty" neo4j:"method" desc:"HTTP method (for REST generator)"`
+	Headers      map[string]string `json:"headers,omitempty" neo4j:"headers" desc:"Custom HTTP headers"`
+	Body         string            `json:"body,omitempty" neo4j:"body" desc:"Request body template"`
+	ResponsePath string            `json:"response_path,omitempty" neo4j:"response_path" desc:"JSONPath to extract response"`
+	ResponseType string            `json:"content_type,omitempty" neo4j:"content_type" desc:"Expected response content type"`
+}
+
+type EndpointFingerprint struct {
+	Type             string            `json:"type,omitempty" neo4j:"type" desc:"Fingerprint type (llm, authentication, etc.)" example:"llm"`
+	Component        string            `json:"component,omitempty" neo4j:"component" desc:"Detected component name for this specific endpoint" example:"okta"`
+	Service          string            `json:"service,omitempty" neo4j:"service" desc:"Detected overall web application's service" example:"ollama"`
+	GeneratorConfigs []GeneratorConfig `json:"generator_configs,omitempty" neo4j:"generator_configs" desc:"Augustus generator configurations from Julius fingerprinting"`
+}
+
 type Webpage struct {
 	registry.BaseModel
 	Username  string                `neo4j:"username" json:"username" desc:"The username associated with this webpage, if authenticated." example:"user@example.com"`
@@ -63,10 +77,13 @@ type Webpage struct {
 	History
 	// Neo4j fields
 	URL             string                `neo4j:"url" json:"url" desc:"The basic URL of the webpage." example:"https://example.com/path"`
-	Metadata        map[string]any        `neo4j:"metadata" json:"metadata" dynamodbav:"metadata" desc:"Additional metadata associated with the webpage." example:"{\"title\": \"Example Domain\"}"`
+	Metadata        map[string]any        `neo4j:"metadata" json:"metadata" dynamodbav:"metadata" desc:"Deprecated: Additional metadata associated with the webpage." example:"{\"title\": \"Example Domain\"}"`
 	SSOIdentified   map[string]SSOWebpage `neo4j:"sso_identified" json:"sso_identified" desc:"SSO providers that have identified this webpage with their last seen timestamps." example:"{\"okta\": {\"last_seen\": \"2023-10-27T11:00:00Z\", \"id\": \"1234567890\", \"name\": \"Chariot\"}}"`
 	DetailsFilepath string                `neo4j:"details_filepath" json:"details_filepath" dynamodbav:"details_filepath" desc:"The path to the details file for the webpage." example:"webpage/1234567890/details-1234567890.json"`
-	// S3 fields
+	Screenshot      string                `neo4j:"screenshot" json:"screenshot" desc:"Path to screenshot file" example:"webpage/example.com/443/screenshot.jpeg"`
+	Resources       string                `neo4j:"resources" json:"resources" desc:"Path to network resources zip" example:"webpage/example.com/443/network_resources.zip"`
+	EndpointFingerprint
+	// S3 / Hydratable fields
 	WebpageDetails
 	// Not Saved but useful for internal processing
 	Parent *WebApplication `neo4j:"-" json:"parent" desc:"The parent entity from which this webpage was discovered. Only used for creating a relationship. Pointer for easy reference"`
@@ -121,10 +138,6 @@ func (w *Webpage) GetLabels() []string {
 
 func (w *Webpage) Valid() bool {
 	return webPageKeyRegex.MatchString(w.Key)
-}
-
-func (w *Webpage) GetAgent() string {
-	return ScreenshotAgentName
 }
 
 func (w *Webpage) SetUsername(username string) {
@@ -209,6 +222,24 @@ func (w *Webpage) Merge(other Webpage) {
 	if other.Parent != nil {
 		w.Parent = other.Parent
 	}
+	if other.Screenshot != "" {
+		w.Screenshot = other.Screenshot
+	}
+	if other.Resources != "" {
+		w.Resources = other.Resources
+	}
+	if other.Type != "" {
+		w.Type = other.Type
+	}
+	if other.Component != "" {
+		w.Component = other.Component
+	}
+	if other.Service != "" {
+		w.Service = other.Service
+	}
+	if len(other.GeneratorConfigs) > 0 {
+		w.GeneratorConfigs = other.GeneratorConfigs
+	}
 	w.MergeSSOIdentified(other)
 	w.MergeMetadata(other)
 	w.MergeSource(other)
@@ -242,12 +273,13 @@ func (w *Webpage) Dehydrate() Hydratable {
 }
 
 func (w *Webpage) Defaulted() {
+	w.SSOIdentified = make(map[string]SSOWebpage)
 	w.Source = []string{}
 	w.Artifacts = []WebpageCodeArtifact{}
 	w.Status = Active
 	w.Created = Now()
 	w.Visited = Now()
-	w.TTL = Future(7 * 24)
+	w.TTL = Future(30 * 24)
 	w.Metadata = map[string]any{}
 }
 
@@ -314,7 +346,12 @@ func (w *Webpage) CreateParent() *WebApplication {
 	}
 
 	baseURL := fmt.Sprintf("%s://%s", parsedURL.Scheme, parsedURL.Host)
-	webapp := NewWebApplication(baseURL, baseURL)
+	webappName := baseURL
+	if w.Service != "" {
+		webappName = w.Service
+	}
+	webapp := NewWebApplication(baseURL, webappName)
+	webapp.Status = Pending
 	return &webapp
 }
 

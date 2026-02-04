@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/gob"
 	"fmt"
+	"maps"
 	"regexp"
 	"slices"
 	"strings"
@@ -49,7 +50,7 @@ func (c *CloudResource) Defaulted() {
 	c.Status = Active
 	c.Created = Now()
 	c.Visited = Now()
-	c.TTL = Future(7 * 24) // 1 week
+	c.TTL = Future(30 * 24) // 30 days
 	if c.Properties == nil {
 		c.Properties = make(map[string]any)
 	}
@@ -143,11 +144,7 @@ func (c *CloudResource) Visit(other *CloudResource) {
 		c.Properties = make(map[string]any)
 	}
 	if other.Properties != nil {
-		for k, v := range other.Properties {
-			if _, exists := c.Properties[k]; !exists {
-				c.Properties[k] = v
-			}
-		}
+		maps.Copy(c.Properties, other.Properties)
 	}
 	c.OriginationData.Visit(other.OriginationData)
 }

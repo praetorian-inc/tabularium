@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
@@ -60,6 +61,21 @@ var (
 	adObjectKeyPattern = regexp.MustCompile(`(?i)^#ad[a-z]+#[^#]+#[A-FS0-9-]+$`)
 )
 
+const TierZeroTag = "tier-zero"
+
+var TierZeroSIDSuffixes = []string{
+	"S-1-5-9", // Enterprise Domain Controllers
+	"-500",    // Administrator Account
+	"-512",    // Domain Admins
+	"-516",    // Domain Controllers
+	"-518",    // Schema Admins
+	"-519",    // Enterprise Admins
+	"-526",    // Key Admins
+	"-527",    // Enterprise Key Admins
+	"-544",    // Administrators
+	"-551",    // Backup Operators
+}
+
 type ADObject struct {
 	BaseAsset
 	registry.ModelAlias
@@ -112,6 +128,7 @@ func (ad *ADObject) Visit(o Assetlike) {
 	ad.ADProperties.Visit(other.ADProperties)
 
 	ad.BaseAsset.Visit(other)
+	ad.TTL = 0
 }
 
 func (d *ADObject) SeedModels() []Seedable {
@@ -136,6 +153,7 @@ func (ad *ADObject) WithStatus(status string) Target {
 
 func (ad *ADObject) Defaulted() {
 	ad.BaseAsset.Defaulted()
+	ad.TTL = 0
 }
 
 func (ad *ADObject) GetHooks() []registry.Hook {
@@ -155,10 +173,29 @@ func (ad *ADObject) GetHooks() []registry.Hook {
 					ad.SID = ad.ObjectID
 				}
 
+				ad.TTL = 0
+
+				ad.tagIfTierZero()
 				return nil
 			},
 		},
 		setGroupAndIdentifier(ad, &ad.Domain, &ad.ObjectID),
+	}
+}
+
+func (ad *ADObject) tagIfTierZero() {
+	if slices.Contains(ad.Tags.Tags, TierZeroTag) {
+		return
+	}
+
+	if ad.SID == "" {
+		return
+	}
+	for _, suffix := range TierZeroSIDSuffixes {
+		if strings.HasSuffix(ad.SID, suffix) {
+			ad.Tags.Tags = append(ad.Tags.Tags, TierZeroTag)
+			return
+		}
 	}
 }
 
@@ -197,7 +234,6 @@ func NewADObject(domain, objectID, distinguishedName, objectLabel string) ADObje
 
 	ad.Defaulted()
 	registry.CallHooks(&ad)
-	ad.TTL = 0
 
 	return ad
 }

@@ -8,6 +8,7 @@ import (
 )
 
 const (
+	GCPProvider      = "gcp"
 	GCPResourceLabel = "GCPResource"
 )
 
@@ -24,7 +25,7 @@ func NewGCPResource(name, accountRef string, rtype CloudResourceType, properties
 	r := GCPResource{
 		CloudResource: CloudResource{
 			Name:         name,
-			Provider:     "gcp",
+			Provider:     GCPProvider,
 			Properties:   properties,
 			ResourceType: rtype,
 			AccountRef:   accountRef,
@@ -196,8 +197,6 @@ func (a *GCPResource) NewAssets() []Asset {
 	return assets
 }
 
-// TODO: worth revisiting logic; currently properties only include public
-// IsPrivate determines if this GCP resource is private based on its IP/URL
 func (a *GCPResource) IsPrivate() bool {
 	return false
 }

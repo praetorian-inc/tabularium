@@ -324,6 +324,30 @@ func TestADObject_Visit(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "nonzero TTL set back to 0",
+			existing: ADObject{
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
+				BaseAsset: BaseAsset{
+					TTL: 10,
+				},
+			},
+			visiting: &ADObject{
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
+				BaseAsset: BaseAsset{
+					TTL: 20,
+				},
+			},
+			expected: ADObject{
+				Domain:   "example.local",
+				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
+				BaseAsset: BaseAsset{
+					TTL: 0,
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -665,4 +689,116 @@ func TestADDomain_SeedModels(t *testing.T) {
 	assert.Equal(t, 1, len(seedModels))
 	assert.Equal(t, &seed, seedModels[0])
 	assert.Contains(t, seed.GetLabels(), SeedLabel)
+}
+
+func TestADObject_TierZeroTagging(t *testing.T) {
+	tests := []struct {
+		name          string
+		objectID      string
+		shouldHaveTag bool
+		description   string
+	}{
+		{
+			name:          "Enterprise Domain Controllers (1-5-9)",
+			objectID:      "S-1-5-9",
+			shouldHaveTag: true,
+			description:   "Should tag Enterprise Domain Controllers",
+		},
+		{
+			name:          "Administrator Account (-500)",
+			objectID:      "S-1-5-21-123456789-123456789-123456789-500",
+			shouldHaveTag: true,
+			description:   "Should tag built-in Administrator account",
+		},
+		{
+			name:          "Domain Admins (-512)",
+			objectID:      "S-1-5-21-123456789-123456789-123456789-512",
+			shouldHaveTag: true,
+			description:   "Should tag Domain Admins group",
+		},
+		{
+			name:          "Domain Controllers (-516)",
+			objectID:      "S-1-5-21-123456789-123456789-123456789-516",
+			shouldHaveTag: true,
+			description:   "Should tag Domain Controllers group",
+		},
+		{
+			name:          "Schema Admins (-518)",
+			objectID:      "S-1-5-21-123456789-123456789-123456789-518",
+			shouldHaveTag: true,
+			description:   "Should tag Schema Admins group",
+		},
+		{
+			name:          "Enterprise Admins (-519)",
+			objectID:      "S-1-5-21-123456789-123456789-123456789-519",
+			shouldHaveTag: true,
+			description:   "Should tag Enterprise Admins group",
+		},
+		{
+			name:          "Key Admins (-526)",
+			objectID:      "S-1-5-21-123456789-123456789-123456789-526",
+			shouldHaveTag: true,
+			description:   "Should tag Key Admins group",
+		},
+		{
+			name:          "Enterprise Key Admins (-527)",
+			objectID:      "S-1-5-21-123456789-123456789-123456789-527",
+			shouldHaveTag: true,
+			description:   "Should tag Enterprise Key Admins group",
+		},
+		{
+			name:          "Backup Operators (-551)",
+			objectID:      "S-1-5-21-123456789-123456789-123456789-551",
+			shouldHaveTag: true,
+			description:   "Should tag Backup Operators group",
+		},
+		{
+			name:          "Administrators (-544)",
+			objectID:      "S-1-5-21-123456789-123456789-123456789-544",
+			shouldHaveTag: true,
+			description:   "Should tag built-in Administrators group",
+		},
+		{
+			name:          "Regular user",
+			objectID:      "S-1-5-21-123456789-123456789-123456789-1001",
+			shouldHaveTag: false,
+			description:   "Should not tag regular users",
+		},
+		{
+			name:          "Domain Users (-513)",
+			objectID:      "S-1-5-21-123456789-123456789-123456789-513",
+			shouldHaveTag: false,
+			description:   "Should not tag Domain Users group",
+		},
+		{
+			name:          "Non-SID ObjectID",
+			objectID:      "123e4567-e89b-12d3-a456-426614174000",
+			shouldHaveTag: false,
+			description:   "Should not tag UUID-based ObjectID",
+		},
+		{
+			name:          "Empty ObjectID",
+			objectID:      "",
+			shouldHaveTag: false,
+			description:   "Should not tag empty ObjectID",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ad := NewADObject("example.local", tt.objectID, NO_DISTINGUISHED_NAME, ADUserLabel)
+
+			if tt.shouldHaveTag {
+				assert.Contains(t, ad.Tags.Tags, TierZeroTag, tt.description)
+			} else {
+				assert.NotContains(t, ad.Tags.Tags, TierZeroTag, tt.description)
+			}
+		})
+	}
+}
+
+func TestDefaultedADObject(t *testing.T) {
+	object := ADObject{}
+	object.Defaulted()
+	assert.Zero(t, object.TTL, "TTL should be zero for defaulted AD object")
 }

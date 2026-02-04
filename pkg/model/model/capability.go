@@ -43,8 +43,10 @@ type Capability interface {
 	CredentialParams() AdditionalCredParams
 	// ValidateCredentials checks the credentials provided to the capability on construction, and returns an error if not valid
 	ValidateCredentials() error
-	// Static returns whether this capability should always be executed from static IPs if available
-	Static() bool
+	// Static returns whether this capability should always be executed from static IPs if available, or nil if no particular behavior is desired
+	Static() *bool
+	// BypassFrozen returns whether this capability should run even if the account is frozen, or nil if the default behavior is desired
+	BypassFrozen() *bool
 	// CheckAffiliation checks if the supplied asset is currently enumerated within the integrated account
 	CheckAffiliation(Asset) (bool, error)
 	// Integration returns whether this capability is an integration

@@ -144,6 +144,19 @@ func TestConversation_SecurityScenarios(t *testing.T) {
 	}
 }
 
+func TestConversation_ParentID(t *testing.T) {
+	parentConvID := "550e8400-e29b-41d4-a716-446655440000"
+	topic := "Subagent: test-agent"
+
+	conv := NewConversation(topic)
+	conv.ParentID = parentConvID
+
+	assert.Equal(t, topic, conv.Topic)
+	assert.Equal(t, parentConvID, conv.ParentID)
+	assert.NotEmpty(t, conv.UUID)
+	assert.True(t, conv.Valid())
+}
+
 func TestConversation_TopicField(t *testing.T) {
 	testCases := []struct {
 		name     string
@@ -179,4 +192,29 @@ func TestConversation_TopicField(t *testing.T) {
 			assert.Equal(t, tc.expected, conv.Topic)
 		})
 	}
+}
+
+func TestConversation_TraceIDField_Accessible(t *testing.T) {
+	conv := &Conversation{}
+	traceID := "550e8400-e29b-41d4-a716-446655440000"
+
+	conv.TraceID = traceID
+
+	assert.Equal(t, traceID, conv.TraceID)
+}
+
+func TestConversation_TraceIDField_EmptyByDefault(t *testing.T) {
+	conv := NewConversation("Test Topic")
+
+	assert.Empty(t, conv.TraceID)
+}
+
+func TestConversation_TraceIDField_PersistsAcrossOperations(t *testing.T) {
+	conv := NewConversation("Test Topic")
+	traceID := "trace-123-456-789"
+	conv.TraceID = traceID
+
+	registry.CallHooks(&conv)
+
+	assert.Equal(t, traceID, conv.TraceID)
 }

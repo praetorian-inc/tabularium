@@ -6,6 +6,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -271,6 +276,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -283,6 +293,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -295,6 +310,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -307,6 +327,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -319,6 +344,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -331,6 +361,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -343,6 +378,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -355,6 +395,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -367,6 +412,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -379,6 +429,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -391,6 +446,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -403,6 +463,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -415,6 +480,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -468,6 +538,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -726,6 +801,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -861,6 +941,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -1408,6 +1493,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -1420,6 +1510,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -1432,6 +1527,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -1550,9 +1650,12 @@ components:
           items:
             type: integer
           type: array
+        orgPolicyFilename:
+          type: string
       required:
       - CloudResource
       - orgPolicy
+      - orgPolicyFilename
       type: object
     azureresource:
       description: ' ()'
@@ -1644,6 +1747,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -1656,6 +1764,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -1668,6 +1781,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -1808,6 +1926,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -1867,6 +1990,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -1879,6 +2007,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -1891,6 +2024,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -1903,6 +2041,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -1915,6 +2058,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2047,6 +2195,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2059,6 +2212,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2079,9 +2237,16 @@ components:
           description: Unique key for the conversation.
           example: '#conversation#example-conversation#550e8400-e29b-41d4-a716-446655440000'
           type: string
+        parent_id:
+          description: UUID of the parent conversation (for subagent conversations).
+          example: 550e8400-e29b-41d4-a716-446655440000
+          type: string
         topic:
           description: Topic extracted from first message (first 256 chars).
           example: Find all active assets in my infrastructure
+          type: string
+        trace_id:
+          description: Trace ID for correlating telemetry events across conversation.
           type: string
         user:
           description: Who started the conversation.
@@ -2222,6 +2387,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2319,6 +2489,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2331,6 +2506,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2343,6 +2523,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2364,6 +2549,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2446,6 +2636,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2458,6 +2653,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2470,6 +2670,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2492,12 +2697,59 @@ components:
       required:
       - BaseModel
       type: object
+    event:
+      description: Represents a telemetry event in a trace.
+      properties:
+        BaseModel:
+          type: object
+        attributes:
+          description: Additional attributes.
+          type: object
+        created:
+          description: Prefixed timestamp for Created GSI queries.
+          type: string
+        event_id:
+          description: Unique event identifier (UUID).
+          type: string
+        event_type:
+          description: Type of event (job_start, job_end, etc).
+          type: string
+        key:
+          description: 'Event key: #event#{trace_id}#{event_id}'
+          type: string
+        parent_span_id:
+          description: Parent span ID.
+          type: string
+        span_id:
+          description: This span's identifier (UUID).
+          type: string
+        trace_id:
+          description: Root trace identifier (UUID).
+          type: string
+        username:
+          description: Account owner for tenant isolation.
+          type: string
+      required:
+      - BaseModel
+      - created
+      - event_id
+      - event_type
+      - key
+      - span_id
+      - trace_id
+      - username
+      type: object
     executedcom:
       description: Represents an Active Directory relationship between two AD objects,
         supporting all BloodHound relationship types.
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2622,6 +2874,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2695,6 +2952,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2715,6 +2977,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2727,6 +2994,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2739,6 +3011,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2751,6 +3028,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2763,6 +3045,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2775,6 +3062,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2787,6 +3079,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2799,6 +3096,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2837,6 +3139,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2849,6 +3156,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2870,6 +3182,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -2962,6 +3279,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -3013,6 +3335,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -3062,6 +3389,10 @@ components:
           items:
             type: string
           type: array
+        current_span_id:
+          description: Current execution span ID (not persisted to DynamoDB, but serialized
+            through SQS for trace correlation).
+          type: string
         delayed:
           description: Timestamp that this job should be delayed until
           example: "2023-10-27T10:00:00Z"
@@ -3096,6 +3427,9 @@ components:
         parent:
           description: Optional parent target from which this job was spawned.
           type: object
+        parent_span_id:
+          description: Parent span ID from spawning job.
+          type: string
         partition:
           description: The partition of the job.
           example: user@example.com##asset#test#0.0.0.0
@@ -3126,6 +3460,9 @@ components:
         target:
           description: The primary target of the job.
           type: object
+        trace_id:
+          description: Root trace ID for this job chain.
+          type: string
         ttl:
           description: Time-to-live for the job record (Unix timestamp).
           example: "1706353200"
@@ -3263,6 +3600,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -3275,6 +3617,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -3287,6 +3634,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -3299,6 +3651,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -3311,6 +3668,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -3528,6 +3890,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -3540,6 +3907,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -3772,6 +4144,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -3784,6 +4161,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -3796,6 +4178,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -3966,6 +4353,8 @@ components:
       properties:
         BaseModel:
           type: object
+        Tags:
+          type: object
         capability:
           description: Capability that discovered this port.
           example: portscan
@@ -4016,6 +4405,7 @@ components:
           type: string
       required:
       - BaseModel
+      - Tags
       - created
       - key
       - parent
@@ -4034,9 +4424,15 @@ components:
       properties:
         BaseModel:
           type: object
+        History:
+          type: object
         capability:
           description: Capability associated with processing this preseed record.
           example: whois-lookup
+          type: string
+        comment:
+          description: User-provided comment about the preseed.
+          example: Verified registrant information
           type: string
         created:
           description: Timestamp when the preseed record was created (RFC3339).
@@ -4086,6 +4482,7 @@ components:
           type: string
       required:
       - BaseModel
+      - History
       - created
       - display
       - key
@@ -4103,6 +4500,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -4115,6 +4517,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -4127,6 +4534,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -4139,6 +4551,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -4151,6 +4568,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -4210,10 +4632,6 @@ components:
           type: object
         Tags:
           type: object
-        beta:
-          description: Whether the risk is in beta.
-          example: "true"
-          type: boolean
         comment:
           description: User-provided comment about the risk.
           example: Confirmed by manual check
@@ -4273,7 +4691,6 @@ components:
       - MLProperties
       - OriginationData
       - Tags
-      - beta
       - created
       - dns
       - key
@@ -4324,6 +4741,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -4336,6 +4758,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -4429,6 +4856,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -4441,6 +4873,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -4532,6 +4969,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -4544,6 +4986,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -4643,12 +5090,59 @@ components:
       - categories
       - name
       type: object
+    traceevent:
+      description: Represents a telemetry event in a trace.
+      properties:
+        BaseModel:
+          type: object
+        attributes:
+          description: Additional attributes.
+          type: object
+        created:
+          description: Prefixed timestamp for Created GSI queries.
+          type: string
+        event_id:
+          description: Unique event identifier (UUID).
+          type: string
+        event_type:
+          description: Type of event (job_start, job_end, etc).
+          type: string
+        key:
+          description: 'Event key: #event#{trace_id}#{event_id}'
+          type: string
+        parent_span_id:
+          description: Parent span ID.
+          type: string
+        span_id:
+          description: This span's identifier (UUID).
+          type: string
+        trace_id:
+          description: Root trace identifier (UUID).
+          type: string
+        username:
+          description: Account owner for tenant isolation.
+          type: string
+      required:
+      - BaseModel
+      - created
+      - event_id
+      - event_type
+      - key
+      - span_id
+      - trace_id
+      - username
+      type: object
     trustedforntauth:
       description: Represents an Active Directory relationship between two AD objects,
         supporting all BloodHound relationship types.
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -4660,6 +5154,8 @@ components:
         a CVE).
       properties:
         BaseModel:
+          type: object
+        ThreatNotificationMetadata:
           type: object
         created:
           description: Date the vulnerability was first created/published (from NVD).
@@ -4724,6 +5220,7 @@ components:
           type: integer
       required:
       - BaseModel
+      - ThreatNotificationMetadata
       - exploit
       - id
       - kev
@@ -4825,6 +5322,8 @@ components:
       properties:
         BaseModel:
           type: object
+        EndpointFingerprint:
+          type: object
         History:
           type: object
         WebpageDetails:
@@ -4848,7 +5347,7 @@ components:
           example: '#webpage#https://example.com#parentKey'
           type: string
         metadata:
-          description: Additional metadata associated with the webpage.
+          description: 'Deprecated: Additional metadata associated with the webpage.'
           example: '{"title": "Example Domain"}'
           type: object
         parent:
@@ -4859,6 +5358,14 @@ components:
           description: Whether the webpage is on a public web server.
           example: "false"
           type: boolean
+        resources:
+          description: Path to network resources zip
+          example: webpage/example.com/443/network_resources.zip
+          type: string
+        screenshot:
+          description: Path to screenshot file
+          example: webpage/example.com/443/screenshot.jpeg
+          type: string
         source:
           description: Sources that identified this webpage (e.g., seed, crawl)
           example: '["crawl", "login"]'
@@ -4895,6 +5402,7 @@ components:
           type: string
       required:
       - BaseModel
+      - EndpointFingerprint
       - History
       - WebpageDetails
       - artifacts
@@ -4904,6 +5412,8 @@ components:
       - metadata
       - parent
       - private
+      - resources
+      - screenshot
       - source
       - sso_identified
       - status
@@ -4918,6 +5428,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -4930,6 +5445,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -4942,6 +5462,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -4954,6 +5479,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -4966,6 +5496,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -4978,6 +5513,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -4990,6 +5530,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -5002,6 +5547,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:
@@ -5014,6 +5564,11 @@ components:
       properties:
         BaseRelationship:
           type: object
+        enforced:
+          description: Whether GPO link is enforced (no override). Only applicable
+            to GPLink relationships
+          example: "true"
+          type: boolean
         relationshipType:
           type: string
       required:

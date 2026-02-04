@@ -16,6 +16,9 @@ func TestCapabilitySchedule_NewCapabilitySchedule(t *testing.T) {
 		Saturday: DaySchedule{Enabled: true, Time: "08:00"},
 	}
 
+	now := time.Now().UTC().Format(time.RFC3339)
+	future := time.Now().UTC().AddDate(0, 0, 7).Format(time.RFC3339)
+
 	config := map[string]string{
 		"Username": "admin",
 		"Password": "secret",
@@ -28,8 +31,8 @@ func TestCapabilitySchedule_NewCapabilitySchedule(t *testing.T) {
 		"#addomain#example.com#S-1-5-21-123",
 		config,
 		weeklySchedule,
-		"2025-11-22T00:00:00Z",
-		"2025-12-10T00:00:00Z",
+		now,
+		future,
 		"C.test-client-123", // clientID
 	)
 

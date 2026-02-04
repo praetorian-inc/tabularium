@@ -2,6 +2,8 @@ package model
 
 import (
 	"encoding/gob"
+	"regexp"
+	"slices"
 	"time"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
@@ -18,6 +20,7 @@ func init() {
 
 type Notification interface {
 	Push(risk Risk) error
+	PushThreatNotification(vuln Vulnerability) error
 	CreateTicket(risk Risk, templateID string) (Attribute, error)
 	AssociateTicket(risk Risk, ticketID string) (Attribute, error)
 	ValidateCredentials() (map[string]any, error)
@@ -96,6 +99,7 @@ type AgentSendable interface {
 }
 
 type Hydratable interface {
+	registry.Model
 	Hydrate([]byte) error
 	HydratableFilepath() string
 	HydratedFile() File
@@ -224,9 +228,9 @@ const (
 	Synchronous string = "synchronous"
 
 	// praetorian-ai agent constants
-	AffiliationAgentName string = "affiliation"
-	AutoTriageAgentName  string = "autotriage"
-	ScreenshotAgentName  string = "screenshotter"
+	AffiliationAgentName    string = "affiliation"
+	AutoTriageAgentName     string = "autotriage"
+	RiskDefinitionAgentName string = "auto-vuln-hydration"
 
 	// system user for globally shared records
 	SystemUser string = "global"
@@ -264,6 +268,15 @@ func Future(hours int) int64 {
 	return time.Now().UTC().Add(time.Duration(hours) * time.Hour).Unix()
 }
 
+var permanentSources = []string{
+	SeedSource,
+	AccountSource,
+}
+
+func IsPermanentSource(source string) bool {
+	return slices.Contains(permanentSources, source)
+}
+
 var AgentDataTypes = map[string]map[string]bool{
 	AutoTriageAgentName: {
 		"risks": true,
@@ -288,3 +301,6 @@ const LargeArtifactsUploadExpiration = 6 * 24 * time.Hour
 const GenericPraetorianAegisInstallerMsi = "PraetorianAegisInstaller_generic.msi"
 const GenericPraetorianAegisInstallerDeb = "PraetorianAegisInstaller_generic.deb"
 const GenericPraetorianAegisInstallerRpm = "PraetorianAegisInstaller_generic.rpm"
+
+var CVERegex = regexp.MustCompile(`(?i)^cve-\d{4}-\d+$`)
+var CVEExtractRegex = regexp.MustCompile(`(?i)^(cve-\d{4}-\d+)`)
