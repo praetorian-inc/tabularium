@@ -50,6 +50,7 @@ const (
 	InsightVMCredential             CredentialType = "insight-vm"              // InsightVM credentials
 	MicrosoftDefenderCredential     CredentialType = "microsoft-defender"      // Microsoft Defender credentials
 	CrowdStrikeSpotlightCredential  CredentialType = "crowdstrike-spotlight"   // CrowdStrike Spotlight credentials
+	ExtrahopCredential              CredentialType = "extrahop"                // Extrahop API key
 	NessusCredential                CredentialType = "nessus"                  // Nessus API key
 	NS1Credential                   CredentialType = "ns1"                     // NS1 API key
 	BurpSuiteCredential             CredentialType = "portswigger"             // Customer BurpSuite API key
