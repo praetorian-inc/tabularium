@@ -139,3 +139,14 @@ func PortFromModel(p *model.Port) Port {
 		},
 	}
 }
+
+// AccountFromModel creates an external Account from a Tabularium Account.
+func AccountFromModel(a *model.Account) Account {
+	return Account{
+		Name:     a.Name,
+		Member:   a.Member,
+		Value:    a.Value,
+		Secret:   a.Secret,
+		Settings: a.Settings,
+	}
+}

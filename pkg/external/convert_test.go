@@ -391,3 +391,301 @@ func TestPortFromModel(t *testing.T) {
 	assert.Equal(t, "example.com", ext.Parent.DNS)
 	assert.Equal(t, "192.168.1.1", ext.Parent.Name)
 }
+
+func TestAccount(t *testing.T) {
+	t.Run("ToModel creates valid account", func(t *testing.T) {
+		ext := Account{
+			Name:   "customer@example.com",
+			Member: "amazon",
+			Value:  "123456789012",
+			Secret: map[string]string{
+				"access_key_id":     "AKIAIOSFODNN7EXAMPLE",
+				"secret_access_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+			},
+		}
+
+		account, err := ext.ToModel()
+		require.NoError(t, err)
+		require.NotNil(t, account)
+
+		assert.Equal(t, "customer@example.com", account.Name)
+		assert.Equal(t, "amazon", account.Member)
+		assert.Equal(t, "123456789012", account.Value)
+		assert.Equal(t, ext.Secret, account.Secret)
+		assert.Contains(t, account.Key, "#account#")
+		assert.NotEmpty(t, account.Updated)
+	})
+
+	t.Run("ToModel with settings", func(t *testing.T) {
+		settings := []byte(`{"region": "us-east-1", "notifications": true}`)
+		ext := Account{
+			Name:     "customer@example.com",
+			Member:   "azure",
+			Value:    "subscription-id-12345",
+			Secret:   map[string]string{"client_secret": "secret123"},
+			Settings: settings,
+		}
+
+		account, err := ext.ToModel()
+		require.NoError(t, err)
+		require.NotNil(t, account)
+
+		assert.Equal(t, "customer@example.com", account.Name)
+		assert.Equal(t, "azure", account.Member)
+		assert.Equal(t, "subscription-id-12345", account.Value)
+		assert.Equal(t, settings, []byte(account.Settings))
+	})
+
+	t.Run("missing name returns error", func(t *testing.T) {
+		ext := Account{
+			Member: "amazon",
+			Value:  "123456789012",
+			Secret: map[string]string{"key": "value"},
+		}
+		_, err := ext.ToModel()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "name")
+	})
+
+	t.Run("missing member returns error", func(t *testing.T) {
+		ext := Account{
+			Name:   "customer@example.com",
+			Value:  "123456789012",
+			Secret: map[string]string{"key": "value"},
+		}
+		_, err := ext.ToModel()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "member")
+	})
+
+	t.Run("missing value returns error", func(t *testing.T) {
+		ext := Account{
+			Name:   "customer@example.com",
+			Member: "amazon",
+			Secret: map[string]string{"key": "value"},
+		}
+		_, err := ext.ToModel()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "value")
+	})
+
+	t.Run("empty secret is allowed", func(t *testing.T) {
+		ext := Account{
+			Name:   "customer@example.com",
+			Member: "amazon",
+			Value:  "123456789012",
+		}
+		account, err := ext.ToModel()
+		require.NoError(t, err)
+		assert.NotNil(t, account)
+	})
+}
+
+func TestAccountFromModel(t *testing.T) {
+	settings := []byte(`{"region": "us-west-2"}`)
+	fullAccount := model.NewAccountWithSettings(
+		"customer@example.com",
+		"amazon",
+		"123456789012",
+		map[string]string{"access_key": "AKIATEST"},
+		settings,
+	)
+
+	ext := AccountFromModel(&fullAccount)
+
+	assert.Equal(t, "customer@example.com", ext.Name)
+	assert.Equal(t, "amazon", ext.Member)
+	assert.Equal(t, "123456789012", ext.Value)
+	assert.Equal(t, map[string]string{"access_key": "AKIATEST"}, ext.Secret)
+	assert.Equal(t, settings, ext.Settings)
+}
+
+func TestAWSResource(t *testing.T) {
+	t.Run("ToModel creates valid AWS resource", func(t *testing.T) {
+		ext := AWSResource{
+			ARN:          "arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0",
+			AccountRef:   "123456789012",
+			ResourceType: model.AWSEC2Instance,
+			Properties: map[string]any{
+				"PublicIp": "54.123.45.67",
+			},
+		}
+
+		resource, err := ext.ToModel()
+		require.NoError(t, err)
+		require.NotNil(t, resource)
+
+		assert.Equal(t, "arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0", resource.Name)
+		assert.Equal(t, "123456789012", resource.AccountRef)
+		assert.Equal(t, model.AWSEC2Instance, resource.ResourceType)
+		assert.Equal(t, model.AWSProvider, resource.Provider)
+		assert.Equal(t, "us-east-1", resource.Region)
+		assert.Contains(t, resource.Key, "#awsresource#")
+		assert.Equal(t, model.Active, resource.Status)
+	})
+
+	t.Run("implements Target interface", func(t *testing.T) {
+		ext := AWSResource{
+			ARN:          "arn:aws:s3:::my-bucket",
+			AccountRef:   "123456789012",
+			ResourceType: model.AWSS3Bucket,
+		}
+
+		assert.Equal(t, "123456789012", ext.Group())
+		assert.Equal(t, "arn:aws:s3:::my-bucket", ext.Identifier())
+
+		target, err := ext.ToTarget()
+		require.NoError(t, err)
+		assert.IsType(t, &model.AWSResource{}, target)
+	})
+
+	t.Run("missing ARN returns error", func(t *testing.T) {
+		ext := AWSResource{
+			AccountRef:   "123456789012",
+			ResourceType: model.AWSEC2Instance,
+		}
+		_, err := ext.ToModel()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "arn")
+	})
+
+	t.Run("missing AccountRef returns error", func(t *testing.T) {
+		ext := AWSResource{
+			ARN:          "arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0",
+			ResourceType: model.AWSEC2Instance,
+		}
+		_, err := ext.ToModel()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "accountRef")
+	})
+
+	t.Run("preserves OrgPolicyFilename", func(t *testing.T) {
+		ext := AWSResource{
+			ARN:               "arn:aws:lambda:us-west-2:123456789012:function:my-function",
+			AccountRef:        "123456789012",
+			ResourceType:      model.AWSLambdaFunction,
+			OrgPolicyFilename: "awsresource/123456789012/my-function/org-policies.json",
+		}
+
+		resource, err := ext.ToModel()
+		require.NoError(t, err)
+		assert.Equal(t, "awsresource/123456789012/my-function/org-policies.json", resource.OrgPolicyFilename)
+	})
+
+	t.Run("invalid ARN returns error", func(t *testing.T) {
+		ext := AWSResource{
+			ARN:          "not-an-arn",
+			AccountRef:   "123456789012",
+			ResourceType: model.AWSEC2Instance,
+		}
+		_, err := ext.ToModel()
+		require.Error(t, err)
+	})
+}
+
+func TestAWSResourceFromModel(t *testing.T) {
+	fullResource, err := model.NewAWSResource(
+		"arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0",
+		"123456789012",
+		model.AWSEC2Instance,
+		map[string]any{
+			"PublicIp": "54.123.45.67",
+		},
+	)
+	require.NoError(t, err)
+	fullResource.OrgPolicyFilename = "test-policy.json"
+
+	ext := AWSResourceFromModel(&fullResource)
+
+	assert.Equal(t, "arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0", ext.ARN)
+	assert.Equal(t, "123456789012", ext.AccountRef)
+	assert.Equal(t, model.AWSEC2Instance, ext.ResourceType)
+	assert.Equal(t, "test-policy.json", ext.OrgPolicyFilename)
+	assert.NotNil(t, ext.Properties)
+	assert.Equal(t, "54.123.45.67", ext.Properties["PublicIp"])
+}
+
+func TestWebApplication(t *testing.T) {
+	t.Run("ToModel creates valid web application", func(t *testing.T) {
+		ext := WebApplication{
+			PrimaryURL: "https://app.example.com",
+			Name:       "Example App",
+			URLs:       []string{"https://api.example.com", "https://admin.example.com"},
+			Status:     model.Active,
+		}
+
+		webapp, err := ext.ToModel()
+		require.NoError(t, err)
+		require.NotNil(t, webapp)
+
+		// URLs are normalized with trailing slash
+		assert.Equal(t, "https://app.example.com/", webapp.PrimaryURL)
+		assert.Equal(t, "Example App", webapp.Name)
+		assert.Equal(t, 2, len(webapp.URLs))
+		assert.Contains(t, webapp.URLs, "https://api.example.com/")
+		assert.Contains(t, webapp.URLs, "https://admin.example.com/")
+		assert.Equal(t, model.Active, webapp.Status)
+		assert.Contains(t, webapp.Key, "#webapplication#")
+	})
+
+	t.Run("implements Target interface", func(t *testing.T) {
+		ext := WebApplication{
+			PrimaryURL: "https://app.example.com",
+			Name:       "Example App",
+		}
+
+		assert.Equal(t, "Example App", ext.Group())
+		assert.Equal(t, "https://app.example.com", ext.Identifier())
+
+		target, err := ext.ToTarget()
+		require.NoError(t, err)
+		assert.IsType(t, &model.WebApplication{}, target)
+	})
+
+	t.Run("defaults name to primary URL when name is empty", func(t *testing.T) {
+		ext := WebApplication{
+			PrimaryURL: "https://app.example.com",
+		}
+
+		webapp, err := ext.ToModel()
+		require.NoError(t, err)
+		// Name defaults to the input URL (before normalization)
+		assert.Equal(t, "https://app.example.com", webapp.Name)
+	})
+
+	t.Run("missing primary URL returns error", func(t *testing.T) {
+		ext := WebApplication{
+			Name: "Example App",
+		}
+		_, err := ext.ToModel()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "primary_url")
+	})
+
+	t.Run("normalizes URLs", func(t *testing.T) {
+		ext := WebApplication{
+			PrimaryURL: "http://example.com:80",
+			Name:       "Example",
+		}
+
+		webapp, err := ext.ToModel()
+		require.NoError(t, err)
+		// NewWebApplication will normalize the URL
+		assert.NotEmpty(t, webapp.PrimaryURL)
+	})
+}
+
+func TestWebApplicationFromModel(t *testing.T) {
+	modelWebApp := model.NewWebApplication("https://app.example.com", "Example App")
+	modelWebApp.URLs = []string{"https://api.example.com/"}
+	modelWebApp.Status = model.Active
+
+	ext := WebApplicationFromModel(&modelWebApp)
+
+	// URLs are normalized in the model, so they'll have trailing slash
+	assert.Equal(t, "https://app.example.com/", ext.PrimaryURL)
+	assert.Equal(t, "Example App", ext.Name)
+	assert.Equal(t, 1, len(ext.URLs))
+	assert.Contains(t, ext.URLs, "https://api.example.com/")
+	assert.Equal(t, model.Active, ext.Status)
+}
