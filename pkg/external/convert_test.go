@@ -8,6 +8,160 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestAsset(t *testing.T) {
+	t.Run("ToModel creates valid asset", func(t *testing.T) {
+		ext := Asset{DNS: "example.com", Name: "192.168.1.1"}
+
+		asset, err := ext.ToModel()
+		require.NoError(t, err)
+		require.NotNil(t, asset)
+
+		assert.Equal(t, "example.com", asset.DNS)
+		assert.Equal(t, "192.168.1.1", asset.Name)
+		assert.Contains(t, asset.Key, "#asset#")
+		assert.Equal(t, model.Active, asset.Status)
+	})
+
+	t.Run("implements Target interface", func(t *testing.T) {
+		ext := Asset{DNS: "example.com", Name: "192.168.1.1"}
+
+		assert.Equal(t, "example.com", ext.Group())
+		assert.Equal(t, "192.168.1.1", ext.Identifier())
+
+		target, err := ext.ToTarget()
+		require.NoError(t, err)
+		assert.IsType(t, &model.Asset{}, target)
+	})
+
+	t.Run("empty asset returns error", func(t *testing.T) {
+		ext := Asset{}
+		_, err := ext.ToModel()
+		require.Error(t, err)
+	})
+}
+
+func TestPort(t *testing.T) {
+	t.Run("ToModel creates valid port", func(t *testing.T) {
+		ext := Port{
+			Protocol: "tcp",
+			Port:     443,
+			Service:  "https",
+			Parent:   Asset{DNS: "example.com", Name: "192.168.1.1"},
+		}
+
+		port, err := ext.ToModel()
+		require.NoError(t, err)
+		require.NotNil(t, port)
+
+		assert.Equal(t, "tcp", port.Protocol)
+		assert.Equal(t, 443, port.Port)
+		assert.Equal(t, "https", port.Service)
+		assert.Contains(t, port.Key, "#port#")
+	})
+
+	t.Run("implements Target interface", func(t *testing.T) {
+		ext := Port{
+			Protocol: "tcp",
+			Port:     443,
+			Parent:   Asset{DNS: "example.com", Name: "192.168.1.1"},
+		}
+
+		assert.Equal(t, "example.com", ext.Group())
+		assert.Equal(t, "192.168.1.1:443", ext.Identifier())
+
+		target, err := ext.ToTarget()
+		require.NoError(t, err)
+		assert.IsType(t, &model.Port{}, target)
+	})
+
+	t.Run("invalid port number returns error", func(t *testing.T) {
+		ext := Port{
+			Protocol: "tcp",
+			Port:     0,
+			Parent:   Asset{DNS: "example.com", Name: "192.168.1.1"},
+		}
+		_, err := ext.ToModel()
+		require.Error(t, err)
+	})
+
+	t.Run("missing protocol returns error", func(t *testing.T) {
+		ext := Port{
+			Port:   443,
+			Parent: Asset{DNS: "example.com", Name: "192.168.1.1"},
+		}
+		_, err := ext.ToModel()
+		require.Error(t, err)
+	})
+}
+
+func TestRisk(t *testing.T) {
+	t.Run("ToModel with asset target", func(t *testing.T) {
+		ext := Risk{
+			Name:   "CVE-2023-12345",
+			Status: "TH",
+			Target: Asset{DNS: "example.com", Name: "192.168.1.1"},
+		}
+
+		risk, err := ext.ToModel()
+		require.NoError(t, err)
+		require.NotNil(t, risk)
+
+		assert.Equal(t, "CVE-2023-12345", risk.Name)
+		assert.Equal(t, "TH", risk.Status)
+		assert.Equal(t, "example.com", risk.DNS)
+		assert.Contains(t, risk.Key, "#risk#")
+	})
+
+	t.Run("ToModel with port target", func(t *testing.T) {
+		ext := Risk{
+			Name:   "ssl-weak-cipher",
+			Status: "OH",
+			Target: Port{
+				Protocol: "tcp",
+				Port:     443,
+				Parent:   Asset{DNS: "example.com", Name: "192.168.1.1"},
+			},
+		}
+
+		risk, err := ext.ToModel()
+		require.NoError(t, err)
+		require.NotNil(t, risk)
+
+		assert.Equal(t, "ssl-weak-cipher", risk.Name)
+		assert.Equal(t, "OH", risk.Status)
+		assert.Contains(t, risk.Key, "#risk#")
+	})
+
+	t.Run("default status when empty", func(t *testing.T) {
+		ext := Risk{
+			Name:   "CVE-2023-12345",
+			Target: Asset{DNS: "example.com", Name: "example.com"},
+		}
+
+		risk, err := ext.ToModel()
+		require.NoError(t, err)
+		assert.Equal(t, "TH", risk.Status) // Default to Triage High
+	})
+
+	t.Run("missing name returns error", func(t *testing.T) {
+		ext := Risk{
+			Status: "TH",
+			Target: Asset{DNS: "example.com", Name: "192.168.1.1"},
+		}
+		_, err := ext.ToModel()
+		require.Error(t, err)
+	})
+
+	t.Run("missing target returns error", func(t *testing.T) {
+		ext := Risk{
+			Name:   "CVE-2023-12345",
+			Status: "TH",
+		}
+		_, err := ext.ToModel()
+		require.Error(t, err)
+	})
+}
+
 func TestIPToAsset(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -84,7 +238,6 @@ func TestIPToAsset(t *testing.T) {
 			assert.Equal(t, tt.wantName, asset.Name)
 			assert.Equal(t, tt.wantClass, asset.Class)
 			assert.Equal(t, tt.wantPrivate, asset.Private)
-			// Key should be auto-generated
 			assert.Contains(t, asset.Key, "#asset#")
 		})
 	}
@@ -149,15 +302,12 @@ func TestDomainToAsset(t *testing.T) {
 			assert.Equal(t, tt.wantDNS, asset.DNS)
 			assert.Equal(t, tt.wantName, asset.Name)
 			assert.Equal(t, tt.wantClass, asset.Class)
-			// Key should be auto-generated
 			assert.Contains(t, asset.Key, "#asset#")
 		})
 	}
 }
 
 func TestCIDRToAsset(t *testing.T) {
-	// Note: CIDR assets require the CIDR to be in the DNS field for class detection.
-	// The domain parameter is ignored for CIDR assets - both DNS and Name are set to the CIDR.
 	tests := []struct {
 		name        string
 		cidr        string
@@ -214,128 +364,30 @@ func TestCIDRToAsset(t *testing.T) {
 			assert.Equal(t, tt.wantName, asset.Name)
 			assert.Equal(t, tt.wantClass, asset.Class)
 			assert.Equal(t, tt.wantPrivate, asset.Private)
-			// Key should be auto-generated
 			assert.Contains(t, asset.Key, "#asset#")
 		})
 	}
 }
 
-func TestConvert(t *testing.T) {
-	t.Run("convert external asset to tabularium asset", func(t *testing.T) {
-		// Simulate an external Asset-like struct
-		type ExternalAsset struct {
-			DNS     string `json:"dns"`
-			Name    string `json:"name"`
-			Private bool   `json:"private"`
-		}
+func TestAssetFromModel(t *testing.T) {
+	fullAsset := model.NewAsset("example.com", "192.168.1.1")
 
-		external := ExternalAsset{
-			DNS:     "example.com",
-			Name:    "192.168.1.1",
-			Private: true,
-		}
+	ext := AssetFromModel(&fullAsset)
 
-		asset, err := Convert[*model.Asset](external)
-		require.NoError(t, err)
-		require.NotNil(t, asset)
-
-		assert.Equal(t, "example.com", asset.DNS)
-		assert.Equal(t, "192.168.1.1", asset.Name)
-		assert.Equal(t, true, asset.Private)
-		// Key should be generated via hooks
-		assert.Contains(t, asset.Key, "#asset#")
-		// Status should be defaulted
-		assert.Equal(t, model.Active, asset.Status)
-	})
-
-	t.Run("convert external risk to tabularium risk", func(t *testing.T) {
-		type ExternalRisk struct {
-			DNS    string `json:"dns"`
-			Name   string `json:"name"`
-			Status string `json:"status"`
-		}
-
-		external := ExternalRisk{
-			DNS:    "example.com",
-			Name:   "CVE-2023-12345",
-			Status: "TH",
-		}
-
-		risk, err := Convert[*model.Risk](external)
-		require.NoError(t, err)
-		require.NotNil(t, risk)
-
-		assert.Equal(t, "example.com", risk.DNS)
-		assert.Equal(t, "CVE-2023-12345", risk.Name)
-		assert.Equal(t, "TH", risk.Status)
-		// Key should be generated via hooks
-		assert.Contains(t, risk.Key, "#risk#")
-	})
-
-	t.Run("convert external job to tabularium job", func(t *testing.T) {
-		type ExternalJob struct {
-			Config       map[string]string `json:"config"`
-			Capabilities []string          `json:"capabilities"`
-			Full         bool              `json:"full"`
-		}
-
-		external := ExternalJob{
-			Config:       map[string]string{"target": "192.168.1.1"},
-			Capabilities: []string{"portscan", "nuclei"},
-			Full:         true,
-		}
-
-		job, err := Convert[*model.Job](external)
-		require.NoError(t, err)
-		require.NotNil(t, job)
-
-		assert.Equal(t, map[string]string{"target": "192.168.1.1"}, job.Config)
-		assert.Equal(t, []string{"portscan", "nuclei"}, job.Capabilities)
-		assert.Equal(t, true, job.Full)
-		// Status should be defaulted to Queued
-		assert.Contains(t, job.Status, model.Queued)
-	})
+	assert.Equal(t, "example.com", ext.DNS)
+	assert.Equal(t, "192.168.1.1", ext.Name)
 }
 
-func TestConvertToModelByName(t *testing.T) {
-	t.Run("convert to asset by name", func(t *testing.T) {
-		external := map[string]any{
-			"dns":     "example.com",
-			"name":    "test.example.com",
-			"private": false,
-		}
+func TestPortFromModel(t *testing.T) {
+	asset := model.NewAsset("example.com", "192.168.1.1")
+	fullPort := model.NewPort("tcp", 443, &asset)
+	fullPort.Service = "https"
 
-		result, err := ConvertToModelByName("asset", external)
-		require.NoError(t, err)
-		require.NotNil(t, result)
+	ext := PortFromModel(&fullPort)
 
-		asset, ok := result.(*model.Asset)
-		require.True(t, ok)
-		assert.Equal(t, "example.com", asset.DNS)
-		assert.Equal(t, "test.example.com", asset.Name)
-	})
-
-	t.Run("unknown model name", func(t *testing.T) {
-		external := map[string]any{}
-
-		_, err := ConvertToModelByName("nonexistent", external)
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "not registered")
-	})
-}
-
-func TestRegisteredTransformerPriority(t *testing.T) {
-	// IP transformer should be called instead of JSON conversion
-	ip := IP{
-		Address: "8.8.8.8",
-		Domain:  "google.com",
-	}
-
-	result, err := Convert[*model.Asset](ip)
-	require.NoError(t, err)
-	require.NotNil(t, result)
-
-	assert.Equal(t, "google.com", result.DNS)
-	assert.Equal(t, "8.8.8.8", result.Name)
-	assert.Equal(t, "ipv4", result.Class)
+	assert.Equal(t, "tcp", ext.Protocol)
+	assert.Equal(t, 443, ext.Port)
+	assert.Equal(t, "https", ext.Service)
+	assert.Equal(t, "example.com", ext.Parent.DNS)
+	assert.Equal(t, "192.168.1.1", ext.Parent.Name)
 }
