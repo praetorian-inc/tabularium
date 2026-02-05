@@ -51,13 +51,3 @@ func (a AWSResource) ToModel() (*model.AWSResource, error) {
 	return target.(*model.AWSResource), nil
 }
 
-// AWSResourceFromModel converts a Tabularium AWSResource to an external AWSResource.
-func AWSResourceFromModel(m *model.AWSResource) AWSResource {
-	return AWSResource{
-		ARN:               m.Name,
-		AccountRef:        m.AccountRef,
-		ResourceType:      m.ResourceType,
-		Properties:        m.Properties,
-		OrgPolicyFilename: m.OrgPolicyFilename,
-	}
-}

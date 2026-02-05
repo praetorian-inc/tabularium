@@ -142,37 +142,6 @@ func TestPreseed_TargetInterface(t *testing.T) {
 	var _ Target = extPreseed
 }
 
-func TestPreseedFromModel(t *testing.T) {
-	modelPreseed := model.NewPreseed("whois", "registrant_email", "test@example.com")
-	modelPreseed.Display = "text"
-	modelPreseed.Status = "A"
-	modelPreseed.Capability = "whois-lookup"
-	modelPreseed.Metadata = map[string]string{"source": "manual"}
-
-	extPreseed := PreseedFromModel(&modelPreseed)
-
-	if extPreseed.Type != modelPreseed.Type {
-		t.Errorf("Type = %v, want %v", extPreseed.Type, modelPreseed.Type)
-	}
-	if extPreseed.Title != modelPreseed.Title {
-		t.Errorf("Title = %v, want %v", extPreseed.Title, modelPreseed.Title)
-	}
-	if extPreseed.Value != modelPreseed.Value {
-		t.Errorf("Value = %v, want %v", extPreseed.Value, modelPreseed.Value)
-	}
-	if extPreseed.Display != modelPreseed.Display {
-		t.Errorf("Display = %v, want %v", extPreseed.Display, modelPreseed.Display)
-	}
-	if extPreseed.Status != modelPreseed.Status {
-		t.Errorf("Status = %v, want %v", extPreseed.Status, modelPreseed.Status)
-	}
-	if extPreseed.Capability != modelPreseed.Capability {
-		t.Errorf("Capability = %v, want %v", extPreseed.Capability, modelPreseed.Capability)
-	}
-	if len(extPreseed.Metadata) != len(modelPreseed.Metadata) {
-		t.Errorf("Metadata length = %v, want %v", len(extPreseed.Metadata), len(modelPreseed.Metadata))
-	}
-}
 
 func TestPreseed_DefaultValues(t *testing.T) {
 	// Test that NewPreseed applies defaults correctly

@@ -31,10 +31,3 @@ func (t Technology) ToModel() (*model.Technology, error) {
 	return &tech, nil
 }
 
-// TechnologyFromModel converts a Tabularium Technology to an external Technology.
-func TechnologyFromModel(m *model.Technology) Technology {
-	return Technology{
-		CPE:  m.CPE,
-		Name: m.Name,
-	}
-}

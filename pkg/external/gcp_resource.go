@@ -51,12 +51,3 @@ func (g GCPResource) ToModel() (*model.GCPResource, error) {
 	return target.(*model.GCPResource), nil
 }
 
-// GCPResourceFromModel converts a Tabularium GCPResource to an external GCPResource.
-func GCPResourceFromModel(m *model.GCPResource) GCPResource {
-	return GCPResource{
-		Name:         m.Name,
-		AccountRef:   m.AccountRef,
-		ResourceType: m.ResourceType,
-		Properties:   m.Properties,
-	}
-}

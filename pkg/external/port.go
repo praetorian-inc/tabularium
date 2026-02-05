@@ -57,13 +57,3 @@ func (p Port) ToModel() (*model.Port, error) {
 	return target.(*model.Port), nil
 }
 
-// PortFromModel converts a Tabularium Port to an external Port.
-func PortFromModel(m *model.Port) Port {
-	asset := m.Asset()
-	return Port{
-		Protocol: m.Protocol,
-		Port:     m.Port,
-		Service:  m.Service,
-		Parent:   Asset{DNS: asset.DNS, Name: asset.Name},
-	}
-}

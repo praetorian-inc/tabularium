@@ -55,13 +55,3 @@ func (a AzureResource) ToModel() (*model.AzureResource, error) {
 	return target.(*model.AzureResource), nil
 }
 
-// AzureResourceFromModel converts a Tabularium AzureResource to an external AzureResource.
-func AzureResourceFromModel(m *model.AzureResource) AzureResource {
-	return AzureResource{
-		Name:          m.Name,
-		AccountRef:    m.AccountRef,
-		ResourceType:  m.ResourceType,
-		Properties:    m.Properties,
-		ResourceGroup: m.ResourceGroup,
-	}
-}

@@ -64,15 +64,3 @@ func (p Preseed) ToModel() (*model.Preseed, error) {
 	return target.(*model.Preseed), nil
 }
 
-// PreseedFromModel creates an external Preseed from a model Preseed.
-func PreseedFromModel(p *model.Preseed) Preseed {
-	return Preseed{
-		Type:       p.Type,
-		Title:      p.Title,
-		Value:      p.Value,
-		Display:    p.Display,
-		Metadata:   p.Metadata,
-		Status:     p.Status,
-		Capability: p.Capability,
-	}
-}

@@ -62,25 +62,3 @@ func (p Person) ToModel() (*model.Person, error) {
 	return target.(*model.Person), nil
 }
 
-// PersonFromModel converts a Tabularium Person to an external Person.
-func PersonFromModel(m *model.Person) Person {
-	ext := Person{}
-
-	if m.Email != nil {
-		ext.Email = *m.Email
-	}
-	if m.Name != nil {
-		ext.Name = *m.Name
-	}
-	if m.Title != nil {
-		ext.Title = *m.Title
-	}
-	if m.OrganizationName != nil {
-		ext.OrganizationName = *m.OrganizationName
-	}
-	if m.LinkedinURL != nil {
-		ext.LinkedinURL = *m.LinkedinURL
-	}
-
-	return ext
-}

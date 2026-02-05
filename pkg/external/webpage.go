@@ -44,9 +44,3 @@ func (w Webpage) ToModel() (*model.Webpage, error) {
 	return target.(*model.Webpage), nil
 }
 
-// WebpageFromModel converts a Tabularium Webpage to an external Webpage.
-func WebpageFromModel(m *model.Webpage) Webpage {
-	return Webpage{
-		URL: m.URL,
-	}
-}

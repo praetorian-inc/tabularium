@@ -1,10 +1,11 @@
-package external
+package convert
 
 import (
 	"fmt"
 	"net"
 	"strings"
 
+	"github.com/praetorian-inc/tabularium/pkg/external"
 	"github.com/praetorian-inc/tabularium/pkg/model/model"
 )
 
@@ -18,10 +19,10 @@ type IP struct {
 }
 
 // ToAsset converts an IP to an external Asset.
-func (ip IP) ToAsset() (Asset, error) {
+func (ip IP) ToAsset() (external.Asset, error) {
 	parsed := net.ParseIP(ip.Address)
 	if parsed == nil {
-		return Asset{}, fmt.Errorf("invalid IP address: %s", ip.Address)
+		return external.Asset{}, fmt.Errorf("invalid IP address: %s", ip.Address)
 	}
 
 	domain := ip.Domain
@@ -29,7 +30,7 @@ func (ip IP) ToAsset() (Asset, error) {
 		domain = ip.Address
 	}
 
-	return Asset{DNS: domain, Name: ip.Address}, nil
+	return external.Asset{DNS: domain, Name: ip.Address}, nil
 }
 
 // ToModel converts an IP directly to a Tabularium Asset.
@@ -47,9 +48,9 @@ type Domain struct {
 }
 
 // ToAsset converts a Domain to an external Asset.
-func (d Domain) ToAsset() (Asset, error) {
+func (d Domain) ToAsset() (external.Asset, error) {
 	if d.Name == "" {
-		return Asset{}, fmt.Errorf("domain name is required")
+		return external.Asset{}, fmt.Errorf("domain name is required")
 	}
 
 	// Normalize: remove protocol prefix if present
@@ -57,7 +58,7 @@ func (d Domain) ToAsset() (Asset, error) {
 	name = strings.TrimPrefix(name, "http://")
 	name = strings.TrimSuffix(name, "/")
 
-	return Asset{DNS: name, Name: name}, nil
+	return external.Asset{DNS: name, Name: name}, nil
 }
 
 // ToModel converts a Domain directly to a Tabularium Asset.
@@ -75,14 +76,14 @@ type CIDR struct {
 }
 
 // ToAsset converts a CIDR to an external Asset.
-func (c CIDR) ToAsset() (Asset, error) {
+func (c CIDR) ToAsset() (external.Asset, error) {
 	_, _, err := net.ParseCIDR(c.Block)
 	if err != nil {
-		return Asset{}, fmt.Errorf("invalid CIDR block: %s: %w", c.Block, err)
+		return external.Asset{}, fmt.Errorf("invalid CIDR block: %s: %w", c.Block, err)
 	}
 
 	// For CIDR assets, DNS must contain the CIDR for class detection
-	return Asset{DNS: c.Block, Name: c.Block}, nil
+	return external.Asset{DNS: c.Block, Name: c.Block}, nil
 }
 
 // ToModel converts a CIDR directly to a Tabularium Asset.
@@ -119,8 +120,8 @@ func CIDRToAsset(block string) (*model.Asset, error) {
 
 // AssetFromModel creates an external Asset from a Tabularium Asset.
 // This is useful for projecting full models to simplified external types.
-func AssetFromModel(a *model.Asset) Asset {
-	return Asset{
+func AssetFromModel(a *model.Asset) external.Asset {
+	return external.Asset{
 		DNS:  a.DNS,
 		Name: a.Name,
 	}

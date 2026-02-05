@@ -1,8 +1,9 @@
-package external
+package convert
 
 import (
 	"testing"
 
+	"github.com/praetorian-inc/tabularium/pkg/external"
 	"github.com/praetorian-inc/tabularium/pkg/model/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -10,7 +11,7 @@ import (
 
 func TestAsset(t *testing.T) {
 	t.Run("ToModel creates valid asset", func(t *testing.T) {
-		ext := Asset{DNS: "example.com", Name: "192.168.1.1"}
+		ext := external.Asset{DNS: "example.com", Name: "192.168.1.1"}
 
 		asset, err := ext.ToModel()
 		require.NoError(t, err)
@@ -23,7 +24,7 @@ func TestAsset(t *testing.T) {
 	})
 
 	t.Run("implements Target interface", func(t *testing.T) {
-		ext := Asset{DNS: "example.com", Name: "192.168.1.1"}
+		ext := external.Asset{DNS: "example.com", Name: "192.168.1.1"}
 
 		assert.Equal(t, "example.com", ext.Group())
 		assert.Equal(t, "192.168.1.1", ext.Identifier())
@@ -34,7 +35,7 @@ func TestAsset(t *testing.T) {
 	})
 
 	t.Run("empty asset returns error", func(t *testing.T) {
-		ext := Asset{}
+		ext := external.Asset{}
 		_, err := ext.ToModel()
 		require.Error(t, err)
 	})
@@ -42,10 +43,10 @@ func TestAsset(t *testing.T) {
 
 func TestRisk(t *testing.T) {
 	t.Run("ToModel with asset target", func(t *testing.T) {
-		ext := Risk{
+		ext := external.Risk{
 			Name:   "CVE-2023-12345",
 			Status: "TH",
-			Target: Asset{DNS: "example.com", Name: "192.168.1.1"},
+			Target: external.Asset{DNS: "example.com", Name: "192.168.1.1"},
 		}
 
 		risk, err := ext.ToModel()
@@ -59,9 +60,9 @@ func TestRisk(t *testing.T) {
 	})
 
 	t.Run("default status when empty", func(t *testing.T) {
-		ext := Risk{
+		ext := external.Risk{
 			Name:   "CVE-2023-12345",
-			Target: Asset{DNS: "example.com", Name: "example.com"},
+			Target: external.Asset{DNS: "example.com", Name: "example.com"},
 		}
 
 		risk, err := ext.ToModel()
@@ -70,16 +71,16 @@ func TestRisk(t *testing.T) {
 	})
 
 	t.Run("missing name returns error", func(t *testing.T) {
-		ext := Risk{
+		ext := external.Risk{
 			Status: "TH",
-			Target: Asset{DNS: "example.com", Name: "192.168.1.1"},
+			Target: external.Asset{DNS: "example.com", Name: "192.168.1.1"},
 		}
 		_, err := ext.ToModel()
 		require.Error(t, err)
 	})
 
 	t.Run("missing target returns error", func(t *testing.T) {
-		ext := Risk{
+		ext := external.Risk{
 			Name:   "CVE-2023-12345",
 			Status: "TH",
 		}
@@ -306,7 +307,7 @@ func TestAssetFromModel(t *testing.T) {
 
 func TestAWSResource(t *testing.T) {
 	t.Run("ToModel creates valid AWS resource", func(t *testing.T) {
-		ext := AWSResource{
+		ext := external.AWSResource{
 			ARN:          "arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0",
 			AccountRef:   "123456789012",
 			ResourceType: model.AWSEC2Instance,
@@ -329,7 +330,7 @@ func TestAWSResource(t *testing.T) {
 	})
 
 	t.Run("implements Target interface", func(t *testing.T) {
-		ext := AWSResource{
+		ext := external.AWSResource{
 			ARN:          "arn:aws:s3:::my-bucket",
 			AccountRef:   "123456789012",
 			ResourceType: model.AWSS3Bucket,
@@ -344,7 +345,7 @@ func TestAWSResource(t *testing.T) {
 	})
 
 	t.Run("missing ARN returns error", func(t *testing.T) {
-		ext := AWSResource{
+		ext := external.AWSResource{
 			AccountRef:   "123456789012",
 			ResourceType: model.AWSEC2Instance,
 		}
@@ -354,7 +355,7 @@ func TestAWSResource(t *testing.T) {
 	})
 
 	t.Run("missing AccountRef returns error", func(t *testing.T) {
-		ext := AWSResource{
+		ext := external.AWSResource{
 			ARN:          "arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0",
 			ResourceType: model.AWSEC2Instance,
 		}
@@ -364,7 +365,7 @@ func TestAWSResource(t *testing.T) {
 	})
 
 	t.Run("preserves OrgPolicyFilename", func(t *testing.T) {
-		ext := AWSResource{
+		ext := external.AWSResource{
 			ARN:               "arn:aws:lambda:us-west-2:123456789012:function:my-function",
 			AccountRef:        "123456789012",
 			ResourceType:      model.AWSLambdaFunction,
@@ -377,7 +378,7 @@ func TestAWSResource(t *testing.T) {
 	})
 
 	t.Run("invalid ARN returns error", func(t *testing.T) {
-		ext := AWSResource{
+		ext := external.AWSResource{
 			ARN:          "not-an-arn",
 			AccountRef:   "123456789012",
 			ResourceType: model.AWSEC2Instance,
@@ -407,4 +408,36 @@ func TestAWSResourceFromModel(t *testing.T) {
 	assert.Equal(t, "test-policy.json", ext.OrgPolicyFilename)
 	assert.NotNil(t, ext.Properties)
 	assert.Equal(t, "54.123.45.67", ext.Properties["PublicIp"])
+}
+
+func TestPreseedFromModel(t *testing.T) {
+	modelPreseed := model.NewPreseed("whois", "registrant_email", "test@example.com")
+	modelPreseed.Display = "text"
+	modelPreseed.Status = "A"
+	modelPreseed.Capability = "whois-lookup"
+	modelPreseed.Metadata = map[string]string{"source": "manual"}
+
+	extPreseed := PreseedFromModel(&modelPreseed)
+
+	if extPreseed.Type != modelPreseed.Type {
+		t.Errorf("Type = %v, want %v", extPreseed.Type, modelPreseed.Type)
+	}
+	if extPreseed.Title != modelPreseed.Title {
+		t.Errorf("Title = %v, want %v", extPreseed.Title, modelPreseed.Title)
+	}
+	if extPreseed.Value != modelPreseed.Value {
+		t.Errorf("Value = %v, want %v", extPreseed.Value, modelPreseed.Value)
+	}
+	if extPreseed.Display != modelPreseed.Display {
+		t.Errorf("Display = %v, want %v", extPreseed.Display, modelPreseed.Display)
+	}
+	if extPreseed.Status != modelPreseed.Status {
+		t.Errorf("Status = %v, want %v", extPreseed.Status, modelPreseed.Status)
+	}
+	if extPreseed.Capability != modelPreseed.Capability {
+		t.Errorf("Capability = %v, want %v", extPreseed.Capability, modelPreseed.Capability)
+	}
+	if len(extPreseed.Metadata) != len(modelPreseed.Metadata) {
+		t.Errorf("Metadata length = %v, want %v", len(extPreseed.Metadata), len(modelPreseed.Metadata))
+	}
 }

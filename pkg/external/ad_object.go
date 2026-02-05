@@ -48,12 +48,3 @@ func (a ADObject) ToModel() (*model.ADObject, error) {
 	return target.(*model.ADObject), nil
 }
 
-// ADObjectFromModel converts a Tabularium ADObject to an external ADObject.
-func ADObjectFromModel(m *model.ADObject) ADObject {
-	return ADObject{
-		Label:             m.Label,
-		Domain:            m.Domain,
-		ObjectID:          m.ObjectID,
-		DistinguishedName: m.DistinguishedName,
-	}
-}
