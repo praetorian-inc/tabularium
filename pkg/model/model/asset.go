@@ -17,7 +17,7 @@ type Asset struct {
 	// Attributes
 	DNS     string `neo4j:"dns" json:"dns" external:"true" desc:"The DNS name, or group identifier associated with this asset." example:"example.com"`
 	Name    string `neo4j:"name" json:"name" external:"true" desc:"Name of the asset, or the same value as DNS if this asset represents the group." example:"169.254.169.254"`
-	Private bool   `neo4j:"private" json:"private" external:"true" desc:"Flag indicating if the asset is considered private (e.g., internal IP)." example:"false"`
+	Private bool   `neo4j:"private" json:"private" desc:"Flag indicating if the asset is considered private (e.g., internal IP)." example:"false"`
 }
 
 func init() {

@@ -22,13 +22,13 @@ type Risk struct {
 	Name       string `neo4j:"name" json:"name" external:"true" desc:"Name of the risk or vulnerability." example:"CVE-2023-12345"`
 	Source     string `neo4j:"source" json:"source" external:"true" desc:"Source that identified the risk." example:"nessus"`
 	Status     string `neo4j:"status" json:"status" external:"true" desc:"Current status of the risk (e.g., TH, OC, RM)." example:"TH"`
-	Priority   int    `neo4j:"priority" json:"priority" external:"true" desc:"Calculated priority score based on severity." example:"10"`
+	Priority   int    `neo4j:"priority" json:"priority" desc:"Calculated priority score based on severity." example:"10"`
 	Created    string `neo4j:"created" json:"created" desc:"Timestamp when the risk was first created (RFC3339)." example:"2023-10-27T10:00:00Z"`
 	Updated    string `neo4j:"updated" json:"updated" desc:"Timestamp when the risk was last updated (RFC3339)." example:"2023-10-27T11:00:00Z"`
 	Visited    string `neo4j:"visited" json:"visited" desc:"Timestamp when the risk was last visited or confirmed (RFC3339)." example:"2023-10-27T11:00:00Z"`
 	TTL        int64  `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the risk record (Unix timestamp)." example:"1706353200"`
-	Comment    string `neo4j:"-" json:"comment,omitempty" external:"true" desc:"User-provided comment about the risk." example:"Confirmed by manual check"`
-	PlextracID string `neo4j:"plextracid" json:"plextracid" external:"true" desc:"ID of the risk in PlexTrac." example:"#clientID#reportId#findingId"`
+	Comment    string `neo4j:"-" json:"comment,omitempty" desc:"User-provided comment about the risk." example:"Confirmed by manual check"`
+	PlextracID string `neo4j:"plextracid" json:"plextracid" desc:"ID of the risk in PlexTrac." example:"#clientID#reportId#findingId"`
 	Target     Target `neo4j:"-" json:"-"` // Internal use, not in schema
 	History
 	MLProperties

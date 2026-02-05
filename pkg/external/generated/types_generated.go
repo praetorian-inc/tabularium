@@ -10,31 +10,6 @@ package external
 type Asset struct {
 	DNS string `json:"dns"` // The DNS name, or group identifier associated with this asset.
 	Name string `json:"name"` // Name of the asset, or the same value as DNS if this asset represents the group.
-	Private bool `json:"private"` // Flag indicating if the asset is considered private (e.g., internal IP).
-}
-
-
-// Attribute is a simplified version of the Tabularium attribute type.
-// Represents a key-value pair attribute associated with an entity, often used for tagging or additional properties.
-type Attribute struct {
-	Name string `json:"name"` // Name of the attribute.
-	Value string `json:"value"` // Value of the attribute.
-	Status string `json:"status"` // Status of the attribute.
-	Capability string `json:"capability,omitempty"` // Capability that discovered this attribute.
-	Metadata map[string]string `json:"metadata,omitempty"` // Additional metadata associated with the attribute.
-}
-
-
-// Job is a simplified version of the Tabularium job type.
-// Represents an asynchronous job or task, including its status, specification, and results.
-type Job struct {
-	Config map[string]string `json:"config"` // Configuration parameters for the job capability.
-	Secret map[string]string `json:"secret"` // Sensitive configuration parameters (credentials, tokens, keys).
-	CredentialIDs []string `json:"credential_ids,omitempty"` // List of credential IDs to retrieve and inject into job execution.
-	Full bool `json:"full,omitempty"` // Indicates if this is a full scan job.
-	Capabilities []string `json:"capabilities,omitempty"` // List of specific capabilities to run for this job.
-	Conversation string `json:"conversation,omitempty"` // UUID of the conversation that initiated this job.
-	TraceID string `json:"trace_id,omitempty"` // Root trace ID for this job chain.
 }
 
 
@@ -45,7 +20,6 @@ type Port struct {
 	Port int `json:"port"` // The port number of this port.
 	Service string `json:"service"` // The name of the service identified on this port.
 	Status string `json:"status"` // Status of the port.
-	Capability string `json:"capability,omitempty"` // Capability that discovered this port.
 }
 
 
@@ -56,9 +30,6 @@ type Risk struct {
 	Name string `json:"name"` // Name of the risk or vulnerability.
 	Source string `json:"source"` // Source that identified the risk.
 	Status string `json:"status"` // Current status of the risk (e.g., TH, OC, RM).
-	Priority int `json:"priority"` // Calculated priority score based on severity.
-	Comment string `json:"comment,omitempty"` // User-provided comment about the risk.
-	PlextracID string `json:"plextracid"` // ID of the risk in PlexTrac.
 }
 
 
@@ -67,10 +38,6 @@ func ModelType(v any) string {
 	switch v.(type) {
 	case Asset, *Asset:
 		return "asset"
-	case Attribute, *Attribute:
-		return "attribute"
-	case Job, *Job:
-		return "job"
 	case Port, *Port:
 		return "port"
 	case Risk, *Risk:

@@ -26,7 +26,7 @@ type Port struct {
 	Status     string            `neo4j:"status" json:"status" external:"true" desc:"Status of the port." example:"A"`
 	Created    string            `neo4j:"created" json:"created" desc:"Timestamp when the port was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
 	Visited    string            `neo4j:"visited" json:"visited" desc:"Timestamp when the port was last visited or confirmed (RFC3339)." example:"2023-10-27T11:00:00Z"`
-	Capability string            `neo4j:"capability" json:"capability,omitempty" external:"true" desc:"Capability that discovered this port." example:"portscan"`
+	Capability string            `neo4j:"capability" json:"capability,omitempty" desc:"Capability that discovered this port." example:"portscan"`
 	TTL        int64             `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the port record (Unix timestamp)." example:"1706353200"`
 	Parent     GraphModelWrapper `neo4j:"-" json:"parent" desc:"Port parent asset."`
 	Tags
