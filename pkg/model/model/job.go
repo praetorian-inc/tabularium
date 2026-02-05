@@ -26,21 +26,21 @@ type Job struct {
 	Status                string            `dynamodbav:"status" json:"status" desc:"Current status of the job (e.g., JQ#2023-10-27T10:05:00Z)." example:"JQ#2023-10-27T10:05:00Z"`
 	TTL                   int64             `dynamodbav:"ttl" json:"ttl" desc:"Time-to-live for the job record (Unix timestamp)." example:"1706353200"`
 	Name                  string            `dynamodbav:"name,omitempty" json:"name,omitempty" desc:"The IP address this job was executed from" example:"1.2.3.4"`
-	Config                map[string]string `dynamodbav:"config" json:"config" desc:"Configuration parameters for the job capability." example:"{\"test\": \"cve-1111-2222\"}"`
-	Secret                map[string]string `dynamodbav:"-" json:"secret" desc:"Sensitive configuration parameters (credentials, tokens, keys)."`
-	CredentialIDs         []string          `dynamodbav:"credential_ids" json:"credential_ids,omitempty" desc:"List of credential IDs to retrieve and inject into job execution." example:"[\"550e8400-e29b-41d4-a716-446655440000\"]"`
+	Config                map[string]string `dynamodbav:"config" json:"config" external:"true" desc:"Configuration parameters for the job capability." example:"{\"test\": \"cve-1111-2222\"}"`
+	Secret                map[string]string `dynamodbav:"-" json:"secret" external:"true" desc:"Sensitive configuration parameters (credentials, tokens, keys)."`
+	CredentialIDs         []string          `dynamodbav:"credential_ids" json:"credential_ids,omitempty" external:"true" desc:"List of credential IDs to retrieve and inject into job execution." example:"[\"550e8400-e29b-41d4-a716-446655440000\"]"`
 	LargeArtifactFileName string            `dynamodbav:"large_artifact_filename" json:"large_artifact_filename,omitempty" desc:"The name of the file that contains the large artifacts." example:"large_artifact.zip"`
 	S3DownloadURL         string            `dynamodbav:"s3DownloadURL" json:"s3DownloadURL,omitempty" desc:"The URL of the file that contains the large output." example:"https://s3.amazonaws.com/big_output.zip"`
 	Retries               int               `dynamodbav:"retries" json:"retries" desc:"The number of times this job has been retried."`
 	AllowRepeat           bool              `dynamodbav:"allowRepeat" json:"allowRepeat" desc:"Indicates if repeating this job should be allowed. Used for manual jobs, or rescan jobs, that should not block other job executions." example:"false"`
-	Full                  bool              `dynamodbav:"-" json:"full,omitempty" desc:"Indicates if this is a full scan job." example:"false"`
-	Capabilities          []string          `dynamodbav:"-" json:"capabilities,omitempty" desc:"List of specific capabilities to run for this job." example:"[\"portscan\", \"nuclei\"]"`
+	Full                  bool              `dynamodbav:"-" json:"full,omitempty" external:"true" desc:"Indicates if this is a full scan job." example:"false"`
+	Capabilities          []string          `dynamodbav:"-" json:"capabilities,omitempty" external:"true" desc:"List of specific capabilities to run for this job." example:"[\"portscan\", \"nuclei\"]"`
 	Queue                 string            `dynamodbav:"-" desc:"Target queue for the job." example:"standard"`
-	Conversation          string            `dynamodbav:"conversation,omitempty" json:"conversation,omitempty" desc:"UUID of the conversation that initiated this job." example:"550e8400-e29b-41d4-a716-446655440000"`
+	Conversation          string            `dynamodbav:"conversation,omitempty" json:"conversation,omitempty" external:"true" desc:"UUID of the conversation that initiated this job." example:"550e8400-e29b-41d4-a716-446655440000"`
 	User                  string            `dynamodbav:"user,omitempty" json:"user,omitempty" desc:"User who initiated this job." example:"user@example.com"`
 	Partition             string            `dynamodbav:"partition,omitempty" json:"partition,omitempty" desc:"The partition of the job." example:"user@example.com##asset#test#0.0.0.0"`
 	// Trace context for telemetry (propagated to child jobs)
-	TraceID       string `dynamodbav:"trace_id,omitempty" json:"trace_id,omitempty" desc:"Root trace ID for this job chain."`
+	TraceID       string `dynamodbav:"trace_id,omitempty" json:"trace_id,omitempty" external:"true" desc:"Root trace ID for this job chain."`
 	ParentSpanID  string `dynamodbav:"parent_span_id,omitempty" json:"parent_span_id,omitempty" desc:"Parent span ID from spawning job."`
 	CurrentSpanID string `dynamodbav:"-" json:"current_span_id,omitempty" desc:"Current execution span ID (not persisted to DynamoDB, but serialized through SQS for trace correlation)."`
 	Origin                TargetWrapper     `dynamodbav:"origin" json:"origin" desc:"The job that originally started this chain of jobs."`
