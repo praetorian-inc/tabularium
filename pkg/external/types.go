@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/praetorian-inc/tabularium/pkg/model/model"
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 // Asset is a simplified asset for external tool writers.
@@ -39,11 +38,12 @@ func (a Asset) ToModel() (*model.Asset, error) {
 }
 
 // Port is a simplified port for external tool writers.
+// It contains essential fields needed to identify an open port on an asset.
 type Port struct {
-	Protocol string `json:"protocol"` // tcp or udp
-	Port     int    `json:"port"`     // Port number
+	Protocol string `json:"protocol"` // Protocol: "tcp" or "udp"
+	Port     int    `json:"port"`     // Port number (1-65535)
 	Service  string `json:"service"`  // Service name (e.g., "https", "ssh")
-	Parent   Asset  `json:"parent"`   // Parent asset
+	Parent   Asset  `json:"parent"`   // Parent asset this port belongs to
 }
 
 // Group implements Target interface.
@@ -56,11 +56,14 @@ func (p Port) Identifier() string {
 
 // ToTarget converts to a full Tabularium Port.
 func (p Port) ToTarget() (model.Target, error) {
-	if p.Protocol == "" {
-		return nil, fmt.Errorf("port requires protocol")
-	}
 	if p.Port <= 0 || p.Port > 65535 {
-		return nil, fmt.Errorf("port must be between 1 and 65535")
+		return nil, fmt.Errorf("port number must be between 1 and 65535")
+	}
+	if p.Protocol == "" {
+		return nil, fmt.Errorf("port requires protocol (tcp or udp)")
+	}
+	if p.Protocol != "tcp" && p.Protocol != "udp" {
+		return nil, fmt.Errorf("port protocol must be tcp or udp")
 	}
 
 	parentAsset, err := p.Parent.ToModel()
@@ -72,6 +75,7 @@ func (p Port) ToTarget() (model.Target, error) {
 	if p.Service != "" {
 		port.Service = p.Service
 	}
+
 	return &port, nil
 }
 
@@ -82,6 +86,17 @@ func (p Port) ToModel() (*model.Port, error) {
 		return nil, err
 	}
 	return target.(*model.Port), nil
+}
+
+// PortFromModel converts a Tabularium Port to an external Port.
+func PortFromModel(m *model.Port) Port {
+	asset := m.Asset()
+	return Port{
+		Protocol: m.Protocol,
+		Port:     m.Port,
+		Service:  m.Service,
+		Parent:   Asset{DNS: asset.DNS, Name: asset.Name},
+	}
 }
 
 // AWSResource is a simplified AWS resource for external tool writers.
@@ -283,189 +298,6 @@ func (r Risk) ToModel() (*model.Risk, error) {
 
 	risk := model.NewRisk(target, r.Name, status)
 	return &risk, nil
-}
-
-// Account is a simplified account for external tool writers.
-// It represents cloud provider credentials and account information.
-type Account struct {
-	Name     string            `json:"name"`               // The owner of the account (e.g., "chariot.customer@example.com")
-	Member   string            `json:"member"`             // The user or system granted access (e.g., "amazon", "azure")
-	Value    string            `json:"value"`              // The identifier for this account within the context of member (e.g., "01234567890")
-	Secret   map[string]string `json:"secret,omitempty"`   // Secret configuration map (e.g., credentials, tokens)
-	Settings []byte            `json:"settings,omitempty"` // Raw JSON settings
-}
-
-// ToModel converts to a full Tabularium Account.
-func (a Account) ToModel() (*model.Account, error) {
-	if a.Name == "" {
-		return nil, fmt.Errorf("account requires name")
-	}
-	if a.Member == "" {
-		return nil, fmt.Errorf("account requires member")
-	}
-	if a.Value == "" {
-		return nil, fmt.Errorf("account requires value")
-	}
-
-	var account model.Account
-	if len(a.Settings) > 0 {
-		account = model.NewAccountWithSettings(a.Name, a.Member, a.Value, a.Secret, a.Settings)
-	} else {
-		account = model.NewAccount(a.Name, a.Member, a.Value, a.Secret)
-	}
-
-	return &account, nil
-}
-
-// User is a simplified user for external tool writers.
-type User struct {
-	Name     string    `json:"name"`     // User email address
-	Accounts []Account `json:"accounts"` // Accounts associated with the user
-}
-
-// ToModel converts to a full Tabularium User.
-func (u User) ToModel() (*model.User, error) {
-	if u.Name == "" {
-		return nil, fmt.Errorf("user requires name")
-	}
-
-	accounts := make([]model.Account, 0, len(u.Accounts))
-	for _, acc := range u.Accounts {
-		modelAccount, err := acc.ToModel()
-		if err != nil {
-			return nil, fmt.Errorf("invalid account: %w", err)
-		}
-		accounts = append(accounts, *modelAccount)
-	}
-
-	user := model.NewUser(u.Name, accounts)
-	return &user, nil
-}
-
-// FromUser creates an external User from a Tabularium User model.
-func FromUser(u *model.User) User {
-	if u == nil {
-		return User{}
-	}
-
-	accounts := make([]Account, 0, len(u.Accounts))
-	for _, acc := range u.Accounts {
-		accounts = append(accounts, Account{
-			Name:   acc.Name,
-			Member: acc.Member,
-			Value:  acc.Value,
-		})
-	}
-
-	return User{
-		Name:     u.Name,
-		Accounts: accounts,
-	}
-}
-
-// CloudResource is a simplified cloud resource for external tool writers.
-// Note: CloudResource does not implement the Target interface directly since
-// model.CloudResource is a base type. Use specific cloud resource types
-// (AWSResource, GCPResource, AzureResource) if you need Target interface support.
-type CloudResource struct {
-	Name         string         `json:"name"`         // Resource name/ARN
-	Provider     string         `json:"provider"`     // Cloud provider (e.g., "aws", "azure", "gcp")
-	ResourceType string         `json:"resourceType"` // Type of resource (e.g., "AWS::EC2::Instance")
-	DisplayName  string         `json:"displayName"`  // Human-readable display name
-	Region       string         `json:"region"`       // Region where resource is located
-	AccountRef   string         `json:"accountRef"`   // Account reference/ID
-	Properties   map[string]any `json:"properties"`   // Additional resource properties
-	IPs          []string       `json:"ips"`          // Associated IP addresses
-	URLs         []string       `json:"urls"`         // Associated URLs
-	Labels       []string       `json:"labels"`       // Resource labels
-}
-
-// Group returns the account reference (grouping identifier).
-func (c CloudResource) Group() string { return c.AccountRef }
-
-// Identifier returns the resource name.
-func (c CloudResource) Identifier() string { return c.Name }
-
-// ToModel converts to a full Tabularium CloudResource.
-func (c CloudResource) ToModel() (*model.CloudResource, error) {
-	if c.Name == "" {
-		return nil, fmt.Errorf("cloud resource requires name")
-	}
-	if c.Provider == "" {
-		return nil, fmt.Errorf("cloud resource requires provider")
-	}
-	if c.AccountRef == "" {
-		return nil, fmt.Errorf("cloud resource requires accountRef")
-	}
-
-	cloudResource := &model.CloudResource{
-		Name:         c.Name,
-		Provider:     c.Provider,
-		ResourceType: model.CloudResourceType(c.ResourceType),
-		DisplayName:  c.DisplayName,
-		Region:       c.Region,
-		AccountRef:   c.AccountRef,
-		Properties:   c.Properties,
-		IPs:          c.IPs,
-		URLs:         c.URLs,
-		Labels:       c.Labels,
-	}
-
-	cloudResource.Defaulted()
-	return cloudResource, nil
-}
-
-// CloudResourceFromModel creates an external CloudResource from a model CloudResource.
-func CloudResourceFromModel(m *model.CloudResource) CloudResource {
-	return CloudResource{
-		Name:         m.Name,
-		Provider:     m.Provider,
-		ResourceType: m.ResourceType.String(),
-		DisplayName:  m.DisplayName,
-		Region:       m.Region,
-		AccountRef:   m.AccountRef,
-		Properties:   m.Properties,
-		IPs:          m.IPs,
-		URLs:         m.URLs,
-		Labels:       m.Labels,
-	}
-}
-
-// Integration is a simplified integration for external tool writers.
-type Integration struct {
-	Name   string `json:"name"`   // Integration name (e.g., "github", "slack")
-	Value  string `json:"value"`  // Integration identifier/value
-	Status string `json:"status"` // Integration status
-}
-
-// ToModel converts to a full Tabularium Integration.
-func (i Integration) ToModel() (*model.Integration, error) {
-	if i.Name == "" {
-		return nil, fmt.Errorf("integration requires name")
-	}
-	if i.Value == "" {
-		return nil, fmt.Errorf("integration requires value")
-	}
-
-	integration := model.NewIntegration(i.Name, i.Value)
-	if i.Status != "" {
-		integration.Status = i.Status
-	}
-
-	return &integration, nil
-}
-
-// FromIntegration creates an external Integration from a Tabularium Integration model.
-func FromIntegration(i *model.Integration) Integration {
-	if i == nil {
-		return Integration{}
-	}
-
-	return Integration{
-		Name:   i.Name,
-		Value:  i.Value,
-		Status: i.Status,
-	}
 }
 
 // Preseed is a simplified preseed for external tool writers.
@@ -792,70 +624,211 @@ func derefString(s *string) string {
 	return *s
 }
 
-// WebApplication is a simplified web application for external tool writers.
-type WebApplication struct {
-	PrimaryURL string   `json:"primary_url"` // The primary/canonical URL of the web application
-	URLs       []string `json:"urls"`        // Additional URLs associated with this web application
-	Name       string   `json:"name"`        // Name of the web application
-	Status     string   `json:"status"`      // Status code (e.g., "A", "I", "P")
+// Webpage is a simplified webpage for external tool writers.
+type Webpage struct {
+	URL string `json:"url"` // The webpage URL
 }
 
 // Group implements Target interface.
-func (w WebApplication) Group() string {
-	return w.Name
+func (w Webpage) Group() string {
+	return w.URL
 }
 
 // Identifier implements Target interface.
-func (w WebApplication) Identifier() string {
-	return w.PrimaryURL
+func (w Webpage) Identifier() string {
+	return w.URL
 }
 
-// ToTarget converts to a full Tabularium WebApplication.
-func (w WebApplication) ToTarget() (model.Target, error) {
-	if w.PrimaryURL == "" {
-		return nil, fmt.Errorf("webapplication requires primary_url")
+// ToTarget converts to a full Tabularium Webpage.
+func (w Webpage) ToTarget() (model.Target, error) {
+	if w.URL == "" {
+		return nil, fmt.Errorf("webpage requires url")
 	}
 
-	name := w.Name
-	if name == "" {
-		name = w.PrimaryURL
+	webpage := model.NewWebpageFromString(w.URL, nil)
+	if !webpage.Valid() {
+		return nil, fmt.Errorf("invalid webpage url: %s", w.URL)
 	}
 
-	// Create the webapp without calling NewWebApplication to avoid double normalization
-	webapp := model.WebApplication{
-		PrimaryURL: w.PrimaryURL,
-		Name:       name,
-		URLs:       w.URLs,
-	}
-
-	if w.Status != "" {
-		webapp.Status = w.Status
-	}
-
-	// Apply defaults and run hooks (including URL normalization)
-	webapp.Defaulted()
-	if err := registry.CallHooks(&webapp); err != nil {
-		return nil, fmt.Errorf("failed to initialize webapplication: %w", err)
-	}
-
-	return &webapp, nil
+	return &webpage, nil
 }
 
-// ToModel converts to a full Tabularium WebApplication (convenience method).
-func (w WebApplication) ToModel() (*model.WebApplication, error) {
+// ToModel converts to a full Tabularium Webpage (convenience method).
+func (w Webpage) ToModel() (*model.Webpage, error) {
 	target, err := w.ToTarget()
 	if err != nil {
 		return nil, err
 	}
-	return target.(*model.WebApplication), nil
+	return target.(*model.Webpage), nil
 }
 
-// WebApplicationFromModel converts a Tabularium WebApplication to an external WebApplication.
-func WebApplicationFromModel(m *model.WebApplication) WebApplication {
-	return WebApplication{
-		PrimaryURL: m.PrimaryURL,
-		URLs:       m.URLs,
-		Name:       m.Name,
-		Status:     m.Status,
+// WebpageFromModel converts a Tabularium Webpage to an external Webpage.
+func WebpageFromModel(m *model.Webpage) Webpage {
+	return Webpage{
+		URL: m.URL,
 	}
+}
+
+// ADObject is a simplified Active Directory object for external tool writers.
+// It contains only the essential fields needed to identify an AD object.
+type ADObject struct {
+	Label             string `json:"label"`             // Primary label (ADUser, ADComputer, ADGroup, etc.)
+	Domain            string `json:"domain"`            // AD domain
+	ObjectID          string `json:"objectid"`          // Object identifier (SID or GUID)
+	DistinguishedName string `json:"distinguishedname"` // DN path
+}
+
+// Group implements Target interface.
+func (a ADObject) Group() string { return a.Domain }
+
+// Identifier implements Target interface.
+func (a ADObject) Identifier() string { return a.ObjectID }
+
+// ToTarget converts to a full Tabularium ADObject.
+func (a ADObject) ToTarget() (model.Target, error) {
+	if a.Domain == "" {
+		return nil, fmt.Errorf("adobject requires domain")
+	}
+	if a.ObjectID == "" {
+		return nil, fmt.Errorf("adobject requires objectid")
+	}
+
+	label := a.Label
+	if label == "" {
+		label = model.ADObjectLabel
+	}
+
+	adObject := model.NewADObject(a.Domain, a.ObjectID, a.DistinguishedName, label)
+	return &adObject, nil
+}
+
+// ToModel converts to a full Tabularium ADObject (convenience method).
+func (a ADObject) ToModel() (*model.ADObject, error) {
+	target, err := a.ToTarget()
+	if err != nil {
+		return nil, err
+	}
+	return target.(*model.ADObject), nil
+}
+
+// ADObjectFromModel converts a Tabularium ADObject to an external ADObject.
+func ADObjectFromModel(m *model.ADObject) ADObject {
+	return ADObject{
+		Label:             m.Label,
+		Domain:            m.Domain,
+		ObjectID:          m.ObjectID,
+		DistinguishedName: m.DistinguishedName,
+	}
+}
+
+// Technology is a simplified technology for external tool writers.
+// It represents a specific technology (software, library, framework) identified on an asset.
+type Technology struct {
+	CPE  string `json:"cpe"`            // The full CPE string (e.g., "cpe:2.3:a:apache:http_server:2.4.50:*:*:*:*:*:*:*")
+	Name string `json:"name,omitempty"` // Optional common name for the technology (e.g., "Apache httpd")
+}
+
+// ToModel converts to a full Tabularium Technology.
+func (t Technology) ToModel() (*model.Technology, error) {
+	if t.CPE == "" {
+		return nil, fmt.Errorf("technology requires cpe")
+	}
+
+	tech, err := model.NewTechnology(t.CPE)
+	if err != nil {
+		return nil, fmt.Errorf("invalid cpe: %w", err)
+	}
+
+	if t.Name != "" {
+		tech.Name = t.Name
+	}
+
+	return &tech, nil
+}
+
+// TechnologyFromModel converts a Tabularium Technology to an external Technology.
+func TechnologyFromModel(m *model.Technology) Technology {
+	return Technology{
+		CPE:  m.CPE,
+		Name: m.Name,
+	}
+}
+
+// Person is a simplified person for external tool writers.
+// It contains essential fields for identifying and enriching person data.
+type Person struct {
+	Email            string `json:"email"`                       // Person's email address
+	Name             string `json:"name"`                        // Person's full name
+	Title            string `json:"title,omitempty"`             // Job title
+	OrganizationName string `json:"organization_name,omitempty"` // Organization they work for
+	LinkedinURL      string `json:"linkedin_url,omitempty"`      // LinkedIn profile URL
+}
+
+// Group implements Target interface.
+func (p Person) Group() string { return p.Email }
+
+// Identifier implements Target interface.
+func (p Person) Identifier() string {
+	if p.Email != "" {
+		return fmt.Sprintf("#person#%s#%s", p.Email, p.Name)
+	}
+	return fmt.Sprintf("#person#%s#%s", p.Name, p.Name)
+}
+
+// ToTarget converts to a full Tabularium Person.
+func (p Person) ToTarget() (model.Target, error) {
+	if p.Email == "" && p.Name == "" {
+		return nil, fmt.Errorf("person requires email or name")
+	}
+
+	var person *model.Person
+	if p.Email != "" {
+		person = model.NewPerson(p.Email, p.Name, "")
+	} else {
+		person = model.NewPersonFromName(p.Name, "")
+	}
+
+	if p.Title != "" {
+		person.Title = &p.Title
+	}
+	if p.OrganizationName != "" {
+		person.OrganizationName = &p.OrganizationName
+	}
+	if p.LinkedinURL != "" {
+		person.LinkedinURL = &p.LinkedinURL
+	}
+
+	return person, nil
+}
+
+// ToModel converts to a full Tabularium Person (convenience method).
+func (p Person) ToModel() (*model.Person, error) {
+	target, err := p.ToTarget()
+	if err != nil {
+		return nil, err
+	}
+	return target.(*model.Person), nil
+}
+
+// PersonFromModel converts a Tabularium Person to an external Person.
+func PersonFromModel(m *model.Person) Person {
+	ext := Person{}
+
+	if m.Email != nil {
+		ext.Email = *m.Email
+	}
+	if m.Name != nil {
+		ext.Name = *m.Name
+	}
+	if m.Title != nil {
+		ext.Title = *m.Title
+	}
+	if m.OrganizationName != nil {
+		ext.OrganizationName = *m.OrganizationName
+	}
+	if m.LinkedinURL != nil {
+		ext.LinkedinURL = *m.LinkedinURL
+	}
+
+	return ext
 }

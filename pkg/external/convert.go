@@ -125,28 +125,3 @@ func AssetFromModel(a *model.Asset) Asset {
 		Name: a.Name,
 	}
 }
-
-// PortFromModel creates an external Port from a Tabularium Port.
-func PortFromModel(p *model.Port) Port {
-	parentAsset := p.Asset()
-	return Port{
-		Protocol: p.Protocol,
-		Port:     p.Port,
-		Service:  p.Service,
-		Parent: Asset{
-			DNS:  parentAsset.DNS,
-			Name: parentAsset.Name,
-		},
-	}
-}
-
-// AccountFromModel creates an external Account from a Tabularium Account.
-func AccountFromModel(a *model.Account) Account {
-	return Account{
-		Name:     a.Name,
-		Member:   a.Member,
-		Value:    a.Value,
-		Secret:   a.Secret,
-		Settings: a.Settings,
-	}
-}
