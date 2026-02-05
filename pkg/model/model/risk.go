@@ -18,10 +18,10 @@ type Risk struct {
 	Username string `neo4j:"username" json:"username" desc:"Chariot username associated with the risk." example:"user@example.com"`
 	Key      string `neo4j:"key" json:"key" desc:"Unique key identifying the risk." example:"#risk#example.com#CVE-2023-12345"`
 	// Attributes
-	DNS        string `neo4j:"dns" json:"dns" desc:"Primary DNS or group associated with the risk." example:"example.com"`
-	Name       string `neo4j:"name" json:"name" desc:"Name of the risk or vulnerability." example:"CVE-2023-12345"`
-	Source     string `neo4j:"source" json:"source" desc:"Source that identified the risk." example:"nessus"`
-	Status     string `neo4j:"status" json:"status" desc:"Current status of the risk (e.g., TH, OC, RM)." example:"TH"`
+	DNS        string `neo4j:"dns" json:"dns" external:"true" desc:"Primary DNS or group associated with the risk." example:"example.com"`
+	Name       string `neo4j:"name" json:"name" external:"true" desc:"Name of the risk or vulnerability." example:"CVE-2023-12345"`
+	Source     string `neo4j:"source" json:"source" external:"true" desc:"Source that identified the risk." example:"nessus"`
+	Status     string `neo4j:"status" json:"status" external:"true" desc:"Current status of the risk (e.g., TH, OC, RM)." example:"TH"`
 	Priority   int    `neo4j:"priority" json:"priority" desc:"Calculated priority score based on severity." example:"10"`
 	Created    string `neo4j:"created" json:"created" desc:"Timestamp when the risk was first created (RFC3339)." example:"2023-10-27T10:00:00Z"`
 	Updated    string `neo4j:"updated" json:"updated" desc:"Timestamp when the risk was last updated (RFC3339)." example:"2023-10-27T11:00:00Z"`
