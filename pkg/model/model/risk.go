@@ -50,7 +50,7 @@ func (r *Risk) GetDescription() string {
 type MLProperties struct {
 	registry.BaseModel
 	Logit           *float32 `neo4j:"logit,omitempty" json:"logit,omitempty" desc:"Logit value from an ML model prediction." example:"0.75"`
-	ProofSufficient *bool    `neo4j:"proofSufficient,omitempty" json:"proofSufficient,omitempty" external:"true" desc:"Indicates if ML model considers proof sufficient for auto-triage." example:"true"`
+	ProofSufficient *bool    `neo4j:"proofSufficient,omitempty" json:"proofSufficient,omitempty" desc:"Indicates if ML model considers proof sufficient for auto-triage." example:"true"`
 	Agent           string   `neo4j:"-" json:"agent,omitempty" desc:"Name of the agent that provided the ML properties." example:"autotriage"`
 }
 

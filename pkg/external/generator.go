@@ -38,11 +38,16 @@ type ModelInfo struct {
 type Generator struct {
 	// Models to include (empty means all with external fields)
 	IncludeModels []string
+	// MinFields is the minimum number of external fields required to generate a type.
+	// Models with fewer fields are skipped. Default is 2.
+	MinFields int
 }
 
-// NewGenerator creates a new Generator.
+// NewGenerator creates a new Generator with default settings.
 func NewGenerator() *Generator {
-	return &Generator{}
+	return &Generator{
+		MinFields: 2, // Require at least 2 external fields
+	}
 }
 
 // Generate creates simplified Go types for all registered models that have
@@ -85,7 +90,11 @@ func (g *Generator) extractModels() []*ModelInfo {
 		}
 
 		model := g.extractModelInfo(name, typ)
-		if model != nil && len(model.Fields) > 0 {
+		minFields := g.MinFields
+		if minFields < 1 {
+			minFields = 2
+		}
+		if model != nil && len(model.Fields) >= minFields {
 			models = append(models, model)
 		}
 	}
