@@ -2560,6 +2560,15 @@ components:
       - BaseRelationship
       - relationshipType
       type: object
+    enriched:
+      description: Represents an enrichment relationship between risks (e.g., a risk
+        enriched by secret detection).
+      properties:
+        BaseRelationship:
+          type: object
+      required:
+      - BaseRelationship
+      type: object
     enrichment:
       description: Represents enrichment data for a vulnerability.
       properties:
