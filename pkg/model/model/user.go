@@ -5,9 +5,9 @@ import (
 )
 
 type User struct {
-	Name     string
-	Tenant   string // the home tenant of the user
-	Accounts []Account
+	Name       string
+	HomeTenant string // the home tenant of the user
+	Accounts   []Account
 }
 
 func (u *User) Linked(username string) bool {
