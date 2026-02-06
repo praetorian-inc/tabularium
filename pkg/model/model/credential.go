@@ -67,10 +67,11 @@ const (
 	LegacyCloudCredential CredentialType = "legacy-cloud" // Legacy cloud credentials (AWS, GCP, Azure)
 
 	// Credential Formats for capabilities to use (and advertise)
-	CredentialFormatEnv     CredentialFormat = "env"      // things like tokens can be release into env vars for caps to use
-	CredentialFormatFile    CredentialFormat = "file"     // credentials requested as files to be stored at a specific location
-	CredentialFormatToken   CredentialFormat = "token"    // returned in a struct for direct use by caps
-	CredentialFormatAPIAuth CredentialFormat = "api-auth" // API authentication credentials
+	CredentialFormatEnv       CredentialFormat = "env"        // things like tokens can be release into env vars for caps to use
+	CredentialFormatFile      CredentialFormat = "file"       // credentials requested as files to be stored at a specific location
+	CredentialFormatToken     CredentialFormat = "token"      // returned in a struct for direct use by caps
+	CredentialFormatAPIAuth   CredentialFormat = "api-auth"   // API authentication credentials
+	CredentialFormatBasicAuth CredentialFormat = "basic-auth" // HTTP Basic auth Authorization header
 
 	// Credential Lifecycles
 	CredentialLifecycleStatic    CredentialLifecycle = "static"
