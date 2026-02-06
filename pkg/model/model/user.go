@@ -6,6 +6,7 @@ import (
 
 type User struct {
 	Name     string
+	Tenant   string // the home tenant of the user
 	Accounts []Account
 }
 
