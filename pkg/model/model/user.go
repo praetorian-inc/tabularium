@@ -33,7 +33,8 @@ func (u *User) Praetorian() bool {
 
 func NewUser(username string, accounts []Account) User {
 	return User{
-		Name:     username,
-		Accounts: accounts,
+		Name:       username,
+		HomeTenant: username,
+		Accounts:   accounts,
 	}
 }
