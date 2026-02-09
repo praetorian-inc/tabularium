@@ -9,14 +9,12 @@ import (
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
-// typeMap maps named types to their simplified Go representations.
 var typeMap = map[string]string{
 	"SmartBytes":        "[]byte",
 	"CloudResourceType": "string",
 	"GobSafeBool":       "bool",
 }
 
-// parentKind describes how a parent field is wired to the child model.
 type parentKind string
 
 const (
@@ -25,35 +23,31 @@ const (
 	parentInterface parentKind = "interface" // interface field: set after hooks
 )
 
-// field describes a regular data field in a slim type.
 type field struct {
-	SourceFieldName string   // Go field name in the source model
-	SourceJSONNames []string // json names in the source model (multiple when merged)
-	JSONName        string   // json name for the slim type field
-	GoType          string   // Go type string for generated struct
+	SourceFieldName string
+	SourceJSONNames []string
+	JSONName        string
+	GoType          string
 }
 
-// parentField describes a parent/embed relationship field.
 type parentField struct {
-	SourceFieldName string     // Go field name in the source model (e.g., "Parent", "Target")
-	JSONName        string     // json name for the slim struct
-	SlimType        string     // slim type name (e.g., "Asset", "WebApplication")
-	Kind            parentKind // how the parent is wired
+	SourceFieldName string
+	JSONName        string
+	SlimType        string
+	Kind            parentKind
 }
 
-// slimType describes a generated slim type.
 type slimType struct {
 	Name           string
-	SourceTypeName string // Go type name (e.g., "Asset", "Risk")
+	SourceTypeName string
 	Fields         []field
 	Parent         *parentField
 }
 
-// parseSlimTags walks all registered types and extracts slim tag information.
 func parseSlimTags(reg *registry.TypeRegistry) []slimType {
 	builders := map[string]*slimType{}
-	// Tracks which (slimType, fieldIndex) pairs we've seen to avoid
-	// duplicates from embedded struct traversal.
+	// Dedup: embedded fields can be visited multiple times when
+	// walking different registered types that share the same embed.
 	seen := map[string]map[string]bool{}
 
 	for _, name := range sortedRegistryNames(reg) {
@@ -80,8 +74,6 @@ func parseSlimTags(reg *registry.TypeRegistry) []slimType {
 
 				typeName, jsonName, embedType := parseEntry(entry)
 
-				// Dedup: skip fields seen from a different registered type
-				// (same embedded field reached via different type walks).
 				if seen[typeName] == nil {
 					seen[typeName] = map[string]bool{}
 				}
@@ -114,8 +106,8 @@ func parseSlimTags(reg *registry.TypeRegistry) []slimType {
 					continue
 				}
 
-				// If another source field maps to the same slim JSON name,
-				// merge it (both source fields get set from one slim field).
+				// Merge: multiple source fields can map to the same slim JSON name
+				// (e.g., DNS and Name both map to "ip" in the IP slim type).
 				if mergeField(b, jsonName, sourceJSONName) {
 					continue
 				}
@@ -137,7 +129,6 @@ func parseSlimTags(reg *registry.TypeRegistry) []slimType {
 	return result
 }
 
-// resolveParentKind determines the parent wiring strategy from the field's reflect.Type.
 func resolveParentKind(t reflect.Type) parentKind {
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
@@ -152,9 +143,8 @@ func resolveParentKind(t reflect.Type) parentKind {
 	}
 }
 
-// resolveSourceTypeName determines the Go type name for a slim type.
-// If the slim type name matches a registered model, use that model's Go type name;
-// otherwise fall back to the struct where the tags were found.
+// resolveSourceTypeName looks up the Go type name for a slim type. Falls back to
+// the declaring struct when the slim type isn't a registered model (e.g., IP → Asset).
 func resolveSourceTypeName(reg *registry.TypeRegistry, slimTypeName, fallback string) string {
 	if typ, ok := reg.GetType(strings.ToLower(slimTypeName)); ok {
 		if typ.Kind() == reflect.Ptr {
@@ -165,8 +155,6 @@ func resolveSourceTypeName(reg *registry.TypeRegistry, slimTypeName, fallback st
 	return fallback
 }
 
-// mergeField checks if a field with the same jsonName already exists in the builder.
-// If so, appends the sourceJSONName to that field's list (if not already present) and returns true.
 func mergeField(b *slimType, jsonName, sourceJSONName string) bool {
 	for i, existing := range b.Fields {
 		if existing.JSONName == jsonName {
@@ -182,7 +170,7 @@ func mergeField(b *slimType, jsonName, sourceJSONName string) bool {
 	return false
 }
 
-// sortedRegistryNames returns canonical (non-alias) registry names in sorted order.
+// sortedRegistryNames returns canonical (non-alias) names in sorted order.
 // A name is canonical if it equals strings.ToLower of the Go type name.
 func sortedRegistryNames(reg *registry.TypeRegistry) []string {
 	var names []string
@@ -206,7 +194,7 @@ func mustGetType(reg *registry.TypeRegistry, name string) reflect.Type {
 	return typ
 }
 
-// parseEntry parses a single slim tag entry: "TypeName[=jsonname[(EmbedType)]]"
+// parseEntry parses a slim tag entry: "TypeName[=jsonname[(EmbedType)]]"
 func parseEntry(entry string) (typeName, jsonName, embedType string) {
 	parts := strings.SplitN(entry, "=", 2)
 	typeName = parts[0]
@@ -222,7 +210,6 @@ func parseEntry(entry string) (typeName, jsonName, embedType string) {
 	return
 }
 
-// jsonTagName extracts the json name from a struct field tag.
 func jsonTagName(sf reflect.StructField) string {
 	tag := sf.Tag.Get("json")
 	if tag == "" || tag == "-" {
@@ -232,7 +219,6 @@ func jsonTagName(sf reflect.StructField) string {
 	return name
 }
 
-// resolveGoType converts a reflect.Type to a Go type string, applying typeMap substitutions.
 func resolveGoType(t reflect.Type) string {
 	if t.Kind() != reflect.Ptr {
 		if mapped, ok := typeMap[t.Name()]; ok {

@@ -9,14 +9,12 @@ import (
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
-// ADObject is a capability model for model.ADObject.
 type ADObject struct {
 	Label    string `json:"label"`
 	Domain   string `json:"domain"`
 	ObjectID string `json:"objectid"`
 }
 
-// Convert converts this capability model to a full model.ADObject.
 func (s ADObject) Convert() (*model.ADObject, error) {
 	m := make(map[string]any)
 	m["label"] = s.Label
@@ -36,7 +34,6 @@ func (s ADObject) Convert() (*model.ADObject, error) {
 	return &result, nil
 }
 
-// AWSResource is a capability model for model.AWSResource.
 type AWSResource struct {
 	IPs          []string       `json:"ips"`
 	URLs         []string       `json:"urls"`
@@ -46,7 +43,6 @@ type AWSResource struct {
 	Properties   map[string]any `json:"properties"`
 }
 
-// Convert converts this capability model to a full model.AWSResource.
 func (s AWSResource) Convert() (*model.AWSResource, error) {
 	m := make(map[string]any)
 	m["ips"] = s.IPs
@@ -69,13 +65,11 @@ func (s AWSResource) Convert() (*model.AWSResource, error) {
 	return &result, nil
 }
 
-// Asset is a capability model for model.Asset.
 type Asset struct {
 	DNS  string `json:"dns"`
 	Name string `json:"name"`
 }
 
-// Convert converts this capability model to a full model.Asset.
 func (s Asset) Convert() (*model.Asset, error) {
 	m := make(map[string]any)
 	m["dns"] = s.DNS
@@ -94,7 +88,6 @@ func (s Asset) Convert() (*model.Asset, error) {
 	return &result, nil
 }
 
-// AzureResource is a capability model for model.AzureResource.
 type AzureResource struct {
 	IPs          []string       `json:"ips"`
 	URLs         []string       `json:"urls"`
@@ -104,7 +97,6 @@ type AzureResource struct {
 	Properties   map[string]any `json:"properties"`
 }
 
-// Convert converts this capability model to a full model.AzureResource.
 func (s AzureResource) Convert() (*model.AzureResource, error) {
 	m := make(map[string]any)
 	m["ips"] = s.IPs
@@ -127,7 +119,6 @@ func (s AzureResource) Convert() (*model.AzureResource, error) {
 	return &result, nil
 }
 
-// CloudResource is a capability model for model.CloudResource.
 type CloudResource struct {
 	IPs          []string       `json:"ips"`
 	URLs         []string       `json:"urls"`
@@ -137,7 +128,6 @@ type CloudResource struct {
 	Properties   map[string]any `json:"properties"`
 }
 
-// Convert converts this capability model to a full model.CloudResource.
 func (s CloudResource) Convert() (*model.CloudResource, error) {
 	m := make(map[string]any)
 	m["ips"] = s.IPs
@@ -160,12 +150,10 @@ func (s CloudResource) Convert() (*model.CloudResource, error) {
 	return &result, nil
 }
 
-// Domain is a capability model for model.Asset.
 type Domain struct {
 	DNS string `json:"domain"`
 }
 
-// Convert converts this capability model to a full model.Asset.
 func (s Domain) Convert() (*model.Asset, error) {
 	m := make(map[string]any)
 	m["dns"] = s.DNS
@@ -184,13 +172,11 @@ func (s Domain) Convert() (*model.Asset, error) {
 	return &result, nil
 }
 
-// File is a capability model for model.File.
 type File struct {
 	Name  string `json:"name"`
 	Bytes []byte `json:"bytes"`
 }
 
-// Convert converts this capability model to a full model.File.
 func (s File) Convert() (*model.File, error) {
 	m := make(map[string]any)
 	m["name"] = s.Name
@@ -209,7 +195,6 @@ func (s File) Convert() (*model.File, error) {
 	return &result, nil
 }
 
-// GCPResource is a capability model for model.GCPResource.
 type GCPResource struct {
 	IPs          []string       `json:"ips"`
 	URLs         []string       `json:"urls"`
@@ -219,7 +204,6 @@ type GCPResource struct {
 	Properties   map[string]any `json:"properties"`
 }
 
-// Convert converts this capability model to a full model.GCPResource.
 func (s GCPResource) Convert() (*model.GCPResource, error) {
 	m := make(map[string]any)
 	m["ips"] = s.IPs
@@ -242,12 +226,10 @@ func (s GCPResource) Convert() (*model.GCPResource, error) {
 	return &result, nil
 }
 
-// IP is a capability model for model.Asset.
 type IP struct {
 	DNS string `json:"ip"`
 }
 
-// Convert converts this capability model to a full model.Asset.
 func (s IP) Convert() (*model.Asset, error) {
 	m := make(map[string]any)
 	m["dns"] = s.DNS
@@ -266,14 +248,12 @@ func (s IP) Convert() (*model.Asset, error) {
 	return &result, nil
 }
 
-// Organization is a capability model for model.Organization.
 type Organization struct {
 	Name    *string `json:"name"`
 	Domain  *string `json:"domain"`
 	Website *string `json:"website"`
 }
 
-// Convert converts this capability model to a full model.Organization.
 func (s Organization) Convert() (*model.Organization, error) {
 	m := make(map[string]any)
 	m["name"] = s.Name
@@ -293,7 +273,6 @@ func (s Organization) Convert() (*model.Organization, error) {
 	return &result, nil
 }
 
-// Person is a capability model for model.Person.
 type Person struct {
 	FirstName *string `json:"first_name"`
 	LastName  *string `json:"last_name"`
@@ -302,7 +281,6 @@ type Person struct {
 	Title     *string `json:"title"`
 }
 
-// Convert converts this capability model to a full model.Person.
 func (s Person) Convert() (*model.Person, error) {
 	m := make(map[string]any)
 	m["first_name"] = s.FirstName
@@ -324,7 +302,6 @@ func (s Person) Convert() (*model.Person, error) {
 	return &result, nil
 }
 
-// Port is a capability model for model.Port.
 type Port struct {
 	Protocol string `json:"protocol"`
 	Port     int    `json:"port"`
@@ -332,7 +309,6 @@ type Port struct {
 	Parent   Asset  `json:"parent"`
 }
 
-// Convert converts this capability model to a full model.Port.
 func (s Port) Convert() (*model.Port, error) {
 	m := make(map[string]any)
 	m["protocol"] = s.Protocol
@@ -361,14 +337,12 @@ func (s Port) Convert() (*model.Port, error) {
 	return &result, nil
 }
 
-// Preseed is a capability model for model.Preseed.
 type Preseed struct {
 	Type  string `json:"type"`
 	Title string `json:"title"`
 	Value string `json:"value"`
 }
 
-// Convert converts this capability model to a full model.Preseed.
 func (s Preseed) Convert() (*model.Preseed, error) {
 	m := make(map[string]any)
 	m["type"] = s.Type
@@ -388,7 +362,6 @@ func (s Preseed) Convert() (*model.Preseed, error) {
 	return &result, nil
 }
 
-// Risk is a capability model for model.Risk.
 type Risk struct {
 	DNS    string `json:"dns"`
 	Name   string `json:"name"`
@@ -397,7 +370,6 @@ type Risk struct {
 	Target Asset  `json:"target"`
 }
 
-// Convert converts this capability model to a full model.Risk.
 func (s Risk) Convert() (*model.Risk, error) {
 	m := make(map[string]any)
 	m["dns"] = s.DNS
@@ -423,13 +395,11 @@ func (s Risk) Convert() (*model.Risk, error) {
 	return &result, nil
 }
 
-// Technology is a capability model for model.Technology.
 type Technology struct {
 	CPE  string `json:"cpe"`
 	Name string `json:"name"`
 }
 
-// Convert converts this capability model to a full model.Technology.
 func (s Technology) Convert() (*model.Technology, error) {
 	m := make(map[string]any)
 	m["cpe"] = s.CPE
@@ -448,14 +418,12 @@ func (s Technology) Convert() (*model.Technology, error) {
 	return &result, nil
 }
 
-// WebApplication is a capability model for model.WebApplication.
 type WebApplication struct {
 	PrimaryURL string   `json:"primary_url"`
 	URLs       []string `json:"urls"`
 	Name       string   `json:"name"`
 }
 
-// Convert converts this capability model to a full model.WebApplication.
 func (s WebApplication) Convert() (*model.WebApplication, error) {
 	m := make(map[string]any)
 	m["primary_url"] = s.PrimaryURL
@@ -475,13 +443,11 @@ func (s WebApplication) Convert() (*model.WebApplication, error) {
 	return &result, nil
 }
 
-// Webpage is a capability model for model.Webpage.
 type Webpage struct {
 	URL    string         `json:"url"`
 	Parent WebApplication `json:"parent"`
 }
 
-// Convert converts this capability model to a full model.Webpage.
 func (s Webpage) Convert() (*model.Webpage, error) {
 	m := make(map[string]any)
 	m["url"] = s.URL

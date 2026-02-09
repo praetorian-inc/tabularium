@@ -52,7 +52,7 @@ func generate(slimTypes []slimType, outputDir string) error {
 	return os.WriteFile(outPath, formatted, 0644)
 }
 
-// manualUnmarshal returns true when the parent must be set before hooks run,
+// manualUnmarshal is true when the parent must be set before hooks run,
 // requiring manual Defaulted + Unmarshal + CallHooks instead of UnmarshalModel.
 func manualUnmarshal(p *parentField) bool {
 	return p != nil && p.Kind != parentInterface
@@ -62,7 +62,6 @@ var typeTmpl = template.Must(template.New("type").Funcs(template.FuncMap{
 	"eq":              func(a, b parentKind) bool { return a == b },
 	"manualUnmarshal": manualUnmarshal,
 }).Parse(`
-// {{.Name}} is a capability model for model.{{.SourceTypeName}}.
 type {{.Name}} struct {
 {{- range .Fields}}
 	{{.SourceFieldName}} {{.GoType}} ` + "`" + `json:"{{.JSONName}}"` + "`" + `
@@ -72,7 +71,6 @@ type {{.Name}} struct {
 {{- end}}
 }
 
-// Convert converts this capability model to a full model.{{.SourceTypeName}}.
 func (s {{.Name}}) Convert() (*model.{{.SourceTypeName}}, error) {
 	m := make(map[string]any)
 {{- range $f := .Fields}}
