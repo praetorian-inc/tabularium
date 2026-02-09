@@ -17,6 +17,9 @@ func init() {
 
 func GenericName(item any) (string, error) {
 	tipe := reflect.TypeOf(item)
+	if tipe == nil {
+		return "", fmt.Errorf("nil type does not implement Model")
+	}
 
 	model := new(Model)
 	rType := reflect.TypeOf(model).Elem()

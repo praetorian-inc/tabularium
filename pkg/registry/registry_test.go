@@ -38,6 +38,13 @@ func TestTypeRegistry_GetModel(t *testing.T) {
 	assert.Nil(t, alias3)
 }
 
+func TestGenericName_NilType(t *testing.T) {
+	var nilModel Model = nil
+	_, err := GenericName(nilModel)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "nil type")
+}
+
 func TestTypeRegistry_MakeType(t *testing.T) {
 	tests := []struct {
 		name     string
