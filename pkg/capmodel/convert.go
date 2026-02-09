@@ -1,6 +1,6 @@
-//go:generate go run ../../cmd/slimgen -output .
+//go:generate go run ../../cmd/capmodelgen -output .
 
-package slim
+package capmodel
 
 import (
 	"encoding/json"
@@ -10,44 +10,44 @@ import (
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
-// Converter is implemented by slim types to declare their target model name.
+// Converter is implemented by capability model types to declare their target model name.
 type Converter interface {
 	TargetModel() string // returns the registry name, e.g., "asset", "port"
 }
 
-// parentAssetProvider is implemented by slim types that embed a parent SlimAsset.
+// parentAssetProvider is implemented by capability model types that embed a parent Asset.
 // When Convert encounters a type that implements this interface, it converts the
-// parent SlimAsset into a full Asset and adds it to the resulting Collection.
+// parent Asset into a full Asset and adds it to the resulting Collection.
 // The bool return value indicates whether the parent should be injected into
 // the child JSON as a GraphModelWrapper-compatible "parent" object. Types like
-// SlimPort and SlimAttribute return true because their full models use
-// GraphModelWrapper. SlimWebpage returns false because Webpage.Parent is
+// Port and Attribute return true because their full models use
+// GraphModelWrapper. Webpage returns false because Webpage.Parent is
 // *WebApplication, not GraphModelWrapper.
 type parentAssetProvider interface {
-	GetParentAsset() (SlimAsset, bool)
+	GetParentAsset() (Asset, bool)
 }
 
-// Convert takes a slim type, marshals it to JSON, and converts it to a full
+// Convert takes a capability model type, marshals it to JSON, and converts it to a full
 // Tabularium model via UnmarshalModel (which calls Defaulted + hooks).
 // Returns a Collection containing the converted model(s).
 //
 // Use collection.Get[*model.Asset](col) to retrieve typed models from the
 // returned Collection.
 //
-// When the slim type implements parentAssetProvider (e.g., SlimPort, SlimAttribute,
-// SlimWebpage), Convert first converts the embedded SlimAsset into a full Asset,
+// When the capability model type implements parentAssetProvider (e.g., Port, Attribute,
+// Webpage), Convert first converts the embedded Asset into a full Asset,
 // adds it to the Collection, then injects the parent into the child model's JSON
 // so that the child's hooks can compute its Key and Source correctly.
-func Convert(slim Converter) (*collection.Collection, error) {
+func Convert(cm Converter) (*collection.Collection, error) {
 	col := &collection.Collection{}
 
-	// If the slim type has a parent asset, convert the parent first and
+	// If the capability model type has a parent asset, convert the parent first and
 	// optionally inject it into the child's JSON payload so that hooks can
 	// reference it. The inject bool controls whether the parent is added as
 	// a GraphModelWrapper-compatible "parent" field in the child JSON.
 	var parentJSON []byte
 	var inject bool
-	if p, ok := slim.(parentAssetProvider); ok {
+	if p, ok := cm.(parentAssetProvider); ok {
 		parentAsset, shouldInject := p.GetParentAsset()
 		inject = shouldInject
 
@@ -60,53 +60,53 @@ func Convert(slim Converter) (*collection.Collection, error) {
 		parentJSON = injectionJSON
 	}
 
-	// Marshal the slim type itself.
-	b, err := json.Marshal(slim)
+	// Marshal the capability model type itself.
+	b, err := json.Marshal(cm)
 	if err != nil {
-		return nil, fmt.Errorf("slim: marshal: %w", err)
+		return nil, fmt.Errorf("capmodel: marshal: %w", err)
 	}
 
-	// If we have a parent and the slim type opts into parent injection,
+	// If we have a parent and the capability model type opts into parent injection,
 	// inject it into the child JSON as a GraphModelWrapper-compatible
 	// "parent" object so that the child hooks can resolve Parent.Model
 	// (e.g., for key construction).
 	if parentJSON != nil && inject {
 		b, err = injectParent(b, parentJSON, "asset")
 		if err != nil {
-			return nil, fmt.Errorf("slim: inject parent: %w", err)
+			return nil, fmt.Errorf("capmodel: inject parent: %w", err)
 		}
 	}
 
-	model, ok := registry.Registry.MakeType(slim.TargetModel())
+	model, ok := registry.Registry.MakeType(cm.TargetModel())
 	if !ok {
-		return nil, fmt.Errorf("slim: unknown model %q", slim.TargetModel())
+		return nil, fmt.Errorf("capmodel: unknown model %q", cm.TargetModel())
 	}
 
 	if err := registry.UnmarshalModel(b, model); err != nil {
-		return nil, fmt.Errorf("slim: unmarshal model: %w", err)
+		return nil, fmt.Errorf("capmodel: unmarshal model: %w", err)
 	}
 
 	col.Add(model)
 	return col, nil
 }
 
-// convertParent converts a SlimAsset into a full model and returns the model
+// convertParent converts an Asset into a full model and returns the model
 // along with its JSON representation (for optional injection into the child).
-func convertParent(parentAsset SlimAsset) (registry.Model, []byte, error) {
+func convertParent(parentAsset Asset) (registry.Model, []byte, error) {
 	m, ok := registry.Registry.MakeType(parentAsset.TargetModel())
 	if !ok {
-		return nil, nil, fmt.Errorf("slim: unknown parent model %q", parentAsset.TargetModel())
+		return nil, nil, fmt.Errorf("capmodel: unknown parent model %q", parentAsset.TargetModel())
 	}
 	pb, err := json.Marshal(parentAsset)
 	if err != nil {
-		return nil, nil, fmt.Errorf("slim: marshal parent: %w", err)
+		return nil, nil, fmt.Errorf("capmodel: marshal parent: %w", err)
 	}
 	if err := registry.UnmarshalModel(pb, m); err != nil {
-		return nil, nil, fmt.Errorf("slim: unmarshal parent: %w", err)
+		return nil, nil, fmt.Errorf("capmodel: unmarshal parent: %w", err)
 	}
 	injectionJSON, err := json.Marshal(m)
 	if err != nil {
-		return nil, nil, fmt.Errorf("slim: re-marshal parent: %w", err)
+		return nil, nil, fmt.Errorf("capmodel: re-marshal parent: %w", err)
 	}
 	return m, injectionJSON, nil
 }

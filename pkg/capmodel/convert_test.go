@@ -1,4 +1,4 @@
-package slim
+package capmodel
 
 import (
 	"strings"
@@ -11,7 +11,7 @@ import (
 func TestConvertAssetTypes(t *testing.T) {
 	tests := []struct {
 		name            string
-		slim            Converter
+		input           Converter
 		expectedDNS     string
 		expectedName    string
 		expectedKey     string
@@ -20,7 +20,7 @@ func TestConvertAssetTypes(t *testing.T) {
 	}{
 		{
 			name:          "IP with parent domain",
-			slim:          NewIPAsset("1.2.3.4", "example.com"),
+			input:         NewIPAsset("1.2.3.4", "example.com"),
 			expectedDNS:   "example.com",
 			expectedName:  "1.2.3.4",
 			expectedKey:   "#asset#example.com#1.2.3.4",
@@ -28,7 +28,7 @@ func TestConvertAssetTypes(t *testing.T) {
 		},
 		{
 			name:            "standalone IP",
-			slim:            NewIPAsset("10.0.0.1", "10.0.0.1"),
+			input:           NewIPAsset("10.0.0.1", "10.0.0.1"),
 			expectedDNS:     "10.0.0.1",
 			expectedName:    "10.0.0.1",
 			expectedKey:     "#asset#10.0.0.1#10.0.0.1",
@@ -37,31 +37,31 @@ func TestConvertAssetTypes(t *testing.T) {
 		},
 		{
 			name:          "IPv6 address",
-			slim:          NewIPAsset("::1", "example.com"),
+			input:         NewIPAsset("::1", "example.com"),
 			expectedDNS:   "example.com",
 			expectedName:  "::1",
 			expectedKey:   "#asset#example.com#::1",
 			expectedClass: "ipv6",
 		},
 		{
-			name:          "SlimAsset with dns and name",
-			slim:          SlimAsset{DNS: "example.com", Name: "1.2.3.4"},
+			name:          "Asset with dns and name",
+			input:         Asset{DNS: "example.com", Name: "1.2.3.4"},
 			expectedDNS:   "example.com",
 			expectedName:  "1.2.3.4",
 			expectedKey:   "#asset#example.com#1.2.3.4",
 			expectedClass: "ipv4",
 		},
 		{
-			name:          "domain via SlimAsset",
-			slim:          SlimAsset{DNS: "sub.example.com", Name: "sub.example.com"},
+			name:          "domain via Asset",
+			input:         Asset{DNS: "sub.example.com", Name: "sub.example.com"},
 			expectedDNS:   "sub.example.com",
 			expectedName:  "sub.example.com",
 			expectedKey:   "#asset#sub.example.com#sub.example.com",
 			expectedClass: "domain",
 		},
 		{
-			name:            "CIDR via SlimAsset",
-			slim:            SlimAsset{DNS: "10.0.0.0/8", Name: "10.0.0.0/8"},
+			name:            "CIDR via Asset",
+			input:           Asset{DNS: "10.0.0.0/8", Name: "10.0.0.0/8"},
 			expectedDNS:     "10.0.0.0/8",
 			expectedName:    "10.0.0.0/8",
 			expectedKey:     "#asset#10.0.0.0/8#10.0.0.0/8",
@@ -70,7 +70,7 @@ func TestConvertAssetTypes(t *testing.T) {
 		},
 		{
 			name:            "private IP",
-			slim:            NewIPAsset("192.168.1.100", "internal.local"),
+			input:           NewIPAsset("192.168.1.100", "internal.local"),
 			expectedDNS:     "internal.local",
 			expectedName:    "192.168.1.100",
 			expectedKey:     "#asset#internal.local#192.168.1.100",
@@ -81,7 +81,7 @@ func TestConvertAssetTypes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			col, err := Convert(tt.slim)
+			col, err := Convert(tt.input)
 			if err != nil {
 				t.Fatalf("Convert() error: %v", err)
 			}
@@ -121,15 +121,15 @@ func TestConvertAssetTypes(t *testing.T) {
 }
 
 func TestConvertPort(t *testing.T) {
-	slim := SlimPort{
-		Asset:      SlimAsset{DNS: "example.com", Name: "1.2.3.4"},
+	p := Port{
+		Asset:      Asset{DNS: "example.com", Name: "1.2.3.4"},
 		Protocol:   "tcp",
 		Port:       443,
 		Service:    "https",
 		Capability: "portscan",
 	}
 
-	col, err := Convert(slim)
+	col, err := Convert(p)
 	if err != nil {
 		t.Fatalf("Convert() error: %v", err)
 	}
@@ -153,40 +153,40 @@ func TestConvertPort(t *testing.T) {
 	if len(ports) != 1 {
 		t.Fatalf("expected 1 port, got %d", len(ports))
 	}
-	p := ports[0]
+	port := ports[0]
 	expectedPortKey := "#port#tcp#443" + expectedAssetKey
-	if p.Key != expectedPortKey {
-		t.Errorf("Port.Key = %q, want %q", p.Key, expectedPortKey)
+	if port.Key != expectedPortKey {
+		t.Errorf("Port.Key = %q, want %q", port.Key, expectedPortKey)
 	}
-	if p.Source != expectedAssetKey {
-		t.Errorf("Port.Source = %q, want %q", p.Source, expectedAssetKey)
+	if port.Source != expectedAssetKey {
+		t.Errorf("Port.Source = %q, want %q", port.Source, expectedAssetKey)
 	}
-	if p.Protocol != "tcp" {
-		t.Errorf("Port.Protocol = %q, want %q", p.Protocol, "tcp")
+	if port.Protocol != "tcp" {
+		t.Errorf("Port.Protocol = %q, want %q", port.Protocol, "tcp")
 	}
-	if p.Port != 443 {
-		t.Errorf("Port.Port = %d, want %d", p.Port, 443)
+	if port.Port != 443 {
+		t.Errorf("Port.Port = %d, want %d", port.Port, 443)
 	}
-	if p.Service != "https" {
-		t.Errorf("Port.Service = %q, want %q", p.Service, "https")
+	if port.Service != "https" {
+		t.Errorf("Port.Service = %q, want %q", port.Service, "https")
 	}
-	if p.Capability != "portscan" {
-		t.Errorf("Port.Capability = %q, want %q", p.Capability, "portscan")
+	if port.Capability != "portscan" {
+		t.Errorf("Port.Capability = %q, want %q", port.Capability, "portscan")
 	}
-	if p.Status != "A" {
-		t.Errorf("Port.Status = %q, want %q", p.Status, "A")
+	if port.Status != "A" {
+		t.Errorf("Port.Status = %q, want %q", port.Status, "A")
 	}
-	if p.Created == "" {
+	if port.Created == "" {
 		t.Error("Port.Created should be set by Defaulted()")
 	}
-	if p.TTL == 0 {
+	if port.TTL == 0 {
 		t.Error("Port.TTL should be set by Defaulted()")
 	}
 }
 
 func TestConvertRisk(t *testing.T) {
 	t.Run("CVE risk", func(t *testing.T) {
-		col, err := Convert(SlimRisk{
+		col, err := Convert(Risk{
 			DNS:     "example.com",
 			Name:    "CVE-2024-1234",
 			Comment: "test vulnerability",
@@ -226,7 +226,7 @@ func TestConvertRisk(t *testing.T) {
 	})
 
 	t.Run("non-CVE name formatting", func(t *testing.T) {
-		col, err := Convert(SlimRisk{DNS: "example.com", Name: "Test Risk Name"})
+		col, err := Convert(Risk{DNS: "example.com", Name: "Test Risk Name"})
 		if err != nil {
 			t.Fatalf("Convert() error: %v", err)
 		}
@@ -248,7 +248,7 @@ func TestConvertRisk(t *testing.T) {
 
 func TestConvertTechnology(t *testing.T) {
 	cpe := "cpe:2.3:a:nginx:nginx:1.25.0:*:*:*:*:*:*:*"
-	col, err := Convert(SlimTechnology{CPE: cpe, Name: "nginx"})
+	col, err := Convert(Technology{CPE: cpe, Name: "nginx"})
 	if err != nil {
 		t.Fatalf("Convert() error: %v", err)
 	}
@@ -281,8 +281,8 @@ func TestConvertTechnology(t *testing.T) {
 }
 
 func TestConvertAttribute(t *testing.T) {
-	col, err := Convert(SlimAttribute{
-		Asset:      SlimAsset{DNS: "example.com", Name: "1.2.3.4"},
+	col, err := Convert(Attribute{
+		Asset:      Asset{DNS: "example.com", Name: "1.2.3.4"},
 		Name:       "open_port",
 		Value:      "443",
 		Capability: "portscan",
@@ -343,7 +343,7 @@ func TestConvertAttribute(t *testing.T) {
 }
 
 func TestConvertFile(t *testing.T) {
-	col, err := Convert(SlimFile{
+	col, err := Convert(File{
 		Name:  "proofs/scan.txt",
 		Bytes: []byte("scan results"),
 	})
@@ -376,8 +376,8 @@ func TestConvertFile(t *testing.T) {
 }
 
 func TestConvertWebpage(t *testing.T) {
-	col, err := Convert(SlimWebpage{
-		Asset: SlimAsset{DNS: "example.com", Name: "1.2.3.4"},
+	col, err := Convert(Webpage{
+		Asset: Asset{DNS: "example.com", Name: "1.2.3.4"},
 		URL:   "https://example.com/login",
 	})
 	if err != nil {
@@ -427,7 +427,7 @@ func TestConvertWebpage(t *testing.T) {
 }
 
 func TestConvertWebApplication(t *testing.T) {
-	col, err := Convert(SlimWebApplication{
+	col, err := Convert(WebApplication{
 		PrimaryURL: "https://app.example.com",
 		URLs:       []string{"https://api.example.com"},
 		Name:       "Example App",
