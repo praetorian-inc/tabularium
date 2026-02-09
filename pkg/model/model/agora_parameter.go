@@ -17,7 +17,8 @@ type AgoraParameter struct {
 	Description string `json:"description" desc:"A description of the parameter suitable for human or LLM use" example:"The rate limit for the capability"`
 	Default     string `json:"default,omitempty" desc:"A string representation of the default value of the parameter" example:"1.2.3.4"`
 	Required    bool   `json:"required" desc:"Whether the parameter is required" example:"true"`
-	Type        string `json:"type" desc:"The type of the parameter" example:"string"`
+	Type        string   `json:"type" desc:"The type of the parameter" example:"string"`
+	Options     []string `json:"options,omitempty" desc:"Suggested choices for enum-style parameters, used as UI hints" example:"[\"option_a\",\"option_b\"]"`
 	// internal
 	parser func(string) error
 }
@@ -29,6 +30,11 @@ func (a AgoraParameter) WithRequired() AgoraParameter {
 
 func (a AgoraParameter) WithDefault(defaultVal string) AgoraParameter {
 	a.Default = defaultVal
+	return a
+}
+
+func (a AgoraParameter) WithOptions(opts []string) AgoraParameter {
+	a.Options = opts
 	return a
 }
 
