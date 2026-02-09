@@ -6,11 +6,14 @@ import "github.com/praetorian-inc/tabularium/pkg/model/model"
 
 // SlimPort is a simplified Port for external tool writers.
 type SlimPort struct {
-	Asset    SlimAsset `json:"-"`
-	Protocol string    `json:"protocol"`
-	Port     int       `json:"port"`
-	Service  string    `json:"service"`
-	// Capability is the name of the scanner or tool that discovered this port.
+	Asset SlimAsset `json:"-"`
+	// The protocol of this port.
+	Protocol string `json:"protocol"`
+	// The port number of this port.
+	Port int `json:"port"`
+	// The name of the service identified on this port.
+	Service string `json:"service"`
+	// Capability that discovered this port.
 	Capability string `json:"capability,omitempty"`
 }
 
@@ -23,10 +26,11 @@ func (SlimPort) injectParent() {}
 
 // SlimRisk is a simplified Risk for external tool writers.
 type SlimRisk struct {
-	// DNS is the grouping domain or identifier the risk is associated with.
+	// Primary DNS or group associated with the risk.
 	DNS string `json:"dns"`
-	// Name is the vulnerability identifier (e.g. CVE-2024-1234). Non-CVE names are automatically lowercased and spaces replaced with dashes.
-	Name    string `json:"name"`
+	// Name of the risk or vulnerability.
+	Name string `json:"name"`
+	// User-provided comment about the risk.
 	Comment string `json:"comment,omitempty"`
 }
 
@@ -34,8 +38,11 @@ func (SlimRisk) TargetModel() string { return "risk" }
 
 // SlimTechnology is a simplified Technology for external tool writers.
 type SlimTechnology struct {
-	CPE     string `json:"cpe"`
-	Name    string `json:"name,omitempty"`
+	// The full CPE string representation.
+	CPE string `json:"cpe"`
+	// Optional common name for the technology.
+	Name string `json:"name,omitempty"`
+	// User-provided comment about the technology record.
 	Comment string `json:"comment,omitempty"`
 }
 
@@ -44,11 +51,13 @@ func (SlimTechnology) TargetModel() string { return "technology" }
 // SlimAttribute is a simplified Attribute for external tool writers.
 type SlimAttribute struct {
 	Asset SlimAsset `json:"-"`
-	Name  string    `json:"name"`
-	Value string    `json:"value"`
-	// Capability is the name of the scanner or tool that discovered this attribute.
+	// Name of the attribute.
+	Name string `json:"name"`
+	// Value of the attribute.
+	Value string `json:"value"`
+	// Capability that discovered this attribute.
 	Capability string `json:"capability,omitempty"`
-	// Metadata is an optional set of freeform key-value pairs.
+	// Additional metadata associated with the attribute.
 	Metadata map[string]string `json:"metadata,omitempty"`
 }
 
@@ -61,8 +70,9 @@ func (SlimAttribute) injectParent() {}
 
 // SlimFile is a simplified File for external tool writers.
 type SlimFile struct {
+	// Name or path of the file.
 	Name string `json:"name"`
-	// Bytes is the file content. Pass a plain []byte value.
+	// File content. Must be a JSON-compatible string. Can be encoded with base64 if it begins with the prefix 'base64:'
 	Bytes model.SmartBytes `json:"bytes"`
 }
 
@@ -71,7 +81,8 @@ func (SlimFile) TargetModel() string { return "file" }
 // SlimWebpage is a simplified Webpage for external tool writers.
 type SlimWebpage struct {
 	Asset SlimAsset `json:"-"`
-	URL   string    `json:"url"`
+	// The basic URL of the webpage.
+	URL string `json:"url"`
 }
 
 func (SlimWebpage) TargetModel() string { return "webpage" }
@@ -81,9 +92,12 @@ func (s SlimWebpage) GetParentAsset() SlimAsset { return s.Asset }
 
 // SlimWebApplication is a simplified WebApplication for external tool writers.
 type SlimWebApplication struct {
-	PrimaryURL string   `json:"primary_url"`
-	URLs       []string `json:"urls"`
-	Name       string   `json:"name"`
+	// The primary/canonical URL of the web application
+	PrimaryURL string `json:"primary_url"`
+	// Additional URLs associated with this web application
+	URLs []string `json:"urls"`
+	// Name of the web application
+	Name string `json:"name"`
 }
 
 func (SlimWebApplication) TargetModel() string { return "webapplication" }

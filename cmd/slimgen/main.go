@@ -70,25 +70,6 @@ var perModelIgnoreFields = map[string]map[string]bool{
 	"webpage": {"Metadata": true},
 }
 
-// fieldDocs maps (model name, field name) to a doc comment for that field.
-// These comments are emitted in the generated code above the corresponding field.
-var fieldDocs = map[string]map[string]string{
-	"risk": {
-		"DNS":  "DNS is the grouping domain or identifier the risk is associated with.",
-		"Name": "Name is the vulnerability identifier (e.g. CVE-2024-1234). Non-CVE names are automatically lowercased and spaces replaced with dashes.",
-	},
-	"port": {
-		"Capability": "Capability is the name of the scanner or tool that discovered this port.",
-	},
-	"attribute": {
-		"Capability": "Capability is the name of the scanner or tool that discovered this attribute.",
-		"Metadata":   "Metadata is an optional set of freeform key-value pairs.",
-	},
-	"file": {
-		"Bytes": "Bytes is the file content. Pass a plain []byte value.",
-	},
-}
-
 // ignoreEmbeddedTypes lists embedded type names to always ignore.
 // Fields from these embedded types are excluded from slim types.
 var ignoreEmbeddedTypes = map[string]bool{
@@ -115,6 +96,7 @@ type slimField struct {
 	Name    string
 	GoType  string
 	JSONTag string
+	Desc    string // from the desc struct tag
 }
 
 func main() {
@@ -179,15 +161,14 @@ func main() {
 			fmt.Fprintf(&buf, "\tAsset SlimAsset `json:\"-\"`\n")
 		}
 
-		modelDocs := fieldDocs[m.name]
 		for _, f := range m.fields {
 			goType := f.GoType
 			// Replace model-package types with fully qualified names
 			if goType == "SmartBytes" {
 				goType = "model.SmartBytes"
 			}
-			if doc, ok := modelDocs[f.Name]; ok {
-				fmt.Fprintf(&buf, "\t// %s\n", doc)
+			if f.Desc != "" {
+				fmt.Fprintf(&buf, "\t// %s\n", f.Desc)
 			}
 			fmt.Fprintf(&buf, "\t%s %s `json:\"%s\"`\n", f.Name, goType, f.JSONTag)
 		}
@@ -302,6 +283,7 @@ func collectFields(modelName string, typ reflect.Type) ([]slimField, bool, bool)
 		// Build the field entry.
 		jsonName, omitempty := parseJSONTag(jsonTag, sf.Name)
 		goType := goTypeName(fieldType)
+		desc := sf.Tag.Get("desc")
 
 		tag := jsonName
 		if omitempty {
@@ -312,6 +294,7 @@ func collectFields(modelName string, typ reflect.Type) ([]slimField, bool, bool)
 			Name:    sf.Name,
 			GoType:  goType,
 			JSONTag: tag,
+			Desc:    desc,
 		})
 	}
 
@@ -374,22 +357,9 @@ func goTypeName(t reflect.Type) string {
 	case reflect.Map:
 		return "map[" + goTypeName(t.Key()) + "]" + goTypeName(t.Elem())
 	case reflect.Interface:
-		if t.NumMethod() == 0 {
-			return "any"
-		}
-		// For named interfaces, use their name
-		if t.Name() != "" {
-			return t.Name()
-		}
 		return "any"
 	default:
-		// For named types from the model package, use just the name.
-		// For built-in types (string, int, bool, etc.) this also works.
-		name := t.Name()
-		if name != "" {
-			return name
-		}
-		return t.String()
+		return t.Name()
 	}
 }
 

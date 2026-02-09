@@ -15,10 +15,10 @@ type Converter interface {
 	TargetModel() string // returns the registry name, e.g., "asset", "port"
 }
 
-// ParentAssetProvider is implemented by slim types that embed a parent SlimAsset.
+// parentAssetProvider is implemented by slim types that embed a parent SlimAsset.
 // When Convert encounters a type that implements this interface, it converts the
 // parent SlimAsset into a full Asset and adds it to the resulting Collection.
-type ParentAssetProvider interface {
+type parentAssetProvider interface {
 	GetParentAsset() SlimAsset
 }
 
@@ -38,7 +38,7 @@ type parentInjectable interface {
 // Use collection.Get[*model.Asset](col) to retrieve typed models from the
 // returned Collection.
 //
-// When the slim type implements ParentAssetProvider (e.g., SlimPort, SlimAttribute,
+// When the slim type implements parentAssetProvider (e.g., SlimPort, SlimAttribute,
 // SlimWebpage), Convert first converts the embedded SlimAsset into a full Asset,
 // adds it to the Collection, then injects the parent into the child model's JSON
 // so that the child's hooks can compute its Key and Source correctly.
@@ -48,7 +48,7 @@ func Convert(slim Converter) (*collection.Collection, error) {
 	// If the slim type has a parent asset, convert the parent first and
 	// inject it into the child's JSON payload so that hooks can reference it.
 	var parentJSON []byte
-	if p, ok := slim.(ParentAssetProvider); ok {
+	if p, ok := slim.(parentAssetProvider); ok {
 		parentAsset := p.GetParentAsset()
 
 		parentModel, pOK := registry.Registry.MakeType(parentAsset.TargetModel())
