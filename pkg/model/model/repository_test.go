@@ -66,6 +66,40 @@ func TestRepository_NewRepository(t *testing.T) {
 
 }
 
+func TestRepository_NewRepository_AzureDevOps(t *testing.T) {
+	// Azure DevOps URL format: dev.azure.com/{org}/{project}/_git/{repo}
+	repo := NewRepository("https://dev.azure.com/myorg/myproject/_git/myrepo")
+	assert.Equal(t, "myorg", repo.Org)
+	assert.Equal(t, "myrepo", repo.Name)
+	assert.Equal(t, "https://dev.azure.com/myorg/myproject/_git/myrepo", repo.URL)
+	assert.Equal(t, "repository", repo.Class)
+	assert.Equal(t, "#repository#https://dev.azure.com/myorg/myproject/_git/myrepo#myrepo", repo.Key)
+
+	// Azure DevOps without https prefix
+	repo = NewRepository("dev.azure.com/myorg/myproject/_git/myrepo")
+	assert.Equal(t, "myorg", repo.Org)
+	assert.Equal(t, "myrepo", repo.Name)
+	assert.Equal(t, "https://dev.azure.com/myorg/myproject/_git/myrepo", repo.URL)
+	assert.Equal(t, "repository", repo.Class)
+	assert.Equal(t, "#repository#https://dev.azure.com/myorg/myproject/_git/myrepo#myrepo", repo.Key)
+
+	// Azure DevOps with trailing slash
+	repo = NewRepository("https://dev.azure.com/myorg/myproject/_git/myrepo/")
+	assert.Equal(t, "myorg", repo.Org)
+	assert.Equal(t, "myrepo", repo.Name)
+	assert.Equal(t, "https://dev.azure.com/myorg/myproject/_git/myrepo", repo.URL)
+	assert.Equal(t, "repository", repo.Class)
+	assert.Equal(t, "#repository#https://dev.azure.com/myorg/myproject/_git/myrepo#myrepo", repo.Key)
+
+	// Azure DevOps with hyphenated names
+	repo = NewRepository("https://dev.azure.com/my-org/my-project/_git/my-repo")
+	assert.Equal(t, "my-org", repo.Org)
+	assert.Equal(t, "my-repo", repo.Name)
+	assert.Equal(t, "https://dev.azure.com/my-org/my-project/_git/my-repo", repo.URL)
+	assert.Equal(t, "repository", repo.Class)
+	assert.Equal(t, "#repository#https://dev.azure.com/my-org/my-project/_git/my-repo#my-repo", repo.Key)
+}
+
 func TestRepository_Valid(t *testing.T) {
 	repo := NewRepository("https://github.com/praetorian-inc/tabularium")
 	assert.True(t, repo.Valid())
@@ -91,6 +125,17 @@ func TestRepository_Valid(t *testing.T) {
 	repo = NewRepository("https://github.com/praetorian-inc/tabularium/")
 	assert.True(t, repo.Valid())
 
+	// Azure DevOps valid URLs
+	repo = NewRepository("https://dev.azure.com/myorg/myproject/_git/myrepo")
+	assert.True(t, repo.Valid())
+
+	repo = NewRepository("dev.azure.com/myorg/myproject/_git/myrepo")
+	assert.True(t, repo.Valid())
+
+	repo = NewRepository("https://dev.azure.com/myorg/myproject/_git/myrepo/")
+	assert.True(t, repo.Valid())
+
+	// Invalid URLs
 	repo = NewRepository("praetorian-inc/tabularium/")
 	assert.False(t, repo.Valid())
 
