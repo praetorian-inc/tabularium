@@ -79,10 +79,10 @@ var TierZeroSIDSuffixes = []string{
 type ADObject struct {
 	BaseAsset
 	registry.ModelAlias
-	Label           string   `neo4j:"label" json:"label" desc:"Primary label of the object." example:"ADUser"`
+	Label           string   `neo4j:"label" json:"label" desc:"Primary label of the object." example:"ADUser" slim:"ADObject"`
 	SecondaryLabels []string `neo4j:"-" json:"labels" desc:"Secondary labels of the object." example:"ADLocalGroup"`
-	Domain          string   `neo4j:"domain" json:"domain" desc:"AD domain this object belongs to." example:"example.local"`
-	ObjectID        string   `neo4j:"objectid" json:"objectid" desc:"Object identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
+	Domain          string   `neo4j:"domain" json:"domain" desc:"AD domain this object belongs to." example:"example.local" slim:"ADObject"`
+	ObjectID        string   `neo4j:"objectid" json:"objectid" desc:"Object identifier." example:"S-1-5-21-123456789-123456789-123456789-1001" slim:"ADObject"`
 	SID             string   `neo4j:"sid" json:"sid,omitempty" desc:"Security identifier." example:"S-1-5-21-123456789-123456789-123456789-1001"`
 	ADProperties
 }

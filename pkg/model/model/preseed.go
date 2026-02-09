@@ -14,9 +14,9 @@ type Preseed struct {
 	registry.BaseModel
 	Username   string            `neo4j:"username" json:"username" desc:"Chariot username associated with the preseed record." example:"user@example.com"`
 	Key        string            `neo4j:"key" json:"key" desc:"Unique key identifying the preseed record." example:"#preseed#whois#registrant_email#test@example.com"`
-	Type       string            `neo4j:"type" json:"type" desc:"Type of the preseed data." example:"whois"`
-	Title      string            `neo4j:"title" json:"title" desc:"Title or category within the preseed type." example:"registrant_email"`
-	Value      string            `neo4j:"value" json:"value" desc:"The actual preseed value." example:"test@example.com"`
+	Type       string            `neo4j:"type" json:"type" desc:"Type of the preseed data." example:"whois" slim:"Preseed"`
+	Title      string            `neo4j:"title" json:"title" desc:"Title or category within the preseed type." example:"registrant_email" slim:"Preseed"`
+	Value      string            `neo4j:"value" json:"value" desc:"The actual preseed value." example:"test@example.com" slim:"Preseed"`
 	Display    string            `neo4j:"display" json:"display" desc:"Hint for UI display type (e.g., text, image, base64)." example:"text"`
 	Status     string            `neo4j:"status" json:"status" desc:"Status of the preseed record." example:"A"`
 	Created    string            `neo4j:"created" json:"created" desc:"Timestamp when the preseed record was created (RFC3339)." example:"2023-10-27T10:00:00Z"`

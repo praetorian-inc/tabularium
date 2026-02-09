@@ -15,8 +15,8 @@ type Asset struct {
 	BaseAsset
 	LabelSettableEmbed
 	// Attributes
-	DNS     string `neo4j:"dns" json:"dns" desc:"The DNS name, or group identifier associated with this asset." example:"example.com"`
-	Name    string `neo4j:"name" json:"name" desc:"Name of the asset, or the same value as DNS if this asset represents the group." example:"169.254.169.254"`
+	DNS     string `neo4j:"dns" json:"dns" desc:"The DNS name, or group identifier associated with this asset." example:"example.com" slim:"Asset,IP=ip,Domain=domain"`
+	Name    string `neo4j:"name" json:"name" desc:"Name of the asset, or the same value as DNS if this asset represents the group." example:"169.254.169.254" slim:"Asset,IP=ip,Domain=domain"`
 	Private bool   `neo4j:"private" json:"private" desc:"Flag indicating if the asset is considered private (e.g., internal IP)." example:"false"`
 }
 
