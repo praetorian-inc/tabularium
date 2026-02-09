@@ -1472,6 +1472,12 @@ components:
           description: The name of the parameter
           example: rate_limit
           type: string
+        options:
+          description: Suggested choices for enum-style parameters, used as UI hints
+          example: '["option_a","option_b"]'
+          items:
+            type: string
+          type: array
         required:
           description: Whether the parameter is required
           example: "true"
