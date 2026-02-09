@@ -24,7 +24,7 @@ const (
 )
 
 var (
-	repository    = regexp.MustCompile(`^(https://)?(github\.com|gitlab\.com|bitbucket\.(com|org)|hub\.docker\.com)/([^/]+)/(([^/]+/)*[^/]+)$`)
+	repository    = regexp.MustCompile(`^(https://)?(github\.com|gitlab\.com|bitbucket\.(com|org)|hub\.docker\.com|dev\.azure\.com)/([^/]+)/(([^/]+/)*[^/]+)$`)
 	repositoryKey = regexp.MustCompile(`^#repository(#[^#]+){2,}$`)
 )
 
@@ -109,6 +109,15 @@ func (r *Repository) extractOrgAndRepo() error {
 	if len(parts) < 4 {
 		return fmt.Errorf("invalid repository URL: %s", r.URL)
 	}
+
+	// Azure DevOps: dev.azure.com/{org}/{project}/_git/{repo}
+	if strings.Contains(r.URL, "dev.azure.com") {
+		r.Name = parts[len(parts)-1]
+		r.Org = parts[len(parts)-4]
+		return nil
+	}
+
+	// GitHub/GitLab/Bitbucket: {domain}/{org}/{repo}
 	r.Name = parts[len(parts)-1]
 	r.Org = parts[len(parts)-2]
 	return nil

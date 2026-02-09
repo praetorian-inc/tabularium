@@ -47,6 +47,7 @@ const (
 	DigitalOceanCredential          CredentialType = "digitalocean"            // DigitalOcean API key
 	GithubCredential                CredentialType = "github"                  // Github API key
 	GitlabCredential                CredentialType = "gitlab"                  // Gitlab API key
+	AzureDevOpsPATCredential        CredentialType = "azuredevops-pat"         // Azure DevOps Personal Access Token
 	InsightVMCredential             CredentialType = "insight-vm"              // InsightVM credentials
 	MicrosoftDefenderCredential     CredentialType = "microsoft-defender"      // Microsoft Defender credentials
 	CrowdStrikeSpotlightCredential  CredentialType = "crowdstrike-spotlight"   // CrowdStrike Spotlight credentials
