@@ -29,9 +29,9 @@ type Organization struct {
 	Key      string `neo4j:"key" json:"key" desc:"Unique key identifying the organization." example:"#organization#example.com#Example Corp"`
 
 	// Core Organization Information
-	Name        *string `neo4j:"name,omitempty" json:"name,omitempty" desc:"Organization name." example:"Example Corporation" slim:"Organization"`
-	Domain      *string `neo4j:"domain,omitempty" json:"domain,omitempty" desc:"Primary domain associated with the organization." example:"example.com" slim:"Organization"`
-	Website     *string `neo4j:"website,omitempty" json:"website,omitempty" desc:"Organization website URL." example:"https://www.example.com" slim:"Organization"`
+	Name        *string `neo4j:"name,omitempty" json:"name,omitempty" desc:"Organization name." example:"Example Corporation" capmodel:"Organization"`
+	Domain      *string `neo4j:"domain,omitempty" json:"domain,omitempty" desc:"Primary domain associated with the organization." example:"example.com" capmodel:"Organization"`
+	Website     *string `neo4j:"website,omitempty" json:"website,omitempty" desc:"Organization website URL." example:"https://www.example.com" capmodel:"Organization"`
 	Description *string `neo4j:"description,omitempty" json:"description,omitempty" desc:"Organization description." example:"Leading technology company providing innovative solutions."`
 
 	// Industry and Classification

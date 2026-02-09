@@ -70,9 +70,9 @@ type File struct {
 	Username string `dynamodbav:"username" json:"username" desc:"Chariot username associated with the file." example:"user@example.com"`
 	Key      string `dynamodbav:"key" json:"key" desc:"Unique key for the file record." example:"#file#proofs/scan.txt"`
 	// Attributes
-	Name         string     `dynamodbav:"name" json:"name" desc:"Name or path of the file." example:"proofs/scan.txt" slim:"File"`
+	Name         string     `dynamodbav:"name" json:"name" desc:"Name or path of the file." example:"proofs/scan.txt" capmodel:"File"`
 	Updated      string     `dynamodbav:"updated" json:"updated" desc:"Timestamp when the file record was last updated (RFC3339)." example:"2023-10-27T11:00:00Z"`
-	Bytes        SmartBytes `dynamodbav:"-" json:"bytes" desc:"File content. Must be a JSON-compatible string. Can be encoded with base64 if it begins with the prefix 'base64:'" example:"base64:dGVzdA==" slim:"File"`
+	Bytes        SmartBytes `dynamodbav:"-" json:"bytes" desc:"File content. Must be a JSON-compatible string. Can be encoded with base64 if it begins with the prefix 'base64:'" example:"base64:dGVzdA==" capmodel:"File"`
 	Overwrite    bool       `dynamodbav:"-" json:"-"`
 	PlexTracPath string     `dynamodbav:"plextrac_path" json:"-" desc:"Key for the file in PlexTrac." example:"/api/v2/uploads/1234567890"`
 }

@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"text/template"
 )
 
@@ -23,33 +24,41 @@ import (
 `
 
 func generate(slimTypes []slimType, outputDir string) error {
+	if err := os.MkdirAll(outputDir, 0755); err != nil {
+		return err
+	}
+
+	// Remove old single-file output.
+	os.Remove(filepath.Join(outputDir, "generated.go"))
+
 	sort.Slice(slimTypes, func(i, j int) bool {
 		return slimTypes[i].Name < slimTypes[j].Name
 	})
 
-	var buf bytes.Buffer
-	buf.WriteString(generatedHeader)
-
 	for _, st := range slimTypes {
+		var buf bytes.Buffer
+		buf.WriteString(generatedHeader)
+
 		if err := typeTmpl.Execute(&buf, st); err != nil {
 			return fmt.Errorf("generating %s: %w", st.Name, err)
 		}
-	}
 
-	formatted, err := format.Source(buf.Bytes())
-	if err != nil {
-		debugPath := filepath.Join(outputDir, "generated_debug.go")
-		if writeErr := os.WriteFile(debugPath, buf.Bytes(), 0644); writeErr != nil {
-			return fmt.Errorf("formatting generated code: %w (also failed to write debug: %v)", err, writeErr)
+		formatted, err := format.Source(buf.Bytes())
+		if err != nil {
+			debugPath := filepath.Join(outputDir, "generated_debug.go")
+			if writeErr := os.WriteFile(debugPath, buf.Bytes(), 0644); writeErr != nil {
+				return fmt.Errorf("formatting %s: %w (also failed to write debug: %v)", st.Name, err, writeErr)
+			}
+			return fmt.Errorf("formatting %s: %w (debug written to %s)", st.Name, err, debugPath)
 		}
-		return fmt.Errorf("formatting generated code: %w (debug written to %s)", err, debugPath)
+
+		outPath := filepath.Join(outputDir, strings.ToLower(st.Name)+".go")
+		if err := os.WriteFile(outPath, formatted, 0644); err != nil {
+			return err
+		}
 	}
 
-	outPath := filepath.Join(outputDir, "generated.go")
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
-		return err
-	}
-	return os.WriteFile(outPath, formatted, 0644)
+	return nil
 }
 
 // manualUnmarshal is true when the parent must be set before hooks run,

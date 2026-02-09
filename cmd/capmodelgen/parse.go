@@ -61,7 +61,7 @@ func parseSlimTags(reg *registry.TypeRegistry) []slimType {
 			if !sf.IsExported() {
 				continue
 			}
-			slimTag := sf.Tag.Get("slim")
+			slimTag := sf.Tag.Get("capmodel")
 			if slimTag == "" {
 				continue
 			}

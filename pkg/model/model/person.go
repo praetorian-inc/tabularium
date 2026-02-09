@@ -28,13 +28,13 @@ type Person struct {
 	Key      string `neo4j:"key" json:"key" desc:"Unique key identifying the person." example:"#person#john.doe@example.com#John Doe"`
 
 	// Core Person Information
-	FirstName *string `neo4j:"first_name,omitempty" json:"first_name,omitempty" desc:"Person's first name." example:"John" slim:"Person"`
-	LastName  *string `neo4j:"last_name,omitempty" json:"last_name,omitempty" desc:"Person's last name." example:"Doe" slim:"Person"`
-	Name      *string `neo4j:"name,omitempty" json:"name,omitempty" desc:"Person's full name." example:"John Doe" slim:"Person"`
-	Email     *string `neo4j:"email,omitempty" json:"email,omitempty" desc:"Person's primary email address." example:"john.doe@example.com" slim:"Person"`
+	FirstName *string `neo4j:"first_name,omitempty" json:"first_name,omitempty" desc:"Person's first name." example:"John" capmodel:"Person"`
+	LastName  *string `neo4j:"last_name,omitempty" json:"last_name,omitempty" desc:"Person's last name." example:"Doe" capmodel:"Person"`
+	Name      *string `neo4j:"name,omitempty" json:"name,omitempty" desc:"Person's full name." example:"John Doe" capmodel:"Person"`
+	Email     *string `neo4j:"email,omitempty" json:"email,omitempty" desc:"Person's primary email address." example:"john.doe@example.com" capmodel:"Person"`
 
 	// Professional Information
-	Title    *string `neo4j:"title,omitempty" json:"title,omitempty" desc:"Person's current job title." example:"Senior Software Engineer" slim:"Person"`
+	Title    *string `neo4j:"title,omitempty" json:"title,omitempty" desc:"Person's current job title." example:"Senior Software Engineer" capmodel:"Person"`
 	Headline *string `neo4j:"headline,omitempty" json:"headline,omitempty" desc:"Person's professional headline." example:"Senior Software Engineer at Example Corp"`
 
 	// Contact Information

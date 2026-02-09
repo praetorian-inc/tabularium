@@ -76,7 +76,7 @@ type Webpage struct {
 	Private   bool                  `neo4j:"private" json:"private" desc:"Whether the webpage is on a public web server." example:"false"`
 	History
 	// Neo4j fields
-	URL             string                `neo4j:"url" json:"url" desc:"The basic URL of the webpage." example:"https://example.com/path" slim:"Webpage"`
+	URL             string                `neo4j:"url" json:"url" desc:"The basic URL of the webpage." example:"https://example.com/path" capmodel:"Webpage"`
 	Metadata        map[string]any        `neo4j:"metadata" json:"metadata" dynamodbav:"metadata" desc:"Deprecated: Additional metadata associated with the webpage." example:"{\"title\": \"Example Domain\"}"`
 	SSOIdentified   map[string]SSOWebpage `neo4j:"sso_identified" json:"sso_identified" desc:"SSO providers that have identified this webpage with their last seen timestamps." example:"{\"okta\": {\"last_seen\": \"2023-10-27T11:00:00Z\", \"id\": \"1234567890\", \"name\": \"Chariot\"}}"`
 	DetailsFilepath string                `neo4j:"details_filepath" json:"details_filepath" dynamodbav:"details_filepath" desc:"The path to the details file for the webpage." example:"webpage/1234567890/details-1234567890.json"`
@@ -86,7 +86,7 @@ type Webpage struct {
 	// S3 / Hydratable fields
 	WebpageDetails
 	// Not Saved but useful for internal processing
-	Parent *WebApplication `neo4j:"-" json:"parent" desc:"The parent entity from which this webpage was discovered. Only used for creating a relationship. Pointer for easy reference" slim:"Webpage=parent(WebApplication)"`
+	Parent *WebApplication `neo4j:"-" json:"parent" desc:"The parent entity from which this webpage was discovered. Only used for creating a relationship. Pointer for easy reference" capmodel:"Webpage=parent(WebApplication)"`
 }
 
 type WebpageDetails struct {
