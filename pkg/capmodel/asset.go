@@ -14,9 +14,9 @@
 //	ports := collection.Get[*model.Port](col)
 package capmodel
 
-// Asset is a capability model for asset representation. It can be used standalone
-// with Convert to create an Asset, or embedded as a parent reference in
-// types like Port and Attribute.
+// Asset is the low-level capability model for asset representation. It can be
+// used standalone with Convert to create an Asset, or embedded as a parent
+// reference in types like Port and Attribute.
 //
 // DNS is the parent/grouping domain; Name is the specific asset identifier.
 //
@@ -26,6 +26,9 @@ package capmodel
 //
 // For top-level assets (domains, CIDRs), DNS and Name are the same because
 // the asset is its own group. For IPs, DNS is the parent domain.
+//
+// For more ergonomic alternatives, see [IP], [Domain], and [CIDR] which
+// provide intuitive field names and handle the DNS/Name mapping automatically.
 type Asset struct {
 	DNS  string `json:"dns"`
 	Name string `json:"name"`

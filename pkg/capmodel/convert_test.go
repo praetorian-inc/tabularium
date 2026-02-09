@@ -473,6 +473,303 @@ func TestConvertUnknownModel(t *testing.T) {
 	}
 }
 
+func TestConvertIP(t *testing.T) {
+	tests := []struct {
+		name            string
+		input           IP
+		expectedDNS     string
+		expectedName    string
+		expectedKey     string
+		expectedClass   string
+		expectedPrivate bool
+	}{
+		{
+			name:          "IPv4 with parent domain",
+			input:         NewIP("1.2.3.4", "example.com"),
+			expectedDNS:   "example.com",
+			expectedName:  "1.2.3.4",
+			expectedKey:   "#asset#example.com#1.2.3.4",
+			expectedClass: "ipv4",
+		},
+		{
+			name:            "standalone IP",
+			input:           NewIP("10.0.0.1", "10.0.0.1"),
+			expectedDNS:     "10.0.0.1",
+			expectedName:    "10.0.0.1",
+			expectedKey:     "#asset#10.0.0.1#10.0.0.1",
+			expectedClass:   "ipv4",
+			expectedPrivate: true,
+		},
+		{
+			name:            "private IP",
+			input:           IP{Address: "192.168.1.100", ParentDomain: "internal.local"},
+			expectedDNS:     "internal.local",
+			expectedName:    "192.168.1.100",
+			expectedKey:     "#asset#internal.local#192.168.1.100",
+			expectedClass:   "ipv4",
+			expectedPrivate: true,
+		},
+		{
+			name:          "IPv6 address",
+			input:         NewIP("::1", "example.com"),
+			expectedDNS:   "example.com",
+			expectedName:  "::1",
+			expectedKey:   "#asset#example.com#::1",
+			expectedClass: "ipv6",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			col, err := Convert(tt.input)
+			if err != nil {
+				t.Fatalf("Convert() error: %v", err)
+			}
+
+			assets := collection.Get[*model.Asset](col)
+			if len(assets) != 1 {
+				t.Fatalf("expected 1 asset, got %d", len(assets))
+			}
+
+			a := assets[0]
+			if a.DNS != tt.expectedDNS {
+				t.Errorf("DNS = %q, want %q", a.DNS, tt.expectedDNS)
+			}
+			if a.Name != tt.expectedName {
+				t.Errorf("Name = %q, want %q", a.Name, tt.expectedName)
+			}
+			if a.Key != tt.expectedKey {
+				t.Errorf("Key = %q, want %q", a.Key, tt.expectedKey)
+			}
+			if a.Class != tt.expectedClass {
+				t.Errorf("Class = %q, want %q", a.Class, tt.expectedClass)
+			}
+			if a.Private != tt.expectedPrivate {
+				t.Errorf("Private = %v, want %v", a.Private, tt.expectedPrivate)
+			}
+		})
+	}
+}
+
+func TestConvertDomain(t *testing.T) {
+	tests := []struct {
+		name          string
+		input         Domain
+		expectedDNS   string
+		expectedName  string
+		expectedKey   string
+		expectedClass string
+	}{
+		{
+			name:          "subdomain",
+			input:         Domain{Name: "sub.example.com"},
+			expectedDNS:   "sub.example.com",
+			expectedName:  "sub.example.com",
+			expectedKey:   "#asset#sub.example.com#sub.example.com",
+			expectedClass: "domain",
+		},
+		{
+			name:          "TLD",
+			input:         Domain{Name: "example.com"},
+			expectedDNS:   "example.com",
+			expectedName:  "example.com",
+			expectedKey:   "#asset#example.com#example.com",
+			expectedClass: "tld",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			col, err := Convert(tt.input)
+			if err != nil {
+				t.Fatalf("Convert() error: %v", err)
+			}
+
+			assets := collection.Get[*model.Asset](col)
+			if len(assets) != 1 {
+				t.Fatalf("expected 1 asset, got %d", len(assets))
+			}
+
+			a := assets[0]
+			if a.DNS != tt.expectedDNS {
+				t.Errorf("DNS = %q, want %q", a.DNS, tt.expectedDNS)
+			}
+			if a.Name != tt.expectedName {
+				t.Errorf("Name = %q, want %q", a.Name, tt.expectedName)
+			}
+			if a.Key != tt.expectedKey {
+				t.Errorf("Key = %q, want %q", a.Key, tt.expectedKey)
+			}
+			if a.Class != tt.expectedClass {
+				t.Errorf("Class = %q, want %q", a.Class, tt.expectedClass)
+			}
+		})
+	}
+}
+
+func TestConvertCIDR(t *testing.T) {
+	tests := []struct {
+		name            string
+		input           CIDR
+		expectedDNS     string
+		expectedName    string
+		expectedKey     string
+		expectedClass   string
+		expectedPrivate bool
+	}{
+		{
+			name:            "private range",
+			input:           CIDR{Range: "10.0.0.0/8"},
+			expectedDNS:     "10.0.0.0/8",
+			expectedName:    "10.0.0.0/8",
+			expectedKey:     "#asset#10.0.0.0/8#10.0.0.0/8",
+			expectedClass:   "cidr",
+			expectedPrivate: true,
+		},
+		{
+			name:          "public range",
+			input:         CIDR{Range: "8.8.8.0/24"},
+			expectedDNS:   "8.8.8.0/24",
+			expectedName:  "8.8.8.0/24",
+			expectedKey:   "#asset#8.8.8.0/24#8.8.8.0/24",
+			expectedClass: "cidr",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			col, err := Convert(tt.input)
+			if err != nil {
+				t.Fatalf("Convert() error: %v", err)
+			}
+
+			assets := collection.Get[*model.Asset](col)
+			if len(assets) != 1 {
+				t.Fatalf("expected 1 asset, got %d", len(assets))
+			}
+
+			a := assets[0]
+			if a.DNS != tt.expectedDNS {
+				t.Errorf("DNS = %q, want %q", a.DNS, tt.expectedDNS)
+			}
+			if a.Name != tt.expectedName {
+				t.Errorf("Name = %q, want %q", a.Name, tt.expectedName)
+			}
+			if a.Key != tt.expectedKey {
+				t.Errorf("Key = %q, want %q", a.Key, tt.expectedKey)
+			}
+			if a.Class != tt.expectedClass {
+				t.Errorf("Class = %q, want %q", a.Class, tt.expectedClass)
+			}
+			if a.Private != tt.expectedPrivate {
+				t.Errorf("Private = %v, want %v", a.Private, tt.expectedPrivate)
+			}
+		})
+	}
+}
+
+// TestConvertIPEquivalentToAsset proves that IP{} and Asset{} produce identical model.Asset output.
+func TestConvertIPEquivalentToAsset(t *testing.T) {
+	ipCol, err := Convert(IP{Address: "1.2.3.4", ParentDomain: "example.com"})
+	if err != nil {
+		t.Fatalf("Convert(IP) error: %v", err)
+	}
+	assetCol, err := Convert(Asset{DNS: "example.com", Name: "1.2.3.4"})
+	if err != nil {
+		t.Fatalf("Convert(Asset) error: %v", err)
+	}
+
+	ipAssets := collection.Get[*model.Asset](ipCol)
+	assetAssets := collection.Get[*model.Asset](assetCol)
+	if len(ipAssets) != 1 || len(assetAssets) != 1 {
+		t.Fatal("expected 1 asset from each Convert call")
+	}
+
+	ip, asset := ipAssets[0], assetAssets[0]
+	if ip.Key != asset.Key {
+		t.Errorf("Key mismatch: IP=%q, Asset=%q", ip.Key, asset.Key)
+	}
+	if ip.Class != asset.Class {
+		t.Errorf("Class mismatch: IP=%q, Asset=%q", ip.Class, asset.Class)
+	}
+	if ip.DNS != asset.DNS {
+		t.Errorf("DNS mismatch: IP=%q, Asset=%q", ip.DNS, asset.DNS)
+	}
+	if ip.Name != asset.Name {
+		t.Errorf("Name mismatch: IP=%q, Asset=%q", ip.Name, asset.Name)
+	}
+	if ip.Private != asset.Private {
+		t.Errorf("Private mismatch: IP=%v, Asset=%v", ip.Private, asset.Private)
+	}
+}
+
+// TestConvertDomainEquivalentToAsset proves that Domain{} and Asset{} produce identical model.Asset output.
+func TestConvertDomainEquivalentToAsset(t *testing.T) {
+	domainCol, err := Convert(Domain{Name: "example.com"})
+	if err != nil {
+		t.Fatalf("Convert(Domain) error: %v", err)
+	}
+	assetCol, err := Convert(Asset{DNS: "example.com", Name: "example.com"})
+	if err != nil {
+		t.Fatalf("Convert(Asset) error: %v", err)
+	}
+
+	domainAssets := collection.Get[*model.Asset](domainCol)
+	assetAssets := collection.Get[*model.Asset](assetCol)
+	if len(domainAssets) != 1 || len(assetAssets) != 1 {
+		t.Fatal("expected 1 asset from each Convert call")
+	}
+
+	d, asset := domainAssets[0], assetAssets[0]
+	if d.Key != asset.Key {
+		t.Errorf("Key mismatch: Domain=%q, Asset=%q", d.Key, asset.Key)
+	}
+	if d.Class != asset.Class {
+		t.Errorf("Class mismatch: Domain=%q, Asset=%q", d.Class, asset.Class)
+	}
+	if d.DNS != asset.DNS {
+		t.Errorf("DNS mismatch: Domain=%q, Asset=%q", d.DNS, asset.DNS)
+	}
+	if d.Name != asset.Name {
+		t.Errorf("Name mismatch: Domain=%q, Asset=%q", d.Name, asset.Name)
+	}
+}
+
+// TestConvertCIDREquivalentToAsset proves that CIDR{} and Asset{} produce identical model.Asset output.
+func TestConvertCIDREquivalentToAsset(t *testing.T) {
+	cidrCol, err := Convert(CIDR{Range: "10.0.0.0/8"})
+	if err != nil {
+		t.Fatalf("Convert(CIDR) error: %v", err)
+	}
+	assetCol, err := Convert(Asset{DNS: "10.0.0.0/8", Name: "10.0.0.0/8"})
+	if err != nil {
+		t.Fatalf("Convert(Asset) error: %v", err)
+	}
+
+	cidrAssets := collection.Get[*model.Asset](cidrCol)
+	assetAssets := collection.Get[*model.Asset](assetCol)
+	if len(cidrAssets) != 1 || len(assetAssets) != 1 {
+		t.Fatal("expected 1 asset from each Convert call")
+	}
+
+	c, asset := cidrAssets[0], assetAssets[0]
+	if c.Key != asset.Key {
+		t.Errorf("Key mismatch: CIDR=%q, Asset=%q", c.Key, asset.Key)
+	}
+	if c.Class != asset.Class {
+		t.Errorf("Class mismatch: CIDR=%q, Asset=%q", c.Class, asset.Class)
+	}
+	if c.DNS != asset.DNS {
+		t.Errorf("DNS mismatch: CIDR=%q, Asset=%q", c.DNS, asset.DNS)
+	}
+	if c.Name != asset.Name {
+		t.Errorf("Name mismatch: CIDR=%q, Asset=%q", c.Name, asset.Name)
+	}
+	if c.Private != asset.Private {
+		t.Errorf("Private mismatch: CIDR=%v, Asset=%v", c.Private, asset.Private)
+	}
+}
+
 // unknownModel is a test helper that implements Converter with an unregistered model name.
 type unknownModel struct{}
 

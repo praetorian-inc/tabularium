@@ -28,29 +28,35 @@ var typeMap = map[string]string{
 // modelConfig defines the generation order and allowed fields for each capability model type.
 // vulnerability is intentionally excluded: after filtering, it only retains Id,
 // which is not worth generating a capability model type for.
+//
+// RegistryModel is an optional field that, when set, causes the generator to
+// look up that name in the registry instead of Name. This enables N:1 mappings
+// where multiple capability model types target the same underlying model.
+// All existing entries leave it empty (backward compatible).
 var modelConfig = []struct {
-	Name   string
-	Fields []string
+	Name          string
+	RegistryModel string // if set, look up this model in the registry instead of Name
+	Fields        []string
 }{
-	{"port", []string{"Protocol", "Port", "Service", "Capability"}},
-	{"risk", []string{"DNS", "Name", "Comment"}},
-	{"technology", []string{"CPE", "Name", "Comment"}},
-	{"attribute", []string{"Name", "Value", "Capability", "Metadata"}},
-	{"file", []string{"Name", "Bytes"}},
-	{"webpage", []string{"URL"}},
-	{"webapplication", []string{"PrimaryURL", "URLs", "Name"}},
+	{Name: "port", Fields: []string{"Protocol", "Port", "Service", "Capability"}},
+	{Name: "risk", Fields: []string{"DNS", "Name", "Comment"}},
+	{Name: "technology", Fields: []string{"CPE", "Name", "Comment"}},
+	{Name: "attribute", Fields: []string{"Name", "Value", "Capability", "Metadata"}},
+	{Name: "file", Fields: []string{"Name", "Bytes"}},
+	{Name: "webpage", Fields: []string{"URL"}},
+	{Name: "webapplication", Fields: []string{"PrimaryURL", "URLs", "Name"}},
 	// Preseed
-	{"preseed", []string{"Type", "Title", "Value", "Display", "Capability", "Metadata", "Comment"}},
+	{Name: "preseed", Fields: []string{"Type", "Title", "Value", "Display", "Capability", "Metadata", "Comment"}},
 	// Cloud resource types
-	{"cloudresource", []string{"Name", "DisplayName", "Provider", "ResourceType", "Region", "AccountRef", "IPs", "URLs", "Properties", "Labels"}},
-	{"awsresource", []string{"Name", "DisplayName", "Provider", "ResourceType", "Region", "AccountRef", "IPs", "URLs", "Properties", "Labels", "OrgPolicyFilename"}},
-	{"azureresource", []string{"Name", "DisplayName", "Provider", "ResourceType", "Region", "AccountRef", "IPs", "URLs", "Properties", "Labels", "ResourceGroup"}},
-	{"gcpresource", []string{"Name", "DisplayName", "Provider", "ResourceType", "Region", "AccountRef", "IPs", "URLs", "Properties", "Labels"}},
+	{Name: "cloudresource", Fields: []string{"Name", "DisplayName", "Provider", "ResourceType", "Region", "AccountRef", "IPs", "URLs", "Properties", "Labels"}},
+	{Name: "awsresource", Fields: []string{"Name", "DisplayName", "Provider", "ResourceType", "Region", "AccountRef", "IPs", "URLs", "Properties", "Labels", "OrgPolicyFilename"}},
+	{Name: "azureresource", Fields: []string{"Name", "DisplayName", "Provider", "ResourceType", "Region", "AccountRef", "IPs", "URLs", "Properties", "Labels", "ResourceGroup"}},
+	{Name: "gcpresource", Fields: []string{"Name", "DisplayName", "Provider", "ResourceType", "Region", "AccountRef", "IPs", "URLs", "Properties", "Labels"}},
 	// Active Directory
-	{"adobject", []string{"Label", "SecondaryLabels", "Domain", "ObjectID", "SID", "Name", "DisplayName", "Description", "DistinguishedName", "SAMAccountName", "DNSHostname", "OperatingSystem", "Department", "AdminCount", "HasSPN", "UnconstrainedDelegation", "TrustedToAuth", "DontRequirePreAuth", "PasswordNeverExpires", "HasLAPS", "IsDC", "Sensitive", "ServicePrincipalNames", "DomainSID", "FunctionalLevel", "LastLogon"}},
+	{Name: "adobject", Fields: []string{"Label", "SecondaryLabels", "Domain", "ObjectID", "SID", "Name", "DisplayName", "Description", "DistinguishedName", "SAMAccountName", "DNSHostname", "OperatingSystem", "Department", "AdminCount", "HasSPN", "UnconstrainedDelegation", "TrustedToAuth", "DontRequirePreAuth", "PasswordNeverExpires", "HasLAPS", "IsDC", "Sensitive", "ServicePrincipalNames", "DomainSID", "FunctionalLevel", "LastLogon"}},
 	// People and organizations
-	{"person", []string{"FirstName", "LastName", "Name", "Email", "Title", "Headline", "Phone", "WorkEmail", "PersonalEmails", "LinkedinURL", "GithubURL", "OrganizationName", "Country", "State", "City", "Seniority", "Departments", "EmailStatus"}},
-	{"organization", []string{"Name", "Domain", "Website", "Description", "Industry", "SubIndustries", "EstimatedNumEmployees", "EmployeeRange", "AnnualRevenue", "RevenueRange", "Country", "State", "City", "Phone", "Email", "LinkedinURL", "FoundedYear", "Technologies", "Keywords", "PubliclyTraded"}},
+	{Name: "person", Fields: []string{"FirstName", "LastName", "Name", "Email", "Title", "Headline", "Phone", "WorkEmail", "PersonalEmails", "LinkedinURL", "GithubURL", "OrganizationName", "Country", "State", "City", "Seniority", "Departments", "EmailStatus"}},
+	{Name: "organization", Fields: []string{"Name", "Domain", "Website", "Description", "Industry", "SubIndustries", "EstimatedNumEmployees", "EmployeeRange", "AnnualRevenue", "RevenueRange", "Country", "State", "City", "Phone", "Email", "LinkedinURL", "FoundedYear", "Technologies", "Keywords", "PubliclyTraded"}},
 }
 
 // capmodelField represents a field to include in a generated capability model type.
@@ -73,13 +79,14 @@ const (
 
 // templateData holds all the information the template needs to generate a single model file.
 type templateData struct {
-	TypeName        string
-	RegistryName    string
-	Fields          []capmodelField
-	HasParent       bool
-	InjectParent    bool
-	HasByteFields   bool
-	NeedsJSON       bool
+	TypeName         string // Go type name (from the registry struct)
+	RegistryName     string // registry key used for TargetModel()
+	ConfigName       string // config entry name (used for output filename)
+	Fields           []capmodelField
+	HasParent        bool
+	InjectParent     bool
+	HasByteFields    bool
+	NeedsJSON        bool
 	SmartBytesFields []capmodelField
 }
 
@@ -140,9 +147,16 @@ func main() {
 	var models []templateData
 
 	for _, mc := range modelConfig {
-		typ, ok := registry.Registry.GetType(mc.Name)
+		// RegistryModel allows N:1 mapping: multiple config entries can
+		// target the same underlying model with different field selections.
+		registryLookup := mc.Name
+		if mc.RegistryModel != "" {
+			registryLookup = mc.RegistryModel
+		}
+
+		typ, ok := registry.Registry.GetType(registryLookup)
 		if !ok {
-			fmt.Fprintf(os.Stderr, "Warning: model %q not found in registry, skipping\n", mc.Name)
+			fmt.Fprintf(os.Stderr, "Warning: model %q not found in registry, skipping\n", registryLookup)
 			continue
 		}
 
@@ -156,7 +170,7 @@ func main() {
 			continue
 		}
 
-		fields, pk, hasBytes := collectFields(mc.Name, mc.Fields, typ)
+		fields, pk, hasBytes := collectFields(registryLookup, mc.Fields, typ)
 
 		// Collect SmartBytes fields for MarshalJSON generation.
 		var smartBytesFields []capmodelField
@@ -168,7 +182,8 @@ func main() {
 
 		models = append(models, templateData{
 			TypeName:         typ.Name(),
-			RegistryName:     mc.Name,
+			RegistryName:     registryLookup,
+			ConfigName:       mc.Name,
 			Fields:           fields,
 			HasParent:        pk != parentNone,
 			InjectParent:     pk == parentInject,
@@ -212,7 +227,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		outputPath := filepath.Join(*outputDir, "gen_"+m.RegistryName+".go")
+		outputPath := filepath.Join(*outputDir, "gen_"+m.ConfigName+".go")
 		if err := os.WriteFile(outputPath, formatted, 0644); err != nil {
 			fmt.Fprintf(os.Stderr, "Error writing %s: %v\n", outputPath, err)
 			os.Exit(1)

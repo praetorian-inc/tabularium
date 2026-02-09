@@ -15,6 +15,14 @@ type Converter interface {
 	TargetModel() string // returns the registry name, e.g., "asset", "port"
 }
 
+// jsonProvider is optionally implemented by capability model types that need
+// custom JSON serialization for Convert. This enables types with ergonomic
+// field names (e.g., IP.Address) to map them to the underlying model's JSON
+// shape (e.g., {"dns":"...","name":"..."}).
+type jsonProvider interface {
+	ConvertJSON() ([]byte, error)
+}
+
 // parentAssetProvider is implemented by capability model types that embed a parent Asset.
 // When Convert encounters a type that implements this interface, it converts the
 // parent Asset into a full Asset and adds it to the resulting Collection.
@@ -60,8 +68,16 @@ func Convert(cm Converter) (*collection.Collection, error) {
 		parentJSON = injectionJSON
 	}
 
-	// Marshal the capability model type itself.
-	b, err := json.Marshal(cm)
+	// Marshal the capability model type itself. Types that implement
+	// jsonProvider supply their own JSON (mapping ergonomic fields to the
+	// underlying model's JSON shape); all others use standard json.Marshal.
+	var b []byte
+	var err error
+	if jp, ok := cm.(jsonProvider); ok {
+		b, err = jp.ConvertJSON()
+	} else {
+		b, err = json.Marshal(cm)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("capmodel: marshal: %w", err)
 	}
