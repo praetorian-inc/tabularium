@@ -16,87 +16,47 @@ import (
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
-// tier1Models lists the registry names of models to generate slim types for.
+// modelConfig defines the generation order and allowed fields for each slim type.
 // vulnerability is intentionally excluded: after filtering, it only retains Id,
-// which is not worth generating a slim type for. Tool writers reference
-// vulnerabilities by ID directly in Risk.Name.
-var tier1Models = []string{
-	"port",
-	"risk",
-	"technology",
-	"attribute",
-	"file",
-	"webpage",
-	"webapplication",
-}
-
-// ignoreFields lists field names to always exclude from slim types.
-var ignoreFields = map[string]bool{
-	"Key":             true,
-	"Username":        true,
-	"Status":          true,
-	"Source":          true,
-	"Origin":          true,
-	"Created":         true,
-	"Visited":         true,
-	"Updated":         true,
-	"TTL":             true,
-	"Secret":          true,
-	"Group":           true,
-	"Identifier":      true,
-	"Class":           true,
-	"Priority":        true,
-	"State":           true,
-	"PlextracID":      true, // PlexTrac integration, internal
-	"OriginSource":    true, // provenance tracking, internal
-	"Data":            true, // enrichment blob, internal
-	"Feed":            true, // threat feed source, internal
-	"WriteupId":       true, // PlexTrac, internal
-	"KevDateAdded":    true, // enrichment, internal
-	"KevDueDate":      true, // enrichment, internal
-	"Exploit":         true, // enrichment flag, internal
-	"Kev":             true, // enrichment flag, internal
-	"CVSS":            true, // enrichment score, internal
-	"EPSS":            true, // enrichment score, internal
-	"Title":           true, // enrichment data, internal
-	"DetailsFilepath": true, // internal storage path
-	"Screenshot":      true, // internal storage path
-	"Resources":       true, // internal storage path
-	"Private":         true, // computed by hooks, not set by tool writers
-}
-
-// perModelIgnoreFields lists field names to exclude for specific models only.
-var perModelIgnoreFields = map[string]map[string]bool{
-	"webpage": {"Metadata": true},
-}
-
-// ignoreEmbeddedTypes lists embedded type names to always ignore.
-// Fields from these embedded types are excluded from slim types.
-var ignoreEmbeddedTypes = map[string]bool{
-	"BaseModel":                 true,
-	"BaseAsset":                 true,
-	"History":                   true,
-	"MLProperties":              true,
-	"Tags":                      true,
-	"OriginationData":           true,
-	"Metadata":                  true,
-	"LabelSettableEmbed":        true,
-	"BurpMetadata":              true,
-	"ModelAlias":                true,
-	"baseTableModel":            true,
-	"ThreatNotificationMetadata": true,
-	"EndpointFingerprint":       true,
-	"WebpageDetails":            true,
-	"WebApplicationDetails":     true,
-	"CPE":                       true,
+// which is not worth generating a slim type for.
+var modelConfig = []struct {
+	Name   string
+	Fields []string
+}{
+	{"port", []string{"Protocol", "Port", "Service", "Capability"}},
+	{"risk", []string{"DNS", "Name", "Comment"}},
+	{"technology", []string{"CPE", "Name", "Comment"}},
+	{"attribute", []string{"Name", "Value", "Capability", "Metadata"}},
+	{"file", []string{"Name", "Bytes"}},
+	{"webpage", []string{"URL"}},
+	{"webapplication", []string{"PrimaryURL", "URLs", "Name"}},
 }
 
 // slimField represents a field to include in a generated slim type.
 type slimField struct {
-	Name    string
-	GoType  string
-	JSONTag string
-	Desc    string // from the desc struct tag
+	Name         string
+	GoType       string
+	JSONTag      string
+	Desc         string // from the desc struct tag
+	IsSmartBytes bool   // true if the original type was SmartBytes (mapped to []byte)
+}
+
+// parentKind describes how a model references its parent.
+type parentKind int
+
+const (
+	parentNone     parentKind = iota
+	parentInject              // GraphModelWrapper -- inject parent into child JSON
+	parentNoInject            // *WebApplication -- convert parent but do not inject
+)
+
+// modelOutput holds the collected information for a single slim type.
+type modelOutput struct {
+	name          string
+	pascalName    string
+	fields        []slimField
+	parent        parentKind
+	hasByteFields bool // true if any field was mapped from SmartBytes to []byte
 }
 
 func main() {
@@ -108,20 +68,12 @@ func main() {
 	buf.WriteString("package slim\n\n")
 
 	// Collect all generated types first to determine imports
-	type modelOutput struct {
-		name                string
-		pascalName          string
-		fields              []slimField
-		hasDirectParentRef  bool // true when the model has a GraphModelWrapper parent
-		hasIndirectParentRef bool // true when the model has a *WebApplication parent
-	}
-
 	var models []modelOutput
 
-	for _, modelName := range tier1Models {
-		typ, ok := registry.Registry.GetType(modelName)
+	for _, mc := range modelConfig {
+		typ, ok := registry.Registry.GetType(mc.Name)
 		if !ok {
-			fmt.Fprintf(os.Stderr, "Warning: model %q not found in registry, skipping\n", modelName)
+			fmt.Fprintf(os.Stderr, "Warning: model %q not found in registry, skipping\n", mc.Name)
 			continue
 		}
 
@@ -131,60 +83,86 @@ func main() {
 		}
 
 		if typ.Kind() != reflect.Struct {
-			fmt.Fprintf(os.Stderr, "Warning: model %q is not a struct, skipping\n", modelName)
+			fmt.Fprintf(os.Stderr, "Warning: model %q is not a struct, skipping\n", mc.Name)
 			continue
 		}
 
-		fields, directParent, indirectParent := collectFields(modelName, typ)
+		fields, pk, hasBytes := collectFields(mc.Name, mc.Fields, typ)
 		models = append(models, modelOutput{
-			name:                 modelName,
-			pascalName:           typ.Name(),
-			fields:               fields,
-			hasDirectParentRef:   directParent,
-			hasIndirectParentRef: indirectParent,
+			name:          mc.Name,
+			pascalName:    typ.Name(),
+			fields:        fields,
+			parent:        pk,
+			hasByteFields: hasBytes,
 		})
 	}
 
-	// Always emit the model package import; generated code uses model.SmartBytes.
-	buf.WriteString("import \"github.com/praetorian-inc/tabularium/pkg/model/model\"\n\n")
+	// Check if any model has byte fields that need encoding/json for MarshalJSON.
+	needsJSON := false
+	for _, m := range models {
+		if m.hasByteFields {
+			needsJSON = true
+			break
+		}
+	}
+
+	if needsJSON {
+		buf.WriteString("import \"encoding/json\"\n\n")
+	}
 
 	// Generate each slim type
 	for _, m := range models {
 		typeName := "Slim" + m.pascalName
-		originalName := m.pascalName
-		hasParent := m.hasDirectParentRef || m.hasIndirectParentRef
 
-		fmt.Fprintf(&buf, "// %s is a simplified %s for external tool writers.\n", typeName, originalName)
+		fmt.Fprintf(&buf, "// %s is a simplified %s for external tool writers.\n", typeName, m.pascalName)
 		fmt.Fprintf(&buf, "type %s struct {\n", typeName)
 
-		if hasParent {
+		if m.parent != parentNone {
 			fmt.Fprintf(&buf, "\tAsset SlimAsset `json:\"-\"`\n")
 		}
 
 		for _, f := range m.fields {
-			goType := f.GoType
-			// Replace model-package types with fully qualified names
-			if goType == "SmartBytes" {
-				goType = "model.SmartBytes"
-			}
 			if f.Desc != "" {
 				fmt.Fprintf(&buf, "\t// %s\n", f.Desc)
 			}
-			fmt.Fprintf(&buf, "\t%s %s `json:\"%s\"`\n", f.Name, goType, f.JSONTag)
+			fmt.Fprintf(&buf, "\t%s %s `json:\"%s\"`\n", f.Name, f.GoType, f.JSONTag)
 		}
 
 		fmt.Fprintf(&buf, "}\n\n")
 		fmt.Fprintf(&buf, "func (%s) TargetModel() string { return %q }\n\n", typeName, m.name)
 
 		// Generate GetParentAsset for types with any parent reference.
-		if hasParent {
+		// The bool return indicates whether to inject the parent into child JSON.
+		if m.parent != parentNone {
 			fmt.Fprintf(&buf, "// GetParentAsset returns the embedded parent asset for %s.\n", typeName)
-			fmt.Fprintf(&buf, "func (s %s) GetParentAsset() SlimAsset { return s.Asset }\n\n", typeName)
+			fmt.Fprintf(&buf, "// The bool indicates whether to inject the parent into the child JSON.\n")
+			fmt.Fprintf(&buf, "func (s %s) GetParentAsset() (SlimAsset, bool) { return s.Asset, %t }\n\n", typeName, m.parent == parentInject)
 		}
 
-		// Generate injectParent marker only for direct GraphModelWrapper parents.
-		if m.hasDirectParentRef {
-			fmt.Fprintf(&buf, "func (%s) injectParent() {}\n\n", typeName)
+		// Generate MarshalJSON for types with []byte fields (from SmartBytes)
+		// so that the bytes are serialized as strings, not base64.
+		if m.hasByteFields {
+			fmt.Fprintf(&buf, "// MarshalJSON implements json.Marshaler so that []byte fields are\n")
+			fmt.Fprintf(&buf, "// serialized as strings (matching SmartBytes behavior) instead of base64.\n")
+			fmt.Fprintf(&buf, "func (s %s) MarshalJSON() ([]byte, error) {\n", typeName)
+			fmt.Fprintf(&buf, "\ttype alias %s\n", typeName)
+			fmt.Fprintf(&buf, "\traw := struct {\n")
+			fmt.Fprintf(&buf, "\t\talias\n")
+			for _, f := range m.fields {
+				if f.IsSmartBytes {
+					fmt.Fprintf(&buf, "\t\t%s string `json:\"%s\"`\n", f.Name, f.JSONTag)
+				}
+			}
+			fmt.Fprintf(&buf, "\t}{\n")
+			fmt.Fprintf(&buf, "\t\talias: alias(s),\n")
+			for _, f := range m.fields {
+				if f.IsSmartBytes {
+					fmt.Fprintf(&buf, "\t\t%s: string(s.%s),\n", f.Name, f.Name)
+				}
+			}
+			fmt.Fprintf(&buf, "\t}\n")
+			fmt.Fprintf(&buf, "\treturn json.Marshal(raw)\n")
+			fmt.Fprintf(&buf, "}\n\n")
 		}
 	}
 
@@ -212,17 +190,21 @@ func main() {
 }
 
 // collectFields inspects a struct type and returns the fields to include in
-// the slim type. It returns the field list and two booleans:
-//   - hasDirectParentRef: true if the model has a GraphModelWrapper parent field
-//   - hasIndirectParentRef: true if the model has a *WebApplication parent field
-//
-// Both indicate that the slim type should embed a SlimAsset.
-func collectFields(modelName string, typ reflect.Type) ([]slimField, bool, bool) {
+// the slim type along with the parentKind indicating how the model references
+// its parent (if at all). Only fields listed in allowList are included.
+func collectFields(modelName string, allowList []string, typ reflect.Type) ([]slimField, parentKind, bool) {
 	var fields []slimField
-	hasDirectParentRef := false
-	hasIndirectParentRef := false
+	pk := parentNone
+	hasBytes := false
 
-	modelIgnore := perModelIgnoreFields[modelName]
+	// Build a set of allowed field names for this model.
+	allowed := make(map[string]bool)
+	for _, name := range allowList {
+		allowed[name] = true
+	}
+
+	// Build a set of visible field names for validation.
+	visibleNames := make(map[string]bool)
 
 	// Use VisibleFields to handle promoted fields from embedded structs.
 	for _, sf := range reflect.VisibleFields(typ) {
@@ -236,9 +218,25 @@ func collectFields(modelName string, typ reflect.Type) ([]slimField, bool, bool)
 			continue
 		}
 
-		// If this field is promoted from an embedded struct (index path > 1),
-		// check whether the embedding type is in the ignore list.
-		if len(sf.Index) > 1 && isFromIgnoredEmbed(typ, sf) {
+		visibleNames[sf.Name] = true
+
+		// Detect GraphModelWrapper fields (direct parent reference).
+		fieldType := sf.Type
+		if fieldType.Name() == "GraphModelWrapper" || (fieldType.Kind() == reflect.Ptr && fieldType.Elem().Name() == "GraphModelWrapper") {
+			pk = parentInject
+			continue
+		}
+
+		// Detect pointer to WebApplication (Webpage.Parent). A *WebApplication
+		// pointer indicates a parent relationship, but unlike GraphModelWrapper,
+		// the parent should NOT be injected into the child JSON.
+		if fieldType.Kind() == reflect.Ptr && fieldType.Elem().Name() == "WebApplication" {
+			pk = parentNoInject
+			continue
+		}
+
+		// Only include fields that are in the allow-list.
+		if !allowed[sf.Name] {
 			continue
 		}
 
@@ -248,41 +246,14 @@ func collectFields(modelName string, typ reflect.Type) ([]slimField, bool, bool)
 			continue
 		}
 
-		// Check the static ignore list.
-		if ignoreFields[sf.Name] {
-			continue
-		}
-
-		// Check the per-model ignore list.
-		if modelIgnore[sf.Name] {
-			continue
-		}
-
-		// Detect GraphModelWrapper fields (direct parent reference).
-		fieldType := sf.Type
-		if fieldType.Name() == "GraphModelWrapper" || (fieldType.Kind() == reflect.Ptr && fieldType.Elem().Name() == "GraphModelWrapper") {
-			hasDirectParentRef = true
-			continue
-		}
-
-		// Detect pointer to WebApplication (Webpage.Parent). A *WebApplication
-		// pointer indicates a parent relationship, but unlike GraphModelWrapper,
-		// the parent should NOT be injected into the child JSON.
-		if fieldType.Kind() == reflect.Ptr && fieldType.Elem().Name() == "WebApplication" {
-			hasIndirectParentRef = true
-			continue
-		}
-
-		// Skip fields with complex model-package types that don't exist in
-		// the slim package. Only allow primitive types, strings, basic
-		// slices/maps, and pointer-to-primitive types.
-		if !isSlimCompatibleType(fieldType) {
-			continue
-		}
-
 		// Build the field entry.
 		jsonName, omitempty := parseJSONTag(jsonTag, sf.Name)
 		goType := goTypeName(fieldType)
+		isSmartBytes := goType == "SmartBytes"
+		if isSmartBytes {
+			goType = "[]byte"
+			hasBytes = true
+		}
 		desc := sf.Tag.Get("desc")
 
 		tag := jsonName
@@ -291,39 +262,28 @@ func collectFields(modelName string, typ reflect.Type) ([]slimField, bool, bool)
 		}
 
 		fields = append(fields, slimField{
-			Name:    sf.Name,
-			GoType:  goType,
-			JSONTag: tag,
-			Desc:    desc,
+			Name:         sf.Name,
+			GoType:       goType,
+			JSONTag:      tag,
+			Desc:         desc,
+			IsSmartBytes: isSmartBytes,
 		})
 	}
 
-	return fields, hasDirectParentRef, hasIndirectParentRef
-}
-
-// isFromIgnoredEmbed checks whether a promoted field originates from an
-// embedded struct that is in the ignoreEmbeddedTypes set.
-func isFromIgnoredEmbed(typ reflect.Type, sf reflect.StructField) bool {
-	// Walk up the index path to find each embedding layer.
-	current := typ
-	for i := 0; i < len(sf.Index)-1; i++ {
-		embedField := current.Field(sf.Index[i])
-		embedType := embedField.Type
-		if embedType.Kind() == reflect.Ptr {
-			embedType = embedType.Elem()
+	// Validate that all allowed field names exist in the model struct.
+	for _, name := range allowList {
+		if !visibleNames[name] {
+			fmt.Fprintf(os.Stderr, "Warning: allowed field %q does not exist in model %q\n", name, modelName)
 		}
-		if ignoreEmbeddedTypes[embedType.Name()] {
-			return true
-		}
-		current = embedType
 	}
-	return false
+
+	return fields, pk, hasBytes
 }
 
 // parseJSONTag extracts the JSON field name and omitempty flag from a json tag.
 func parseJSONTag(tag, fieldName string) (string, bool) {
 	if tag == "" {
-		return strings.ToLower(fieldName), false
+		return fieldName, false
 	}
 	parts := strings.Split(tag, ",")
 	name := parts[0]
@@ -360,38 +320,5 @@ func goTypeName(t reflect.Type) string {
 		return "any"
 	default:
 		return t.Name()
-	}
-}
-
-// isSlimCompatibleType returns true if the type can be represented directly
-// in the slim package without importing model-specific struct types.
-// Allowed: primitives, strings, []byte, []string, map[string]string,
-// map[string]any, pointers to primitives, and the SmartBytes named type.
-func isSlimCompatibleType(t reflect.Type) bool {
-	switch t.Kind() {
-	case reflect.Bool, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32,
-		reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32,
-		reflect.Uint64, reflect.Float32, reflect.Float64, reflect.String:
-		return true
-	case reflect.Ptr:
-		return isSlimCompatibleType(t.Elem())
-	case reflect.Slice:
-		elem := t.Elem()
-		// Allow []byte (and named aliases like SmartBytes), []string
-		if elem.Kind() == reflect.Uint8 || elem.Kind() == reflect.String {
-			return true
-		}
-		return false
-	case reflect.Map:
-		// Allow map[string]string and map[string]any
-		if t.Key().Kind() == reflect.String {
-			valKind := t.Elem().Kind()
-			if valKind == reflect.String || (valKind == reflect.Interface && t.Elem().NumMethod() == 0) {
-				return true
-			}
-		}
-		return false
-	default:
-		return false
 	}
 }

@@ -2,7 +2,7 @@
 //
 // Usage:
 //
-//	col, err := slim.Convert(slim.IP{Address: "1.2.3.4", ParentDomain: "example.com"})
+//	col, err := slim.Convert(slim.NewIPAsset("1.2.3.4", "example.com"))
 //	assets := collection.Get[*model.Asset](col)
 //
 //	col, err = slim.Convert(slim.SlimPort{
@@ -18,25 +18,24 @@ package slim
 // with Convert to create an Asset, or embedded as a parent reference in
 // types like SlimPort and SlimAttribute.
 //
-// DNS is the grouping domain and Name is the specific identifier.
-// For domains and CIDRs, set both DNS and Name to the same value.
-// For IPs, DNS is the parent domain and Name is the IP address.
-// Consider using the IP type for IP address discoveries.
+// DNS is the parent/grouping domain; Name is the specific asset identifier.
+//
+//   - Domain:  SlimAsset{DNS: "example.com", Name: "example.com"}
+//   - CIDR:    SlimAsset{DNS: "10.0.0.0/8", Name: "10.0.0.0/8"}
+//   - IP:      SlimAsset{DNS: "example.com", Name: "1.2.3.4"}  (or use NewIPAsset)
+//
+// For top-level assets (domains, CIDRs), DNS and Name are the same because
+// the asset is its own group. For IPs, DNS is the parent domain.
 type SlimAsset struct {
 	DNS  string `json:"dns"`
 	Name string `json:"name"`
 }
 
-// IP is a convenience type for IP address discoveries. It is equivalent to
-// SlimAsset with more descriptive field names for the IP use case.
-// For standalone IPs (no parent domain), set ParentDomain to the IP address itself.
-type IP struct {
-	Address      string `json:"name"`
-	ParentDomain string `json:"dns"`
-}
-
 // TargetModel returns the registry name for SlimAsset conversions.
 func (SlimAsset) TargetModel() string { return "asset" }
 
-// TargetModel returns the registry name for IP conversions.
-func (IP) TargetModel() string { return "asset" }
+// NewIPAsset creates a SlimAsset for an IP address discovery.
+// For standalone IPs (no parent domain), set parentDomain to the IP address itself.
+func NewIPAsset(address, parentDomain string) SlimAsset {
+	return SlimAsset{DNS: parentDomain, Name: address}
+}

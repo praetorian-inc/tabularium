@@ -18,17 +18,13 @@ type Converter interface {
 // parentAssetProvider is implemented by slim types that embed a parent SlimAsset.
 // When Convert encounters a type that implements this interface, it converts the
 // parent SlimAsset into a full Asset and adds it to the resulting Collection.
+// The bool return value indicates whether the parent should be injected into
+// the child JSON as a GraphModelWrapper-compatible "parent" object. Types like
+// SlimPort and SlimAttribute return true because their full models use
+// GraphModelWrapper. SlimWebpage returns false because Webpage.Parent is
+// *WebApplication, not GraphModelWrapper.
 type parentAssetProvider interface {
-	GetParentAsset() SlimAsset
-}
-
-// parentInjectable is a marker interface for slim types whose parent asset
-// should be injected into the child JSON as a GraphModelWrapper-compatible
-// "parent" object. Types like SlimPort and SlimAttribute implement this because
-// their full models use GraphModelWrapper. SlimWebpage does NOT implement it
-// because Webpage.Parent is *WebApplication, not GraphModelWrapper.
-type parentInjectable interface {
-	injectParent()
+	GetParentAsset() (SlimAsset, bool)
 }
 
 // Convert takes a slim type, marshals it to JSON, and converts it to a full
@@ -46,32 +42,22 @@ func Convert(slim Converter) (*collection.Collection, error) {
 	col := &collection.Collection{}
 
 	// If the slim type has a parent asset, convert the parent first and
-	// inject it into the child's JSON payload so that hooks can reference it.
+	// optionally inject it into the child's JSON payload so that hooks can
+	// reference it. The inject bool controls whether the parent is added as
+	// a GraphModelWrapper-compatible "parent" field in the child JSON.
 	var parentJSON []byte
+	var inject bool
 	if p, ok := slim.(parentAssetProvider); ok {
-		parentAsset := p.GetParentAsset()
+		parentAsset, shouldInject := p.GetParentAsset()
+		inject = shouldInject
 
-		parentModel, pOK := registry.Registry.MakeType(parentAsset.TargetModel())
-		if !pOK {
-			return nil, fmt.Errorf("slim: unknown parent model %q", parentAsset.TargetModel())
-		}
-
-		pb, err := json.Marshal(parentAsset)
+		parentModel, injectionJSON, err := convertParent(parentAsset)
 		if err != nil {
-			return nil, fmt.Errorf("slim: marshal parent: %w", err)
-		}
-
-		if err := registry.UnmarshalModel(pb, parentModel); err != nil {
-			return nil, fmt.Errorf("slim: unmarshal parent: %w", err)
+			return nil, err
 		}
 
 		col.Add(parentModel)
-
-		// Marshal the fully-constructed parent so we can inject it into the child JSON.
-		parentJSON, err = json.Marshal(parentModel)
-		if err != nil {
-			return nil, fmt.Errorf("slim: re-marshal parent: %w", err)
-		}
+		parentJSON = injectionJSON
 	}
 
 	// Marshal the slim type itself.
@@ -80,16 +66,14 @@ func Convert(slim Converter) (*collection.Collection, error) {
 		return nil, fmt.Errorf("slim: marshal: %w", err)
 	}
 
-	// If we have a parent and the slim type opts into parent injection
-	// (via the parentInjectable marker), inject it into the child JSON as a
-	// GraphModelWrapper-compatible "parent" object so that the child hooks
-	// can resolve Parent.Model (e.g., for key construction).
-	if parentJSON != nil {
-		if _, ok := slim.(parentInjectable); ok {
-			b, err = injectParent(b, parentJSON, "asset")
-			if err != nil {
-				return nil, fmt.Errorf("slim: inject parent: %w", err)
-			}
+	// If we have a parent and the slim type opts into parent injection,
+	// inject it into the child JSON as a GraphModelWrapper-compatible
+	// "parent" object so that the child hooks can resolve Parent.Model
+	// (e.g., for key construction).
+	if parentJSON != nil && inject {
+		b, err = injectParent(b, parentJSON, "asset")
+		if err != nil {
+			return nil, fmt.Errorf("slim: inject parent: %w", err)
 		}
 	}
 
@@ -106,27 +90,42 @@ func Convert(slim Converter) (*collection.Collection, error) {
 	return col, nil
 }
 
-// injectParent takes the child JSON (b) and inserts a "parent" field that is a
-// GraphModelWrapper-compatible object: {"type": parentType, "model": parentJSON}.
-func injectParent(childJSON, parentJSON []byte, parentType string) ([]byte, error) {
-	var child map[string]json.RawMessage
-	if err := json.Unmarshal(childJSON, &child); err != nil {
-		return nil, err
+// convertParent converts a SlimAsset into a full model and returns the model
+// along with its JSON representation (for optional injection into the child).
+func convertParent(parentAsset SlimAsset) (registry.Model, []byte, error) {
+	m, ok := registry.Registry.MakeType(parentAsset.TargetModel())
+	if !ok {
+		return nil, nil, fmt.Errorf("slim: unknown parent model %q", parentAsset.TargetModel())
 	}
-
-	wrapper := struct {
-		Type  string          `json:"type"`
-		Model json.RawMessage `json:"model"`
-	}{
-		Type:  parentType,
-		Model: parentJSON,
-	}
-
-	wb, err := json.Marshal(wrapper)
+	pb, err := json.Marshal(parentAsset)
 	if err != nil {
-		return nil, err
+		return nil, nil, fmt.Errorf("slim: marshal parent: %w", err)
 	}
+	if err := registry.UnmarshalModel(pb, m); err != nil {
+		return nil, nil, fmt.Errorf("slim: unmarshal parent: %w", err)
+	}
+	injectionJSON, err := json.Marshal(m)
+	if err != nil {
+		return nil, nil, fmt.Errorf("slim: re-marshal parent: %w", err)
+	}
+	return m, injectionJSON, nil
+}
 
-	child["parent"] = wb
-	return json.Marshal(child)
+// injectParent takes the child JSON (a compact JSON object from json.Marshal)
+// and appends a "parent" field containing a GraphModelWrapper-compatible
+// object: {"type": parentType, "model": parentJSON}.
+func injectParent(childJSON, parentJSON []byte, parentType string) ([]byte, error) {
+	if len(childJSON) < 2 || childJSON[len(childJSON)-1] != '}' {
+		return nil, fmt.Errorf("injectParent: expected JSON object, got %q", childJSON)
+	}
+	// Build: ,"parent":{"type":"<parentType>","model":<parentJSON>}}
+	// childJSON is compact (from json.Marshal), so we trim the trailing '}'.
+	var buf []byte
+	buf = append(buf, childJSON[:len(childJSON)-1]...)
+	buf = append(buf, `,"parent":{"type":"`...)
+	buf = append(buf, parentType...)
+	buf = append(buf, `","model":`...)
+	buf = append(buf, parentJSON...)
+	buf = append(buf, "}}"...)
+	return buf, nil
 }

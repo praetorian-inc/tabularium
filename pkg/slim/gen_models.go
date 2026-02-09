@@ -2,7 +2,7 @@
 
 package slim
 
-import "github.com/praetorian-inc/tabularium/pkg/model/model"
+import "encoding/json"
 
 // SlimPort is a simplified Port for external tool writers.
 type SlimPort struct {
@@ -20,9 +20,8 @@ type SlimPort struct {
 func (SlimPort) TargetModel() string { return "port" }
 
 // GetParentAsset returns the embedded parent asset for SlimPort.
-func (s SlimPort) GetParentAsset() SlimAsset { return s.Asset }
-
-func (SlimPort) injectParent() {}
+// The bool indicates whether to inject the parent into the child JSON.
+func (s SlimPort) GetParentAsset() (SlimAsset, bool) { return s.Asset, true }
 
 // SlimRisk is a simplified Risk for external tool writers.
 type SlimRisk struct {
@@ -64,19 +63,32 @@ type SlimAttribute struct {
 func (SlimAttribute) TargetModel() string { return "attribute" }
 
 // GetParentAsset returns the embedded parent asset for SlimAttribute.
-func (s SlimAttribute) GetParentAsset() SlimAsset { return s.Asset }
-
-func (SlimAttribute) injectParent() {}
+// The bool indicates whether to inject the parent into the child JSON.
+func (s SlimAttribute) GetParentAsset() (SlimAsset, bool) { return s.Asset, true }
 
 // SlimFile is a simplified File for external tool writers.
 type SlimFile struct {
 	// Name or path of the file.
 	Name string `json:"name"`
 	// File content. Must be a JSON-compatible string. Can be encoded with base64 if it begins with the prefix 'base64:'
-	Bytes model.SmartBytes `json:"bytes"`
+	Bytes []byte `json:"bytes"`
 }
 
 func (SlimFile) TargetModel() string { return "file" }
+
+// MarshalJSON implements json.Marshaler so that []byte fields are
+// serialized as strings (matching SmartBytes behavior) instead of base64.
+func (s SlimFile) MarshalJSON() ([]byte, error) {
+	type alias SlimFile
+	raw := struct {
+		alias
+		Bytes string `json:"bytes"`
+	}{
+		alias: alias(s),
+		Bytes: string(s.Bytes),
+	}
+	return json.Marshal(raw)
+}
 
 // SlimWebpage is a simplified Webpage for external tool writers.
 type SlimWebpage struct {
@@ -88,7 +100,8 @@ type SlimWebpage struct {
 func (SlimWebpage) TargetModel() string { return "webpage" }
 
 // GetParentAsset returns the embedded parent asset for SlimWebpage.
-func (s SlimWebpage) GetParentAsset() SlimAsset { return s.Asset }
+// The bool indicates whether to inject the parent into the child JSON.
+func (s SlimWebpage) GetParentAsset() (SlimAsset, bool) { return s.Asset, false }
 
 // SlimWebApplication is a simplified WebApplication for external tool writers.
 type SlimWebApplication struct {

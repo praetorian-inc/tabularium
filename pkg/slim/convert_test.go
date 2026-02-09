@@ -20,7 +20,7 @@ func TestConvertAssetTypes(t *testing.T) {
 	}{
 		{
 			name:          "IP with parent domain",
-			slim:          IP{Address: "1.2.3.4", ParentDomain: "example.com"},
+			slim:          NewIPAsset("1.2.3.4", "example.com"),
 			expectedDNS:   "example.com",
 			expectedName:  "1.2.3.4",
 			expectedKey:   "#asset#example.com#1.2.3.4",
@@ -28,7 +28,7 @@ func TestConvertAssetTypes(t *testing.T) {
 		},
 		{
 			name:            "standalone IP",
-			slim:            IP{Address: "10.0.0.1", ParentDomain: "10.0.0.1"},
+			slim:            NewIPAsset("10.0.0.1", "10.0.0.1"),
 			expectedDNS:     "10.0.0.1",
 			expectedName:    "10.0.0.1",
 			expectedKey:     "#asset#10.0.0.1#10.0.0.1",
@@ -37,7 +37,7 @@ func TestConvertAssetTypes(t *testing.T) {
 		},
 		{
 			name:          "IPv6 address",
-			slim:          IP{Address: "::1", ParentDomain: "example.com"},
+			slim:          NewIPAsset("::1", "example.com"),
 			expectedDNS:   "example.com",
 			expectedName:  "::1",
 			expectedKey:   "#asset#example.com#::1",
@@ -70,7 +70,7 @@ func TestConvertAssetTypes(t *testing.T) {
 		},
 		{
 			name:            "private IP",
-			slim:            IP{Address: "192.168.1.100", ParentDomain: "internal.local"},
+			slim:            NewIPAsset("192.168.1.100", "internal.local"),
 			expectedDNS:     "internal.local",
 			expectedName:    "192.168.1.100",
 			expectedKey:     "#asset#internal.local#192.168.1.100",
@@ -476,5 +476,4 @@ func TestConvertUnknownModel(t *testing.T) {
 // unknownModel is a test helper that implements Converter with an unregistered model name.
 type unknownModel struct{}
 
-func (unknownModel) TargetModel() string          { return "nonexistent" }
-func (unknownModel) MarshalJSON() ([]byte, error)  { return []byte(`{}`), nil }
+func (unknownModel) TargetModel() string { return "nonexistent" }
