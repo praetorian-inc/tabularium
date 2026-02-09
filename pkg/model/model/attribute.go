@@ -14,15 +14,15 @@ type Attribute struct {
 	// Attributes
 	OriginSource string            `neo4j:"origin_source" json:"origin_source" desc:"Source that added this to the system (one of self, account, seed)" example:"seed"`
 	Source       string            `neo4j:"source" json:"source" desc:"Key of the parent model this attribute belongs to." example:"#asset#example.com#example.com"`
-	Name         string            `neo4j:"name" json:"name" desc:"Name of the attribute." example:"https" slim:"Attribute"`
-	Value        string            `neo4j:"value" json:"value" desc:"Value of the attribute." example:"443" slim:"Attribute"`
+	Name         string            `neo4j:"name" json:"name" desc:"Name of the attribute." example:"https"`
+	Value        string            `neo4j:"value" json:"value" desc:"Value of the attribute." example:"443"`
 	Status       string            `neo4j:"status" json:"status" desc:"Status of the attribute." example:"A"`
 	Created      string            `neo4j:"created" json:"created" desc:"Timestamp when the attribute was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
 	Visited      string            `neo4j:"visited" json:"visited" desc:"Timestamp when the attribute was last visited or confirmed (RFC3339)." example:"2023-10-27T11:00:00Z"`
 	Capability   string            `neo4j:"capability" json:"capability,omitempty" desc:"Capability that discovered this attribute." example:"portscan"`
 	TTL          int64             `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the attribute record (Unix timestamp)." example:"1706353200"`
 	Metadata     map[string]string `neo4j:"metadata" json:"metadata,omitempty" desc:"Additional metadata associated with the attribute." example:"{\"tool\": \"masscan\"}"`
-	Parent       GraphModelWrapper `neo4j:"-" json:"parent" desc:"Attribute parent." slim:"Attribute=parent(Asset)"`
+	Parent       GraphModelWrapper `neo4j:"-" json:"parent" desc:"Attribute parent."`
 }
 
 const AttributeLabel = "Attribute"

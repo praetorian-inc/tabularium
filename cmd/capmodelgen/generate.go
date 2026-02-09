@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 	"text/template"
 )
 
@@ -23,11 +22,9 @@ import (
 )
 `
 
-// templateData holds all data for a single slim type template.
 type templateData struct {
 	TypeName        string
 	SourceTypeName  string
-	SourceModelName string
 	Fields          []templateField
 	ParentField     *templateParentField
 }
@@ -36,17 +33,15 @@ type templateField struct {
 	Name            string   // Go field name in slim type
 	GoType          string
 	JSONName        string   // json tag for the slim struct
-	SourceJSONNames []string // json tag(s) in the source model (for Convert map)
+	SourceJSONNames []string // json names in the source model (for Convert map)
 }
 
 type templateParentField struct {
-	Name        string // Go field name (e.g., Target, Parent)
+	Name        string // Go field name (used in both slim struct and result assignment)
 	SlimType    string // e.g., "Asset", "WebApplication"
 	JSONName    string
-	IsInject    bool // GraphModelWrapper — needs JSON injection
-	IsInterface bool // interface field like Target
-	IsPointer   bool // *WebApplication
-	SourceField string
+	IsInject    bool // GraphModelWrapper — needs wrapping with NewGraphModelWrapper
+	IsInterface bool // interface field (e.g., Target) — set after hooks
 }
 
 func generate(slimTypes []slimType, outputDir string) error {
@@ -59,7 +54,7 @@ func generate(slimTypes []slimType, outputDir string) error {
 
 	for _, st := range slimTypes {
 		td := buildTemplateData(st)
-		if err := writeType(&buf, td); err != nil {
+		if err := typeTmpl.Execute(&buf, td); err != nil {
 			return fmt.Errorf("generating %s: %w", st.Name, err)
 		}
 	}
@@ -80,25 +75,18 @@ func generate(slimTypes []slimType, outputDir string) error {
 
 func buildTemplateData(st slimType) templateData {
 	td := templateData{
-		TypeName:        st.Name,
-		SourceTypeName:  st.SourceTypeName,
-		SourceModelName: st.SourceModelName,
+		TypeName:       st.Name,
+		SourceTypeName: st.SourceTypeName,
 	}
-
-	pi := getParentInfo(st)
 
 	for _, f := range st.Fields {
 		if f.EmbedSlimType != "" {
-			if pi != nil {
-				td.ParentField = &templateParentField{
-					Name:        f.SourceFieldName,
-					SlimType:    f.EmbedSlimType,
-					JSONName:    f.JSONName,
-					IsInject:    pi.Kind == parentInject,
-					IsInterface: pi.InterfaceField,
-					IsPointer:   strings.HasPrefix(f.GoType, "*"),
-					SourceField: f.SourceFieldName,
-				}
+			td.ParentField = &templateParentField{
+				Name:        f.SourceFieldName,
+				SlimType:    f.EmbedSlimType,
+				JSONName:    f.JSONName,
+				IsInject:    f.GoType == "GraphModelWrapper",
+				IsInterface: f.GoType == "any",
 			}
 			continue
 		}
@@ -114,7 +102,15 @@ func buildTemplateData(st slimType) templateData {
 	return td
 }
 
-var typeTmpl = template.Must(template.New("type").Parse(`
+// needsParentBeforeHooks returns true if the parent must be set before hooks run.
+// This is the case for all parent types except interfaces (which are set after).
+func needsParentBeforeHooks(pf *templateParentField) bool {
+	return pf != nil && !pf.IsInterface
+}
+
+var typeTmpl = template.Must(template.New("type").Funcs(template.FuncMap{
+	"needsParentBeforeHooks": needsParentBeforeHooks,
+}).Parse(`
 // {{.TypeName}} is a capability model for model.{{.SourceTypeName}}.
 type {{.TypeName}} struct {
 {{- range .Fields}}
@@ -126,7 +122,6 @@ type {{.TypeName}} struct {
 }
 
 // Convert converts this capability model to a full model.{{.SourceTypeName}}.
-// It applies defaults and hooks via registry.UnmarshalModel.
 func (s {{.TypeName}}) Convert() (*model.{{.SourceTypeName}}, error) {
 	m := make(map[string]any)
 {{- range $field := .Fields}}
@@ -135,12 +130,10 @@ func (s {{.TypeName}}) Convert() (*model.{{.SourceTypeName}}, error) {
 {{- end}}
 {{- end}}
 {{- if .ParentField}}
-{{- if or .ParentField.IsInject .ParentField.IsInterface}}
 	parentModel, err := s.{{.ParentField.Name}}.Convert()
 	if err != nil {
 		return nil, err
 	}
-{{- end}}
 {{- end}}
 
 	b, err := json.Marshal(m)
@@ -148,15 +141,18 @@ func (s {{.TypeName}}) Convert() (*model.{{.SourceTypeName}}, error) {
 		return nil, err
 	}
 
-{{- if and .ParentField .ParentField.IsInject}}
-	// For types with injected parents, we unmarshal without hooks first,
-	// set the parent, then call hooks (which may depend on the parent).
+{{- if needsParentBeforeHooks .ParentField}}
+	// Parent must be set before hooks run (hooks depend on it).
 	var result model.{{.SourceTypeName}}
 	result.Defaulted()
 	if err := json.Unmarshal(b, &result); err != nil {
 		return nil, err
 	}
-	result.{{.ParentField.SourceField}} = model.NewGraphModelWrapper(parentModel)
+{{- if .ParentField.IsInject}}
+	result.{{.ParentField.Name}} = model.NewGraphModelWrapper(parentModel)
+{{- else}}
+	result.{{.ParentField.Name}} = parentModel
+{{- end}}
 	if err := registry.CallHooks(&result); err != nil {
 		return nil, err
 	}
@@ -167,16 +163,7 @@ func (s {{.TypeName}}) Convert() (*model.{{.SourceTypeName}}, error) {
 	}
 {{- if .ParentField}}
 {{- if .ParentField.IsInterface}}
-	result.{{.ParentField.SourceField}} = parentModel
-{{- else if .ParentField.IsPointer}}
-	converted, err := s.{{.ParentField.Name}}.Convert()
-	if err != nil {
-		return nil, err
-	}
-	result.{{.ParentField.SourceField}} = converted
-	if err := registry.CallHooks(&result); err != nil {
-		return nil, err
-	}
+	result.{{.ParentField.Name}} = parentModel
 {{- end}}
 {{- end}}
 {{- end}}
@@ -184,7 +171,3 @@ func (s {{.TypeName}}) Convert() (*model.{{.SourceTypeName}}, error) {
 	return &result, nil
 }
 `))
-
-func writeType(buf *bytes.Buffer, td templateData) error {
-	return typeTmpl.Execute(buf, td)
-}

@@ -22,7 +22,7 @@ type Port struct {
 	Source     string            `neo4j:"source" json:"source" desc:"Key of the parent asset this port belongs to." example:"#asset#example.com#example.com"`
 	Protocol   string            `neo4j:"protocol" json:"protocol" desc:"The protocol of this port." example:"tcp" slim:"Port"`
 	Port       int               `neo4j:"port" json:"port" desc:"The port number of this port." example:"80" slim:"Port"`
-	Service    string            `neo4j:"service" json:"service" desc:"The name of the service identified on this port." example:"https"`
+	Service    string            `neo4j:"service" json:"service" desc:"The name of the service identified on this port." example:"https" slim:"Port"`
 	Status     string            `neo4j:"status" json:"status" desc:"Status of the port." example:"A"`
 	Created    string            `neo4j:"created" json:"created" desc:"Timestamp when the port was created (RFC3339)." example:"2023-10-27T10:00:00Z"`
 	Visited    string            `neo4j:"visited" json:"visited" desc:"Timestamp when the port was last visited or confirmed (RFC3339)." example:"2023-10-27T11:00:00Z"`

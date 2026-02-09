@@ -17,7 +17,6 @@ type ADObject struct {
 }
 
 // Convert converts this capability model to a full model.ADObject.
-// It applies defaults and hooks via registry.UnmarshalModel.
 func (s ADObject) Convert() (*model.ADObject, error) {
 	m := make(map[string]any)
 	m["label"] = s.Label
@@ -47,7 +46,6 @@ type AWSResource struct {
 }
 
 // Convert converts this capability model to a full model.AWSResource.
-// It applies defaults and hooks via registry.UnmarshalModel.
 func (s AWSResource) Convert() (*model.AWSResource, error) {
 	m := make(map[string]any)
 	m["ips"] = s.IPs
@@ -76,7 +74,6 @@ type Asset struct {
 }
 
 // Convert converts this capability model to a full model.Asset.
-// It applies defaults and hooks via registry.UnmarshalModel.
 func (s Asset) Convert() (*model.Asset, error) {
 	m := make(map[string]any)
 	m["dns"] = s.DNS
@@ -94,43 +91,6 @@ func (s Asset) Convert() (*model.Asset, error) {
 	return &result, nil
 }
 
-// Attribute is a capability model for model.Attribute.
-type Attribute struct {
-	Name   string `json:"name"`
-	Value  string `json:"value"`
-	Parent Asset  `json:"parent"`
-}
-
-// Convert converts this capability model to a full model.Attribute.
-// It applies defaults and hooks via registry.UnmarshalModel.
-func (s Attribute) Convert() (*model.Attribute, error) {
-	m := make(map[string]any)
-	m["name"] = s.Name
-	m["value"] = s.Value
-	parentModel, err := s.Parent.Convert()
-	if err != nil {
-		return nil, err
-	}
-
-	b, err := json.Marshal(m)
-	if err != nil {
-		return nil, err
-	}
-	// For types with injected parents, we unmarshal without hooks first,
-	// set the parent, then call hooks (which may depend on the parent).
-	var result model.Attribute
-	result.Defaulted()
-	if err := json.Unmarshal(b, &result); err != nil {
-		return nil, err
-	}
-	result.Parent = model.NewGraphModelWrapper(parentModel)
-	if err := registry.CallHooks(&result); err != nil {
-		return nil, err
-	}
-
-	return &result, nil
-}
-
 // AzureResource is a capability model for model.AzureResource.
 type AzureResource struct {
 	IPs          []string       `json:"ips"`
@@ -142,7 +102,6 @@ type AzureResource struct {
 }
 
 // Convert converts this capability model to a full model.AzureResource.
-// It applies defaults and hooks via registry.UnmarshalModel.
 func (s AzureResource) Convert() (*model.AzureResource, error) {
 	m := make(map[string]any)
 	m["ips"] = s.IPs
@@ -175,7 +134,6 @@ type CloudResource struct {
 }
 
 // Convert converts this capability model to a full model.CloudResource.
-// It applies defaults and hooks via registry.UnmarshalModel.
 func (s CloudResource) Convert() (*model.CloudResource, error) {
 	m := make(map[string]any)
 	m["ips"] = s.IPs
@@ -203,7 +161,6 @@ type Domain struct {
 }
 
 // Convert converts this capability model to a full model.Asset.
-// It applies defaults and hooks via registry.UnmarshalModel.
 func (s Domain) Convert() (*model.Asset, error) {
 	m := make(map[string]any)
 	m["dns"] = s.DNS
@@ -228,7 +185,6 @@ type File struct {
 }
 
 // Convert converts this capability model to a full model.File.
-// It applies defaults and hooks via registry.UnmarshalModel.
 func (s File) Convert() (*model.File, error) {
 	m := make(map[string]any)
 	m["name"] = s.Name
@@ -257,7 +213,6 @@ type GCPResource struct {
 }
 
 // Convert converts this capability model to a full model.GCPResource.
-// It applies defaults and hooks via registry.UnmarshalModel.
 func (s GCPResource) Convert() (*model.GCPResource, error) {
 	m := make(map[string]any)
 	m["ips"] = s.IPs
@@ -285,7 +240,6 @@ type IP struct {
 }
 
 // Convert converts this capability model to a full model.Asset.
-// It applies defaults and hooks via registry.UnmarshalModel.
 func (s IP) Convert() (*model.Asset, error) {
 	m := make(map[string]any)
 	m["dns"] = s.DNS
@@ -311,7 +265,6 @@ type Organization struct {
 }
 
 // Convert converts this capability model to a full model.Organization.
-// It applies defaults and hooks via registry.UnmarshalModel.
 func (s Organization) Convert() (*model.Organization, error) {
 	m := make(map[string]any)
 	m["name"] = s.Name
@@ -340,7 +293,6 @@ type Person struct {
 }
 
 // Convert converts this capability model to a full model.Person.
-// It applies defaults and hooks via registry.UnmarshalModel.
 func (s Person) Convert() (*model.Person, error) {
 	m := make(map[string]any)
 	m["first_name"] = s.FirstName
@@ -365,15 +317,16 @@ func (s Person) Convert() (*model.Person, error) {
 type Port struct {
 	Protocol string `json:"protocol"`
 	Port     int    `json:"port"`
+	Service  string `json:"service"`
 	Parent   Asset  `json:"parent"`
 }
 
 // Convert converts this capability model to a full model.Port.
-// It applies defaults and hooks via registry.UnmarshalModel.
 func (s Port) Convert() (*model.Port, error) {
 	m := make(map[string]any)
 	m["protocol"] = s.Protocol
 	m["port"] = s.Port
+	m["service"] = s.Service
 	parentModel, err := s.Parent.Convert()
 	if err != nil {
 		return nil, err
@@ -383,8 +336,7 @@ func (s Port) Convert() (*model.Port, error) {
 	if err != nil {
 		return nil, err
 	}
-	// For types with injected parents, we unmarshal without hooks first,
-	// set the parent, then call hooks (which may depend on the parent).
+	// Parent must be set before hooks run (hooks depend on it).
 	var result model.Port
 	result.Defaulted()
 	if err := json.Unmarshal(b, &result); err != nil {
@@ -406,7 +358,6 @@ type Preseed struct {
 }
 
 // Convert converts this capability model to a full model.Preseed.
-// It applies defaults and hooks via registry.UnmarshalModel.
 func (s Preseed) Convert() (*model.Preseed, error) {
 	m := make(map[string]any)
 	m["type"] = s.Type
@@ -435,7 +386,6 @@ type Risk struct {
 }
 
 // Convert converts this capability model to a full model.Risk.
-// It applies defaults and hooks via registry.UnmarshalModel.
 func (s Risk) Convert() (*model.Risk, error) {
 	m := make(map[string]any)
 	m["dns"] = s.DNS
@@ -462,14 +412,15 @@ func (s Risk) Convert() (*model.Risk, error) {
 
 // Technology is a capability model for model.Technology.
 type Technology struct {
-	CPE string `json:"cpe"`
+	CPE  string `json:"cpe"`
+	Name string `json:"name"`
 }
 
 // Convert converts this capability model to a full model.Technology.
-// It applies defaults and hooks via registry.UnmarshalModel.
 func (s Technology) Convert() (*model.Technology, error) {
 	m := make(map[string]any)
 	m["cpe"] = s.CPE
+	m["name"] = s.Name
 
 	b, err := json.Marshal(m)
 	if err != nil {
@@ -491,7 +442,6 @@ type WebApplication struct {
 }
 
 // Convert converts this capability model to a full model.WebApplication.
-// It applies defaults and hooks via registry.UnmarshalModel.
 func (s WebApplication) Convert() (*model.WebApplication, error) {
 	m := make(map[string]any)
 	m["primary_url"] = s.PrimaryURL
@@ -517,24 +467,25 @@ type Webpage struct {
 }
 
 // Convert converts this capability model to a full model.Webpage.
-// It applies defaults and hooks via registry.UnmarshalModel.
 func (s Webpage) Convert() (*model.Webpage, error) {
 	m := make(map[string]any)
 	m["url"] = s.URL
+	parentModel, err := s.Parent.Convert()
+	if err != nil {
+		return nil, err
+	}
 
 	b, err := json.Marshal(m)
 	if err != nil {
 		return nil, err
 	}
+	// Parent must be set before hooks run (hooks depend on it).
 	var result model.Webpage
-	if err := registry.UnmarshalModel(b, &result); err != nil {
+	result.Defaulted()
+	if err := json.Unmarshal(b, &result); err != nil {
 		return nil, err
 	}
-	converted, err := s.Parent.Convert()
-	if err != nil {
-		return nil, err
-	}
-	result.Parent = converted
+	result.Parent = parentModel
 	if err := registry.CallHooks(&result); err != nil {
 		return nil, err
 	}

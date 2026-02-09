@@ -8,7 +8,7 @@ import (
 )
 
 func TestIPConvert(t *testing.T) {
-	ip := NewIPAsset("192.168.1.1")
+	ip := IP{DNS: "192.168.1.1"}
 	result, err := ip.Convert()
 	if err != nil {
 		t.Fatalf("IP.Convert() error: %v", err)
@@ -98,6 +98,7 @@ func TestPortConvert(t *testing.T) {
 	p := Port{
 		Protocol: "tcp",
 		Port:     443,
+		Service:  "https",
 		Parent:   Asset{DNS: "example.com", Name: "10.0.0.1"},
 	}
 	result, err := p.Convert()
@@ -111,6 +112,9 @@ func TestPortConvert(t *testing.T) {
 	if result.Port != 443 {
 		t.Errorf("expected Port=443, got %d", result.Port)
 	}
+	if result.Service != "https" {
+		t.Errorf("expected Service=https, got %q", result.Service)
+	}
 	if result.Key == "" {
 		t.Error("expected Key to be set by hooks")
 	}
@@ -119,30 +123,11 @@ func TestPortConvert(t *testing.T) {
 	}
 }
 
-func TestAttributeConvert(t *testing.T) {
-	a := Attribute{
-		Name:   "open_port",
-		Value:  "443",
-		Parent: Asset{DNS: "example.com", Name: "10.0.0.1"},
-	}
-	result, err := a.Convert()
-	if err != nil {
-		t.Fatalf("Attribute.Convert() error: %v", err)
-	}
-
-	if result.Name != "open_port" {
-		t.Errorf("expected Name=open_port, got %q", result.Name)
-	}
-	if result.Value != "443" {
-		t.Errorf("expected Value=443, got %q", result.Value)
-	}
-	if result.Key == "" {
-		t.Error("expected Key to be set by hooks")
-	}
-}
-
 func TestTechnologyConvert(t *testing.T) {
-	tech := Technology{CPE: "cpe:2.3:a:apache:http_server:2.4.50:*:*:*:*:*:*:*"}
+	tech := Technology{
+		CPE:  "cpe:2.3:a:apache:http_server:2.4.50:*:*:*:*:*:*:*",
+		Name: "Apache httpd",
+	}
 	result, err := tech.Convert()
 	if err != nil {
 		t.Fatalf("Technology.Convert() error: %v", err)
@@ -150,6 +135,9 @@ func TestTechnologyConvert(t *testing.T) {
 
 	if result.CPE != "cpe:2.3:a:apache:http_server:2.4.50:*:*:*:*:*:*:*" {
 		t.Errorf("expected CPE to match, got %q", result.CPE)
+	}
+	if result.Name != "Apache httpd" {
+		t.Errorf("expected Name=Apache httpd, got %q", result.Name)
 	}
 	if result.Key != "#technology#cpe:2.3:a:apache:http_server:2.4.50:*:*:*:*:*:*:*" {
 		t.Errorf("unexpected Key: %q", result.Key)
