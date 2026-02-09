@@ -18,7 +18,7 @@ type AgoraParameter struct {
 	Default     string `json:"default,omitempty" desc:"A string representation of the default value of the parameter" example:"1.2.3.4"`
 	Required    bool   `json:"required" desc:"Whether the parameter is required" example:"true"`
 	Type        string   `json:"type" desc:"The type of the parameter" example:"string"`
-	Options     []string `json:"options,omitempty" desc:"Valid choices for enum-style parameters" example:"[\"option_a\",\"option_b\"]"`
+	Options     []string `json:"options,omitempty" desc:"Suggested choices for enum-style parameters, used as UI hints" example:"[\"option_a\",\"option_b\"]"`
 	// internal
 	parser func(string) error
 }
