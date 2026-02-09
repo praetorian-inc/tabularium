@@ -27,6 +27,7 @@ func (s ADObject) Convert() (*model.ADObject, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var result model.ADObject
 	if err := registry.UnmarshalModel(b, &result); err != nil {
 		return nil, err
@@ -59,6 +60,7 @@ func (s AWSResource) Convert() (*model.AWSResource, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var result model.AWSResource
 	if err := registry.UnmarshalModel(b, &result); err != nil {
 		return nil, err
@@ -83,6 +85,7 @@ func (s Asset) Convert() (*model.Asset, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var result model.Asset
 	if err := registry.UnmarshalModel(b, &result); err != nil {
 		return nil, err
@@ -115,6 +118,7 @@ func (s AzureResource) Convert() (*model.AzureResource, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var result model.AzureResource
 	if err := registry.UnmarshalModel(b, &result); err != nil {
 		return nil, err
@@ -147,6 +151,7 @@ func (s CloudResource) Convert() (*model.CloudResource, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var result model.CloudResource
 	if err := registry.UnmarshalModel(b, &result); err != nil {
 		return nil, err
@@ -170,6 +175,7 @@ func (s Domain) Convert() (*model.Asset, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var result model.Asset
 	if err := registry.UnmarshalModel(b, &result); err != nil {
 		return nil, err
@@ -194,6 +200,7 @@ func (s File) Convert() (*model.File, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var result model.File
 	if err := registry.UnmarshalModel(b, &result); err != nil {
 		return nil, err
@@ -226,6 +233,7 @@ func (s GCPResource) Convert() (*model.GCPResource, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var result model.GCPResource
 	if err := registry.UnmarshalModel(b, &result); err != nil {
 		return nil, err
@@ -249,6 +257,7 @@ func (s IP) Convert() (*model.Asset, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var result model.Asset
 	if err := registry.UnmarshalModel(b, &result); err != nil {
 		return nil, err
@@ -275,6 +284,7 @@ func (s Organization) Convert() (*model.Organization, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var result model.Organization
 	if err := registry.UnmarshalModel(b, &result); err != nil {
 		return nil, err
@@ -305,6 +315,7 @@ func (s Person) Convert() (*model.Person, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var result model.Person
 	if err := registry.UnmarshalModel(b, &result); err != nil {
 		return nil, err
@@ -336,7 +347,7 @@ func (s Port) Convert() (*model.Port, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Parent must be set before hooks run (hooks depend on it).
+
 	var result model.Port
 	result.Defaulted()
 	if err := json.Unmarshal(b, &result); err != nil {
@@ -368,6 +379,7 @@ func (s Preseed) Convert() (*model.Preseed, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var result model.Preseed
 	if err := registry.UnmarshalModel(b, &result); err != nil {
 		return nil, err
@@ -401,6 +413,7 @@ func (s Risk) Convert() (*model.Risk, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var result model.Risk
 	if err := registry.UnmarshalModel(b, &result); err != nil {
 		return nil, err
@@ -426,6 +439,7 @@ func (s Technology) Convert() (*model.Technology, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var result model.Technology
 	if err := registry.UnmarshalModel(b, &result); err != nil {
 		return nil, err
@@ -452,6 +466,7 @@ func (s WebApplication) Convert() (*model.WebApplication, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var result model.WebApplication
 	if err := registry.UnmarshalModel(b, &result); err != nil {
 		return nil, err
@@ -479,7 +494,7 @@ func (s Webpage) Convert() (*model.Webpage, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Parent must be set before hooks run (hooks depend on it).
+
 	var result model.Webpage
 	result.Defaulted()
 	if err := json.Unmarshal(b, &result); err != nil {

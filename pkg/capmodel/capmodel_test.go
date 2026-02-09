@@ -7,225 +7,162 @@ import (
 	_ "github.com/praetorian-inc/tabularium/pkg/model/model"
 )
 
-func TestIPConvert(t *testing.T) {
-	ip := IP{DNS: "192.168.1.1"}
-	result, err := ip.Convert()
-	if err != nil {
-		t.Fatalf("IP.Convert() error: %v", err)
+func assertEqual(t *testing.T, field, got, want string) {
+	t.Helper()
+	if got != want {
+		t.Errorf("%s: got %q, want %q", field, got, want)
 	}
+}
 
-	if result.DNS != "192.168.1.1" {
-		t.Errorf("expected DNS=192.168.1.1, got %q", result.DNS)
+func assertPrefix(t *testing.T, field, got, prefix string) {
+	t.Helper()
+	if !strings.HasPrefix(got, prefix) {
+		t.Errorf("%s: got %q, want prefix %q", field, got, prefix)
 	}
-	if result.Name != "192.168.1.1" {
-		t.Errorf("expected Name=192.168.1.1, got %q", result.Name)
+}
+
+func assertNonEmpty(t *testing.T, field, got string) {
+	t.Helper()
+	if got == "" {
+		t.Errorf("%s: expected non-empty", field)
 	}
-	if result.Key == "" {
-		t.Error("expected Key to be set by hooks")
+}
+
+func TestIPConvert(t *testing.T) {
+	result, err := IP{DNS: "192.168.1.1"}.Convert()
+	if err != nil {
+		t.Fatal(err)
 	}
-	if !strings.HasPrefix(result.Key, "#asset#") {
-		t.Errorf("expected Key to start with #asset#, got %q", result.Key)
-	}
+	assertEqual(t, "DNS", result.DNS, "192.168.1.1")
+	assertEqual(t, "Name", result.Name, "192.168.1.1")
+	assertPrefix(t, "Key", result.Key, "#asset#")
 }
 
 func TestDomainConvert(t *testing.T) {
-	d := Domain{DNS: "example.com"}
-	result, err := d.Convert()
+	result, err := Domain{DNS: "example.com"}.Convert()
 	if err != nil {
-		t.Fatalf("Domain.Convert() error: %v", err)
+		t.Fatal(err)
 	}
-
-	if result.DNS != "example.com" {
-		t.Errorf("expected DNS=example.com, got %q", result.DNS)
-	}
-	if result.Name != "example.com" {
-		t.Errorf("expected Name=example.com, got %q", result.Name)
-	}
-	if result.Key != "#asset#example.com#example.com" {
-		t.Errorf("expected Key=#asset#example.com#example.com, got %q", result.Key)
-	}
+	assertEqual(t, "DNS", result.DNS, "example.com")
+	assertEqual(t, "Name", result.Name, "example.com")
+	assertEqual(t, "Key", result.Key, "#asset#example.com#example.com")
 }
 
 func TestAssetConvert(t *testing.T) {
-	a := Asset{DNS: "example.com", Name: "10.0.0.1"}
-	result, err := a.Convert()
+	result, err := Asset{DNS: "example.com", Name: "10.0.0.1"}.Convert()
 	if err != nil {
-		t.Fatalf("Asset.Convert() error: %v", err)
+		t.Fatal(err)
 	}
-
-	if result.DNS != "example.com" {
-		t.Errorf("expected DNS=example.com, got %q", result.DNS)
-	}
-	if result.Name != "10.0.0.1" {
-		t.Errorf("expected Name=10.0.0.1, got %q", result.Name)
-	}
-	if result.Key != "#asset#example.com#10.0.0.1" {
-		t.Errorf("expected Key=#asset#example.com#10.0.0.1, got %q", result.Key)
-	}
+	assertEqual(t, "DNS", result.DNS, "example.com")
+	assertEqual(t, "Name", result.Name, "10.0.0.1")
+	assertEqual(t, "Key", result.Key, "#asset#example.com#10.0.0.1")
 }
 
 func TestRiskConvert(t *testing.T) {
-	r := Risk{
+	result, err := Risk{
 		DNS:    "example.com",
 		Name:   "CVE-2023-12345",
 		Status: "TH",
 		Source: "nessus",
 		Target: Asset{DNS: "example.com", Name: "10.0.0.1"},
-	}
-	result, err := r.Convert()
+	}.Convert()
 	if err != nil {
-		t.Fatalf("Risk.Convert() error: %v", err)
+		t.Fatal(err)
 	}
-
-	if result.DNS != "example.com" {
-		t.Errorf("expected DNS=example.com, got %q", result.DNS)
-	}
-	if result.Name != "CVE-2023-12345" {
-		t.Errorf("expected Name=CVE-2023-12345, got %q", result.Name)
-	}
-	if result.Status != "TH" {
-		t.Errorf("expected Status=TH, got %q", result.Status)
-	}
+	assertEqual(t, "DNS", result.DNS, "example.com")
+	assertEqual(t, "Name", result.Name, "CVE-2023-12345")
+	assertEqual(t, "Status", result.Status, "TH")
 	if result.Target == nil {
 		t.Fatal("expected Target to be set")
 	}
-	if result.Key == "" {
-		t.Error("expected Key to be set by hooks")
-	}
+	assertNonEmpty(t, "Key", result.Key)
 }
 
 func TestPortConvert(t *testing.T) {
-	p := Port{
+	result, err := Port{
 		Protocol: "tcp",
 		Port:     443,
 		Service:  "https",
 		Parent:   Asset{DNS: "example.com", Name: "10.0.0.1"},
-	}
-	result, err := p.Convert()
+	}.Convert()
 	if err != nil {
-		t.Fatalf("Port.Convert() error: %v", err)
+		t.Fatal(err)
 	}
-
-	if result.Protocol != "tcp" {
-		t.Errorf("expected Protocol=tcp, got %q", result.Protocol)
-	}
+	assertEqual(t, "Protocol", result.Protocol, "tcp")
 	if result.Port != 443 {
-		t.Errorf("expected Port=443, got %d", result.Port)
+		t.Errorf("Port: got %d, want 443", result.Port)
 	}
-	if result.Service != "https" {
-		t.Errorf("expected Service=https, got %q", result.Service)
-	}
-	if result.Key == "" {
-		t.Error("expected Key to be set by hooks")
-	}
-	if !strings.HasPrefix(result.Key, "#port#tcp#443") {
-		t.Errorf("expected Key to start with #port#tcp#443, got %q", result.Key)
-	}
+	assertEqual(t, "Service", result.Service, "https")
+	assertPrefix(t, "Key", result.Key, "#port#tcp#443")
 }
 
 func TestTechnologyConvert(t *testing.T) {
-	tech := Technology{
+	result, err := Technology{
 		CPE:  "cpe:2.3:a:apache:http_server:2.4.50:*:*:*:*:*:*:*",
 		Name: "Apache httpd",
-	}
-	result, err := tech.Convert()
+	}.Convert()
 	if err != nil {
-		t.Fatalf("Technology.Convert() error: %v", err)
+		t.Fatal(err)
 	}
-
-	if result.CPE != "cpe:2.3:a:apache:http_server:2.4.50:*:*:*:*:*:*:*" {
-		t.Errorf("expected CPE to match, got %q", result.CPE)
-	}
-	if result.Name != "Apache httpd" {
-		t.Errorf("expected Name=Apache httpd, got %q", result.Name)
-	}
-	if result.Key != "#technology#cpe:2.3:a:apache:http_server:2.4.50:*:*:*:*:*:*:*" {
-		t.Errorf("unexpected Key: %q", result.Key)
-	}
+	assertEqual(t, "CPE", result.CPE, "cpe:2.3:a:apache:http_server:2.4.50:*:*:*:*:*:*:*")
+	assertEqual(t, "Name", result.Name, "Apache httpd")
+	assertEqual(t, "Key", result.Key, "#technology#cpe:2.3:a:apache:http_server:2.4.50:*:*:*:*:*:*:*")
 }
 
 func TestFileConvert(t *testing.T) {
-	f := File{Name: "proofs/test.txt", Bytes: []byte("hello")}
-	result, err := f.Convert()
+	result, err := File{Name: "proofs/test.txt", Bytes: []byte("hello")}.Convert()
 	if err != nil {
-		t.Fatalf("File.Convert() error: %v", err)
+		t.Fatal(err)
 	}
-
-	if result.Name != "proofs/test.txt" {
-		t.Errorf("expected Name=proofs/test.txt, got %q", result.Name)
-	}
+	assertEqual(t, "Name", result.Name, "proofs/test.txt")
 	if len(result.Bytes) == 0 {
 		t.Error("expected Bytes to be non-empty")
 	}
-	if result.Key != "#file#proofs/test.txt" {
-		t.Errorf("unexpected Key: %q", result.Key)
-	}
+	assertEqual(t, "Key", result.Key, "#file#proofs/test.txt")
 }
 
 func TestWebApplicationConvert(t *testing.T) {
-	wa := WebApplication{
+	result, err := WebApplication{
 		PrimaryURL: "https://example.com",
 		Name:       "Example App",
 		URLs:       []string{"https://api.example.com"},
-	}
-	result, err := wa.Convert()
+	}.Convert()
 	if err != nil {
-		t.Fatalf("WebApplication.Convert() error: %v", err)
+		t.Fatal(err)
 	}
-
-	if !strings.HasPrefix(result.PrimaryURL, "https://example.com") {
-		t.Errorf("expected PrimaryURL to start with https://example.com, got %q", result.PrimaryURL)
-	}
-	if result.Name != "Example App" {
-		t.Errorf("expected Name=Example App, got %q", result.Name)
-	}
-	if result.Key == "" {
-		t.Error("expected Key to be set by hooks")
-	}
+	assertPrefix(t, "PrimaryURL", result.PrimaryURL, "https://example.com")
+	assertEqual(t, "Name", result.Name, "Example App")
+	assertNonEmpty(t, "Key", result.Key)
 }
 
 func TestWebpageConvert(t *testing.T) {
-	wp := Webpage{
+	result, err := Webpage{
 		URL: "https://example.com/login",
 		Parent: WebApplication{
 			PrimaryURL: "https://example.com",
 			Name:       "Example",
 		},
-	}
-	result, err := wp.Convert()
+	}.Convert()
 	if err != nil {
-		t.Fatalf("Webpage.Convert() error: %v", err)
+		t.Fatal(err)
 	}
-
-	if result.URL != "https://example.com/login" {
-		t.Errorf("expected URL=https://example.com/login, got %q", result.URL)
-	}
+	assertEqual(t, "URL", result.URL, "https://example.com/login")
 	if result.Parent == nil {
 		t.Fatal("expected Parent to be set")
 	}
 }
 
 func TestPreseedConvert(t *testing.T) {
-	p := Preseed{
+	result, err := Preseed{
 		Type:  "whois",
 		Title: "registrant_email",
 		Value: "admin@example.com",
-	}
-	result, err := p.Convert()
+	}.Convert()
 	if err != nil {
-		t.Fatalf("Preseed.Convert() error: %v", err)
+		t.Fatal(err)
 	}
-
-	if result.Type != "whois" {
-		t.Errorf("expected Type=whois, got %q", result.Type)
-	}
-	if result.Title != "registrant_email" {
-		t.Errorf("expected Title=registrant_email, got %q", result.Title)
-	}
-	if result.Value != "admin@example.com" {
-		t.Errorf("expected Value=admin@example.com, got %q", result.Value)
-	}
-	if result.Key == "" {
-		t.Error("expected Key to be set by hooks")
-	}
+	assertEqual(t, "Type", result.Type, "whois")
+	assertEqual(t, "Title", result.Title, "registrant_email")
+	assertEqual(t, "Value", result.Value, "admin@example.com")
+	assertNonEmpty(t, "Key", result.Key)
 }

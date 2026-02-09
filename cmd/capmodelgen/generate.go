@@ -22,28 +22,6 @@ import (
 )
 `
 
-type templateData struct {
-	TypeName        string
-	SourceTypeName  string
-	Fields          []templateField
-	ParentField     *templateParentField
-}
-
-type templateField struct {
-	Name            string   // Go field name in slim type
-	GoType          string
-	JSONName        string   // json tag for the slim struct
-	SourceJSONNames []string // json names in the source model (for Convert map)
-}
-
-type templateParentField struct {
-	Name        string // Go field name (used in both slim struct and result assignment)
-	SlimType    string // e.g., "Asset", "WebApplication"
-	JSONName    string
-	IsInject    bool // GraphModelWrapper — needs wrapping with NewGraphModelWrapper
-	IsInterface bool // interface field (e.g., Target) — set after hooks
-}
-
 func generate(slimTypes []slimType, outputDir string) error {
 	sort.Slice(slimTypes, func(i, j int) bool {
 		return slimTypes[i].Name < slimTypes[j].Name
@@ -53,8 +31,7 @@ func generate(slimTypes []slimType, outputDir string) error {
 	buf.WriteString(generatedHeader)
 
 	for _, st := range slimTypes {
-		td := buildTemplateData(st)
-		if err := typeTmpl.Execute(&buf, td); err != nil {
+		if err := typeTmpl.Execute(&buf, st); err != nil {
 			return fmt.Errorf("generating %s: %w", st.Name, err)
 		}
 	}
@@ -62,7 +39,9 @@ func generate(slimTypes []slimType, outputDir string) error {
 	formatted, err := format.Source(buf.Bytes())
 	if err != nil {
 		debugPath := filepath.Join(outputDir, "generated_debug.go")
-		os.WriteFile(debugPath, buf.Bytes(), 0644)
+		if writeErr := os.WriteFile(debugPath, buf.Bytes(), 0644); writeErr != nil {
+			return fmt.Errorf("formatting generated code: %w (also failed to write debug: %v)", err, writeErr)
+		}
 		return fmt.Errorf("formatting generated code: %w (debug written to %s)", err, debugPath)
 	}
 
@@ -73,64 +52,36 @@ func generate(slimTypes []slimType, outputDir string) error {
 	return os.WriteFile(outPath, formatted, 0644)
 }
 
-func buildTemplateData(st slimType) templateData {
-	td := templateData{
-		TypeName:       st.Name,
-		SourceTypeName: st.SourceTypeName,
-	}
-
-	for _, f := range st.Fields {
-		if f.EmbedSlimType != "" {
-			td.ParentField = &templateParentField{
-				Name:        f.SourceFieldName,
-				SlimType:    f.EmbedSlimType,
-				JSONName:    f.JSONName,
-				IsInject:    f.GoType == "GraphModelWrapper",
-				IsInterface: f.GoType == "any",
-			}
-			continue
-		}
-
-		td.Fields = append(td.Fields, templateField{
-			Name:            f.SourceFieldName,
-			GoType:          f.GoType,
-			JSONName:        f.JSONName,
-			SourceJSONNames: f.SourceJSONNames,
-		})
-	}
-
-	return td
-}
-
-// needsParentBeforeHooks returns true if the parent must be set before hooks run.
-// This is the case for all parent types except interfaces (which are set after).
-func needsParentBeforeHooks(pf *templateParentField) bool {
-	return pf != nil && !pf.IsInterface
+// manualUnmarshal returns true when the parent must be set before hooks run,
+// requiring manual Defaulted + Unmarshal + CallHooks instead of UnmarshalModel.
+func manualUnmarshal(p *parentField) bool {
+	return p != nil && p.Kind != parentInterface
 }
 
 var typeTmpl = template.Must(template.New("type").Funcs(template.FuncMap{
-	"needsParentBeforeHooks": needsParentBeforeHooks,
+	"eq":              func(a, b parentKind) bool { return a == b },
+	"manualUnmarshal": manualUnmarshal,
 }).Parse(`
-// {{.TypeName}} is a capability model for model.{{.SourceTypeName}}.
-type {{.TypeName}} struct {
+// {{.Name}} is a capability model for model.{{.SourceTypeName}}.
+type {{.Name}} struct {
 {{- range .Fields}}
-	{{.Name}} {{.GoType}} ` + "`" + `json:"{{.JSONName}}"` + "`" + `
+	{{.SourceFieldName}} {{.GoType}} ` + "`" + `json:"{{.JSONName}}"` + "`" + `
 {{- end}}
-{{- if .ParentField}}
-	{{.ParentField.Name}} {{.ParentField.SlimType}} ` + "`" + `json:"{{.ParentField.JSONName}}"` + "`" + `
+{{- if .Parent}}
+	{{.Parent.SourceFieldName}} {{.Parent.SlimType}} ` + "`" + `json:"{{.Parent.JSONName}}"` + "`" + `
 {{- end}}
 }
 
 // Convert converts this capability model to a full model.{{.SourceTypeName}}.
-func (s {{.TypeName}}) Convert() (*model.{{.SourceTypeName}}, error) {
+func (s {{.Name}}) Convert() (*model.{{.SourceTypeName}}, error) {
 	m := make(map[string]any)
-{{- range $field := .Fields}}
-{{- range $field.SourceJSONNames}}
-	m["{{.}}"] = s.{{$field.Name}}
+{{- range $f := .Fields}}
+{{- range $f.SourceJSONNames}}
+	m["{{.}}"] = s.{{$f.SourceFieldName}}
 {{- end}}
 {{- end}}
-{{- if .ParentField}}
-	parentModel, err := s.{{.ParentField.Name}}.Convert()
+{{- if .Parent}}
+	parentModel, err := s.{{.Parent.SourceFieldName}}.Convert()
 	if err != nil {
 		return nil, err
 	}
@@ -141,30 +92,26 @@ func (s {{.TypeName}}) Convert() (*model.{{.SourceTypeName}}, error) {
 		return nil, err
 	}
 
-{{- if needsParentBeforeHooks .ParentField}}
-	// Parent must be set before hooks run (hooks depend on it).
 	var result model.{{.SourceTypeName}}
+{{- if manualUnmarshal .Parent}}
 	result.Defaulted()
 	if err := json.Unmarshal(b, &result); err != nil {
 		return nil, err
 	}
-{{- if .ParentField.IsInject}}
-	result.{{.ParentField.Name}} = model.NewGraphModelWrapper(parentModel)
+{{- if eq .Parent.Kind "inject"}}
+	result.{{.Parent.SourceFieldName}} = model.NewGraphModelWrapper(parentModel)
 {{- else}}
-	result.{{.ParentField.Name}} = parentModel
+	result.{{.Parent.SourceFieldName}} = parentModel
 {{- end}}
 	if err := registry.CallHooks(&result); err != nil {
 		return nil, err
 	}
 {{- else}}
-	var result model.{{.SourceTypeName}}
 	if err := registry.UnmarshalModel(b, &result); err != nil {
 		return nil, err
 	}
-{{- if .ParentField}}
-{{- if .ParentField.IsInterface}}
-	result.{{.ParentField.Name}} = parentModel
-{{- end}}
+{{- if .Parent}}
+	result.{{.Parent.SourceFieldName}} = parentModel
 {{- end}}
 {{- end}}
 

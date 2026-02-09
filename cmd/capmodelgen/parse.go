@@ -16,27 +16,43 @@ var typeMap = map[string]string{
 	"GobSafeBool":       "bool",
 }
 
-// fieldSpec describes a single field in a slim type.
-type fieldSpec struct {
+// parentKind describes how a parent field is wired to the child model.
+type parentKind string
+
+const (
+	parentInject    parentKind = "inject"    // GraphModelWrapper: wrap with NewGraphModelWrapper, set before hooks
+	parentConcrete  parentKind = "concrete"  // concrete pointer: set directly, before hooks
+	parentInterface parentKind = "interface" // interface field: set after hooks
+)
+
+// field describes a regular data field in a slim type.
+type field struct {
 	SourceFieldName string   // Go field name in the source model
 	SourceJSONNames []string // json names in the source model (multiple when merged)
 	JSONName        string   // json name for the slim type field
-	GoType          string   // Go type string
-	EmbedSlimType   string   // if non-empty, this is an embedded slim type
+	GoType          string   // Go type string for generated struct
+}
+
+// parentField describes a parent/embed relationship field.
+type parentField struct {
+	SourceFieldName string     // Go field name in the source model (e.g., "Parent", "Target")
+	JSONName        string     // json name for the slim struct
+	SlimType        string     // slim type name (e.g., "Asset", "WebApplication")
+	Kind            parentKind // how the parent is wired
 }
 
 // slimType describes a generated slim type.
 type slimType struct {
-	Name            string
-	SourceModelName string // registered name in the registry (lowercase)
-	SourceTypeName  string // Go type name (e.g., "Asset", "Risk")
-	Fields          []fieldSpec
+	Name           string
+	SourceTypeName string // Go type name (e.g., "Asset", "Risk")
+	Fields         []field
+	Parent         *parentField
 }
 
 // parseSlimTags walks all registered types and extracts slim tag information.
 func parseSlimTags(reg *registry.TypeRegistry) []slimType {
 	builders := map[string]*slimType{}
-	// Tracks which (slimType, field:jsonName) pairs we've seen to avoid
+	// Tracks which (slimType, fieldIndex) pairs we've seen to avoid
 	// duplicates from embedded struct traversal.
 	seen := map[string]map[string]bool{}
 
@@ -64,15 +80,15 @@ func parseSlimTags(reg *registry.TypeRegistry) []slimType {
 
 				typeName, jsonName, embedType := parseEntry(entry)
 
-				// Dedup: skip fields already seen for this slim type
+				// Dedup: skip fields seen from a different registered type
+				// (same embedded field reached via different type walks).
 				if seen[typeName] == nil {
 					seen[typeName] = map[string]bool{}
 				}
-				fieldKey := sf.Name + ":" + jsonName
-				if seen[typeName][fieldKey] {
+				if seen[typeName][sf.Name] {
 					continue
 				}
-				seen[typeName][fieldKey] = true
+				seen[typeName][sf.Name] = true
 
 				sourceJSONName := jsonTagName(sf)
 				if jsonName == "" {
@@ -81,29 +97,34 @@ func parseSlimTags(reg *registry.TypeRegistry) []slimType {
 
 				b, ok := builders[typeName]
 				if !ok {
-					srcType, srcModel := resolveSourceModel(reg, typeName, goTypeName)
 					b = &slimType{
-						Name:            typeName,
-						SourceModelName: srcModel,
-						SourceTypeName:  srcType,
+						Name:           typeName,
+						SourceTypeName: resolveSourceTypeName(reg, typeName, goTypeName),
 					}
 					builders[typeName] = b
 				}
 
-				// If another source field maps to the same slim JSON name,
-				// merge it (both source fields get set from one slim field).
-				if embedType == "" {
-					if merged := mergeField(b, jsonName, sourceJSONName); merged {
-						continue
+				if embedType != "" {
+					b.Parent = &parentField{
+						SourceFieldName: sf.Name,
+						JSONName:        jsonName,
+						SlimType:        embedType,
+						Kind:            resolveParentKind(sf.Type),
 					}
+					continue
 				}
 
-				b.Fields = append(b.Fields, fieldSpec{
+				// If another source field maps to the same slim JSON name,
+				// merge it (both source fields get set from one slim field).
+				if mergeField(b, jsonName, sourceJSONName) {
+					continue
+				}
+
+				b.Fields = append(b.Fields, field{
 					SourceFieldName: sf.Name,
 					SourceJSONNames: []string{sourceJSONName},
 					JSONName:        jsonName,
 					GoType:          resolveGoType(sf.Type),
-					EmbedSlimType:   embedType,
 				})
 			}
 		}
@@ -116,26 +137,44 @@ func parseSlimTags(reg *registry.TypeRegistry) []slimType {
 	return result
 }
 
-// resolveSourceModel determines the Go type name and registry name for a slim type.
-// If the slim type name is itself a registered model, use that; otherwise fall back
-// to the struct where the tags were found.
-func resolveSourceModel(reg *registry.TypeRegistry, slimTypeName, fallbackGoType string) (typeName, modelName string) {
-	lower := strings.ToLower(slimTypeName)
-	if typ, ok := reg.GetType(lower); ok {
-		t := typ
-		if t.Kind() == reflect.Ptr {
-			t = t.Elem()
-		}
-		return t.Name(), lower
+// resolveParentKind determines the parent wiring strategy from the field's reflect.Type.
+func resolveParentKind(t reflect.Type) parentKind {
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
 	}
-	return fallbackGoType, strings.ToLower(fallbackGoType)
+	switch {
+	case t.Kind() == reflect.Interface:
+		return parentInterface
+	case t.Name() == "GraphModelWrapper":
+		return parentInject
+	default:
+		return parentConcrete
+	}
+}
+
+// resolveSourceTypeName determines the Go type name for a slim type.
+// If the slim type name matches a registered model, use that model's Go type name;
+// otherwise fall back to the struct where the tags were found.
+func resolveSourceTypeName(reg *registry.TypeRegistry, slimTypeName, fallback string) string {
+	if typ, ok := reg.GetType(strings.ToLower(slimTypeName)); ok {
+		if typ.Kind() == reflect.Ptr {
+			typ = typ.Elem()
+		}
+		return typ.Name()
+	}
+	return fallback
 }
 
 // mergeField checks if a field with the same jsonName already exists in the builder.
-// If so, appends the sourceJSONName to that field's list and returns true.
+// If so, appends the sourceJSONName to that field's list (if not already present) and returns true.
 func mergeField(b *slimType, jsonName, sourceJSONName string) bool {
 	for i, existing := range b.Fields {
-		if existing.JSONName == jsonName && existing.EmbedSlimType == "" {
+		if existing.JSONName == jsonName {
+			for _, name := range b.Fields[i].SourceJSONNames {
+				if name == sourceJSONName {
+					return true
+				}
+			}
 			b.Fields[i].SourceJSONNames = append(b.Fields[i].SourceJSONNames, sourceJSONName)
 			return true
 		}
@@ -144,24 +183,15 @@ func mergeField(b *slimType, jsonName, sourceJSONName string) bool {
 }
 
 // sortedRegistryNames returns canonical (non-alias) registry names in sorted order.
-// Aliases are detected by checking if another name resolves to the same reflect.Type
-// with a different primary name.
+// A name is canonical if it equals strings.ToLower of the Go type name.
 func sortedRegistryNames(reg *registry.TypeRegistry) []string {
-	// Build set of primary names: a name is primary if it equals strings.ToLower(Type.Name())
-	allTypes := reg.GetAllTypes()
 	var names []string
-	seen := map[reflect.Type]bool{}
-	for name, typ := range allTypes {
-		elemType := typ
-		if elemType.Kind() == reflect.Ptr {
-			elemType = elemType.Elem()
+	for name, typ := range reg.GetAllTypes() {
+		if typ.Kind() == reflect.Ptr {
+			typ = typ.Elem()
 		}
-		// A name is canonical if it matches the lowercased Go type name
-		if name == strings.ToLower(elemType.Name()) {
-			if !seen[typ] {
-				seen[typ] = true
-				names = append(names, name)
-			}
+		if name == strings.ToLower(typ.Name()) {
+			names = append(names, name)
 		}
 	}
 	sort.Strings(names)
@@ -204,7 +234,7 @@ func jsonTagName(sf reflect.StructField) string {
 
 // resolveGoType converts a reflect.Type to a Go type string, applying typeMap substitutions.
 func resolveGoType(t reflect.Type) string {
-	if t.Kind() != reflect.Ptr && t.Name() != "" {
+	if t.Kind() != reflect.Ptr {
 		if mapped, ok := typeMap[t.Name()]; ok {
 			return mapped
 		}
