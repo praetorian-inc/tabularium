@@ -12,8 +12,7 @@ import (
 )
 
 // generate renders each typeSpec through the embedded Go template, formats the output
-// with gofmt, and writes one file per type into outputDir. On formatting errors it
-// writes the raw output to generated_debug.go for diagnosis.
+// with gofmt, and writes one file per type into outputDir.
 func generate(typeSpecs []typeSpec, outputDir string) error {
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
 		return err
@@ -28,11 +27,7 @@ func generate(typeSpecs []typeSpec, outputDir string) error {
 
 		formatted, err := format.Source(buf.Bytes())
 		if err != nil {
-			debugPath := filepath.Join(outputDir, "generated_debug.go")
-			if writeErr := os.WriteFile(debugPath, buf.Bytes(), 0644); writeErr != nil {
-				return fmt.Errorf("formatting %s: %w (also failed to write debug: %v)", st.Name, err, writeErr)
-			}
-			return fmt.Errorf("formatting %s: %w (debug written to %s)", st.Name, err, debugPath)
+			return fmt.Errorf("formatting %s: %w", st.Name, err)
 		}
 
 		outPath := filepath.Join(outputDir, strings.ToLower(st.Name)+".go")

@@ -200,15 +200,17 @@ func mustGetType(reg *registry.TypeRegistry, name string) reflect.Type {
 func parseEntry(entry string) (typeName, jsonName, embedType string) {
 	parts := strings.SplitN(entry, "=", 2)
 	typeName = parts[0]
-	if len(parts) == 2 {
-		rest := parts[1]
-		if idx := strings.Index(rest, "("); idx != -1 {
-			jsonName = rest[:idx]
-			embedType = strings.TrimSuffix(rest[idx+1:], ")")
-		} else {
-			jsonName = rest
-		}
+	if len(parts) == 1 {
+		return
 	}
+	rest := parts[1]
+	idx := strings.Index(rest, "(")
+	if idx == -1 {
+		jsonName = rest
+		return
+	}
+	jsonName = rest[:idx]
+	embedType = strings.TrimSuffix(rest[idx+1:], ")")
 	return
 }
 
@@ -228,10 +230,8 @@ func jsonTagName(sf reflect.StructField) string {
 // SmartBytes emit as "[]byte" rather than "[]uint8". Pointers are excluded from the
 // typeMap check so that *SmartBytes correctly recurses to "*[]byte" via the Ptr case.
 func resolveGoType(t reflect.Type) string {
-	if t.Kind() != reflect.Ptr {
-		if mapped, ok := typeMap[t.Name()]; ok {
-			return mapped
-		}
+	if mapped, ok := typeMap[t.Name()]; ok && t.Kind() != reflect.Ptr {
+		return mapped
 	}
 	switch t.Kind() {
 	case reflect.Ptr:
