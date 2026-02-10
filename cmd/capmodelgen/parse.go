@@ -50,6 +50,7 @@ type typeSpec struct {
 	SourceTypeName string
 	Fields         []field
 	Parent         *parentField
+	fieldIdx       map[string]int // JSONName → index in Fields
 }
 
 func parseCapmodelTags(reg *registry.TypeRegistry) []typeSpec {
@@ -101,12 +102,16 @@ func parseCapmodelTags(reg *registry.TypeRegistry) []typeSpec {
 					continue
 				}
 
-				// Merge: multiple source fields can map to the same JSON name
+				// Multiple source fields can map to the same JSON name
 				// (e.g., DNS and Name both map to "ip" in the IP type).
-				if mergeField(b, jsonName, sourceJSONName) {
+				if idx, ok := b.fieldIdx[jsonName]; ok {
+					if !slices.Contains(b.Fields[idx].SourceJSONNames, sourceJSONName) {
+						b.Fields[idx].SourceJSONNames = append(b.Fields[idx].SourceJSONNames, sourceJSONName)
+					}
 					continue
 				}
 
+				b.fieldIdx[jsonName] = len(b.Fields)
 				b.Fields = append(b.Fields, field{
 					SourceFieldName: sf.Name,
 					SourceJSONNames: []string{sourceJSONName},
@@ -145,6 +150,7 @@ func getOrCreateBuilder(builders map[string]*typeSpec, reg *registry.TypeRegistr
 	b := &typeSpec{
 		Name:           typeName,
 		SourceTypeName: resolveSourceTypeName(reg, typeName, goTypeName),
+		fieldIdx:       map[string]int{},
 	}
 	builders[typeName] = b
 	return b
@@ -169,18 +175,6 @@ func resolveSourceTypeName(reg *registry.TypeRegistry, name, fallback string) st
 		return derefPtr(typ).Name()
 	}
 	return fallback
-}
-
-func mergeField(b *typeSpec, jsonName, sourceJSONName string) bool {
-	for i, existing := range b.Fields {
-		if existing.JSONName == jsonName {
-			if !slices.Contains(b.Fields[i].SourceJSONNames, sourceJSONName) {
-				b.Fields[i].SourceJSONNames = append(b.Fields[i].SourceJSONNames, sourceJSONName)
-			}
-			return true
-		}
-	}
-	return false
 }
 
 // sortedRegistryNames returns canonical (non-alias) names in sorted order.
