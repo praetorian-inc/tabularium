@@ -23,14 +23,6 @@ var typeMap = map[string]string{
 	"CloudResourceType": "string",
 }
 
-type parentKind string
-
-const (
-	parentInject    parentKind = "inject"    // GraphModelWrapper: wrap with NewGraphModelWrapper, set before hooks
-	parentConcrete  parentKind = "concrete"  // concrete pointer: set directly, before hooks
-	parentInterface parentKind = "interface" // interface field: set after hooks
-)
-
 type field struct {
 	SourceFieldName string
 	SourceJSONNames []string
@@ -42,7 +34,7 @@ type parentField struct {
 	SourceFieldName string
 	JSONName        string
 	EmbedType       string
-	Kind            parentKind
+	Wrap            bool // needs NewGraphModelWrapper
 }
 
 type typeSpec struct {
@@ -93,11 +85,12 @@ func parseCapmodelTags(reg *registry.TypeRegistry) []typeSpec {
 				b := getOrCreateBuilder(builders, reg, typeName, goTypeName)
 
 				if embedType != "" {
+					t := derefPtr(sf.Type)
 					b.Parent = &parentField{
 						SourceFieldName: sf.Name,
 						JSONName:        jsonName,
 						EmbedType:       embedType,
-						Kind:            resolveParentKind(sf.Type),
+						Wrap:            t == reflect.TypeFor[model.GraphModelWrapper](),
 					}
 					continue
 				}
@@ -154,18 +147,6 @@ func getOrCreateBuilder(builders map[string]*typeSpec, reg *registry.TypeRegistr
 	}
 	builders[typeName] = b
 	return b
-}
-
-func resolveParentKind(t reflect.Type) parentKind {
-	t = derefPtr(t)
-	switch {
-	case t.Kind() == reflect.Interface:
-		return parentInterface
-	case t == reflect.TypeFor[model.GraphModelWrapper]():
-		return parentInject
-	default:
-		return parentConcrete
-	}
 }
 
 // resolveSourceTypeName looks up the Go type name for a capmodel type. Falls back to

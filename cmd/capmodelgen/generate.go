@@ -41,15 +41,7 @@ func generate(typeSpecs []typeSpec, outputDir string) error {
 	return nil
 }
 
-// manualUnmarshal is true when the parent must be set before hooks run,
-// requiring manual Defaulted + Unmarshal + CallHooks instead of UnmarshalModel.
-func manualUnmarshal(p *parentField) bool {
-	return p != nil && p.Kind != parentInterface
-}
-
 //go:embed type.go.tmpl
 var typeTmplStr string
 
-var typeTmpl = template.Must(template.New("type").Funcs(template.FuncMap{
-	"manualUnmarshal": manualUnmarshal,
-}).Parse(typeTmplStr))
+var typeTmpl = template.Must(template.New("type").Parse(typeTmplStr))

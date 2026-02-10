@@ -38,12 +38,12 @@ func (s {{.Name}}) Convert() (*model.{{.SourceTypeName}}, error) {
 	}
 
 	var result model.{{.SourceTypeName}}
-{{- if manualUnmarshal .Parent}}
+{{- if .Parent}}
 	result.Defaulted()
 	if err := json.Unmarshal(b, &result); err != nil {
 		return nil, err
 	}
-{{- if eq .Parent.Kind "inject"}}
+{{- if .Parent.Wrap}}
 	result.{{.Parent.SourceFieldName}} = model.NewGraphModelWrapper(parentModel)
 {{- else}}
 	result.{{.Parent.SourceFieldName}} = parentModel
@@ -55,9 +55,6 @@ func (s {{.Name}}) Convert() (*model.{{.SourceTypeName}}, error) {
 	if err := registry.UnmarshalModel(b, &result); err != nil {
 		return nil, err
 	}
-{{- if .Parent}}
-	result.{{.Parent.SourceFieldName}} = parentModel
-{{- end}}
 {{- end}}
 
 	return &result, nil

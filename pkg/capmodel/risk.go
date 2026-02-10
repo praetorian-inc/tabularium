@@ -34,10 +34,14 @@ func (s Risk) Convert() (*model.Risk, error) {
 	}
 
 	var result model.Risk
-	if err := registry.UnmarshalModel(b, &result); err != nil {
+	result.Defaulted()
+	if err := json.Unmarshal(b, &result); err != nil {
 		return nil, err
 	}
 	result.Target = parentModel
+	if err := registry.CallHooks(&result); err != nil {
+		return nil, err
+	}
 
 	return &result, nil
 }
