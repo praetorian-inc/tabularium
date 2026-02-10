@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	_ "embed"
 	"fmt"
 	"go/format"
 	"os"
@@ -59,60 +60,9 @@ func manualUnmarshal(p *parentField) bool {
 	return p != nil && p.Kind != parentInterface
 }
 
+//go:embed type.go.tmpl
+var typeTmplStr string
+
 var typeTmpl = template.Must(template.New("type").Funcs(template.FuncMap{
 	"manualUnmarshal": manualUnmarshal,
-}).Parse(`
-type {{.Name}} struct {
-{{- range .Fields}}
-	{{.SourceFieldName}} {{.GoType}} ` + "`" + `json:"{{.JSONName}}"` + "`" + `
-{{- end}}
-{{- if .Parent}}
-	{{.Parent.SourceFieldName}} {{.Parent.EmbedType}} ` + "`" + `json:"{{.Parent.JSONName}}"` + "`" + `
-{{- end}}
-}
-
-func (s {{.Name}}) Convert() (*model.{{.SourceTypeName}}, error) {
-	m := make(map[string]any)
-{{- range $f := .Fields}}
-{{- range $f.SourceJSONNames}}
-	m["{{.}}"] = s.{{$f.SourceFieldName}}
-{{- end}}
-{{- end}}
-{{- if .Parent}}
-	parentModel, err := s.{{.Parent.SourceFieldName}}.Convert()
-	if err != nil {
-		return nil, err
-	}
-{{- end}}
-
-	b, err := json.Marshal(m)
-	if err != nil {
-		return nil, err
-	}
-
-	var result model.{{.SourceTypeName}}
-{{- if manualUnmarshal .Parent}}
-	result.Defaulted()
-	if err := json.Unmarshal(b, &result); err != nil {
-		return nil, err
-	}
-{{- if eq .Parent.Kind "inject"}}
-	result.{{.Parent.SourceFieldName}} = model.NewGraphModelWrapper(parentModel)
-{{- else}}
-	result.{{.Parent.SourceFieldName}} = parentModel
-{{- end}}
-	if err := registry.CallHooks(&result); err != nil {
-		return nil, err
-	}
-{{- else}}
-	if err := registry.UnmarshalModel(b, &result); err != nil {
-		return nil, err
-	}
-{{- if .Parent}}
-	result.{{.Parent.SourceFieldName}} = parentModel
-{{- end}}
-{{- end}}
-
-	return &result, nil
-}
-`))
+}).Parse(typeTmplStr))

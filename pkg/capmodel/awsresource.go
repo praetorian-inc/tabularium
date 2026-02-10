@@ -15,6 +15,7 @@ type AWSResource struct {
 	Name         string         `json:"name"`
 	ResourceType string         `json:"resourceType"`
 	Region       string         `json:"region"`
+	AccountRef   string         `json:"accountRef"`
 	Properties   map[string]any `json:"properties"`
 }
 
@@ -25,6 +26,7 @@ func (s AWSResource) Convert() (*model.AWSResource, error) {
 	m["name"] = s.Name
 	m["resourceType"] = s.ResourceType
 	m["region"] = s.Region
+	m["accountRef"] = s.AccountRef
 	m["properties"] = s.Properties
 
 	b, err := json.Marshal(m)

@@ -10,12 +10,14 @@ import (
 )
 
 type AzureResource struct {
-	IPs          []string       `json:"ips"`
-	URLs         []string       `json:"urls"`
-	Name         string         `json:"name"`
-	ResourceType string         `json:"resourceType"`
-	Region       string         `json:"region"`
-	Properties   map[string]any `json:"properties"`
+	IPs           []string       `json:"ips"`
+	URLs          []string       `json:"urls"`
+	Name          string         `json:"name"`
+	ResourceType  string         `json:"resourceType"`
+	Region        string         `json:"region"`
+	AccountRef    string         `json:"accountRef"`
+	Properties    map[string]any `json:"properties"`
+	ResourceGroup string         `json:"resourceGroup"`
 }
 
 func (s AzureResource) Convert() (*model.AzureResource, error) {
@@ -25,7 +27,9 @@ func (s AzureResource) Convert() (*model.AzureResource, error) {
 	m["name"] = s.Name
 	m["resourceType"] = s.ResourceType
 	m["region"] = s.Region
+	m["accountRef"] = s.AccountRef
 	m["properties"] = s.Properties
+	m["resourceGroup"] = s.ResourceGroup
 
 	b, err := json.Marshal(m)
 	if err != nil {

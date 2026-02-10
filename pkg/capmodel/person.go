@@ -10,11 +10,27 @@ import (
 )
 
 type Person struct {
-	FirstName *string `json:"first_name"`
-	LastName  *string `json:"last_name"`
-	Name      *string `json:"name"`
-	Email     *string `json:"email"`
-	Title     *string `json:"title"`
+	FirstName        *string   `json:"first_name"`
+	LastName         *string   `json:"last_name"`
+	Name             *string   `json:"name"`
+	Email            *string   `json:"email"`
+	Title            *string   `json:"title"`
+	Headline         *string   `json:"headline"`
+	Phone            *string   `json:"phone"`
+	PersonalEmails   *[]string `json:"personal_emails"`
+	WorkEmail        *string   `json:"work_email"`
+	LinkedinURL      *string   `json:"linkedin_url"`
+	TwitterURL       *string   `json:"twitter_url"`
+	FacebookURL      *string   `json:"facebook_url"`
+	GithubURL        *string   `json:"github_url"`
+	PhotoURL         *string   `json:"photo_url"`
+	OrganizationName *string   `json:"organization_name"`
+	Country          *string   `json:"country"`
+	State            *string   `json:"state"`
+	City             *string   `json:"city"`
+	Seniority        *string   `json:"seniority"`
+	Departments      *[]string `json:"departments"`
+	Functions        *[]string `json:"functions"`
 }
 
 func (s Person) Convert() (*model.Person, error) {
@@ -24,6 +40,22 @@ func (s Person) Convert() (*model.Person, error) {
 	m["name"] = s.Name
 	m["email"] = s.Email
 	m["title"] = s.Title
+	m["headline"] = s.Headline
+	m["phone"] = s.Phone
+	m["personal_emails"] = s.PersonalEmails
+	m["work_email"] = s.WorkEmail
+	m["linkedin_url"] = s.LinkedinURL
+	m["twitter_url"] = s.TwitterURL
+	m["facebook_url"] = s.FacebookURL
+	m["github_url"] = s.GithubURL
+	m["photo_url"] = s.PhotoURL
+	m["organization_name"] = s.OrganizationName
+	m["country"] = s.Country
+	m["state"] = s.State
+	m["city"] = s.City
+	m["seniority"] = s.Seniority
+	m["departments"] = s.Departments
+	m["functions"] = s.Functions
 
 	b, err := json.Marshal(m)
 	if err != nil {

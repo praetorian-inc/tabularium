@@ -10,9 +10,46 @@ import (
 )
 
 type Organization struct {
-	Name    *string `json:"name"`
-	Domain  *string `json:"domain"`
-	Website *string `json:"website"`
+	Name                  *string    `json:"name"`
+	Domain                *string    `json:"domain"`
+	Website               *string    `json:"website"`
+	Description           *string    `json:"description"`
+	Industry              *string    `json:"industry"`
+	SubIndustries         *[]string  `json:"sub_industries"`
+	Keywords              *[]string  `json:"keywords"`
+	OrganizationType      *string    `json:"organization_type"`
+	BusinessModel         *string    `json:"business_model"`
+	EstimatedNumEmployees *int       `json:"estimated_num_employees"`
+	EmployeeRange         *string    `json:"employee_range"`
+	AnnualRevenue         *float64   `json:"annual_revenue"`
+	RevenueRange          *string    `json:"revenue_range"`
+	MarketCapitalization  *float64   `json:"market_capitalization"`
+	Country               *string    `json:"country"`
+	State                 *string    `json:"state"`
+	City                  *string    `json:"city"`
+	PostalCode            *string    `json:"postal_code"`
+	StreetAddress         *string    `json:"street_address"`
+	Phone                 *string    `json:"phone"`
+	Fax                   *string    `json:"fax"`
+	Email                 *string    `json:"email"`
+	LinkedinURL           *string    `json:"linkedin_url"`
+	TwitterURL            *string    `json:"twitter_url"`
+	FacebookURL           *string    `json:"facebook_url"`
+	BlogURL               *string    `json:"blog_url"`
+	FoundedYear           *int       `json:"founded_year"`
+	PubliclyTraded        *bool      `json:"publicly_traded"`
+	TickerSymbol          *string    `json:"ticker_symbol"`
+	Exchange              *string    `json:"exchange"`
+	Technologies          *[]string  `json:"technologies"`
+	TechCategories        *[]string  `json:"tech_categories"`
+	TechVendors           *[]string  `json:"tech_vendors"`
+	AlternatePhones       *[]string  `json:"alternate_phones"`
+	PhoneTypes            *[]string  `json:"phone_types"`
+	FundingRounds         *[]string  `json:"funding_rounds"`
+	FundingAmounts        *[]float64 `json:"funding_amounts"`
+	Investors             *[]string  `json:"investors"`
+	AdditionalAddresses   *[]string  `json:"additional_addresses"`
+	AddressTypes          *[]string  `json:"address_types"`
 }
 
 func (s Organization) Convert() (*model.Organization, error) {
@@ -20,6 +57,43 @@ func (s Organization) Convert() (*model.Organization, error) {
 	m["name"] = s.Name
 	m["domain"] = s.Domain
 	m["website"] = s.Website
+	m["description"] = s.Description
+	m["industry"] = s.Industry
+	m["sub_industries"] = s.SubIndustries
+	m["keywords"] = s.Keywords
+	m["organization_type"] = s.OrganizationType
+	m["business_model"] = s.BusinessModel
+	m["estimated_num_employees"] = s.EstimatedNumEmployees
+	m["employee_range"] = s.EmployeeRange
+	m["annual_revenue"] = s.AnnualRevenue
+	m["revenue_range"] = s.RevenueRange
+	m["market_capitalization"] = s.MarketCapitalization
+	m["country"] = s.Country
+	m["state"] = s.State
+	m["city"] = s.City
+	m["postal_code"] = s.PostalCode
+	m["street_address"] = s.StreetAddress
+	m["phone"] = s.Phone
+	m["fax"] = s.Fax
+	m["email"] = s.Email
+	m["linkedin_url"] = s.LinkedinURL
+	m["twitter_url"] = s.TwitterURL
+	m["facebook_url"] = s.FacebookURL
+	m["blog_url"] = s.BlogURL
+	m["founded_year"] = s.FoundedYear
+	m["publicly_traded"] = s.PubliclyTraded
+	m["ticker_symbol"] = s.TickerSymbol
+	m["exchange"] = s.Exchange
+	m["technologies"] = s.Technologies
+	m["tech_categories"] = s.TechCategories
+	m["tech_vendors"] = s.TechVendors
+	m["alternate_phones"] = s.AlternatePhones
+	m["phone_types"] = s.PhoneTypes
+	m["funding_rounds"] = s.FundingRounds
+	m["funding_amounts"] = s.FundingAmounts
+	m["investors"] = s.Investors
+	m["additional_addresses"] = s.AdditionalAddresses
+	m["address_types"] = s.AddressTypes
 
 	b, err := json.Marshal(m)
 	if err != nil {

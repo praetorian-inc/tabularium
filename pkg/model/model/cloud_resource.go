@@ -31,15 +31,15 @@ type AssetBuilder interface {
 }
 
 type CloudResource struct {
-	IPs          []string          `neo4j:"ips" json:"ips" capmodel:"CloudResource,AWSResource,AzureResource,GCPResource"`
-	URLs         []string          `neo4j:"urls" json:"urls" capmodel:"CloudResource,AWSResource,AzureResource,GCPResource"`
-	Name         string            `neo4j:"name" json:"name" capmodel:"CloudResource,AWSResource,AzureResource,GCPResource"`
+	IPs          []string          `neo4j:"ips" json:"ips" capmodel:"AWSResource,AzureResource,GCPResource"`
+	URLs         []string          `neo4j:"urls" json:"urls" capmodel:"AWSResource,AzureResource,GCPResource"`
+	Name         string            `neo4j:"name" json:"name" capmodel:"AWSResource,AzureResource,GCPResource"`
 	DisplayName  string            `neo4j:"displayName" json:"displayName"`
 	Provider     string            `neo4j:"provider" json:"provider"`
-	ResourceType CloudResourceType `neo4j:"resourceType" json:"resourceType" capmodel:"CloudResource,AWSResource,AzureResource,GCPResource"`
-	Region       string            `neo4j:"region" json:"region" capmodel:"CloudResource,AWSResource,AzureResource,GCPResource"`
-	AccountRef   string            `neo4j:"accountRef" json:"accountRef"`
-	Properties   map[string]any    `neo4j:"properties" json:"properties" capmodel:"CloudResource,AWSResource,AzureResource,GCPResource"`
+	ResourceType CloudResourceType `neo4j:"resourceType" json:"resourceType" capmodel:"AWSResource,AzureResource,GCPResource"`
+	Region       string            `neo4j:"region" json:"region" capmodel:"AWSResource,AzureResource,GCPResource"`
+	AccountRef   string            `neo4j:"accountRef" json:"accountRef" capmodel:"AWSResource,AzureResource,GCPResource"`
+	Properties   map[string]any    `neo4j:"properties" json:"properties" capmodel:"AWSResource,AzureResource,GCPResource"`
 	Labels       []string          `neo4j:"labels" json:"labels"`
 	BaseAsset
 	OriginationData

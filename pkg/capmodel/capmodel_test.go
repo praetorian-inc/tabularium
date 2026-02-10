@@ -39,6 +39,16 @@ func assertPtrEqual(t *testing.T, field string, got *string, want string) {
 
 func strPtr(s string) *string { return &s }
 
+func intPtr(i int) *int { return &i }
+
+func float64Ptr(f float64) *float64 { return &f }
+
+func boolPtr(b bool) *bool { return &b }
+
+func strSlicePtr(ss []string) *[]string { return &ss }
+
+func float64SlicePtr(fs []float64) *[]float64 { return &fs }
+
 func TestIPConvert(t *testing.T) {
 	result, err := IP{DNS: "192.168.1.1"}.Convert()
 	if err != nil {
@@ -181,9 +191,12 @@ func TestPreseedConvert(t *testing.T) {
 
 func TestADObjectConvert(t *testing.T) {
 	result, err := ADObject{
-		Label:    "ADUser",
-		Domain:   "example.local",
-		ObjectID: "S-1-5-21-123456789",
+		Label:           "ADUser",
+		SecondaryLabels: []string{"ADLocalGroup"},
+		Domain:          "example.local",
+		ObjectID:        "S-1-5-21-123456789",
+		SID:             "S-1-5-21-123456789",
+		ADProperties:    map[string]any{"name": "John Smith", "department": "IT"},
 	}.Convert()
 	if err != nil {
 		t.Fatal(err)
@@ -191,27 +204,13 @@ func TestADObjectConvert(t *testing.T) {
 	assertEqual(t, "Label", result.Label, "ADUser")
 	assertEqual(t, "Domain", result.Domain, "example.local")
 	assertEqual(t, "ObjectID", result.ObjectID, "S-1-5-21-123456789")
+	assertEqual(t, "SID", result.SID, "S-1-5-21-123456789")
+	if len(result.SecondaryLabels) != 1 || result.SecondaryLabels[0] != "ADLocalGroup" {
+		t.Errorf("SecondaryLabels: got %v, want [ADLocalGroup]", result.SecondaryLabels)
+	}
+	assertEqual(t, "ADProperties.Name", result.ADProperties.Name, "John Smith")
+	assertEqual(t, "ADProperties.Department", result.ADProperties.Department, "IT")
 	assertNonEmpty(t, "Key", result.Key)
-}
-
-func TestCloudResourceConvert(t *testing.T) {
-	result, err := CloudResource{
-		Name:         "my-bucket",
-		ResourceType: "s3",
-		Region:       "us-east-1",
-		IPs:          []string{"10.0.0.1"},
-		URLs:         []string{"https://my-bucket.s3.amazonaws.com"},
-		Properties:   map[string]any{"versioning": true},
-	}.Convert()
-	if err != nil {
-		t.Fatal(err)
-	}
-	assertEqual(t, "Name", result.Name, "my-bucket")
-	assertEqual(t, "ResourceType", string(result.ResourceType), "s3")
-	assertEqual(t, "Region", result.Region, "us-east-1")
-	if len(result.IPs) != 1 {
-		t.Errorf("IPs: got %d, want 1", len(result.IPs))
-	}
 }
 
 func TestAWSResourceConvert(t *testing.T) {
@@ -219,26 +218,32 @@ func TestAWSResourceConvert(t *testing.T) {
 		Name:         "my-ec2",
 		ResourceType: "ec2",
 		Region:       "us-west-2",
+		AccountRef:   "123456789012",
 	}.Convert()
 	if err != nil {
 		t.Fatal(err)
 	}
 	assertEqual(t, "Name", result.Name, "my-ec2")
 	assertEqual(t, "ResourceType", string(result.ResourceType), "ec2")
+	assertEqual(t, "AccountRef", result.AccountRef, "123456789012")
 	assertNonEmpty(t, "Key", result.Key)
 }
 
 func TestAzureResourceConvert(t *testing.T) {
 	result, err := AzureResource{
-		Name:         "my-vm",
-		ResourceType: "vm",
-		Region:       "eastus",
+		Name:          "my-vm",
+		ResourceType:  "vm",
+		Region:        "eastus",
+		AccountRef:    "sub-123",
+		ResourceGroup: "my-rg",
 	}.Convert()
 	if err != nil {
 		t.Fatal(err)
 	}
 	assertEqual(t, "Name", result.Name, "my-vm")
 	assertEqual(t, "ResourceType", string(result.ResourceType), "vm")
+	assertEqual(t, "AccountRef", result.AccountRef, "sub-123")
+	assertEqual(t, "ResourceGroup", result.ResourceGroup, "my-rg")
 	assertNonEmpty(t, "Key", result.Key)
 }
 
@@ -247,22 +252,40 @@ func TestGCPResourceConvert(t *testing.T) {
 		Name:         "my-instance",
 		ResourceType: "compute",
 		Region:       "us-central1",
+		AccountRef:   "my-project",
 	}.Convert()
 	if err != nil {
 		t.Fatal(err)
 	}
 	assertEqual(t, "Name", result.Name, "my-instance")
 	assertEqual(t, "ResourceType", string(result.ResourceType), "compute")
+	assertEqual(t, "AccountRef", result.AccountRef, "my-project")
 	assertNonEmpty(t, "Key", result.Key)
 }
 
 func TestPersonConvert(t *testing.T) {
 	result, err := Person{
-		FirstName: strPtr("Jane"),
-		LastName:  strPtr("Doe"),
-		Name:      strPtr("Jane Doe"),
-		Email:     strPtr("jane@example.com"),
-		Title:     strPtr("Engineer"),
+		FirstName:        strPtr("Jane"),
+		LastName:         strPtr("Doe"),
+		Name:             strPtr("Jane Doe"),
+		Email:            strPtr("jane@example.com"),
+		Title:            strPtr("Engineer"),
+		Headline:         strPtr("Senior Engineer at Acme"),
+		Phone:            strPtr("+1-555-123-4567"),
+		PersonalEmails:   strSlicePtr([]string{"jane@gmail.com"}),
+		WorkEmail:        strPtr("jane@work.com"),
+		LinkedinURL:      strPtr("https://linkedin.com/in/jane"),
+		TwitterURL:       strPtr("https://twitter.com/jane"),
+		FacebookURL:      strPtr("https://facebook.com/jane"),
+		GithubURL:        strPtr("https://github.com/jane"),
+		PhotoURL:         strPtr("https://example.com/photo.jpg"),
+		OrganizationName: strPtr("Acme Corp"),
+		Country:          strPtr("United States"),
+		State:            strPtr("California"),
+		City:             strPtr("San Francisco"),
+		Seniority:        strPtr("Senior"),
+		Departments:      strSlicePtr([]string{"Engineering"}),
+		Functions:        strSlicePtr([]string{"Software Development"}),
 	}.Convert()
 	if err != nil {
 		t.Fatal(err)
@@ -270,17 +293,73 @@ func TestPersonConvert(t *testing.T) {
 	assertPtrEqual(t, "FirstName", result.FirstName, "Jane")
 	assertPtrEqual(t, "LastName", result.LastName, "Doe")
 	assertPtrEqual(t, "Email", result.Email, "jane@example.com")
+	assertPtrEqual(t, "Headline", result.Headline, "Senior Engineer at Acme")
+	assertPtrEqual(t, "Phone", result.Phone, "+1-555-123-4567")
+	assertPtrEqual(t, "WorkEmail", result.WorkEmail, "jane@work.com")
+	assertPtrEqual(t, "LinkedinURL", result.LinkedinURL, "https://linkedin.com/in/jane")
+	assertPtrEqual(t, "TwitterURL", result.TwitterURL, "https://twitter.com/jane")
+	assertPtrEqual(t, "FacebookURL", result.FacebookURL, "https://facebook.com/jane")
+	assertPtrEqual(t, "GithubURL", result.GithubURL, "https://github.com/jane")
+	assertPtrEqual(t, "PhotoURL", result.PhotoURL, "https://example.com/photo.jpg")
+	assertPtrEqual(t, "OrganizationName", result.OrganizationName, "Acme Corp")
+	assertPtrEqual(t, "Country", result.Country, "United States")
+	assertPtrEqual(t, "State", result.State, "California")
+	assertPtrEqual(t, "City", result.City, "San Francisco")
+	assertPtrEqual(t, "Seniority", result.Seniority, "Senior")
 }
 
 func TestOrganizationConvert(t *testing.T) {
 	result, err := Organization{
-		Name:    strPtr("Acme Corp"),
-		Domain:  strPtr("acme.com"),
-		Website: strPtr("https://acme.com"),
+		Name:                  strPtr("Acme Corp"),
+		Domain:                strPtr("acme.com"),
+		Website:               strPtr("https://acme.com"),
+		Description:           strPtr("A great company"),
+		Industry:              strPtr("Technology"),
+		SubIndustries:         strSlicePtr([]string{"SaaS"}),
+		Keywords:              strSlicePtr([]string{"cloud"}),
+		OrganizationType:      strPtr("Public"),
+		BusinessModel:         strPtr("B2B"),
+		EstimatedNumEmployees: intPtr(5000),
+		EmployeeRange:         strPtr("1000-5000"),
+		AnnualRevenue:         float64Ptr(50000000),
+		RevenueRange:          strPtr("$10M-$50M"),
+		MarketCapitalization:  float64Ptr(1000000000),
+		Country:               strPtr("United States"),
+		State:                 strPtr("California"),
+		City:                  strPtr("San Francisco"),
+		PostalCode:            strPtr("94105"),
+		StreetAddress:         strPtr("123 Market St"),
+		Phone:                 strPtr("+1-555-123-4567"),
+		Fax:                   strPtr("+1-555-123-4568"),
+		Email:                 strPtr("contact@acme.com"),
+		LinkedinURL:           strPtr("https://linkedin.com/company/acme"),
+		TwitterURL:            strPtr("https://twitter.com/acme"),
+		FacebookURL:           strPtr("https://facebook.com/acme"),
+		BlogURL:               strPtr("https://blog.acme.com"),
+		FoundedYear:           intPtr(2010),
+		PubliclyTraded:        boolPtr(true),
+		TickerSymbol:          strPtr("ACME"),
+		Exchange:              strPtr("NASDAQ"),
+		Technologies:          strSlicePtr([]string{"AWS", "Docker"}),
+		TechCategories:        strSlicePtr([]string{"Cloud"}),
+		TechVendors:           strSlicePtr([]string{"Amazon"}),
+		AlternatePhones:       strSlicePtr([]string{"+1-555-999-0000"}),
+		PhoneTypes:            strSlicePtr([]string{"main"}),
+		FundingRounds:         strSlicePtr([]string{"Series A"}),
+		FundingAmounts:        float64SlicePtr([]float64{5000000}),
+		Investors:             strSlicePtr([]string{"Sequoia"}),
+		AdditionalAddresses:   strSlicePtr([]string{"456 Oak St"}),
+		AddressTypes:          strSlicePtr([]string{"office"}),
 	}.Convert()
 	if err != nil {
 		t.Fatal(err)
 	}
 	assertPtrEqual(t, "Name", result.Name, "Acme Corp")
 	assertPtrEqual(t, "Domain", result.Domain, "acme.com")
+	assertPtrEqual(t, "Description", result.Description, "A great company")
+	assertPtrEqual(t, "Industry", result.Industry, "Technology")
+	assertPtrEqual(t, "Country", result.Country, "United States")
+	assertPtrEqual(t, "Phone", result.Phone, "+1-555-123-4567")
+	assertPtrEqual(t, "LinkedinURL", result.LinkedinURL, "https://linkedin.com/company/acme")
+	assertPtrEqual(t, "TickerSymbol", result.TickerSymbol, "ACME")
 }

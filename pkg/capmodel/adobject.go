@@ -10,16 +10,24 @@ import (
 )
 
 type ADObject struct {
-	Label    string `json:"label"`
-	Domain   string `json:"domain"`
-	ObjectID string `json:"objectid"`
+	Label           string         `json:"label"`
+	SecondaryLabels []string       `json:"labels"`
+	Domain          string         `json:"domain"`
+	ObjectID        string         `json:"objectid"`
+	SID             string         `json:"sid"`
+	ADProperties    map[string]any `json:"properties"`
 }
 
 func (s ADObject) Convert() (*model.ADObject, error) {
 	m := make(map[string]any)
 	m["label"] = s.Label
+	m["labels"] = s.SecondaryLabels
 	m["domain"] = s.Domain
 	m["objectid"] = s.ObjectID
+	m["sid"] = s.SID
+	for k, v := range s.ADProperties {
+		m[k] = v
+	}
 
 	b, err := json.Marshal(m)
 	if err != nil {

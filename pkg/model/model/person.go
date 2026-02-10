@@ -35,23 +35,23 @@ type Person struct {
 
 	// Professional Information
 	Title    *string `neo4j:"title,omitempty" json:"title,omitempty" desc:"Person's current job title." example:"Senior Software Engineer" capmodel:"Person"`
-	Headline *string `neo4j:"headline,omitempty" json:"headline,omitempty" desc:"Person's professional headline." example:"Senior Software Engineer at Example Corp"`
+	Headline *string `neo4j:"headline,omitempty" json:"headline,omitempty" desc:"Person's professional headline." example:"Senior Software Engineer at Example Corp" capmodel:"Person"`
 
 	// Contact Information
-	Phone          *string   `neo4j:"phone,omitempty" json:"phone,omitempty" desc:"Person's phone number." example:"+1-555-123-4567"`
-	PersonalEmails *[]string `neo4j:"personal_emails,omitempty" json:"personal_emails,omitempty" desc:"List of personal email addresses." example:"[\"john.doe@gmail.com\", \"johndoe@yahoo.com\"]"`
-	WorkEmail      *string   `neo4j:"work_email,omitempty" json:"work_email,omitempty" desc:"Person's work email address." example:"john.doe@company.com"`
+	Phone          *string   `neo4j:"phone,omitempty" json:"phone,omitempty" desc:"Person's phone number." example:"+1-555-123-4567" capmodel:"Person"`
+	PersonalEmails *[]string `neo4j:"personal_emails,omitempty" json:"personal_emails,omitempty" desc:"List of personal email addresses." example:"[\"john.doe@gmail.com\", \"johndoe@yahoo.com\"]" capmodel:"Person"`
+	WorkEmail      *string   `neo4j:"work_email,omitempty" json:"work_email,omitempty" desc:"Person's work email address." example:"john.doe@company.com" capmodel:"Person"`
 
 	// Social Media and Online Presence
-	LinkedinURL *string `neo4j:"linkedin_url,omitempty" json:"linkedin_url,omitempty" desc:"LinkedIn profile URL." example:"https://www.linkedin.com/in/johndoe"`
-	TwitterURL  *string `neo4j:"twitter_url,omitempty" json:"twitter_url,omitempty" desc:"Twitter profile URL." example:"https://twitter.com/johndoe"`
-	FacebookURL *string `neo4j:"facebook_url,omitempty" json:"facebook_url,omitempty" desc:"Facebook profile URL." example:"https://www.facebook.com/johndoe"`
-	GithubURL   *string `neo4j:"github_url,omitempty" json:"github_url,omitempty" desc:"GitHub profile URL." example:"https://github.com/johndoe"`
-	PhotoURL    *string `neo4j:"photo_url,omitempty" json:"photo_url,omitempty" desc:"Person's profile photo URL." example:"https://media.licdn.com/dms/image/123/profile-pic.jpg"`
+	LinkedinURL *string `neo4j:"linkedin_url,omitempty" json:"linkedin_url,omitempty" desc:"LinkedIn profile URL." example:"https://www.linkedin.com/in/johndoe" capmodel:"Person"`
+	TwitterURL  *string `neo4j:"twitter_url,omitempty" json:"twitter_url,omitempty" desc:"Twitter profile URL." example:"https://twitter.com/johndoe" capmodel:"Person"`
+	FacebookURL *string `neo4j:"facebook_url,omitempty" json:"facebook_url,omitempty" desc:"Facebook profile URL." example:"https://www.facebook.com/johndoe" capmodel:"Person"`
+	GithubURL   *string `neo4j:"github_url,omitempty" json:"github_url,omitempty" desc:"GitHub profile URL." example:"https://github.com/johndoe" capmodel:"Person"`
+	PhotoURL    *string `neo4j:"photo_url,omitempty" json:"photo_url,omitempty" desc:"Person's profile photo URL." example:"https://media.licdn.com/dms/image/123/profile-pic.jpg" capmodel:"Person"`
 
 	// Current Organization Information
 	OrganizationID   *string `neo4j:"organization_id,omitempty" json:"organization_id,omitempty" desc:"Apollo.io organization ID where person currently works." example:"5e66b6381e05b4008c8331b8"`
-	OrganizationName *string `neo4j:"organization_name,omitempty" json:"organization_name,omitempty" desc:"Name of organization where person currently works." example:"Example Corp"`
+	OrganizationName *string `neo4j:"organization_name,omitempty" json:"organization_name,omitempty" desc:"Name of organization where person currently works." example:"Example Corp" capmodel:"Person"`
 
 	// Employment History - JSON array of employment records
 	EmploymentHistory *[]EmploymentRecord `neo4j:"employment_history,omitempty" json:"employment_history,omitempty" desc:"List of person's employment history records."`
@@ -61,9 +61,9 @@ type Person struct {
 	ExtrapolatedEmailConfidence *float64 `neo4j:"extrapolated_email_confidence,omitempty" json:"extrapolated_email_confidence,omitempty" desc:"Confidence score for extrapolated email." example:"0.95"`
 
 	// Geographic Information
-	Country *string `neo4j:"country,omitempty" json:"country,omitempty" desc:"Country where the person is located." example:"United States"`
-	State   *string `neo4j:"state,omitempty" json:"state,omitempty" desc:"State or region where the person is located." example:"California"`
-	City    *string `neo4j:"city,omitempty" json:"city,omitempty" desc:"City where the person is located." example:"San Francisco"`
+	Country *string `neo4j:"country,omitempty" json:"country,omitempty" desc:"Country where the person is located." example:"United States" capmodel:"Person"`
+	State   *string `neo4j:"state,omitempty" json:"state,omitempty" desc:"State or region where the person is located." example:"California" capmodel:"Person"`
+	City    *string `neo4j:"city,omitempty" json:"city,omitempty" desc:"City where the person is located." example:"San Francisco" capmodel:"Person"`
 
 	// Apollo.io Specific Metadata
 	ApolloID         *string  `neo4j:"apollo_id,omitempty" json:"apollo_id,omitempty" desc:"Apollo.io person identifier." example:"671bd2e8c2c9b5000169ba39"`
@@ -72,9 +72,9 @@ type Person struct {
 	DataQualityScore *float64 `neo4j:"data_quality_score,omitempty" json:"data_quality_score,omitempty" desc:"Data quality score from Apollo.io." example:"0.92"`
 
 	// Additional Professional Information
-	Seniority   *string   `neo4j:"seniority,omitempty" json:"seniority,omitempty" desc:"Seniority level." example:"Senior"`
-	Departments *[]string `neo4j:"departments,omitempty" json:"departments,omitempty" desc:"List of departments person works in." example:"[\"Engineering\", \"Product\"]"`
-	Functions   *[]string `neo4j:"functions,omitempty" json:"functions,omitempty" desc:"List of job functions." example:"[\"Software Development\", \"Technical Leadership\"]"`
+	Seniority   *string   `neo4j:"seniority,omitempty" json:"seniority,omitempty" desc:"Seniority level." example:"Senior" capmodel:"Person"`
+	Departments *[]string `neo4j:"departments,omitempty" json:"departments,omitempty" desc:"List of departments person works in." example:"[\"Engineering\", \"Product\"]" capmodel:"Person"`
+	Functions   *[]string `neo4j:"functions,omitempty" json:"functions,omitempty" desc:"List of job functions." example:"[\"Software Development\", \"Technical Leadership\"]" capmodel:"Person"`
 
 	// Timestamps and Status
 	TTL     int64  `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the person record (Unix timestamp)." example:"1706353200"`
