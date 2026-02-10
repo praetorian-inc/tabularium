@@ -44,6 +44,7 @@ type parentField struct {
 	JSONName        string
 	EmbedType       string
 	Wrap            bool
+	SourceGoType    string // Go type for the source field (e.g., "*WebApplication", "Target")
 }
 
 // typeSpec holds all the information needed to generate a single capmodel type file.
@@ -108,6 +109,7 @@ func parseCapmodelTags(reg *registry.TypeRegistry) []typeSpec {
 						JSONName:        jsonName,
 						EmbedType:       embedType,
 						Wrap:            t == reflect.TypeFor[model.GraphModelWrapper](),
+						SourceGoType:    resolveSourceGoType(sf.Type),
 					}
 					continue
 				}
@@ -245,4 +247,14 @@ func resolveGoType(t reflect.Type) string {
 	default:
 		return t.Name()
 	}
+}
+
+// resolveSourceGoType returns the Go type string for a source model field,
+// prefixed with "model." for use in the converter template type assertions.
+// Examples: "*model.WebApplication", "model.Target", "model.GraphModelWrapper".
+func resolveSourceGoType(t reflect.Type) string {
+	if t.Kind() == reflect.Ptr {
+		return "*model." + t.Elem().Name()
+	}
+	return "model." + t.Name()
 }

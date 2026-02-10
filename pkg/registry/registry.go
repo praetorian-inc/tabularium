@@ -40,15 +40,17 @@ func Name(model Model) string {
 
 // TypeRegistry holds information about all registered types
 type TypeRegistry struct {
-	types   map[string]reflect.Type
-	aliases map[string]string
+	types      map[string]reflect.Type
+	aliases    map[string]string
+	converters map[string]ConverterFunc
 }
 
 // NewTypeRegistry creates a new type registry
 func NewTypeRegistry() *TypeRegistry {
 	return &TypeRegistry{
-		types:   make(map[string]reflect.Type),
-		aliases: make(map[string]string),
+		types:      make(map[string]reflect.Type),
+		aliases:    make(map[string]string),
+		converters: make(map[string]ConverterFunc),
 	}
 }
 

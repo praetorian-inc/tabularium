@@ -2,13 +2,6 @@
 
 package capmodel
 
-import (
-	"encoding/json"
-
-	"github.com/praetorian-inc/tabularium/pkg/model/model"
-	"github.com/praetorian-inc/tabularium/pkg/registry"
-)
-
 type Person struct {
 	FirstName        *string   `json:"first_name"`
 	LastName         *string   `json:"last_name"`
@@ -31,41 +24,4 @@ type Person struct {
 	Seniority        *string   `json:"seniority"`
 	Departments      *[]string `json:"departments"`
 	Functions        *[]string `json:"functions"`
-}
-
-func (s Person) Convert() (*model.Person, error) {
-	m := make(map[string]any, 21)
-	m["first_name"] = s.FirstName
-	m["last_name"] = s.LastName
-	m["name"] = s.Name
-	m["email"] = s.Email
-	m["title"] = s.Title
-	m["headline"] = s.Headline
-	m["phone"] = s.Phone
-	m["personal_emails"] = s.PersonalEmails
-	m["work_email"] = s.WorkEmail
-	m["linkedin_url"] = s.LinkedinURL
-	m["twitter_url"] = s.TwitterURL
-	m["facebook_url"] = s.FacebookURL
-	m["github_url"] = s.GithubURL
-	m["photo_url"] = s.PhotoURL
-	m["organization_name"] = s.OrganizationName
-	m["country"] = s.Country
-	m["state"] = s.State
-	m["city"] = s.City
-	m["seniority"] = s.Seniority
-	m["departments"] = s.Departments
-	m["functions"] = s.Functions
-
-	b, err := json.Marshal(m)
-	if err != nil {
-		return nil, err
-	}
-
-	var result model.Person
-	if err := registry.UnmarshalModel(b, &result); err != nil {
-		return nil, err
-	}
-
-	return &result, nil
 }

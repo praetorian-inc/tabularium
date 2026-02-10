@@ -1,19 +1,29 @@
 package capmodel
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	_ "github.com/praetorian-inc/tabularium/pkg/model/model"
+	"github.com/praetorian-inc/tabularium/pkg/model/model"
+	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 func ptr[T any](v T) *T { return &v }
 
-func TestIPConvert(t *testing.T) {
-	result, err := IP{DNS: "192.168.1.1"}.Convert()
+func convert[T registry.Model](t *testing.T, name string, v any) T {
+	t.Helper()
+	data, err := json.Marshal(v)
 	require.NoError(t, err)
+	result, err := registry.Registry.Convert(name, data)
+	require.NoError(t, err)
+	return result.(T)
+}
+
+func TestIPConvert(t *testing.T) {
+	result := convert[*model.Asset](t, "IP", IP{DNS: "192.168.1.1"})
 	assert.Equal(t, "192.168.1.1", result.DNS)
 	// DNS and Name share the same capmodel field ("ip"), so setting DNS propagates to both.
 	assert.Equal(t, "192.168.1.1", result.Name)
@@ -21,30 +31,27 @@ func TestIPConvert(t *testing.T) {
 }
 
 func TestDomainConvert(t *testing.T) {
-	result, err := Domain{DNS: "example.com"}.Convert()
-	require.NoError(t, err)
+	result := convert[*model.Asset](t, "Domain", Domain{DNS: "example.com"})
 	assert.Equal(t, "example.com", result.DNS)
 	assert.Equal(t, "example.com", result.Name)
 	assert.Equal(t, "#asset#example.com#example.com", result.Key)
 }
 
 func TestAssetConvert(t *testing.T) {
-	result, err := Asset{DNS: "example.com", Name: "10.0.0.1"}.Convert()
-	require.NoError(t, err)
+	result := convert[*model.Asset](t, "Asset", Asset{DNS: "example.com", Name: "10.0.0.1"})
 	assert.Equal(t, "example.com", result.DNS)
 	assert.Equal(t, "10.0.0.1", result.Name)
 	assert.Equal(t, "#asset#example.com#10.0.0.1", result.Key)
 }
 
 func TestRiskConvert(t *testing.T) {
-	result, err := Risk{
+	result := convert[*model.Risk](t, "Risk", Risk{
 		DNS:    "example.com",
 		Name:   "CVE-2023-12345",
 		Status: "TH",
 		Source: "nessus",
 		Target: Asset{DNS: "example.com", Name: "10.0.0.1"},
-	}.Convert()
-	require.NoError(t, err)
+	})
 	assert.Equal(t, "example.com", result.DNS)
 	assert.Equal(t, "CVE-2023-12345", result.Name)
 	assert.Equal(t, "TH", result.Status)
@@ -53,13 +60,12 @@ func TestRiskConvert(t *testing.T) {
 }
 
 func TestPortConvert(t *testing.T) {
-	result, err := Port{
+	result := convert[*model.Port](t, "Port", Port{
 		Protocol: "tcp",
 		Port:     443,
 		Service:  "https",
 		Parent:   Asset{DNS: "example.com", Name: "10.0.0.1"},
-	}.Convert()
-	require.NoError(t, err)
+	})
 	assert.Equal(t, "tcp", result.Protocol)
 	assert.Equal(t, 443, result.Port)
 	assert.Equal(t, "https", result.Service)
@@ -67,56 +73,51 @@ func TestPortConvert(t *testing.T) {
 }
 
 func TestTechnologyConvert(t *testing.T) {
-	result, err := Technology{
+	result := convert[*model.Technology](t, "Technology", Technology{
 		CPE:  "cpe:2.3:a:apache:http_server:2.4.50:*:*:*:*:*:*:*",
 		Name: "Apache httpd",
-	}.Convert()
-	require.NoError(t, err)
+	})
 	assert.Equal(t, "cpe:2.3:a:apache:http_server:2.4.50:*:*:*:*:*:*:*", result.CPE)
 	assert.Equal(t, "Apache httpd", result.Name)
 	assert.Equal(t, "#technology#cpe:2.3:a:apache:http_server:2.4.50:*:*:*:*:*:*:*", result.Key)
 }
 
 func TestFileConvert(t *testing.T) {
-	result, err := File{Name: "proofs/test.txt", Bytes: []byte("hello")}.Convert()
-	require.NoError(t, err)
+	result := convert[*model.File](t, "File", File{Name: "proofs/test.txt", Bytes: []byte("hello")})
 	assert.Equal(t, "proofs/test.txt", result.Name)
 	assert.NotEmpty(t, result.Bytes)
 	assert.Equal(t, "#file#proofs/test.txt", result.Key)
 }
 
 func TestWebApplicationConvert(t *testing.T) {
-	result, err := WebApplication{
+	result := convert[*model.WebApplication](t, "WebApplication", WebApplication{
 		PrimaryURL: "https://example.com",
 		Name:       "Example App",
 		URLs:       []string{"https://api.example.com"},
-	}.Convert()
-	require.NoError(t, err)
+	})
 	assert.Contains(t, result.PrimaryURL, "https://example.com")
 	assert.Equal(t, "Example App", result.Name)
 	assert.NotEmpty(t, result.Key)
 }
 
 func TestWebpageConvert(t *testing.T) {
-	result, err := Webpage{
+	result := convert[*model.Webpage](t, "Webpage", Webpage{
 		URL: "https://example.com/login",
 		Parent: WebApplication{
 			PrimaryURL: "https://example.com",
 			Name:       "Example",
 		},
-	}.Convert()
-	require.NoError(t, err)
+	})
 	assert.Equal(t, "https://example.com/login", result.URL)
 	assert.NotNil(t, result.Parent)
 }
 
 func TestPreseedConvert(t *testing.T) {
-	result, err := Preseed{
+	result := convert[*model.Preseed](t, "Preseed", Preseed{
 		Type:  "whois",
 		Title: "registrant_email",
 		Value: "admin@example.com",
-	}.Convert()
-	require.NoError(t, err)
+	})
 	assert.Equal(t, "whois", result.Type)
 	assert.Equal(t, "registrant_email", result.Title)
 	assert.Equal(t, "admin@example.com", result.Value)
@@ -124,7 +125,7 @@ func TestPreseedConvert(t *testing.T) {
 }
 
 func TestADObjectConvert(t *testing.T) {
-	result, err := ADObject{
+	result := convert[*model.ADObject](t, "ADObject", ADObject{
 		Label:           "ADUser",
 		SecondaryLabels: []string{"ADLocalGroup"},
 		Domain:          "example.local",
@@ -132,8 +133,7 @@ func TestADObjectConvert(t *testing.T) {
 		SID:             "S-1-5-21-123456789",
 		Name:            "John Smith",
 		Department:      "IT",
-	}.Convert()
-	require.NoError(t, err)
+	})
 	assert.Equal(t, "ADUser", result.Label)
 	assert.Equal(t, "example.local", result.Domain)
 	assert.Equal(t, "S-1-5-21-123456789", result.ObjectID)
@@ -145,13 +145,12 @@ func TestADObjectConvert(t *testing.T) {
 }
 
 func TestAWSResourceConvert(t *testing.T) {
-	result, err := AWSResource{
+	result := convert[*model.AWSResource](t, "AWSResource", AWSResource{
 		Name:         "my-ec2",
 		ResourceType: "ec2",
 		Region:       "us-west-2",
 		AccountRef:   "123456789012",
-	}.Convert()
-	require.NoError(t, err)
+	})
 	assert.Equal(t, "my-ec2", result.Name)
 	assert.Equal(t, "ec2", string(result.ResourceType))
 	assert.Equal(t, "123456789012", result.AccountRef)
@@ -159,14 +158,13 @@ func TestAWSResourceConvert(t *testing.T) {
 }
 
 func TestAzureResourceConvert(t *testing.T) {
-	result, err := AzureResource{
+	result := convert[*model.AzureResource](t, "AzureResource", AzureResource{
 		Name:          "my-vm",
 		ResourceType:  "vm",
 		Region:        "eastus",
 		AccountRef:    "sub-123",
 		ResourceGroup: "my-rg",
-	}.Convert()
-	require.NoError(t, err)
+	})
 	assert.Equal(t, "my-vm", result.Name)
 	assert.Equal(t, "vm", string(result.ResourceType))
 	assert.Equal(t, "sub-123", result.AccountRef)
@@ -175,13 +173,12 @@ func TestAzureResourceConvert(t *testing.T) {
 }
 
 func TestGCPResourceConvert(t *testing.T) {
-	result, err := GCPResource{
+	result := convert[*model.GCPResource](t, "GCPResource", GCPResource{
 		Name:         "my-instance",
 		ResourceType: "compute",
 		Region:       "us-central1",
 		AccountRef:   "my-project",
-	}.Convert()
-	require.NoError(t, err)
+	})
 	assert.Equal(t, "my-instance", result.Name)
 	assert.Equal(t, "compute", string(result.ResourceType))
 	assert.Equal(t, "my-project", result.AccountRef)
@@ -189,7 +186,7 @@ func TestGCPResourceConvert(t *testing.T) {
 }
 
 func TestPersonConvert(t *testing.T) {
-	result, err := Person{
+	result := convert[*model.Person](t, "Person", Person{
 		FirstName:        ptr("Jane"),
 		LastName:         ptr("Doe"),
 		Name:             ptr("Jane Doe"),
@@ -211,8 +208,7 @@ func TestPersonConvert(t *testing.T) {
 		Seniority:        ptr("Senior"),
 		Departments:      ptr([]string{"Engineering"}),
 		Functions:        ptr([]string{"Software Development"}),
-	}.Convert()
-	require.NoError(t, err)
+	})
 	assert.Equal(t, ptr("Jane"), result.FirstName)
 	assert.Equal(t, ptr("Doe"), result.LastName)
 	assert.Equal(t, ptr("jane@example.com"), result.Email)
@@ -232,7 +228,7 @@ func TestPersonConvert(t *testing.T) {
 }
 
 func TestOrganizationConvert(t *testing.T) {
-	result, err := Organization{
+	result := convert[*model.Organization](t, "Organization", Organization{
 		Name:                  ptr("Acme Corp"),
 		Domain:                ptr("acme.com"),
 		Website:               ptr("https://acme.com"),
@@ -273,8 +269,7 @@ func TestOrganizationConvert(t *testing.T) {
 		Investors:             ptr([]string{"Sequoia"}),
 		AdditionalAddresses:   ptr([]string{"456 Oak St"}),
 		AddressTypes:          ptr([]string{"office"}),
-	}.Convert()
-	require.NoError(t, err)
+	})
 	assert.Equal(t, ptr("Acme Corp"), result.Name)
 	assert.Equal(t, ptr("acme.com"), result.Domain)
 	assert.Equal(t, ptr("A great company"), result.Description)
