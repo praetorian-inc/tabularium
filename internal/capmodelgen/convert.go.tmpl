@@ -5,6 +5,7 @@ package capmodel
 import (
 {{- if needsJSON .}}
 	"encoding/json"
+	"fmt"
 {{end}}
 	"github.com/praetorian-inc/tabularium/pkg/model/model"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
@@ -59,11 +60,19 @@ func convert{{.Name}}(data []byte) (registry.Model, error) {
 	}
 {{- if .Parent.Wrap}}
 	if parentModel != nil {
-		result.{{.Parent.SourceFieldName}} = model.NewGraphModelWrapper(parentModel.(model.GraphModel))
+		gm, ok := parentModel.(model.GraphModel)
+		if !ok {
+			return nil, fmt.Errorf("convert{{.Name}}: parent is %T, not model.GraphModel", parentModel)
+		}
+		result.{{.Parent.SourceFieldName}} = model.NewGraphModelWrapper(gm)
 	}
 {{- else}}
 	if parentModel != nil {
-		result.{{.Parent.SourceFieldName}} = parentModel.({{.Parent.SourceGoType}})
+		typed, ok := parentModel.({{.Parent.SourceGoType}})
+		if !ok {
+			return nil, fmt.Errorf("convert{{.Name}}: parent is %T, not {{.Parent.SourceGoType}}", parentModel)
+		}
+		result.{{.Parent.SourceFieldName}} = typed
 	}
 {{- end}}
 	if err := registry.CallHooks(&result); err != nil {
