@@ -21,11 +21,20 @@ jobs:
           token: ${{ secrets.WORKFLOW_PAT }}
           path: capability-sdk
 
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
       - name: Sync models
         run: |
           rm -f capability-sdk/pkg/capmodel/*.go
           mkdir -p capability-sdk/pkg/capmodel
           cp internal/capmodel/*_model.go capability-sdk/pkg/capmodel/
+
+      - name: Vet capability-sdk
+        working-directory: capability-sdk
+        run: go vet ./...
 
       - name: Commit and push
         working-directory: capability-sdk
