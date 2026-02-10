@@ -14,6 +14,7 @@ func (c CloudResourceType) String() string {
 const (
 	// AWS
 	AWSAccount             CloudResourceType = "AWS::Organizations::Account"
+	AWSOrganization        CloudResourceType = "AWS::Organizations::Organization"
 	AWSLambdaFunction      CloudResourceType = "AWS::Lambda::Function"
 	AWSS3Bucket            CloudResourceType = "AWS::S3::Bucket"
 	AWSEC2Instance         CloudResourceType = "AWS::EC2::Instance"
