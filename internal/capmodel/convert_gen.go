@@ -4,6 +4,7 @@ package capmodel
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/praetorian-inc/tabularium/pkg/model/model"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
@@ -158,7 +159,11 @@ func convertPort(data []byte) (registry.Model, error) {
 		return nil, err
 	}
 	if parentModel != nil {
-		result.Parent = model.NewGraphModelWrapper(parentModel.(model.GraphModel))
+		gm, ok := parentModel.(model.GraphModel)
+		if !ok {
+			return nil, fmt.Errorf("convertPort: parent is %T, not model.GraphModel", parentModel)
+		}
+		result.Parent = model.NewGraphModelWrapper(gm)
 	}
 	if err := registry.CallHooks(&result); err != nil {
 		return nil, err
@@ -198,7 +203,11 @@ func convertRisk(data []byte) (registry.Model, error) {
 		return nil, err
 	}
 	if parentModel != nil {
-		result.Target = parentModel.(model.Target)
+		typed, ok := parentModel.(model.Target)
+		if !ok {
+			return nil, fmt.Errorf("convertRisk: parent is %T, not model.Target", parentModel)
+		}
+		result.Target = typed
 	}
 	if err := registry.CallHooks(&result); err != nil {
 		return nil, err
@@ -246,7 +255,11 @@ func convertWebpage(data []byte) (registry.Model, error) {
 		return nil, err
 	}
 	if parentModel != nil {
-		result.Parent = parentModel.(*model.WebApplication)
+		typed, ok := parentModel.(*model.WebApplication)
+		if !ok {
+			return nil, fmt.Errorf("convertWebpage: parent is %T, not *model.WebApplication", parentModel)
+		}
+		result.Parent = typed
 	}
 	if err := registry.CallHooks(&result); err != nil {
 		return nil, err
