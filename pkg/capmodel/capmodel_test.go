@@ -130,7 +130,8 @@ func TestADObjectConvert(t *testing.T) {
 		Domain:          "example.local",
 		ObjectID:        "S-1-5-21-123456789",
 		SID:             "S-1-5-21-123456789",
-		ADProperties:    map[string]any{"name": "John Smith", "department": "IT"},
+		Name:            "John Smith",
+		Department:      "IT",
 	}.Convert()
 	require.NoError(t, err)
 	assert.Equal(t, "ADUser", result.Label)

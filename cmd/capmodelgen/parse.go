@@ -36,7 +36,6 @@ type field struct {
 	SourceJSONNames []string
 	JSONName        string
 	GoType          string
-	Spread          bool
 }
 
 type parentField struct {
@@ -91,17 +90,6 @@ func parseCapmodelTags(reg *registry.TypeRegistry) []typeSpec {
 				}
 
 				b := getOrCreateBuilder(builders, reg, typeName, goTypeName)
-
-				if embedType == "spread" {
-					b.Fields = append(b.Fields, field{
-						SourceFieldName: sf.Name,
-						SourceJSONNames: []string{sourceJSONName},
-						JSONName:        jsonName,
-						GoType:          "map[string]any",
-						Spread:          true,
-					})
-					continue
-				}
 
 				if embedType != "" {
 					b.Parent = &parentField{

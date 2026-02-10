@@ -21,14 +21,8 @@ type {{.Name}} struct {
 func (s {{.Name}}) Convert() (*model.{{.SourceTypeName}}, error) {
 	m := make(map[string]any)
 {{- range $f := .Fields}}
-{{- if $f.Spread}}
-	for k, v := range s.{{$f.SourceFieldName}} {
-		m[k] = v
-	}
-{{- else}}
 {{- range $f.SourceJSONNames}}
 	m["{{.}}"] = s.{{$f.SourceFieldName}}
-{{- end}}
 {{- end}}
 {{- end}}
 {{- if .Parent}}
