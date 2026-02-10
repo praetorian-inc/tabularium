@@ -3,13 +3,19 @@ name: Schema and Client Generation
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   generate:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -42,6 +48,10 @@ jobs:
         run: go run ./cmd/codegen -input client/api.yaml -gen py:client/python/tabularium
         id: codegen_py
 
+      - name: Generate Capability Models
+        run: go run ./internal/capmodelgen -output internal/capmodel/
+        id: capmodelgen
+
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
@@ -49,7 +59,7 @@ jobs:
 
       - name: Commit changes
         run: |
-          git add client/api.yaml client/python/tabularium/models.py
+          git add client/api.yaml client/python/tabularium/models.py internal/capmodel/
           # Check if there are staged changes
           if ! git diff --staged --quiet; then
             git commit -m "chore(codegen): regenerate schema and clients"
