@@ -11,6 +11,45 @@ import (
 	"text/template"
 )
 
+// needsRemap reports whether a field's capmodel JSON name differs from its
+// source JSON name(s), meaning the converter must remap the key.
+func needsRemap(f field) bool {
+	return len(f.SourceJSONNames) > 1 || f.SourceJSONNames[0] != f.JSONName
+}
+
+var funcMap = template.FuncMap{
+	"hasRemap": func(ts typeSpec) bool {
+		for _, f := range ts.Fields {
+			if needsRemap(f) {
+				return true
+			}
+		}
+		return false
+	},
+	"remapFields": func(ts typeSpec) []field {
+		var result []field
+		for _, f := range ts.Fields {
+			if needsRemap(f) {
+				result = append(result, f)
+			}
+		}
+		return result
+	},
+	"needsJSON": func(specs []typeSpec) bool {
+		for _, ts := range specs {
+			if ts.Parent != nil {
+				return true
+			}
+			for _, f := range ts.Fields {
+				if needsRemap(f) {
+					return true
+				}
+			}
+		}
+		return false
+	},
+}
+
 // generate renders each typeSpec through the model template (one file per type),
 // then renders all typeSpecs through the convert template (single file).
 func generate(typeSpecs []typeSpec, outputDir string) error {
@@ -63,4 +102,4 @@ var modelTmpl = template.Must(template.New("model").Parse(modelTmplStr))
 //go:embed convert.go.tmpl
 var convertTmplStr string
 
-var convertTmpl = template.Must(template.New("convert").Parse(convertTmplStr))
+var convertTmpl = template.Must(template.New("convert").Funcs(funcMap).Parse(convertTmplStr))

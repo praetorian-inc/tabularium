@@ -3,8 +3,9 @@
 package capmodel
 
 import (
+{{- if needsJSON .}}
 	"encoding/json"
-
+{{end}}
 	"github.com/praetorian-inc/tabularium/pkg/model/model"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
@@ -14,47 +15,43 @@ func init() {
 	registry.Registry.MustRegisterConverter("{{.Name}}", convert{{.Name}})
 {{- end}}
 }
-
 {{range .}}
 func convert{{.Name}}(data []byte) (registry.Model, error) {
+{{- if and (not .Parent) (not (hasRemap .))}}
+	var result model.{{.SourceTypeName}}
+	if err := registry.UnmarshalModel(data, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+{{- else}}
 	var raw map[string]json.RawMessage
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return nil, err
 	}
-
-	remapped := make(map[string]json.RawMessage, len(raw))
-	for k, v := range raw {
-		switch k {
-{{- range $f := .Fields}}
-		case "{{$f.JSONName}}":
-{{- range $f.SourceJSONNames}}
-			remapped["{{.}}"] = v
+{{- range remapFields .}}
+	if v, ok := raw["{{.JSONName}}"]; ok {
+		delete(raw, "{{.JSONName}}")
+{{- range .SourceJSONNames}}
+		raw["{{.}}"] = v
 {{- end}}
+	}
 {{- end}}
 {{- if .Parent}}
-		case "{{.Parent.JSONName}}":
-			// handled below
+	parentRaw := raw["{{.Parent.JSONName}}"]
+	delete(raw, "{{.Parent.JSONName}}")
 {{- end}}
-		default:
-			remapped[k] = v
-		}
-	}
-
-	b, err := json.Marshal(remapped)
+	b, err := json.Marshal(raw)
 	if err != nil {
 		return nil, err
 	}
-
 {{- if .Parent}}
-
 	var parentModel registry.Model
-	if parentRaw, ok := raw["{{.Parent.JSONName}}"]; ok {
+	if parentRaw != nil {
 		parentModel, err = registry.Registry.Convert("{{.Parent.EmbedType}}", parentRaw)
 		if err != nil {
 			return nil, err
 		}
 	}
-
 	var result model.{{.SourceTypeName}}
 	result.Defaulted()
 	if err := json.Unmarshal(b, &result); err != nil {
@@ -73,14 +70,12 @@ func convert{{.Name}}(data []byte) (registry.Model, error) {
 		return nil, err
 	}
 {{- else}}
-
 	var result model.{{.SourceTypeName}}
 	if err := registry.UnmarshalModel(b, &result); err != nil {
 		return nil, err
 	}
 {{- end}}
-
 	return &result, nil
+{{- end}}
 }
-
 {{end}}

@@ -29,432 +29,34 @@ func init() {
 }
 
 func convertADObject(data []byte) (registry.Model, error) {
-	var raw map[string]json.RawMessage
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return nil, err
-	}
-
-	remapped := make(map[string]json.RawMessage, len(raw))
-	for k, v := range raw {
-		switch k {
-		case "label":
-			remapped["label"] = v
-		case "labels":
-			remapped["labels"] = v
-		case "domain":
-			remapped["domain"] = v
-		case "objectid":
-			remapped["objectid"] = v
-		case "sid":
-			remapped["sid"] = v
-		case "name":
-			remapped["name"] = v
-		case "description":
-			remapped["description"] = v
-		case "displayname":
-			remapped["displayname"] = v
-		case "isdeleted":
-			remapped["isdeleted"] = v
-		case "admincount":
-			remapped["admincount"] = v
-		case "casecuritycollected":
-			remapped["casecuritycollected"] = v
-		case "caname":
-			remapped["caname"] = v
-		case "certchain":
-			remapped["certchain"] = v
-		case "certname":
-			remapped["certname"] = v
-		case "certthumbprint":
-			remapped["certthumbprint"] = v
-		case "certthumbprints":
-			remapped["certthumbprints"] = v
-		case "hasenrollmentagentrestrictions":
-			remapped["hasenrollmentagentrestrictions"] = v
-		case "enrollmentagentrestrictionscollected":
-			remapped["enrollmentagentrestrictionscollected"] = v
-		case "isuserspecifiessanenabled":
-			remapped["isuserspecifiessanenabled"] = v
-		case "isuserspecifiessanenabledcollected":
-			remapped["isuserspecifiessanenabledcollected"] = v
-		case "roleseparationenabled":
-			remapped["roleseparationenabled"] = v
-		case "roleseparationenabledcollected":
-			remapped["roleseparationenabledcollected"] = v
-		case "hasbasicconstraints":
-			remapped["hasbasicconstraints"] = v
-		case "basicconstraintpathlength":
-			remapped["basicconstraintpathlength"] = v
-		case "unresolvedpublishedtemplates":
-			remapped["unresolvedpublishedtemplates"] = v
-		case "dnshostname":
-			remapped["dnshostname"] = v
-		case "crosscertificatepair":
-			remapped["crosscertificatepair"] = v
-		case "distinguishedname":
-			remapped["distinguishedname"] = v
-		case "domainsid":
-			remapped["domainsid"] = v
-		case "sensitive":
-			remapped["sensitive"] = v
-		case "blocksinheritance":
-			remapped["blocksinheritance"] = v
-		case "isacl":
-			remapped["isacl"] = v
-		case "isaclprotected":
-			remapped["isaclprotected"] = v
-		case "inheritancehash":
-			remapped["inheritancehash"] = v
-		case "inheritancehashes":
-			remapped["inheritancehashes"] = v
-		case "enforced":
-			remapped["enforced"] = v
-		case "department":
-			remapped["department"] = v
-		case "hascrosscertificatepair":
-			remapped["hascrosscertificatepair"] = v
-		case "hasspn":
-			remapped["hasspn"] = v
-		case "unconstraineddelegation":
-			remapped["unconstraineddelegation"] = v
-		case "lastlogon":
-			remapped["lastlogon"] = v
-		case "lastlogontimestamp":
-			remapped["lastlogontimestamp"] = v
-		case "isprimarygroup":
-			remapped["isprimarygroup"] = v
-		case "haslaps":
-			remapped["haslaps"] = v
-		case "dontreqpreauth":
-			remapped["dontreqpreauth"] = v
-		case "logontype":
-			remapped["logontype"] = v
-		case "hasura":
-			remapped["hasura"] = v
-		case "pwdneverexpires":
-			remapped["pwdneverexpires"] = v
-		case "passwordnotreqd":
-			remapped["passwordnotreqd"] = v
-		case "functionallevel":
-			remapped["functionallevel"] = v
-		case "trusttype":
-			remapped["trusttype"] = v
-		case "spoofsidhistoryblocked":
-			remapped["spoofsidhistoryblocked"] = v
-		case "trustedtoauth":
-			remapped["trustedtoauth"] = v
-		case "samaccountname":
-			remapped["samaccountname"] = v
-		case "certificatemappingmethodsraw":
-			remapped["certificatemappingmethodsraw"] = v
-		case "certificatemappingmethods":
-			remapped["certificatemappingmethods"] = v
-		case "strongcertificatebindingenforcementraw":
-			remapped["strongcertificatebindingenforcementraw"] = v
-		case "strongcertificatebindingenforcement":
-			remapped["strongcertificatebindingenforcement"] = v
-		case "ekus":
-			remapped["ekus"] = v
-		case "subjectaltrequireupn":
-			remapped["subjectaltrequireupn"] = v
-		case "subjectaltrequiredns":
-			remapped["subjectaltrequiredns"] = v
-		case "subjectaltrequiredomaindns":
-			remapped["subjectaltrequiredomaindns"] = v
-		case "subjectaltrequireemail":
-			remapped["subjectaltrequireemail"] = v
-		case "subjectaltrequirespn":
-			remapped["subjectaltrequirespn"] = v
-		case "subjectrequireemail":
-			remapped["subjectrequireemail"] = v
-		case "authorizedsignatures":
-			remapped["authorizedsignatures"] = v
-		case "applicationpolicies":
-			remapped["applicationpolicies"] = v
-		case "issuancepolicies":
-			remapped["issuancepolicies"] = v
-		case "schemaversion":
-			remapped["schemaversion"] = v
-		case "requiresmanagerapproval":
-			remapped["requiresmanagerapproval"] = v
-		case "authenticationenabled":
-			remapped["authenticationenabled"] = v
-		case "schannelauthenticationenabled":
-			remapped["schannelauthenticationenabled"] = v
-		case "enrolleesuppliessubject":
-			remapped["enrolleesuppliessubject"] = v
-		case "certificateapplicationpolicy":
-			remapped["certificateapplicationpolicy"] = v
-		case "certificatenameflag":
-			remapped["certificatenameflag"] = v
-		case "effectiveekus":
-			remapped["effectiveekus"] = v
-		case "enrollmentflag":
-			remapped["enrollmentflag"] = v
-		case "flags":
-			remapped["flags"] = v
-		case "nosecurityextension":
-			remapped["nosecurityextension"] = v
-		case "renewalperiod":
-			remapped["renewalperiod"] = v
-		case "validityperiod":
-			remapped["validityperiod"] = v
-		case "oid":
-			remapped["oid"] = v
-		case "homedirectory":
-			remapped["homedirectory"] = v
-		case "certificatepolicy":
-			remapped["certificatepolicy"] = v
-		case "certtemplateoid":
-			remapped["certtemplateoid"] = v
-		case "grouplinkid":
-			remapped["grouplinkid"] = v
-		case "objectguid":
-			remapped["objectguid"] = v
-		case "expirepasswordsonsmartcardonlyaccounts":
-			remapped["expirepasswordsonsmartcardonlyaccounts"] = v
-		case "machineaccountquota":
-			remapped["machineaccountquota"] = v
-		case "supportedencryptiontypes":
-			remapped["supportedencryptiontypes"] = v
-		case "tgtdelegation":
-			remapped["tgtdelegation"] = v
-		case "encryptedtextpwdallowed":
-			remapped["encryptedtextpwdallowed"] = v
-		case "smartcardrequired":
-			remapped["smartcardrequired"] = v
-		case "usedeskeyonly":
-			remapped["usedeskeyonly"] = v
-		case "logonscriptenabled":
-			remapped["logonscriptenabled"] = v
-		case "lockedout":
-			remapped["lockedout"] = v
-		case "passwordcantchange":
-			remapped["passwordcantchange"] = v
-		case "passwordexpired":
-			remapped["passwordexpired"] = v
-		case "dsheuristics":
-			remapped["dsheuristics"] = v
-		case "useraccountcontrol":
-			remapped["useraccountcontrol"] = v
-		case "trustattributesinbound":
-			remapped["trustattributesinbound"] = v
-		case "trustattributesoutbound":
-			remapped["trustattributesoutbound"] = v
-		case "minpwdlength":
-			remapped["minpwdlength"] = v
-		case "pwdproperties":
-			remapped["pwdproperties"] = v
-		case "pwdhistorylength":
-			remapped["pwdhistorylength"] = v
-		case "lockoutthreshold":
-			remapped["lockoutthreshold"] = v
-		case "minpwdage":
-			remapped["minpwdage"] = v
-		case "maxpwdage":
-			remapped["maxpwdage"] = v
-		case "lockoutduration":
-			remapped["lockoutduration"] = v
-		case "lockoutobservationwindow":
-			remapped["lockoutobservationwindow"] = v
-		case "ownersid":
-			remapped["ownersid"] = v
-		case "smbsigning":
-			remapped["smbsigning"] = v
-		case "webclientrunning":
-			remapped["webclientrunning"] = v
-		case "restrictoutboundntlm":
-			remapped["restrictoutboundntlm"] = v
-		case "gmsa":
-			remapped["gmsa"] = v
-		case "msa":
-			remapped["msa"] = v
-		case "doesanyacegrantownerrights":
-			remapped["doesanyacegrantownerrights"] = v
-		case "doesanyinheritedacegrantownerrights":
-			remapped["doesanyinheritedacegrantownerrights"] = v
-		case "adcswebenrollmenthttp":
-			remapped["adcswebenrollmenthttp"] = v
-		case "adcswebenrollmenthttps":
-			remapped["adcswebenrollmenthttps"] = v
-		case "adcswebenrollmenthttpsepa":
-			remapped["adcswebenrollmenthttpsepa"] = v
-		case "ldapsigning":
-			remapped["ldapsigning"] = v
-		case "ldapavailable":
-			remapped["ldapavailable"] = v
-		case "ldapsavailable":
-			remapped["ldapsavailable"] = v
-		case "ldapsepa":
-			remapped["ldapsepa"] = v
-		case "isdc":
-			remapped["isdc"] = v
-		case "isreadonlydc":
-			remapped["isreadonlydc"] = v
-		case "httpenrollmentendpoints":
-			remapped["httpenrollmentendpoints"] = v
-		case "httpsenrollmentendpoints":
-			remapped["httpsenrollmentendpoints"] = v
-		case "hasvulnerableendpoint":
-			remapped["hasvulnerableendpoint"] = v
-		case "requiresecuritysignature":
-			remapped["requiresecuritysignature"] = v
-		case "enablesecuritysignature":
-			remapped["enablesecuritysignature"] = v
-		case "restrictreceivingntmltraffic":
-			remapped["restrictreceivingntmltraffic"] = v
-		case "ntlmminserversec":
-			remapped["ntlmminserversec"] = v
-		case "ntlmminclientsec":
-			remapped["ntlmminclientsec"] = v
-		case "lmcompatibilitylevel":
-			remapped["lmcompatibilitylevel"] = v
-		case "usemachineid":
-			remapped["usemachineid"] = v
-		case "clientallowedntlmservers":
-			remapped["clientallowedntlmservers"] = v
-		case "transitive":
-			remapped["transitive"] = v
-		case "groupscope":
-			remapped["groupscope"] = v
-		case "netbios":
-			remapped["netbios"] = v
-		case "adminsdholderprotected":
-			remapped["adminsdholderprotected"] = v
-		case "serviceprincipalnames":
-			remapped["serviceprincipalnames"] = v
-		case "operatingsystem":
-			remapped["operatingsystem"] = v
-		default:
-			remapped[k] = v
-		}
-	}
-
-	b, err := json.Marshal(remapped)
-	if err != nil {
-		return nil, err
-	}
-
 	var result model.ADObject
-	if err := registry.UnmarshalModel(b, &result); err != nil {
+	if err := registry.UnmarshalModel(data, &result); err != nil {
 		return nil, err
 	}
-
 	return &result, nil
 }
 
 func convertAWSResource(data []byte) (registry.Model, error) {
-	var raw map[string]json.RawMessage
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return nil, err
-	}
-
-	remapped := make(map[string]json.RawMessage, len(raw))
-	for k, v := range raw {
-		switch k {
-		case "ips":
-			remapped["ips"] = v
-		case "urls":
-			remapped["urls"] = v
-		case "name":
-			remapped["name"] = v
-		case "resourceType":
-			remapped["resourceType"] = v
-		case "region":
-			remapped["region"] = v
-		case "accountRef":
-			remapped["accountRef"] = v
-		case "properties":
-			remapped["properties"] = v
-		default:
-			remapped[k] = v
-		}
-	}
-
-	b, err := json.Marshal(remapped)
-	if err != nil {
-		return nil, err
-	}
-
 	var result model.AWSResource
-	if err := registry.UnmarshalModel(b, &result); err != nil {
+	if err := registry.UnmarshalModel(data, &result); err != nil {
 		return nil, err
 	}
-
 	return &result, nil
 }
 
 func convertAsset(data []byte) (registry.Model, error) {
-	var raw map[string]json.RawMessage
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return nil, err
-	}
-
-	remapped := make(map[string]json.RawMessage, len(raw))
-	for k, v := range raw {
-		switch k {
-		case "dns":
-			remapped["dns"] = v
-		case "name":
-			remapped["name"] = v
-		default:
-			remapped[k] = v
-		}
-	}
-
-	b, err := json.Marshal(remapped)
-	if err != nil {
-		return nil, err
-	}
-
 	var result model.Asset
-	if err := registry.UnmarshalModel(b, &result); err != nil {
+	if err := registry.UnmarshalModel(data, &result); err != nil {
 		return nil, err
 	}
-
 	return &result, nil
 }
 
 func convertAzureResource(data []byte) (registry.Model, error) {
-	var raw map[string]json.RawMessage
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return nil, err
-	}
-
-	remapped := make(map[string]json.RawMessage, len(raw))
-	for k, v := range raw {
-		switch k {
-		case "ips":
-			remapped["ips"] = v
-		case "urls":
-			remapped["urls"] = v
-		case "name":
-			remapped["name"] = v
-		case "resourceType":
-			remapped["resourceType"] = v
-		case "region":
-			remapped["region"] = v
-		case "accountRef":
-			remapped["accountRef"] = v
-		case "properties":
-			remapped["properties"] = v
-		case "resourceGroup":
-			remapped["resourceGroup"] = v
-		default:
-			remapped[k] = v
-		}
-	}
-
-	b, err := json.Marshal(remapped)
-	if err != nil {
-		return nil, err
-	}
-
 	var result model.AzureResource
-	if err := registry.UnmarshalModel(b, &result); err != nil {
+	if err := registry.UnmarshalModel(data, &result); err != nil {
 		return nil, err
 	}
-
 	return &result, nil
 }
 
@@ -463,100 +65,35 @@ func convertDomain(data []byte) (registry.Model, error) {
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return nil, err
 	}
-
-	remapped := make(map[string]json.RawMessage, len(raw))
-	for k, v := range raw {
-		switch k {
-		case "domain":
-			remapped["dns"] = v
-			remapped["name"] = v
-		default:
-			remapped[k] = v
-		}
+	if v, ok := raw["domain"]; ok {
+		delete(raw, "domain")
+		raw["dns"] = v
+		raw["name"] = v
 	}
-
-	b, err := json.Marshal(remapped)
+	b, err := json.Marshal(raw)
 	if err != nil {
 		return nil, err
 	}
-
 	var result model.Asset
 	if err := registry.UnmarshalModel(b, &result); err != nil {
 		return nil, err
 	}
-
 	return &result, nil
 }
 
 func convertFile(data []byte) (registry.Model, error) {
-	var raw map[string]json.RawMessage
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return nil, err
-	}
-
-	remapped := make(map[string]json.RawMessage, len(raw))
-	for k, v := range raw {
-		switch k {
-		case "name":
-			remapped["name"] = v
-		case "bytes":
-			remapped["bytes"] = v
-		default:
-			remapped[k] = v
-		}
-	}
-
-	b, err := json.Marshal(remapped)
-	if err != nil {
-		return nil, err
-	}
-
 	var result model.File
-	if err := registry.UnmarshalModel(b, &result); err != nil {
+	if err := registry.UnmarshalModel(data, &result); err != nil {
 		return nil, err
 	}
-
 	return &result, nil
 }
 
 func convertGCPResource(data []byte) (registry.Model, error) {
-	var raw map[string]json.RawMessage
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return nil, err
-	}
-
-	remapped := make(map[string]json.RawMessage, len(raw))
-	for k, v := range raw {
-		switch k {
-		case "ips":
-			remapped["ips"] = v
-		case "urls":
-			remapped["urls"] = v
-		case "name":
-			remapped["name"] = v
-		case "resourceType":
-			remapped["resourceType"] = v
-		case "region":
-			remapped["region"] = v
-		case "accountRef":
-			remapped["accountRef"] = v
-		case "properties":
-			remapped["properties"] = v
-		default:
-			remapped[k] = v
-		}
-	}
-
-	b, err := json.Marshal(remapped)
-	if err != nil {
-		return nil, err
-	}
-
 	var result model.GCPResource
-	if err := registry.UnmarshalModel(b, &result); err != nil {
+	if err := registry.UnmarshalModel(data, &result); err != nil {
 		return nil, err
 	}
-
 	return &result, nil
 }
 
@@ -565,204 +102,35 @@ func convertIP(data []byte) (registry.Model, error) {
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return nil, err
 	}
-
-	remapped := make(map[string]json.RawMessage, len(raw))
-	for k, v := range raw {
-		switch k {
-		case "ip":
-			remapped["dns"] = v
-			remapped["name"] = v
-		default:
-			remapped[k] = v
-		}
+	if v, ok := raw["ip"]; ok {
+		delete(raw, "ip")
+		raw["dns"] = v
+		raw["name"] = v
 	}
-
-	b, err := json.Marshal(remapped)
+	b, err := json.Marshal(raw)
 	if err != nil {
 		return nil, err
 	}
-
 	var result model.Asset
 	if err := registry.UnmarshalModel(b, &result); err != nil {
 		return nil, err
 	}
-
 	return &result, nil
 }
 
 func convertOrganization(data []byte) (registry.Model, error) {
-	var raw map[string]json.RawMessage
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return nil, err
-	}
-
-	remapped := make(map[string]json.RawMessage, len(raw))
-	for k, v := range raw {
-		switch k {
-		case "name":
-			remapped["name"] = v
-		case "domain":
-			remapped["domain"] = v
-		case "website":
-			remapped["website"] = v
-		case "description":
-			remapped["description"] = v
-		case "industry":
-			remapped["industry"] = v
-		case "sub_industries":
-			remapped["sub_industries"] = v
-		case "keywords":
-			remapped["keywords"] = v
-		case "organization_type":
-			remapped["organization_type"] = v
-		case "business_model":
-			remapped["business_model"] = v
-		case "estimated_num_employees":
-			remapped["estimated_num_employees"] = v
-		case "employee_range":
-			remapped["employee_range"] = v
-		case "annual_revenue":
-			remapped["annual_revenue"] = v
-		case "revenue_range":
-			remapped["revenue_range"] = v
-		case "market_capitalization":
-			remapped["market_capitalization"] = v
-		case "country":
-			remapped["country"] = v
-		case "state":
-			remapped["state"] = v
-		case "city":
-			remapped["city"] = v
-		case "postal_code":
-			remapped["postal_code"] = v
-		case "street_address":
-			remapped["street_address"] = v
-		case "phone":
-			remapped["phone"] = v
-		case "fax":
-			remapped["fax"] = v
-		case "email":
-			remapped["email"] = v
-		case "linkedin_url":
-			remapped["linkedin_url"] = v
-		case "twitter_url":
-			remapped["twitter_url"] = v
-		case "facebook_url":
-			remapped["facebook_url"] = v
-		case "blog_url":
-			remapped["blog_url"] = v
-		case "founded_year":
-			remapped["founded_year"] = v
-		case "publicly_traded":
-			remapped["publicly_traded"] = v
-		case "ticker_symbol":
-			remapped["ticker_symbol"] = v
-		case "exchange":
-			remapped["exchange"] = v
-		case "technologies":
-			remapped["technologies"] = v
-		case "tech_categories":
-			remapped["tech_categories"] = v
-		case "tech_vendors":
-			remapped["tech_vendors"] = v
-		case "alternate_phones":
-			remapped["alternate_phones"] = v
-		case "phone_types":
-			remapped["phone_types"] = v
-		case "funding_rounds":
-			remapped["funding_rounds"] = v
-		case "funding_amounts":
-			remapped["funding_amounts"] = v
-		case "investors":
-			remapped["investors"] = v
-		case "additional_addresses":
-			remapped["additional_addresses"] = v
-		case "address_types":
-			remapped["address_types"] = v
-		default:
-			remapped[k] = v
-		}
-	}
-
-	b, err := json.Marshal(remapped)
-	if err != nil {
-		return nil, err
-	}
-
 	var result model.Organization
-	if err := registry.UnmarshalModel(b, &result); err != nil {
+	if err := registry.UnmarshalModel(data, &result); err != nil {
 		return nil, err
 	}
-
 	return &result, nil
 }
 
 func convertPerson(data []byte) (registry.Model, error) {
-	var raw map[string]json.RawMessage
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return nil, err
-	}
-
-	remapped := make(map[string]json.RawMessage, len(raw))
-	for k, v := range raw {
-		switch k {
-		case "first_name":
-			remapped["first_name"] = v
-		case "last_name":
-			remapped["last_name"] = v
-		case "name":
-			remapped["name"] = v
-		case "email":
-			remapped["email"] = v
-		case "title":
-			remapped["title"] = v
-		case "headline":
-			remapped["headline"] = v
-		case "phone":
-			remapped["phone"] = v
-		case "personal_emails":
-			remapped["personal_emails"] = v
-		case "work_email":
-			remapped["work_email"] = v
-		case "linkedin_url":
-			remapped["linkedin_url"] = v
-		case "twitter_url":
-			remapped["twitter_url"] = v
-		case "facebook_url":
-			remapped["facebook_url"] = v
-		case "github_url":
-			remapped["github_url"] = v
-		case "photo_url":
-			remapped["photo_url"] = v
-		case "organization_name":
-			remapped["organization_name"] = v
-		case "country":
-			remapped["country"] = v
-		case "state":
-			remapped["state"] = v
-		case "city":
-			remapped["city"] = v
-		case "seniority":
-			remapped["seniority"] = v
-		case "departments":
-			remapped["departments"] = v
-		case "functions":
-			remapped["functions"] = v
-		default:
-			remapped[k] = v
-		}
-	}
-
-	b, err := json.Marshal(remapped)
-	if err != nil {
-		return nil, err
-	}
-
 	var result model.Person
-	if err := registry.UnmarshalModel(b, &result); err != nil {
+	if err := registry.UnmarshalModel(data, &result); err != nil {
 		return nil, err
 	}
-
 	return &result, nil
 }
 
@@ -771,36 +139,19 @@ func convertPort(data []byte) (registry.Model, error) {
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return nil, err
 	}
-
-	remapped := make(map[string]json.RawMessage, len(raw))
-	for k, v := range raw {
-		switch k {
-		case "protocol":
-			remapped["protocol"] = v
-		case "port":
-			remapped["port"] = v
-		case "service":
-			remapped["service"] = v
-		case "parent":
-			// handled below
-		default:
-			remapped[k] = v
-		}
-	}
-
-	b, err := json.Marshal(remapped)
+	parentRaw := raw["parent"]
+	delete(raw, "parent")
+	b, err := json.Marshal(raw)
 	if err != nil {
 		return nil, err
 	}
-
 	var parentModel registry.Model
-	if parentRaw, ok := raw["parent"]; ok {
+	if parentRaw != nil {
 		parentModel, err = registry.Registry.Convert("Asset", parentRaw)
 		if err != nil {
 			return nil, err
 		}
 	}
-
 	var result model.Port
 	result.Defaulted()
 	if err := json.Unmarshal(b, &result); err != nil {
@@ -812,40 +163,14 @@ func convertPort(data []byte) (registry.Model, error) {
 	if err := registry.CallHooks(&result); err != nil {
 		return nil, err
 	}
-
 	return &result, nil
 }
 
 func convertPreseed(data []byte) (registry.Model, error) {
-	var raw map[string]json.RawMessage
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return nil, err
-	}
-
-	remapped := make(map[string]json.RawMessage, len(raw))
-	for k, v := range raw {
-		switch k {
-		case "type":
-			remapped["type"] = v
-		case "title":
-			remapped["title"] = v
-		case "value":
-			remapped["value"] = v
-		default:
-			remapped[k] = v
-		}
-	}
-
-	b, err := json.Marshal(remapped)
-	if err != nil {
-		return nil, err
-	}
-
 	var result model.Preseed
-	if err := registry.UnmarshalModel(b, &result); err != nil {
+	if err := registry.UnmarshalModel(data, &result); err != nil {
 		return nil, err
 	}
-
 	return &result, nil
 }
 
@@ -854,38 +179,19 @@ func convertRisk(data []byte) (registry.Model, error) {
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return nil, err
 	}
-
-	remapped := make(map[string]json.RawMessage, len(raw))
-	for k, v := range raw {
-		switch k {
-		case "dns":
-			remapped["dns"] = v
-		case "name":
-			remapped["name"] = v
-		case "source":
-			remapped["source"] = v
-		case "status":
-			remapped["status"] = v
-		case "target":
-			// handled below
-		default:
-			remapped[k] = v
-		}
-	}
-
-	b, err := json.Marshal(remapped)
+	parentRaw := raw["target"]
+	delete(raw, "target")
+	b, err := json.Marshal(raw)
 	if err != nil {
 		return nil, err
 	}
-
 	var parentModel registry.Model
-	if parentRaw, ok := raw["target"]; ok {
+	if parentRaw != nil {
 		parentModel, err = registry.Registry.Convert("Asset", parentRaw)
 		if err != nil {
 			return nil, err
 		}
 	}
-
 	var result model.Risk
 	result.Defaulted()
 	if err := json.Unmarshal(b, &result); err != nil {
@@ -897,71 +203,22 @@ func convertRisk(data []byte) (registry.Model, error) {
 	if err := registry.CallHooks(&result); err != nil {
 		return nil, err
 	}
-
 	return &result, nil
 }
 
 func convertTechnology(data []byte) (registry.Model, error) {
-	var raw map[string]json.RawMessage
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return nil, err
-	}
-
-	remapped := make(map[string]json.RawMessage, len(raw))
-	for k, v := range raw {
-		switch k {
-		case "cpe":
-			remapped["cpe"] = v
-		case "name":
-			remapped["name"] = v
-		default:
-			remapped[k] = v
-		}
-	}
-
-	b, err := json.Marshal(remapped)
-	if err != nil {
-		return nil, err
-	}
-
 	var result model.Technology
-	if err := registry.UnmarshalModel(b, &result); err != nil {
+	if err := registry.UnmarshalModel(data, &result); err != nil {
 		return nil, err
 	}
-
 	return &result, nil
 }
 
 func convertWebApplication(data []byte) (registry.Model, error) {
-	var raw map[string]json.RawMessage
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return nil, err
-	}
-
-	remapped := make(map[string]json.RawMessage, len(raw))
-	for k, v := range raw {
-		switch k {
-		case "primary_url":
-			remapped["primary_url"] = v
-		case "urls":
-			remapped["urls"] = v
-		case "name":
-			remapped["name"] = v
-		default:
-			remapped[k] = v
-		}
-	}
-
-	b, err := json.Marshal(remapped)
-	if err != nil {
-		return nil, err
-	}
-
 	var result model.WebApplication
-	if err := registry.UnmarshalModel(b, &result); err != nil {
+	if err := registry.UnmarshalModel(data, &result); err != nil {
 		return nil, err
 	}
-
 	return &result, nil
 }
 
@@ -970,32 +227,19 @@ func convertWebpage(data []byte) (registry.Model, error) {
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return nil, err
 	}
-
-	remapped := make(map[string]json.RawMessage, len(raw))
-	for k, v := range raw {
-		switch k {
-		case "url":
-			remapped["url"] = v
-		case "parent":
-			// handled below
-		default:
-			remapped[k] = v
-		}
-	}
-
-	b, err := json.Marshal(remapped)
+	parentRaw := raw["parent"]
+	delete(raw, "parent")
+	b, err := json.Marshal(raw)
 	if err != nil {
 		return nil, err
 	}
-
 	var parentModel registry.Model
-	if parentRaw, ok := raw["parent"]; ok {
+	if parentRaw != nil {
 		parentModel, err = registry.Registry.Convert("WebApplication", parentRaw)
 		if err != nil {
 			return nil, err
 		}
 	}
-
 	var result model.Webpage
 	result.Defaulted()
 	if err := json.Unmarshal(b, &result); err != nil {
@@ -1007,6 +251,5 @@ func convertWebpage(data []byte) (registry.Model, error) {
 	if err := registry.CallHooks(&result); err != nil {
 		return nil, err
 	}
-
 	return &result, nil
 }
