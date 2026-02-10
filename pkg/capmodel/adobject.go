@@ -157,7 +157,7 @@ type ADObject struct {
 }
 
 func (s ADObject) Convert() (*model.ADObject, error) {
-	m := make(map[string]any)
+	m := make(map[string]any, 144)
 	m["label"] = s.Label
 	m["labels"] = s.SecondaryLabels
 	m["domain"] = s.Domain

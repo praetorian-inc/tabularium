@@ -19,7 +19,7 @@ type {{.Name}} struct {
 }
 
 func (s {{.Name}}) Convert() (*model.{{.SourceTypeName}}, error) {
-	m := make(map[string]any)
+	m := make(map[string]any, {{len .Fields}})
 {{- range $f := .Fields}}
 {{- range $f.SourceJSONNames}}
 	m["{{.}}"] = s.{{$f.SourceFieldName}}

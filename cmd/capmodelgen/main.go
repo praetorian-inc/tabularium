@@ -1,3 +1,11 @@
+// capmodelgen generates simplified "capability model" types from the Tabularium model
+// registry. It reads capmodel struct tags on registered model fields and emits one Go
+// source file per type into pkg/capmodel/, each containing a plain struct and a Convert
+// method that produces the corresponding internal model.
+//
+// Usage:
+//
+//	go run ./cmd/capmodelgen -output pkg/capmodel/
 package main
 
 import (

@@ -14,7 +14,7 @@ type IP struct {
 }
 
 func (s IP) Convert() (*model.Asset, error) {
-	m := make(map[string]any)
+	m := make(map[string]any, 1)
 	m["dns"] = s.DNS
 	m["name"] = s.DNS
 

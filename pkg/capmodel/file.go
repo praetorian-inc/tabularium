@@ -15,7 +15,7 @@ type File struct {
 }
 
 func (s File) Convert() (*model.File, error) {
-	m := make(map[string]any)
+	m := make(map[string]any, 2)
 	m["name"] = s.Name
 	m["bytes"] = s.Bytes
 

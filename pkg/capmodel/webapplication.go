@@ -16,7 +16,7 @@ type WebApplication struct {
 }
 
 func (s WebApplication) Convert() (*model.WebApplication, error) {
-	m := make(map[string]any)
+	m := make(map[string]any, 3)
 	m["primary_url"] = s.PrimaryURL
 	m["urls"] = s.URLs
 	m["name"] = s.Name

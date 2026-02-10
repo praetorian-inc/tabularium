@@ -53,7 +53,7 @@ type Organization struct {
 }
 
 func (s Organization) Convert() (*model.Organization, error) {
-	m := make(map[string]any)
+	m := make(map[string]any, 40)
 	m["name"] = s.Name
 	m["domain"] = s.Domain
 	m["website"] = s.Website

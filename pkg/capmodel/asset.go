@@ -15,7 +15,7 @@ type Asset struct {
 }
 
 func (s Asset) Convert() (*model.Asset, error) {
-	m := make(map[string]any)
+	m := make(map[string]any, 2)
 	m["dns"] = s.DNS
 	m["name"] = s.Name
 

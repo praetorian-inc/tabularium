@@ -18,7 +18,7 @@ type Risk struct {
 }
 
 func (s Risk) Convert() (*model.Risk, error) {
-	m := make(map[string]any)
+	m := make(map[string]any, 4)
 	m["dns"] = s.DNS
 	m["name"] = s.Name
 	m["source"] = s.Source

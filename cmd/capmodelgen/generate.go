@@ -11,6 +11,9 @@ import (
 	"text/template"
 )
 
+// generate renders each typeSpec through the embedded Go template, formats the output
+// with gofmt, and writes one file per type into outputDir. On formatting errors it
+// writes the raw output to generated_debug.go for diagnosis.
 func generate(typeSpecs []typeSpec, outputDir string) error {
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
 		return err

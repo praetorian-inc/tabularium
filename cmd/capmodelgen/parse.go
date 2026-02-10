@@ -18,11 +18,17 @@ func derefPtr(t reflect.Type) reflect.Type {
 	return t
 }
 
+// typeMap maps named Go types to the type string that should appear in generated code.
+// This is needed for types whose reflect.Kind doesn't match the desired output
+// (e.g., SmartBytes is a named type over []byte, but reflect reports []uint8).
 var typeMap = map[string]string{
 	"SmartBytes":        "[]byte",
 	"CloudResourceType": "string",
 }
 
+// field represents a regular (non-parent) field in a generated capmodel type.
+// SourceJSONNames may contain multiple entries when several source model fields
+// map to the same capmodel field (e.g., DNS and Name both map to "ip" for the IP type).
 type field struct {
 	SourceFieldName string
 	SourceJSONNames []string
@@ -30,13 +36,20 @@ type field struct {
 	GoType          string
 }
 
+// parentField represents a parent/embed relationship in a generated capmodel type.
+// Wrap is true when the source field is a GraphModelWrapper, which requires
+// NewGraphModelWrapper() in the generated Convert method.
 type parentField struct {
 	SourceFieldName string
 	JSONName        string
 	EmbedType       string
-	Wrap            bool // needs NewGraphModelWrapper
+	Wrap            bool
 }
 
+// typeSpec holds all the information needed to generate a single capmodel type file.
+// SourceTypeName is the internal model type that Convert() produces (e.g., "Asset").
+// It may differ from Name when the capmodel type doesn't correspond to a registered
+// model (e.g., capmodel "IP" maps to source type "Asset").
 type typeSpec struct {
 	Name           string
 	SourceTypeName string
@@ -45,6 +58,10 @@ type typeSpec struct {
 	fieldIdx       map[string]int // JSONName → index in Fields
 }
 
+// parseCapmodelTags walks every registered model type, extracts capmodel struct tags,
+// and builds a typeSpec for each distinct capmodel type name found. A single source
+// field may contribute to multiple capmodel types via comma-separated tag entries
+// (e.g., `capmodel:"Asset,IP=ip,Domain=domain"`). The returned slice is sorted by name.
 func parseCapmodelTags(reg *registry.TypeRegistry) []typeSpec {
 	builders := map[string]*typeSpec{}
 	// Tracks which (typeName, fieldName) pairs have been processed.
@@ -195,6 +212,8 @@ func parseEntry(entry string) (typeName, jsonName, embedType string) {
 	return
 }
 
+// jsonTagName extracts the JSON field name from a struct field's json tag.
+// Falls back to the lowercased Go field name when the tag is absent or "-".
 func jsonTagName(sf reflect.StructField) string {
 	tag := sf.Tag.Get("json")
 	if tag == "" || tag == "-" {
@@ -204,9 +223,11 @@ func jsonTagName(sf reflect.StructField) string {
 	return name
 }
 
+// resolveGoType converts a reflect.Type into the Go source string for the generated code.
+// Named types are checked against typeMap before structural resolution so that types like
+// SmartBytes emit as "[]byte" rather than "[]uint8". Pointers are excluded from the
+// typeMap check so that *SmartBytes correctly recurses to "*[]byte" via the Ptr case.
 func resolveGoType(t reflect.Type) string {
-	// Check named-type mappings first; these override structural resolution
-	// (e.g., SmartBytes is a named []byte that should emit as []byte, not []uint8).
 	if t.Kind() != reflect.Ptr {
 		if mapped, ok := typeMap[t.Name()]; ok {
 			return mapped

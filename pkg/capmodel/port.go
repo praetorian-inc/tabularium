@@ -17,7 +17,7 @@ type Port struct {
 }
 
 func (s Port) Convert() (*model.Port, error) {
-	m := make(map[string]any)
+	m := make(map[string]any, 3)
 	m["protocol"] = s.Protocol
 	m["port"] = s.Port
 	m["service"] = s.Service

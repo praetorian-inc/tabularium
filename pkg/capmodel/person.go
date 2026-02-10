@@ -34,7 +34,7 @@ type Person struct {
 }
 
 func (s Person) Convert() (*model.Person, error) {
-	m := make(map[string]any)
+	m := make(map[string]any, 21)
 	m["first_name"] = s.FirstName
 	m["last_name"] = s.LastName
 	m["name"] = s.Name

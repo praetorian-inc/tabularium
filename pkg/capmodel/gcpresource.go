@@ -20,7 +20,7 @@ type GCPResource struct {
 }
 
 func (s GCPResource) Convert() (*model.GCPResource, error) {
-	m := make(map[string]any)
+	m := make(map[string]any, 7)
 	m["ips"] = s.IPs
 	m["urls"] = s.URLs
 	m["name"] = s.Name

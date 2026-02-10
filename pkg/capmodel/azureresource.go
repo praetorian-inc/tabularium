@@ -21,7 +21,7 @@ type AzureResource struct {
 }
 
 func (s AzureResource) Convert() (*model.AzureResource, error) {
-	m := make(map[string]any)
+	m := make(map[string]any, 8)
 	m["ips"] = s.IPs
 	m["urls"] = s.URLs
 	m["name"] = s.Name

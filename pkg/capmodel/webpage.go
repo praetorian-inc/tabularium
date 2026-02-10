@@ -15,7 +15,7 @@ type Webpage struct {
 }
 
 func (s Webpage) Convert() (*model.Webpage, error) {
-	m := make(map[string]any)
+	m := make(map[string]any, 1)
 	m["url"] = s.URL
 	parentModel, err := s.Parent.Convert()
 	if err != nil {

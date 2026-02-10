@@ -15,7 +15,7 @@ type Technology struct {
 }
 
 func (s Technology) Convert() (*model.Technology, error) {
-	m := make(map[string]any)
+	m := make(map[string]any, 2)
 	m["cpe"] = s.CPE
 	m["name"] = s.Name
 

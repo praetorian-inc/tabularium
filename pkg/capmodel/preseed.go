@@ -16,7 +16,7 @@ type Preseed struct {
 }
 
 func (s Preseed) Convert() (*model.Preseed, error) {
-	m := make(map[string]any)
+	m := make(map[string]any, 3)
 	m["type"] = s.Type
 	m["title"] = s.Title
 	m["value"] = s.Value

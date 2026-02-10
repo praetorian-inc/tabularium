@@ -20,7 +20,7 @@ type AWSResource struct {
 }
 
 func (s AWSResource) Convert() (*model.AWSResource, error) {
-	m := make(map[string]any)
+	m := make(map[string]any, 7)
 	m["ips"] = s.IPs
 	m["urls"] = s.URLs
 	m["name"] = s.Name
