@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/praetorian-inc/tabularium/pkg/model/model"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -20,7 +21,6 @@ func derefPtr(t reflect.Type) reflect.Type {
 var typeMap = map[string]string{
 	"SmartBytes":        "[]byte",
 	"CloudResourceType": "string",
-	"GobSafeBool":       "bool",
 }
 
 type parentKind string
@@ -155,7 +155,7 @@ func resolveParentKind(t reflect.Type) parentKind {
 	switch {
 	case t.Kind() == reflect.Interface:
 		return parentInterface
-	case t.Name() == "GraphModelWrapper":
+	case t == reflect.TypeFor[model.GraphModelWrapper]():
 		return parentInject
 	default:
 		return parentConcrete
