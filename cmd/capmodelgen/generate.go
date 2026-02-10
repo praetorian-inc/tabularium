@@ -6,7 +6,6 @@ import (
 	"go/format"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 	"text/template"
 )
@@ -23,19 +22,12 @@ import (
 )
 `
 
-func generate(slimTypes []slimType, outputDir string) error {
+func generate(typeSpecs []typeSpec, outputDir string) error {
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
 		return err
 	}
 
-	// Remove old single-file output.
-	os.Remove(filepath.Join(outputDir, "generated.go"))
-
-	sort.Slice(slimTypes, func(i, j int) bool {
-		return slimTypes[i].Name < slimTypes[j].Name
-	})
-
-	for _, st := range slimTypes {
+	for _, st := range typeSpecs {
 		var buf bytes.Buffer
 		buf.WriteString(generatedHeader)
 
@@ -68,7 +60,6 @@ func manualUnmarshal(p *parentField) bool {
 }
 
 var typeTmpl = template.Must(template.New("type").Funcs(template.FuncMap{
-	"eq":              func(a, b parentKind) bool { return a == b },
 	"manualUnmarshal": manualUnmarshal,
 }).Parse(`
 type {{.Name}} struct {
@@ -76,7 +67,7 @@ type {{.Name}} struct {
 	{{.SourceFieldName}} {{.GoType}} ` + "`" + `json:"{{.JSONName}}"` + "`" + `
 {{- end}}
 {{- if .Parent}}
-	{{.Parent.SourceFieldName}} {{.Parent.SlimType}} ` + "`" + `json:"{{.Parent.JSONName}}"` + "`" + `
+	{{.Parent.SourceFieldName}} {{.Parent.EmbedType}} ` + "`" + `json:"{{.Parent.JSONName}}"` + "`" + `
 {{- end}}
 }
 

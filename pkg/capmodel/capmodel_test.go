@@ -28,12 +28,24 @@ func assertNonEmpty(t *testing.T, field, got string) {
 	}
 }
 
+func assertPtrEqual(t *testing.T, field string, got *string, want string) {
+	t.Helper()
+	if got == nil {
+		t.Errorf("%s: got nil, want %q", field, want)
+	} else if *got != want {
+		t.Errorf("%s: got %q, want %q", field, *got, want)
+	}
+}
+
+func strPtr(s string) *string { return &s }
+
 func TestIPConvert(t *testing.T) {
 	result, err := IP{DNS: "192.168.1.1"}.Convert()
 	if err != nil {
 		t.Fatal(err)
 	}
 	assertEqual(t, "DNS", result.DNS, "192.168.1.1")
+	// DNS and Name share the same capmodel field ("ip"), so setting DNS propagates to both.
 	assertEqual(t, "Name", result.Name, "192.168.1.1")
 	assertPrefix(t, "Key", result.Key, "#asset#")
 }
@@ -165,4 +177,110 @@ func TestPreseedConvert(t *testing.T) {
 	assertEqual(t, "Title", result.Title, "registrant_email")
 	assertEqual(t, "Value", result.Value, "admin@example.com")
 	assertNonEmpty(t, "Key", result.Key)
+}
+
+func TestADObjectConvert(t *testing.T) {
+	result, err := ADObject{
+		Label:    "ADUser",
+		Domain:   "example.local",
+		ObjectID: "S-1-5-21-123456789",
+	}.Convert()
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertEqual(t, "Label", result.Label, "ADUser")
+	assertEqual(t, "Domain", result.Domain, "example.local")
+	assertEqual(t, "ObjectID", result.ObjectID, "S-1-5-21-123456789")
+	assertNonEmpty(t, "Key", result.Key)
+}
+
+func TestCloudResourceConvert(t *testing.T) {
+	result, err := CloudResource{
+		Name:         "my-bucket",
+		ResourceType: "s3",
+		Region:       "us-east-1",
+		IPs:          []string{"10.0.0.1"},
+		URLs:         []string{"https://my-bucket.s3.amazonaws.com"},
+		Properties:   map[string]any{"versioning": true},
+	}.Convert()
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertEqual(t, "Name", result.Name, "my-bucket")
+	assertEqual(t, "ResourceType", string(result.ResourceType), "s3")
+	assertEqual(t, "Region", result.Region, "us-east-1")
+	if len(result.IPs) != 1 {
+		t.Errorf("IPs: got %d, want 1", len(result.IPs))
+	}
+}
+
+func TestAWSResourceConvert(t *testing.T) {
+	result, err := AWSResource{
+		Name:         "my-ec2",
+		ResourceType: "ec2",
+		Region:       "us-west-2",
+	}.Convert()
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertEqual(t, "Name", result.Name, "my-ec2")
+	assertEqual(t, "ResourceType", string(result.ResourceType), "ec2")
+	assertNonEmpty(t, "Key", result.Key)
+}
+
+func TestAzureResourceConvert(t *testing.T) {
+	result, err := AzureResource{
+		Name:         "my-vm",
+		ResourceType: "vm",
+		Region:       "eastus",
+	}.Convert()
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertEqual(t, "Name", result.Name, "my-vm")
+	assertEqual(t, "ResourceType", string(result.ResourceType), "vm")
+	assertNonEmpty(t, "Key", result.Key)
+}
+
+func TestGCPResourceConvert(t *testing.T) {
+	result, err := GCPResource{
+		Name:         "my-instance",
+		ResourceType: "compute",
+		Region:       "us-central1",
+	}.Convert()
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertEqual(t, "Name", result.Name, "my-instance")
+	assertEqual(t, "ResourceType", string(result.ResourceType), "compute")
+	assertNonEmpty(t, "Key", result.Key)
+}
+
+func TestPersonConvert(t *testing.T) {
+	result, err := Person{
+		FirstName: strPtr("Jane"),
+		LastName:  strPtr("Doe"),
+		Name:      strPtr("Jane Doe"),
+		Email:     strPtr("jane@example.com"),
+		Title:     strPtr("Engineer"),
+	}.Convert()
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertPtrEqual(t, "FirstName", result.FirstName, "Jane")
+	assertPtrEqual(t, "LastName", result.LastName, "Doe")
+	assertPtrEqual(t, "Email", result.Email, "jane@example.com")
+}
+
+func TestOrganizationConvert(t *testing.T) {
+	result, err := Organization{
+		Name:    strPtr("Acme Corp"),
+		Domain:  strPtr("acme.com"),
+		Website: strPtr("https://acme.com"),
+	}.Convert()
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertPtrEqual(t, "Name", result.Name, "Acme Corp")
+	assertPtrEqual(t, "Domain", result.Domain, "acme.com")
 }

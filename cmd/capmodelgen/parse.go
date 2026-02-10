@@ -3,11 +3,19 @@ package main
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
+
+func derefPtr(t reflect.Type) reflect.Type {
+	if t.Kind() == reflect.Ptr {
+		return t.Elem()
+	}
+	return t
+}
 
 var typeMap = map[string]string{
 	"SmartBytes":        "[]byte",
@@ -33,40 +41,38 @@ type field struct {
 type parentField struct {
 	SourceFieldName string
 	JSONName        string
-	SlimType        string
+	EmbedType       string
 	Kind            parentKind
 }
 
-type slimType struct {
+type typeSpec struct {
 	Name           string
 	SourceTypeName string
 	Fields         []field
 	Parent         *parentField
 }
 
-func parseSlimTags(reg *registry.TypeRegistry) []slimType {
-	builders := map[string]*slimType{}
-	// Dedup: embedded fields can be visited multiple times when
-	// walking different registered types that share the same embed.
-	seen := map[string]map[string]bool{}
+func parseCapmodelTags(reg *registry.TypeRegistry) []typeSpec {
+	builders := map[string]*typeSpec{}
+	// Tracks which (typeName, fieldName) pairs have been processed.
+	// Embedded fields appear in multiple registered types that share
+	// the same embed, so we skip duplicates.
+	visited := map[string]map[string]bool{}
 
 	for _, name := range sortedRegistryNames(reg) {
-		typ := mustGetType(reg, name)
-		if typ.Kind() == reflect.Ptr {
-			typ = typ.Elem()
-		}
+		typ := derefPtr(mustGetType(reg, name))
 		goTypeName := typ.Name()
 
 		for _, sf := range reflect.VisibleFields(typ) {
 			if !sf.IsExported() {
 				continue
 			}
-			slimTag := sf.Tag.Get("capmodel")
-			if slimTag == "" {
+			tag := sf.Tag.Get("capmodel")
+			if tag == "" {
 				continue
 			}
 
-			for _, entry := range strings.Split(slimTag, ",") {
+			for _, entry := range strings.Split(tag, ",") {
 				entry = strings.TrimSpace(entry)
 				if entry == "" {
 					continue
@@ -74,40 +80,29 @@ func parseSlimTags(reg *registry.TypeRegistry) []slimType {
 
 				typeName, jsonName, embedType := parseEntry(entry)
 
-				if seen[typeName] == nil {
-					seen[typeName] = map[string]bool{}
-				}
-				if seen[typeName][sf.Name] {
+				if !markVisited(visited, typeName, sf.Name) {
 					continue
 				}
-				seen[typeName][sf.Name] = true
 
 				sourceJSONName := jsonTagName(sf)
 				if jsonName == "" {
 					jsonName = sourceJSONName
 				}
 
-				b, ok := builders[typeName]
-				if !ok {
-					b = &slimType{
-						Name:           typeName,
-						SourceTypeName: resolveSourceTypeName(reg, typeName, goTypeName),
-					}
-					builders[typeName] = b
-				}
+				b := getOrCreateBuilder(builders, reg, typeName, goTypeName)
 
 				if embedType != "" {
 					b.Parent = &parentField{
 						SourceFieldName: sf.Name,
 						JSONName:        jsonName,
-						SlimType:        embedType,
+						EmbedType:       embedType,
 						Kind:            resolveParentKind(sf.Type),
 					}
 					continue
 				}
 
-				// Merge: multiple source fields can map to the same slim JSON name
-				// (e.g., DNS and Name both map to "ip" in the IP slim type).
+				// Merge: multiple source fields can map to the same JSON name
+				// (e.g., DNS and Name both map to "ip" in the IP type).
 				if mergeField(b, jsonName, sourceJSONName) {
 					continue
 				}
@@ -122,17 +117,41 @@ func parseSlimTags(reg *registry.TypeRegistry) []slimType {
 		}
 	}
 
-	result := make([]slimType, 0, len(builders))
+	result := make([]typeSpec, 0, len(builders))
 	for _, b := range builders {
 		result = append(result, *b)
 	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Name < result[j].Name
+	})
 	return result
 }
 
-func resolveParentKind(t reflect.Type) parentKind {
-	if t.Kind() == reflect.Ptr {
-		t = t.Elem()
+func markVisited(visited map[string]map[string]bool, typeName, fieldName string) bool {
+	if visited[typeName] == nil {
+		visited[typeName] = map[string]bool{}
 	}
+	if visited[typeName][fieldName] {
+		return false
+	}
+	visited[typeName][fieldName] = true
+	return true
+}
+
+func getOrCreateBuilder(builders map[string]*typeSpec, reg *registry.TypeRegistry, typeName, goTypeName string) *typeSpec {
+	if b, ok := builders[typeName]; ok {
+		return b
+	}
+	b := &typeSpec{
+		Name:           typeName,
+		SourceTypeName: resolveSourceTypeName(reg, typeName, goTypeName),
+	}
+	builders[typeName] = b
+	return b
+}
+
+func resolveParentKind(t reflect.Type) parentKind {
+	t = derefPtr(t)
 	switch {
 	case t.Kind() == reflect.Interface:
 		return parentInterface
@@ -143,27 +162,21 @@ func resolveParentKind(t reflect.Type) parentKind {
 	}
 }
 
-// resolveSourceTypeName looks up the Go type name for a slim type. Falls back to
-// the declaring struct when the slim type isn't a registered model (e.g., IP → Asset).
-func resolveSourceTypeName(reg *registry.TypeRegistry, slimTypeName, fallback string) string {
-	if typ, ok := reg.GetType(strings.ToLower(slimTypeName)); ok {
-		if typ.Kind() == reflect.Ptr {
-			typ = typ.Elem()
-		}
-		return typ.Name()
+// resolveSourceTypeName looks up the Go type name for a capmodel type. Falls back to
+// the declaring struct when the type isn't a registered model (e.g., IP → Asset).
+func resolveSourceTypeName(reg *registry.TypeRegistry, name, fallback string) string {
+	if typ, ok := reg.GetType(strings.ToLower(name)); ok {
+		return derefPtr(typ).Name()
 	}
 	return fallback
 }
 
-func mergeField(b *slimType, jsonName, sourceJSONName string) bool {
+func mergeField(b *typeSpec, jsonName, sourceJSONName string) bool {
 	for i, existing := range b.Fields {
 		if existing.JSONName == jsonName {
-			for _, name := range b.Fields[i].SourceJSONNames {
-				if name == sourceJSONName {
-					return true
-				}
+			if !slices.Contains(b.Fields[i].SourceJSONNames, sourceJSONName) {
+				b.Fields[i].SourceJSONNames = append(b.Fields[i].SourceJSONNames, sourceJSONName)
 			}
-			b.Fields[i].SourceJSONNames = append(b.Fields[i].SourceJSONNames, sourceJSONName)
 			return true
 		}
 	}
@@ -175,10 +188,7 @@ func mergeField(b *slimType, jsonName, sourceJSONName string) bool {
 func sortedRegistryNames(reg *registry.TypeRegistry) []string {
 	var names []string
 	for name, typ := range reg.GetAllTypes() {
-		if typ.Kind() == reflect.Ptr {
-			typ = typ.Elem()
-		}
-		if name == strings.ToLower(typ.Name()) {
+		if name == strings.ToLower(derefPtr(typ).Name()) {
 			names = append(names, name)
 		}
 	}
@@ -194,7 +204,7 @@ func mustGetType(reg *registry.TypeRegistry, name string) reflect.Type {
 	return typ
 }
 
-// parseEntry parses a slim tag entry: "TypeName[=jsonname[(EmbedType)]]"
+// parseEntry parses a capmodel tag entry: "TypeName[=jsonname[(EmbedType)]]"
 func parseEntry(entry string) (typeName, jsonName, embedType string) {
 	parts := strings.SplitN(entry, "=", 2)
 	typeName = parts[0]
@@ -220,6 +230,8 @@ func jsonTagName(sf reflect.StructField) string {
 }
 
 func resolveGoType(t reflect.Type) string {
+	// Check named-type mappings first; these override structural resolution
+	// (e.g., SmartBytes is a named []byte that should emit as []byte, not []uint8).
 	if t.Kind() != reflect.Ptr {
 		if mapped, ok := typeMap[t.Name()]; ok {
 			return mapped

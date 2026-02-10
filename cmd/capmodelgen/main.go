@@ -18,9 +18,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	slimTypes := parseSlimTags(registry.Registry)
+	types := parseCapmodelTags(registry.Registry)
 
-	if err := generate(slimTypes, *output); err != nil {
+	if err := generate(types, *output); err != nil {
 		fmt.Fprintf(os.Stderr, "error generating code: %v\n", err)
 		os.Exit(1)
 	}
