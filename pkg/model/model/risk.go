@@ -20,7 +20,6 @@ type Risk struct {
 	// Attributes
 	DNS        string `neo4j:"dns" json:"dns" desc:"Primary DNS or group associated with the risk." example:"example.com"`
 	Name       string `neo4j:"name" json:"name" desc:"Name of the risk or vulnerability." example:"CVE-2023-12345"`
-	Title      string `neo4j:"title" json:"title,omitempty" desc:"Title associated with the risk." example:"Title"`
 	Source     string `neo4j:"source" json:"source" desc:"Source that identified the risk." example:"nessus"`
 	Status     string `neo4j:"status" json:"status" desc:"Current status of the risk (e.g., TH, OC, RM)." example:"TH"`
 	Priority   int    `neo4j:"priority" json:"priority" desc:"Calculated priority score based on severity." example:"10"`
