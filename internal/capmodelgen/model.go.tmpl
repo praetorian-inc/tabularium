@@ -4,9 +4,9 @@ package capmodel
 
 type {{.Name}} struct {
 {{- range .Fields}}
-	{{.SourceFieldName}} {{.GoType}} `json:"{{.JSONName}}"`
+	{{.GoFieldName}} {{.GoType}} `json:"{{.JSONName}}"`
 {{- end}}
 {{- if .Parent}}
-	{{.Parent.SourceFieldName}} {{.Parent.EmbedType}} `json:"{{.Parent.JSONName}}"`
+	{{.Parent.GoFieldName}} {{.Parent.EmbedType}} `json:"{{.Parent.JSONName}}"`
 {{- end}}
 }

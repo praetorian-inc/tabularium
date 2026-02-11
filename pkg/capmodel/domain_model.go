@@ -3,5 +3,5 @@
 package capmodel
 
 type Domain struct {
-	DNS string `json:"domain"`
+	Domain string `json:"domain"`
 }

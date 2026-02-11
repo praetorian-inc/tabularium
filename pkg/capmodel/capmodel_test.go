@@ -32,15 +32,15 @@ func extract[T any](t *testing.T, name string, m registry.Model) *T {
 }
 
 func TestIPConvert(t *testing.T) {
-	result := convert[*model.Asset](t, "IP", IP{DNS: "192.168.1.1"})
+	result := convert[*model.Asset](t, "IP", IP{IP: "192.168.1.1"})
 	assert.Equal(t, "192.168.1.1", result.DNS)
-	// DNS and Name share the same capmodel field ("ip"), so setting DNS propagates to both.
+	// DNS and Name share the same capmodel field ("ip"), so setting IP propagates to both.
 	assert.Equal(t, "192.168.1.1", result.Name)
 	assert.Contains(t, result.Key, "#asset#")
 }
 
 func TestDomainConvert(t *testing.T) {
-	result := convert[*model.Asset](t, "Domain", Domain{DNS: "example.com"})
+	result := convert[*model.Asset](t, "Domain", Domain{Domain: "example.com"})
 	assert.Equal(t, "example.com", result.DNS)
 	assert.Equal(t, "example.com", result.Name)
 	assert.Equal(t, "#asset#example.com#example.com", result.Key)

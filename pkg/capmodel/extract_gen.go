@@ -235,7 +235,7 @@ func extractDomain(m registry.Model) (any, error) {
 		return nil, fmt.Errorf("extractDomain: expected *model.Asset, got %T", m)
 	}
 	result := Domain{
-		DNS: src.DNS,
+		Domain: src.DNS,
 	}
 	return &result, nil
 }
@@ -275,7 +275,7 @@ func extractIP(m registry.Model) (any, error) {
 		return nil, fmt.Errorf("extractIP: expected *model.Asset, got %T", m)
 	}
 	result := IP{
-		DNS: src.DNS,
+		IP: src.DNS,
 	}
 	return &result, nil
 }

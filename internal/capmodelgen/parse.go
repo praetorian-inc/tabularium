@@ -26,11 +26,40 @@ var typeMap = map[string]string{
 	"CloudResourceType": "string",
 }
 
+// commonInitialisms is the set of words that should be fully uppercased in Go names.
+var commonInitialisms = map[string]bool{
+	"acl": true, "api": true, "cpu": true, "css": true,
+	"dns": true, "eof": true, "guid": true, "html": true,
+	"http": true, "https": true, "id": true, "ip": true,
+	"json": true, "ram": true, "rpc": true, "sid": true,
+	"smtp": true, "sql": true, "ssh": true, "tcp": true,
+	"tls": true, "ttl": true, "udp": true, "uid": true,
+	"uri": true, "url": true, "uuid": true, "xml": true,
+	"cpe": true,
+}
+
+// jsonToGoName converts a JSON field name to an exported Go field name.
+// Handles snake_case and camelCase, uppercasing known initialisms.
+func jsonToGoName(jsonName string) string {
+	parts := strings.Split(jsonName, "_")
+	var buf strings.Builder
+	for _, part := range parts {
+		if commonInitialisms[strings.ToLower(part)] {
+			buf.WriteString(strings.ToUpper(part))
+		} else if len(part) > 0 {
+			buf.WriteString(strings.ToUpper(part[:1]))
+			buf.WriteString(part[1:])
+		}
+	}
+	return buf.String()
+}
+
 // field represents a regular (non-parent) field in a generated capmodel type.
 // SourceJSONNames may contain multiple entries when several source model fields
 // map to the same capmodel field (e.g., DNS and Name both map to "ip" for the IP type).
 type field struct {
-	SourceFieldName string
+	GoFieldName     string   // field name in the generated capmodel struct
+	SourceFieldName string   // field name in the source model struct
 	SourceJSONNames []string
 	JSONName        string
 	GoType          string
@@ -41,7 +70,8 @@ type field struct {
 // Wrap is true when the source field is a GraphModelWrapper, which requires
 // NewGraphModelWrapper() in the generated Convert method.
 type parentField struct {
-	SourceFieldName string
+	GoFieldName     string // field name in the generated capmodel struct
+	SourceFieldName string // field name in the source model struct
 	JSONName        string
 	EmbedType       string
 	Wrap            bool
@@ -103,9 +133,17 @@ func parseCapmodelTags(reg *registry.TypeRegistry) []typeSpec {
 
 				b := getOrCreateBuilder(builders, reg, typeName, goTypeName)
 
+				// Derive GoFieldName: use source name when JSON names match,
+				// derive from the capmodel JSON name when they differ.
+				goFieldName := sf.Name
+				if jsonName != sourceJSONName {
+					goFieldName = jsonToGoName(jsonName)
+				}
+
 				if embedType != "" {
 					t := derefPtr(sf.Type)
 					b.Parent = &parentField{
+						GoFieldName:     goFieldName,
 						SourceFieldName: sf.Name,
 						JSONName:        jsonName,
 						EmbedType:       embedType,
@@ -132,6 +170,7 @@ func parseCapmodelTags(reg *registry.TypeRegistry) []typeSpec {
 
 				b.fieldIdx[jsonName] = len(b.Fields)
 				b.Fields = append(b.Fields, field{
+					GoFieldName:     goFieldName,
 					SourceFieldName: sf.Name,
 					SourceJSONNames: []string{sourceJSONName},
 					JSONName:        jsonName,

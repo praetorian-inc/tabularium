@@ -23,9 +23,9 @@ func extract{{.Name}}(m registry.Model) (any, error) {
 	result := {{.Name}}{
 {{- range .Fields}}
 {{- if .SourceGoType}}
-		{{.SourceFieldName}}: {{.GoType}}(src.{{.SourceFieldName}}),
+		{{.GoFieldName}}: {{.GoType}}(src.{{.SourceFieldName}}),
 {{- else}}
-		{{.SourceFieldName}}: src.{{.SourceFieldName}},
+		{{.GoFieldName}}: src.{{.SourceFieldName}},
 {{- end}}
 {{- end}}
 	}
@@ -40,7 +40,7 @@ func extract{{.Name}}(m registry.Model) (any, error) {
 		if !ok {
 			return nil, fmt.Errorf("extract{{.Name}}: parent is %T, not *{{.Parent.EmbedType}}", p)
 		}
-		result.{{.Parent.SourceFieldName}} = *typed
+		result.{{.Parent.GoFieldName}} = *typed
 	}
 {{- else}}
 	if src.{{.Parent.SourceFieldName}} != nil {
@@ -52,7 +52,7 @@ func extract{{.Name}}(m registry.Model) (any, error) {
 		if !ok {
 			return nil, fmt.Errorf("extract{{.Name}}: parent is %T, not *{{.Parent.EmbedType}}", p)
 		}
-		result.{{.Parent.SourceFieldName}} = *typed
+		result.{{.Parent.GoFieldName}} = *typed
 	}
 {{- end}}
 {{- end}}

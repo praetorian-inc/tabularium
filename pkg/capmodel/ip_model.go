@@ -3,5 +3,5 @@
 package capmodel
 
 type IP struct {
-	DNS string `json:"ip"`
+	IP string `json:"ip"`
 }
