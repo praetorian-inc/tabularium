@@ -43,6 +43,7 @@ type TypeRegistry struct {
 	types      map[string]reflect.Type
 	aliases    map[string]string
 	converters map[string]ConverterFunc
+	extractors map[string]ExtractorFunc
 }
 
 // NewTypeRegistry creates a new type registry
@@ -51,6 +52,7 @@ func NewTypeRegistry() *TypeRegistry {
 		types:      make(map[string]reflect.Type),
 		aliases:    make(map[string]string),
 		converters: make(map[string]ConverterFunc),
+		extractors: make(map[string]ExtractorFunc),
 	}
 }
 

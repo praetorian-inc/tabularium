@@ -50,64 +50,51 @@ var funcMap = template.FuncMap{
 	},
 }
 
-// generate renders each typeSpec through the model template (one file per type)
-// into modelDir, then renders all typeSpecs through the convert template into
-// converterDir. The two directories may be the same.
-func generate(typeSpecs []typeSpec, modelDir, converterDir string) error {
-	if err := os.MkdirAll(modelDir, 0755); err != nil {
+// templateData is the data passed to convert_gen.go and extract_gen.go templates.
+type templateData struct {
+	Package   string
+	TypeSpecs []typeSpec
+}
+
+// generate renders all generated files into outputDir:
+//   - one model file per typeSpec
+//   - convert_gen.go with registry converters
+//   - extract_gen.go with registry extractors
+func generate(typeSpecs []typeSpec, outputDir string) error {
+	if err := os.MkdirAll(outputDir, 0755); err != nil {
 		return err
 	}
 
 	for _, st := range typeSpecs {
-		var buf bytes.Buffer
-
-		if err := modelTmpl.Execute(&buf, st); err != nil {
-			return fmt.Errorf("generating %s: %w", st.Name, err)
-		}
-
-		formatted, err := format.Source(buf.Bytes())
-		if err != nil {
-			return fmt.Errorf("formatting %s: %w", st.Name, err)
-		}
-
-		outPath := filepath.Join(modelDir, strings.ToLower(st.Name)+"_model.go")
-		if err := os.WriteFile(outPath, formatted, 0644); err != nil {
+		if err := writeFormatted(modelTmpl, st, outputDir, strings.ToLower(st.Name)+"_model.go"); err != nil {
 			return err
 		}
 	}
 
-	// Generate single convert_gen.go with all converters
-	if err := os.MkdirAll(converterDir, 0755); err != nil {
-		return err
+	data := templateData{
+		Package:   filepath.Base(outputDir),
+		TypeSpecs: typeSpecs,
 	}
 
-	pkgName := filepath.Base(converterDir)
+	if err := writeFormatted(convertTmpl, data, outputDir, "convert_gen.go"); err != nil {
+		return err
+	}
+	return writeFormatted(extractTmpl, data, outputDir, "extract_gen.go")
+}
 
+// writeFormatted executes a template, formats the output as Go source, and writes it.
+func writeFormatted(tmpl *template.Template, data any, dir, filename string) error {
 	var buf bytes.Buffer
-	if err := convertTmpl.Execute(&buf, convertData{
-		Package:   pkgName,
-		TypeSpecs: typeSpecs,
-	}); err != nil {
-		return fmt.Errorf("generating convert_gen.go: %w", err)
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return fmt.Errorf("generating %s: %w", filename, err)
 	}
 
 	formatted, err := format.Source(buf.Bytes())
 	if err != nil {
-		return fmt.Errorf("formatting convert_gen.go: %w", err)
+		return fmt.Errorf("formatting %s: %w", filename, err)
 	}
 
-	outPath := filepath.Join(converterDir, "convert_gen.go")
-	if err := os.WriteFile(outPath, formatted, 0644); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// convertData is the template data for convert_gen.go.
-type convertData struct {
-	Package   string
-	TypeSpecs []typeSpec
+	return os.WriteFile(filepath.Join(dir, filename), formatted, 0644)
 }
 
 //go:embed model.go.tmpl
@@ -119,3 +106,8 @@ var modelTmpl = template.Must(template.New("model").Parse(modelTmplStr))
 var convertTmplStr string
 
 var convertTmpl = template.Must(template.New("convert").Funcs(funcMap).Parse(convertTmplStr))
+
+//go:embed extract.go.tmpl
+var extractTmplStr string
+
+var extractTmpl = template.Must(template.New("extract").Parse(extractTmplStr))

@@ -7,8 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	// Blank import to trigger converter registration from the public package
-	_ "github.com/praetorian-inc/tabularium/pkg/capmodel"
 	"github.com/praetorian-inc/tabularium/pkg/model/model"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
@@ -22,6 +20,15 @@ func convert[T registry.Model](t *testing.T, name string, v any) T {
 	result, err := registry.Registry.Convert(name, data)
 	require.NoError(t, err)
 	return result.(T)
+}
+
+func extract[T any](t *testing.T, name string, m registry.Model) *T {
+	t.Helper()
+	result, err := registry.Registry.Extract(name, m)
+	require.NoError(t, err)
+	typed, ok := result.(*T)
+	require.True(t, ok, "expected *%T, got %T", *new(T), result)
+	return typed
 }
 
 func TestIPConvert(t *testing.T) {
@@ -280,4 +287,70 @@ func TestOrganizationConvert(t *testing.T) {
 	assert.Equal(t, ptr("+1-555-123-4567"), result.Phone)
 	assert.Equal(t, ptr("https://linkedin.com/company/acme"), result.LinkedinURL)
 	assert.Equal(t, ptr("ACME"), result.TickerSymbol)
+}
+
+// Extract tests — one per distinct code path in generated extractors.
+
+func TestAssetExtract(t *testing.T) {
+	src := model.NewAsset("example.com", "10.0.0.1")
+	result := extract[Asset](t, "Asset", &src)
+	assert.Equal(t, "example.com", result.DNS)
+	assert.Equal(t, "10.0.0.1", result.Name)
+}
+
+func TestAWSResourceExtract(t *testing.T) {
+	src := &model.AWSResource{CloudResource: model.CloudResource{
+		Name: "my-ec2", ResourceType: "ec2", Region: "us-west-2", AccountRef: "123456789012",
+	}}
+	result := extract[AWSResource](t, "AWSResource", src)
+	assert.Equal(t, "my-ec2", result.Name)
+	assert.Equal(t, "ec2", result.ResourceType) // CloudResourceType → string cast
+}
+
+func TestPortExtract(t *testing.T) {
+	asset := model.NewAsset("example.com", "10.0.0.1")
+	src := model.NewPort("tcp", 443, &asset)
+	result := extract[Port](t, "Port", &src)
+	assert.Equal(t, "tcp", result.Protocol)
+	assert.Equal(t, 443, result.Port)
+	assert.Equal(t, "example.com", result.Parent.DNS) // GraphModelWrapper parent
+}
+
+func TestRiskExtract(t *testing.T) {
+	asset := model.NewAsset("example.com", "10.0.0.1")
+	src := model.NewRisk(&asset, "CVE-2023-12345", "TH")
+	result := extract[Risk](t, "Risk", &src)
+	assert.Equal(t, "example.com", result.DNS)
+	assert.Equal(t, "CVE-2023-12345", result.Name)
+	assert.Equal(t, "example.com", result.Target.DNS) // interface parent
+}
+
+func TestWebpageExtract(t *testing.T) {
+	src := &model.Webpage{
+		URL:    "https://example.com/login",
+		Parent: &model.WebApplication{PrimaryURL: "https://example.com", Name: "Example"},
+	}
+	result := extract[Webpage](t, "Webpage", src)
+	assert.Equal(t, "https://example.com/login", result.URL)
+	assert.Equal(t, "https://example.com", result.Parent.PrimaryURL) // concrete pointer parent
+}
+
+// Round-trip: capmodel → model → capmodel
+func TestAssetRoundTrip(t *testing.T) {
+	original := Asset{DNS: "example.com", Name: "10.0.0.1"}
+	m := convert[*model.Asset](t, "Asset", original)
+	result := extract[Asset](t, "Asset", m)
+	assert.Equal(t, original, *result)
+}
+
+func TestPortRoundTrip(t *testing.T) {
+	original := Port{
+		Protocol: "tcp",
+		Port:     443,
+		Service:  "https",
+		Parent:   Asset{DNS: "example.com", Name: "10.0.0.1"},
+	}
+	m := convert[*model.Port](t, "Port", original)
+	result := extract[Port](t, "Port", m)
+	assert.Equal(t, original, *result)
 }

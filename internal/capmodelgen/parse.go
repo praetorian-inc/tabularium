@@ -34,6 +34,7 @@ type field struct {
 	SourceJSONNames []string
 	JSONName        string
 	GoType          string
+	SourceGoType    string // original Go type before typeMap; empty when equal to GoType
 }
 
 // parentField represents a parent/embed relationship in a generated capmodel type.
@@ -123,12 +124,19 @@ func parseCapmodelTags(reg *registry.TypeRegistry) []typeSpec {
 					continue
 				}
 
+				goType := resolveGoType(sf.Type)
+				var sourceGoType string
+				if _, mapped := typeMap[sf.Type.Name()]; mapped {
+					sourceGoType = sf.Type.Name()
+				}
+
 				b.fieldIdx[jsonName] = len(b.Fields)
 				b.Fields = append(b.Fields, field{
 					SourceFieldName: sf.Name,
 					SourceJSONNames: []string{sourceJSONName},
 					JSONName:        jsonName,
-					GoType:          resolveGoType(sf.Type),
+					GoType:          goType,
+					SourceGoType:    sourceGoType,
 				})
 			}
 		}
