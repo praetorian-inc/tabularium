@@ -2,15 +2,19 @@ package filters
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 type Filter struct {
-	Field           string            `json:"field"`
-	Operator        string            `json:"operator"`
-	Value           SliceOrValue[any] `json:"value"`
-	Not             bool              `json:"not"`
-	ReverseOperands bool              `json:"reverseOperands"`
-	Alias           string            `json:"alias,omitempty"`
+	Field                string            `json:"field"`
+	Operator             string            `json:"operator"`
+	Value                SliceOrValue[any] `json:"value"`
+	Not                  bool              `json:"not"`
+	ReverseOperands      bool              `json:"reverseOperands"`
+	Alias                string            `json:"alias,omitempty"`
+	MetadataLabel        string            `json:"metadataLabel,omitempty"`
+	MetadataDirection    string            `json:"metadataDirection,omitempty"`
+	MetadataRelationship string            `json:"metadataRelationship,omitempty"`
 }
 
 func NewFilter(field, operator string, value any, opts ...Option) Filter {
@@ -85,6 +89,48 @@ func (f *Filter) UnmarshalJSON(data []byte) error {
 		if num == float64(int64(num)) {
 			f.Value[i] = int64(num)
 		}
+	}
+
+	return nil
+}
+
+func (f *Filter) HasMetadata() bool {
+	label, direction, relationship := f.metadataFieldsPresent()
+	return label && direction && relationship
+}
+
+func (f *Filter) metadataFieldsPresent() (label, direction, relationship bool) {
+	return f.MetadataLabel != "", f.MetadataDirection != "", f.MetadataRelationship != ""
+}
+
+func (f *Filter) Validate() error {
+	if f.Operator == OperatorOr || f.Operator == OperatorAnd {
+		if f.HasMetadata() {
+			return fmt.Errorf("metadata is not allowed on logical filters")
+		}
+		for _, value := range f.Value {
+			nested, ok := value.(Filter)
+			if !ok {
+				continue
+			}
+			if err := nested.Validate(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	label, direction, relationship := f.metadataFieldsPresent()
+	hasAnyMetadata := label || direction || relationship
+	if hasAnyMetadata && !f.HasMetadata() {
+		return fmt.Errorf("metadataLabel, metadataDirection, metadataRelationship must be provided together")
+	}
+	if !hasAnyMetadata {
+		return nil
+	}
+
+	if f.MetadataDirection != "source" && f.MetadataDirection != "target" {
+		return fmt.Errorf("metadataDirection must be one of: source, target")
 	}
 
 	return nil
