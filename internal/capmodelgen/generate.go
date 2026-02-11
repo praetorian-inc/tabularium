@@ -50,10 +50,11 @@ var funcMap = template.FuncMap{
 	},
 }
 
-// generate renders each typeSpec through the model template (one file per type),
-// then renders all typeSpecs through the convert template (single file).
-func generate(typeSpecs []typeSpec, outputDir string) error {
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+// generate renders each typeSpec through the model template (one file per type)
+// into modelDir, then renders all typeSpecs through the convert template into
+// converterDir. The two directories may be the same.
+func generate(typeSpecs []typeSpec, modelDir, converterDir string) error {
+	if err := os.MkdirAll(modelDir, 0755); err != nil {
 		return err
 	}
 
@@ -69,15 +70,24 @@ func generate(typeSpecs []typeSpec, outputDir string) error {
 			return fmt.Errorf("formatting %s: %w", st.Name, err)
 		}
 
-		outPath := filepath.Join(outputDir, strings.ToLower(st.Name)+"_model.go")
+		outPath := filepath.Join(modelDir, strings.ToLower(st.Name)+"_model.go")
 		if err := os.WriteFile(outPath, formatted, 0644); err != nil {
 			return err
 		}
 	}
 
 	// Generate single convert_gen.go with all converters
+	if err := os.MkdirAll(converterDir, 0755); err != nil {
+		return err
+	}
+
+	pkgName := filepath.Base(converterDir)
+
 	var buf bytes.Buffer
-	if err := convertTmpl.Execute(&buf, typeSpecs); err != nil {
+	if err := convertTmpl.Execute(&buf, convertData{
+		Package:   pkgName,
+		TypeSpecs: typeSpecs,
+	}); err != nil {
 		return fmt.Errorf("generating convert_gen.go: %w", err)
 	}
 
@@ -86,12 +96,18 @@ func generate(typeSpecs []typeSpec, outputDir string) error {
 		return fmt.Errorf("formatting convert_gen.go: %w", err)
 	}
 
-	outPath := filepath.Join(outputDir, "convert_gen.go")
+	outPath := filepath.Join(converterDir, "convert_gen.go")
 	if err := os.WriteFile(outPath, formatted, 0644); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// convertData is the template data for convert_gen.go.
+type convertData struct {
+	Package   string
+	TypeSpecs []typeSpec
 }
 
 //go:embed model.go.tmpl
