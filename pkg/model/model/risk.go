@@ -294,6 +294,9 @@ func (r *Risk) GetHooks() []registry.Hook {
 	return []registry.Hook{
 		{
 			Call: func() error {
+				if r.DNS == "" {
+					r.DNS = r.Target.Group()
+				}
 				r.formatName()
 				r.Key = fmt.Sprintf("#risk#%s#%s", r.DNS, r.Name)
 				r.Priority = riskPriority[r.Severity()]
