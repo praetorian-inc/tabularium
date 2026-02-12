@@ -82,6 +82,30 @@ func (a *BaseAsset) IsStatus(value string) bool {
 	return strings.HasPrefix(a.Status, value)
 }
 
+// IsValidStatus checks if a status value is one of the valid status constants.
+// Empty string is considered valid (for new items without status set yet).
+func IsValidStatus(status string) bool {
+	if status == "" {
+		return true
+	}
+	validStatuses := []string{
+		Deleted,
+		Pending,
+		Active,
+		Frozen,
+		FrozenRejected,
+		ActiveLow,
+		ActivePassive,
+		ActiveHigh,
+	}
+	for _, valid := range validStatuses {
+		if status == valid {
+			return true
+		}
+	}
+	return false
+}
+
 func (a *BaseAsset) IsClass(value string) bool {
 	return strings.HasPrefix(a.Class, value)
 }
