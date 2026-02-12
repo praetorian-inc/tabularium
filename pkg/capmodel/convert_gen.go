@@ -208,6 +208,9 @@ func convertRisk(data []byte) (registry.Model, error) {
 			return nil, fmt.Errorf("convertRisk: parent is %T, not model.Target", parentModel)
 		}
 		result.Target = typed
+		if result.DNS == "" {
+			result.DNS = typed.Group()
+		}
 	}
 	if err := registry.CallHooks(&result); err != nil {
 		return nil, err

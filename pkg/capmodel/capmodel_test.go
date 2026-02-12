@@ -55,17 +55,16 @@ func TestAssetConvert(t *testing.T) {
 
 func TestRiskConvert(t *testing.T) {
 	result := convert[*model.Risk](t, "Risk", Risk{
-		DNS:    "example.com",
 		Name:   "CVE-2023-12345",
 		Status: "TH",
 		Source: "nessus",
 		Target: Asset{DNS: "example.com", Name: "10.0.0.1"},
 	})
-	assert.Equal(t, "example.com", result.DNS)
+	assert.Equal(t, "example.com", result.DNS, "DNS should be derived from parent Target")
 	assert.Equal(t, "CVE-2023-12345", result.Name)
 	assert.Equal(t, "TH", result.Status)
 	assert.NotNil(t, result.Target)
-	assert.NotEmpty(t, result.Key)
+	assert.Equal(t, "#risk#example.com#CVE-2023-12345", result.Key)
 }
 
 func TestPortConvert(t *testing.T) {
@@ -320,9 +319,8 @@ func TestRiskExtract(t *testing.T) {
 	asset := model.NewAsset("example.com", "10.0.0.1")
 	src := model.NewRisk(&asset, "CVE-2023-12345", "TH")
 	result := extract[Risk](t, "Risk", &src)
-	assert.Equal(t, "example.com", result.DNS)
 	assert.Equal(t, "CVE-2023-12345", result.Name)
-	assert.Equal(t, "example.com", result.Target.DNS) // interface parent
+	assert.Equal(t, "example.com", result.Target.DNS) // DNS from parent
 }
 
 func TestWebpageExtract(t *testing.T) {

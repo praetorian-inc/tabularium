@@ -404,7 +404,6 @@ func extractRisk(m registry.Model) (any, error) {
 		return nil, fmt.Errorf("extractRisk: expected *model.Risk, got %T", m)
 	}
 	result := Risk{
-		DNS:    src.DNS,
 		Name:   src.Name,
 		Source: src.Source,
 		Status: src.Status,
