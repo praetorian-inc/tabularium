@@ -60,6 +60,7 @@ type templateData struct {
 //   - one model file per typeSpec
 //   - convert_gen.go with registry converters
 //   - extract_gen.go with registry extractors
+//   - typemap_gen.go with capmodel→model type mapping
 func generate(typeSpecs []typeSpec, outputDir string) error {
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
 		return err
@@ -77,6 +78,9 @@ func generate(typeSpecs []typeSpec, outputDir string) error {
 	}
 
 	if err := writeFormatted(convertTmpl, data, outputDir, "convert_gen.go"); err != nil {
+		return err
+	}
+	if err := writeFormatted(typemapTmpl, data, outputDir, "typemap_gen.go"); err != nil {
 		return err
 	}
 	return writeFormatted(extractTmpl, data, outputDir, "extract_gen.go")
@@ -106,6 +110,11 @@ var modelTmpl = template.Must(template.New("model").Parse(modelTmplStr))
 var convertTmplStr string
 
 var convertTmpl = template.Must(template.New("convert").Funcs(funcMap).Parse(convertTmplStr))
+
+//go:embed typemap.go.tmpl
+var typemapTmplStr string
+
+var typemapTmpl = template.Must(template.New("typemap").Parse(typemapTmplStr))
 
 //go:embed extract.go.tmpl
 var extractTmplStr string
