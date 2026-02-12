@@ -316,6 +316,20 @@ func TestPortExtract(t *testing.T) {
 	assert.Equal(t, "example.com", result.Parent.DNS) // GraphModelWrapper parent
 }
 
+func TestPortExtractNoTarget(t *testing.T) {
+	src := &model.Port{
+		Protocol: "tcp",
+		Port:     443,
+		Service:  "https",
+		Source:   "#asset#example.com#10.0.0.1",
+	}
+	result := extract[models.Port](t, "Port", src)
+	assert.Equal(t, "tcp", result.Protocol)
+	assert.Equal(t, 443, result.Port)
+	assert.Equal(t, "example.com", result.Parent.DNS)
+	assert.Equal(t, "10.0.0.1", result.Parent.Name)
+}
+
 func TestRiskExtract(t *testing.T) {
 	asset := model.NewAsset("example.com", "10.0.0.1")
 	src := model.NewRisk(&asset, "CVE-2023-12345", "TH")

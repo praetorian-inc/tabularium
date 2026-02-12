@@ -2,6 +2,13 @@ package registry
 
 import "fmt"
 
+// Extractable is an optional interface that models can implement to populate
+// derived fields before extraction. For example, Port uses this to reconstruct
+// its Parent from the Source key when the Parent isn't present.
+type Extractable interface {
+	PrepareForExtract()
+}
+
 // ExtractorFunc converts a registered Model into its simplified capmodel representation.
 type ExtractorFunc func(m Model) (any, error)
 
