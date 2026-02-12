@@ -7,6 +7,7 @@ import (
 
 	"github.com/praetorian-inc/tabularium/pkg/model/model"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
+	"{{.ModelsImport}}"
 )
 
 func init() {
@@ -20,7 +21,7 @@ func extract{{.Name}}(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extract{{.Name}}: expected *model.{{.SourceTypeName}}, got %T", m)
 	}
-	result := {{.Name}}{
+	result := models.{{.Name}}{
 {{- range .Fields}}
 {{- if .SourceGoType}}
 		{{.GoFieldName}}: {{.GoType}}(src.{{.SourceFieldName}}),
@@ -36,9 +37,9 @@ func extract{{.Name}}(m registry.Model) (any, error) {
 		if err != nil {
 			return nil, err
 		}
-		typed, ok := p.(*{{.Parent.EmbedType}})
+		typed, ok := p.(*models.{{.Parent.EmbedType}})
 		if !ok {
-			return nil, fmt.Errorf("extract{{.Name}}: parent is %T, not *{{.Parent.EmbedType}}", p)
+			return nil, fmt.Errorf("extract{{.Name}}: parent is %T, not *models.{{.Parent.EmbedType}}", p)
 		}
 		result.{{.Parent.GoFieldName}} = *typed
 	}
@@ -48,9 +49,9 @@ func extract{{.Name}}(m registry.Model) (any, error) {
 		if err != nil {
 			return nil, err
 		}
-		typed, ok := p.(*{{.Parent.EmbedType}})
+		typed, ok := p.(*models.{{.Parent.EmbedType}})
 		if !ok {
-			return nil, fmt.Errorf("extract{{.Name}}: parent is %T, not *{{.Parent.EmbedType}}", p)
+			return nil, fmt.Errorf("extract{{.Name}}: parent is %T, not *models.{{.Parent.EmbedType}}", p)
 		}
 		result.{{.Parent.GoFieldName}} = *typed
 	}

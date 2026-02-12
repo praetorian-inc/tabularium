@@ -5,6 +5,7 @@ package capmodel
 import (
 	"fmt"
 
+	"github.com/praetorian-inc/tabularium/pkg/capmodel/internal/models"
 	"github.com/praetorian-inc/tabularium/pkg/model/model"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
@@ -33,7 +34,7 @@ func extractADObject(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractADObject: expected *model.ADObject, got %T", m)
 	}
-	result := ADObject{
+	result := models.ADObject{
 		Label:                                   src.Label,
 		SecondaryLabels:                         src.SecondaryLabels,
 		Domain:                                  src.Domain,
@@ -187,7 +188,7 @@ func extractAWSResource(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractAWSResource: expected *model.AWSResource, got %T", m)
 	}
-	result := AWSResource{
+	result := models.AWSResource{
 		IPs:          src.IPs,
 		URLs:         src.URLs,
 		Name:         src.Name,
@@ -204,7 +205,7 @@ func extractAsset(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractAsset: expected *model.Asset, got %T", m)
 	}
-	result := Asset{
+	result := models.Asset{
 		DNS:  src.DNS,
 		Name: src.Name,
 	}
@@ -216,7 +217,7 @@ func extractAzureResource(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractAzureResource: expected *model.AzureResource, got %T", m)
 	}
-	result := AzureResource{
+	result := models.AzureResource{
 		IPs:           src.IPs,
 		URLs:          src.URLs,
 		Name:          src.Name,
@@ -234,7 +235,7 @@ func extractDomain(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractDomain: expected *model.Asset, got %T", m)
 	}
-	result := Domain{
+	result := models.Domain{
 		Domain: src.DNS,
 	}
 	return &result, nil
@@ -245,7 +246,7 @@ func extractFile(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractFile: expected *model.File, got %T", m)
 	}
-	result := File{
+	result := models.File{
 		Name:  src.Name,
 		Bytes: []byte(src.Bytes),
 	}
@@ -257,7 +258,7 @@ func extractGCPResource(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractGCPResource: expected *model.GCPResource, got %T", m)
 	}
-	result := GCPResource{
+	result := models.GCPResource{
 		IPs:          src.IPs,
 		URLs:         src.URLs,
 		Name:         src.Name,
@@ -274,7 +275,7 @@ func extractIP(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractIP: expected *model.Asset, got %T", m)
 	}
-	result := IP{
+	result := models.IP{
 		IP: src.DNS,
 	}
 	return &result, nil
@@ -285,7 +286,7 @@ func extractOrganization(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractOrganization: expected *model.Organization, got %T", m)
 	}
-	result := Organization{
+	result := models.Organization{
 		Name:                  src.Name,
 		Domain:                src.Domain,
 		Website:               src.Website,
@@ -335,7 +336,7 @@ func extractPerson(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractPerson: expected *model.Person, got %T", m)
 	}
-	result := Person{
+	result := models.Person{
 		FirstName:        src.FirstName,
 		LastName:         src.LastName,
 		Name:             src.Name,
@@ -366,7 +367,7 @@ func extractPort(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractPort: expected *model.Port, got %T", m)
 	}
-	result := Port{
+	result := models.Port{
 		Protocol: src.Protocol,
 		Port:     src.Port,
 		Service:  src.Service,
@@ -376,9 +377,9 @@ func extractPort(m registry.Model) (any, error) {
 		if err != nil {
 			return nil, err
 		}
-		typed, ok := p.(*Asset)
+		typed, ok := p.(*models.Asset)
 		if !ok {
-			return nil, fmt.Errorf("extractPort: parent is %T, not *Asset", p)
+			return nil, fmt.Errorf("extractPort: parent is %T, not *models.Asset", p)
 		}
 		result.Parent = *typed
 	}
@@ -390,7 +391,7 @@ func extractPreseed(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractPreseed: expected *model.Preseed, got %T", m)
 	}
-	result := Preseed{
+	result := models.Preseed{
 		Type:  src.Type,
 		Title: src.Title,
 		Value: src.Value,
@@ -403,7 +404,8 @@ func extractRisk(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractRisk: expected *model.Risk, got %T", m)
 	}
-	result := Risk{
+	result := models.Risk{
+		DNS:    src.DNS,
 		Name:   src.Name,
 		Source: src.Source,
 		Status: src.Status,
@@ -413,9 +415,9 @@ func extractRisk(m registry.Model) (any, error) {
 		if err != nil {
 			return nil, err
 		}
-		typed, ok := p.(*Asset)
+		typed, ok := p.(*models.Asset)
 		if !ok {
-			return nil, fmt.Errorf("extractRisk: parent is %T, not *Asset", p)
+			return nil, fmt.Errorf("extractRisk: parent is %T, not *models.Asset", p)
 		}
 		result.Target = *typed
 	}
@@ -427,7 +429,7 @@ func extractTechnology(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractTechnology: expected *model.Technology, got %T", m)
 	}
-	result := Technology{
+	result := models.Technology{
 		CPE:  src.CPE,
 		Name: src.Name,
 	}
@@ -439,7 +441,7 @@ func extractWebApplication(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractWebApplication: expected *model.WebApplication, got %T", m)
 	}
-	result := WebApplication{
+	result := models.WebApplication{
 		PrimaryURL: src.PrimaryURL,
 		URLs:       src.URLs,
 		Name:       src.Name,
@@ -452,7 +454,7 @@ func extractWebpage(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractWebpage: expected *model.Webpage, got %T", m)
 	}
-	result := Webpage{
+	result := models.Webpage{
 		URL: src.URL,
 	}
 	if src.Parent != nil {
@@ -460,9 +462,9 @@ func extractWebpage(m registry.Model) (any, error) {
 		if err != nil {
 			return nil, err
 		}
-		typed, ok := p.(*WebApplication)
+		typed, ok := p.(*models.WebApplication)
 		if !ok {
-			return nil, fmt.Errorf("extractWebpage: parent is %T, not *WebApplication", p)
+			return nil, fmt.Errorf("extractWebpage: parent is %T, not *models.WebApplication", p)
 		}
 		result.Parent = *typed
 	}

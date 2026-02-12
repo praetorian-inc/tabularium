@@ -52,12 +52,13 @@ var funcMap = template.FuncMap{
 
 // templateData is the data passed to convert_gen.go and extract_gen.go templates.
 type templateData struct {
-	Package   string
-	TypeSpecs []typeSpec
+	Package      string
+	ModelsImport string
+	TypeSpecs    []typeSpec
 }
 
 // generate renders all generated files into outputDir:
-//   - one model file per typeSpec
+//   - one model file per typeSpec (in internal/models/ subdirectory)
 //   - convert_gen.go with registry converters
 //   - extract_gen.go with registry extractors
 //   - typemap_gen.go with capmodel→model type mapping
@@ -66,15 +67,26 @@ func generate(typeSpecs []typeSpec, outputDir string) error {
 		return err
 	}
 
+	modelsDir := filepath.Join(outputDir, "internal", "models")
+	if err := os.MkdirAll(modelsDir, 0755); err != nil {
+		return err
+	}
+
 	for _, st := range typeSpecs {
-		if err := writeFormatted(modelTmpl, st, outputDir, strings.ToLower(st.Name)+"_model.go"); err != nil {
+		if err := writeFormatted(modelTmpl, st, modelsDir, strings.ToLower(st.Name)+"_model.go"); err != nil {
 			return err
 		}
 	}
 
+	modelsImport, err := resolveImportPath(modelsDir)
+	if err != nil {
+		return fmt.Errorf("resolving models import path: %w", err)
+	}
+
 	data := templateData{
-		Package:   filepath.Base(outputDir),
-		TypeSpecs: typeSpecs,
+		Package:      filepath.Base(outputDir),
+		ModelsImport: modelsImport,
+		TypeSpecs:    typeSpecs,
 	}
 
 	if err := writeFormatted(convertTmpl, data, outputDir, "convert_gen.go"); err != nil {
@@ -84,6 +96,36 @@ func generate(typeSpecs []typeSpec, outputDir string) error {
 		return err
 	}
 	return writeFormatted(extractTmpl, data, outputDir, "extract_gen.go")
+}
+
+// resolveImportPath finds the Go module import path for the given directory
+// by walking up to find go.mod and computing the relative path.
+func resolveImportPath(dir string) (string, error) {
+	abs, err := filepath.Abs(dir)
+	if err != nil {
+		return "", err
+	}
+	for d := abs; ; d = filepath.Dir(d) {
+		data, err := os.ReadFile(filepath.Join(d, "go.mod"))
+		if err == nil {
+			for _, line := range strings.Split(string(data), "\n") {
+				if strings.HasPrefix(line, "module ") {
+					mod := strings.TrimSpace(strings.TrimPrefix(line, "module "))
+					rel, err := filepath.Rel(d, abs)
+					if err != nil {
+						return "", err
+					}
+					return mod + "/" + filepath.ToSlash(rel), nil
+				}
+			}
+			return "", fmt.Errorf("no module directive in %s/go.mod", d)
+		}
+		parent := filepath.Dir(d)
+		if parent == d {
+			break
+		}
+	}
+	return "", fmt.Errorf("no go.mod found above %s", dir)
 }
 
 // writeFormatted executes a template, formats the output as Go source, and writes it.

@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/praetorian-inc/tabularium/pkg/capmodel/internal/models"
 	"github.com/praetorian-inc/tabularium/pkg/model/model"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
@@ -32,7 +33,7 @@ func extract[T any](t *testing.T, name string, m registry.Model) *T {
 }
 
 func TestIPConvert(t *testing.T) {
-	result := convert[*model.Asset](t, "IP", IP{IP: "192.168.1.1"})
+	result := convert[*model.Asset](t, "IP", models.IP{IP: "192.168.1.1"})
 	assert.Equal(t, "192.168.1.1", result.DNS)
 	// DNS and Name share the same capmodel field ("ip"), so setting IP propagates to both.
 	assert.Equal(t, "192.168.1.1", result.Name)
@@ -40,25 +41,25 @@ func TestIPConvert(t *testing.T) {
 }
 
 func TestDomainConvert(t *testing.T) {
-	result := convert[*model.Asset](t, "Domain", Domain{Domain: "example.com"})
+	result := convert[*model.Asset](t, "Domain", models.Domain{Domain: "example.com"})
 	assert.Equal(t, "example.com", result.DNS)
 	assert.Equal(t, "example.com", result.Name)
 	assert.Equal(t, "#asset#example.com#example.com", result.Key)
 }
 
 func TestAssetConvert(t *testing.T) {
-	result := convert[*model.Asset](t, "Asset", Asset{DNS: "example.com", Name: "10.0.0.1"})
+	result := convert[*model.Asset](t, "Asset", models.Asset{DNS: "example.com", Name: "10.0.0.1"})
 	assert.Equal(t, "example.com", result.DNS)
 	assert.Equal(t, "10.0.0.1", result.Name)
 	assert.Equal(t, "#asset#example.com#10.0.0.1", result.Key)
 }
 
 func TestRiskConvert(t *testing.T) {
-	result := convert[*model.Risk](t, "Risk", Risk{
+	result := convert[*model.Risk](t, "Risk", models.Risk{
 		Name:   "CVE-2023-12345",
 		Status: "TH",
 		Source: "nessus",
-		Target: Asset{DNS: "example.com", Name: "10.0.0.1"},
+		Target: models.Asset{DNS: "example.com", Name: "10.0.0.1"},
 	})
 	assert.Equal(t, "example.com", result.DNS, "DNS should be derived from parent Target")
 	assert.Equal(t, "CVE-2023-12345", result.Name)
@@ -68,11 +69,11 @@ func TestRiskConvert(t *testing.T) {
 }
 
 func TestPortConvert(t *testing.T) {
-	result := convert[*model.Port](t, "Port", Port{
+	result := convert[*model.Port](t, "Port", models.Port{
 		Protocol: "tcp",
 		Port:     443,
 		Service:  "https",
-		Parent:   Asset{DNS: "example.com", Name: "10.0.0.1"},
+		Parent:   models.Asset{DNS: "example.com", Name: "10.0.0.1"},
 	})
 	assert.Equal(t, "tcp", result.Protocol)
 	assert.Equal(t, 443, result.Port)
@@ -81,7 +82,7 @@ func TestPortConvert(t *testing.T) {
 }
 
 func TestTechnologyConvert(t *testing.T) {
-	result := convert[*model.Technology](t, "Technology", Technology{
+	result := convert[*model.Technology](t, "Technology", models.Technology{
 		CPE:  "cpe:2.3:a:apache:http_server:2.4.50:*:*:*:*:*:*:*",
 		Name: "Apache httpd",
 	})
@@ -91,14 +92,14 @@ func TestTechnologyConvert(t *testing.T) {
 }
 
 func TestFileConvert(t *testing.T) {
-	result := convert[*model.File](t, "File", File{Name: "proofs/test.txt", Bytes: []byte("hello")})
+	result := convert[*model.File](t, "File", models.File{Name: "proofs/test.txt", Bytes: []byte("hello")})
 	assert.Equal(t, "proofs/test.txt", result.Name)
 	assert.NotEmpty(t, result.Bytes)
 	assert.Equal(t, "#file#proofs/test.txt", result.Key)
 }
 
 func TestWebApplicationConvert(t *testing.T) {
-	result := convert[*model.WebApplication](t, "WebApplication", WebApplication{
+	result := convert[*model.WebApplication](t, "WebApplication", models.WebApplication{
 		PrimaryURL: "https://example.com",
 		Name:       "Example App",
 		URLs:       []string{"https://api.example.com"},
@@ -109,9 +110,9 @@ func TestWebApplicationConvert(t *testing.T) {
 }
 
 func TestWebpageConvert(t *testing.T) {
-	result := convert[*model.Webpage](t, "Webpage", Webpage{
+	result := convert[*model.Webpage](t, "Webpage", models.Webpage{
 		URL: "https://example.com/login",
-		Parent: WebApplication{
+		Parent: models.WebApplication{
 			PrimaryURL: "https://example.com",
 			Name:       "Example",
 		},
@@ -121,7 +122,7 @@ func TestWebpageConvert(t *testing.T) {
 }
 
 func TestPreseedConvert(t *testing.T) {
-	result := convert[*model.Preseed](t, "Preseed", Preseed{
+	result := convert[*model.Preseed](t, "Preseed", models.Preseed{
 		Type:  "whois",
 		Title: "registrant_email",
 		Value: "admin@example.com",
@@ -133,7 +134,7 @@ func TestPreseedConvert(t *testing.T) {
 }
 
 func TestADObjectConvert(t *testing.T) {
-	result := convert[*model.ADObject](t, "ADObject", ADObject{
+	result := convert[*model.ADObject](t, "ADObject", models.ADObject{
 		Label:           "ADUser",
 		SecondaryLabels: []string{"ADLocalGroup"},
 		Domain:          "example.local",
@@ -153,7 +154,7 @@ func TestADObjectConvert(t *testing.T) {
 }
 
 func TestAWSResourceConvert(t *testing.T) {
-	result := convert[*model.AWSResource](t, "AWSResource", AWSResource{
+	result := convert[*model.AWSResource](t, "AWSResource", models.AWSResource{
 		Name:         "my-ec2",
 		ResourceType: "ec2",
 		Region:       "us-west-2",
@@ -166,7 +167,7 @@ func TestAWSResourceConvert(t *testing.T) {
 }
 
 func TestAzureResourceConvert(t *testing.T) {
-	result := convert[*model.AzureResource](t, "AzureResource", AzureResource{
+	result := convert[*model.AzureResource](t, "AzureResource", models.AzureResource{
 		Name:          "my-vm",
 		ResourceType:  "vm",
 		Region:        "eastus",
@@ -181,7 +182,7 @@ func TestAzureResourceConvert(t *testing.T) {
 }
 
 func TestGCPResourceConvert(t *testing.T) {
-	result := convert[*model.GCPResource](t, "GCPResource", GCPResource{
+	result := convert[*model.GCPResource](t, "GCPResource", models.GCPResource{
 		Name:         "my-instance",
 		ResourceType: "compute",
 		Region:       "us-central1",
@@ -194,7 +195,7 @@ func TestGCPResourceConvert(t *testing.T) {
 }
 
 func TestPersonConvert(t *testing.T) {
-	result := convert[*model.Person](t, "Person", Person{
+	result := convert[*model.Person](t, "Person", models.Person{
 		FirstName:        ptr("Jane"),
 		LastName:         ptr("Doe"),
 		Name:             ptr("Jane Doe"),
@@ -236,7 +237,7 @@ func TestPersonConvert(t *testing.T) {
 }
 
 func TestOrganizationConvert(t *testing.T) {
-	result := convert[*model.Organization](t, "Organization", Organization{
+	result := convert[*model.Organization](t, "Organization", models.Organization{
 		Name:                  ptr("Acme Corp"),
 		Domain:                ptr("acme.com"),
 		Website:               ptr("https://acme.com"),
@@ -292,7 +293,7 @@ func TestOrganizationConvert(t *testing.T) {
 
 func TestAssetExtract(t *testing.T) {
 	src := model.NewAsset("example.com", "10.0.0.1")
-	result := extract[Asset](t, "Asset", &src)
+	result := extract[models.Asset](t, "Asset", &src)
 	assert.Equal(t, "example.com", result.DNS)
 	assert.Equal(t, "10.0.0.1", result.Name)
 }
@@ -301,7 +302,7 @@ func TestAWSResourceExtract(t *testing.T) {
 	src := &model.AWSResource{CloudResource: model.CloudResource{
 		Name: "my-ec2", ResourceType: "ec2", Region: "us-west-2", AccountRef: "123456789012",
 	}}
-	result := extract[AWSResource](t, "AWSResource", src)
+	result := extract[models.AWSResource](t, "AWSResource", src)
 	assert.Equal(t, "my-ec2", result.Name)
 	assert.Equal(t, "ec2", result.ResourceType) // CloudResourceType → string cast
 }
@@ -309,7 +310,7 @@ func TestAWSResourceExtract(t *testing.T) {
 func TestPortExtract(t *testing.T) {
 	asset := model.NewAsset("example.com", "10.0.0.1")
 	src := model.NewPort("tcp", 443, &asset)
-	result := extract[Port](t, "Port", &src)
+	result := extract[models.Port](t, "Port", &src)
 	assert.Equal(t, "tcp", result.Protocol)
 	assert.Equal(t, 443, result.Port)
 	assert.Equal(t, "example.com", result.Parent.DNS) // GraphModelWrapper parent
@@ -318,7 +319,7 @@ func TestPortExtract(t *testing.T) {
 func TestRiskExtract(t *testing.T) {
 	asset := model.NewAsset("example.com", "10.0.0.1")
 	src := model.NewRisk(&asset, "CVE-2023-12345", "TH")
-	result := extract[Risk](t, "Risk", &src)
+	result := extract[models.Risk](t, "Risk", &src)
 	assert.Equal(t, "CVE-2023-12345", result.Name)
 	assert.Equal(t, "example.com", result.Target.DNS) // DNS from parent
 }
@@ -328,27 +329,27 @@ func TestWebpageExtract(t *testing.T) {
 		URL:    "https://example.com/login",
 		Parent: &model.WebApplication{PrimaryURL: "https://example.com", Name: "Example"},
 	}
-	result := extract[Webpage](t, "Webpage", src)
+	result := extract[models.Webpage](t, "Webpage", src)
 	assert.Equal(t, "https://example.com/login", result.URL)
 	assert.Equal(t, "https://example.com", result.Parent.PrimaryURL) // concrete pointer parent
 }
 
 // Round-trip: capmodel → model → capmodel
 func TestAssetRoundTrip(t *testing.T) {
-	original := Asset{DNS: "example.com", Name: "10.0.0.1"}
+	original := models.Asset{DNS: "example.com", Name: "10.0.0.1"}
 	m := convert[*model.Asset](t, "Asset", original)
-	result := extract[Asset](t, "Asset", m)
+	result := extract[models.Asset](t, "Asset", m)
 	assert.Equal(t, original, *result)
 }
 
 func TestPortRoundTrip(t *testing.T) {
-	original := Port{
+	original := models.Port{
 		Protocol: "tcp",
 		Port:     443,
 		Service:  "https",
-		Parent:   Asset{DNS: "example.com", Name: "10.0.0.1"},
+		Parent:   models.Asset{DNS: "example.com", Name: "10.0.0.1"},
 	}
 	m := convert[*model.Port](t, "Port", original)
-	result := extract[Port](t, "Port", m)
+	result := extract[models.Port](t, "Port", m)
 	assert.Equal(t, original, *result)
 }
