@@ -294,7 +294,7 @@ func (r *Risk) GetHooks() []registry.Hook {
 	return []registry.Hook{
 		{
 			Call: func() error {
-				if r.DNS == "" {
+				if r.DNS == "" && r.Target != nil {
 					r.DNS = r.Target.Group()
 				}
 				r.formatName()
