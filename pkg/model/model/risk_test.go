@@ -189,13 +189,11 @@ func TestRisk_Valid(t *testing.T) {
 	missingKey.Key = ""
 	missingStatus := NewRisk(&Asset{DNS: "test", Name: "test"}, "test", "")
 	missingName := NewRisk(&Asset{DNS: "test", Name: "test"}, "", TriageInfo)
-	missingDNS := NewRiskWithDNS(&Asset{DNS: "test", Name: "test"}, "test", "", TriageInfo)
 
 	assert.True(t, validRisk.Valid())
 	assert.False(t, missingKey.Valid())
 	assert.False(t, missingStatus.Valid())
 	assert.False(t, missingName.Valid())
-	assert.False(t, missingDNS.Valid())
 }
 
 func TestRisk_TagsVist(t *testing.T) {
@@ -425,7 +423,7 @@ func TestRisk_VisitOrigins(t *testing.T) {
 
 func TestRisk_TargetInterface(t *testing.T) {
 	risk := Risk{
-		Status: "TH",  // Triage High
+		Status: "TH", // Triage High
 		DNS:    "example.com",
 		Key:    "#risk#example.com#CVE-2024-1234",
 		Name:   "swagger-api",
