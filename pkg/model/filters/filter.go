@@ -6,15 +6,19 @@ import (
 )
 
 type Filter struct {
-	Field                string            `json:"field"`
-	Operator             string            `json:"operator"`
-	Value                SliceOrValue[any] `json:"value"`
-	Not                  bool              `json:"not"`
-	ReverseOperands      bool              `json:"reverseOperands"`
-	Alias                string            `json:"alias,omitempty"`
-	MetadataLabel        string            `json:"metadataLabel,omitempty"`
-	MetadataDirection    string            `json:"metadataDirection,omitempty"`
-	MetadataRelationship string            `json:"metadataRelationship,omitempty"`
+	Field           string            `json:"field"`
+	Operator        string            `json:"operator"`
+	Value           SliceOrValue[any] `json:"value"`
+	Not             bool              `json:"not"`
+	ReverseOperands bool              `json:"reverseOperands"`
+	Alias           string            `json:"alias,omitempty"`
+	MetadataFilter
+}
+
+type MetadataFilter struct {
+	MetadataLabel        string `json:"metadataLabel,omitempty"`
+	MetadataDirection    string `json:"metadataDirection,omitempty"`
+	MetadataRelationship string `json:"metadataRelationship,omitempty"`
 }
 
 func NewFilter(field, operator string, value any, opts ...Option) Filter {
@@ -125,6 +129,7 @@ func (f *Filter) Validate() error {
 	if hasAnyMetadata && !f.HasMetadata() {
 		return fmt.Errorf("metadataLabel, metadataDirection, metadataRelationship must be provided together")
 	}
+
 	if !hasAnyMetadata {
 		return nil
 	}
