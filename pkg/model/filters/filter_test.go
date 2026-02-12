@@ -186,12 +186,14 @@ func TestFilter_FloatHandling(t *testing.T) {
 func TestFilter_ValidateMetadata(t *testing.T) {
 	t.Run("passes with complete metadata trio on leaf", func(t *testing.T) {
 		filter := Filter{
-			Field:                "title",
-			Operator:             OperatorContains,
-			Value:                SliceOrValue[any]{"critical"},
-			MetadataLabel:        "Vulnerability",
-			MetadataDirection:    "target",
-			MetadataRelationship: "INSTANCE_OF",
+			Field:    "title",
+			Operator: OperatorContains,
+			Value:    SliceOrValue[any]{"critical"},
+			MetadataFilter: MetadataFilter{
+				MetadataLabel:        "Vulnerability",
+				MetadataDirection:    "target",
+				MetadataRelationship: "INSTANCE_OF",
+			},
 		}
 
 		err := filter.Validate()
@@ -207,11 +209,13 @@ func TestFilter_ValidateMetadata(t *testing.T) {
 
 	t.Run("fails with partial metadata trio", func(t *testing.T) {
 		filter := Filter{
-			Field:             "title",
-			Operator:          OperatorContains,
-			Value:             SliceOrValue[any]{"critical"},
-			MetadataLabel:     "Vulnerability",
-			MetadataDirection: "target",
+			Field:    "title",
+			Operator: OperatorContains,
+			Value:    SliceOrValue[any]{"critical"},
+			MetadataFilter: MetadataFilter{
+				MetadataLabel:     "Vulnerability",
+				MetadataDirection: "target",
+			},
 		}
 
 		err := filter.Validate()
@@ -220,12 +224,14 @@ func TestFilter_ValidateMetadata(t *testing.T) {
 
 	t.Run("fails with invalid metadata direction", func(t *testing.T) {
 		filter := Filter{
-			Field:                "title",
-			Operator:             OperatorContains,
-			Value:                SliceOrValue[any]{"critical"},
-			MetadataLabel:        "Vulnerability",
-			MetadataDirection:    "SOURCE",
-			MetadataRelationship: "INSTANCE_OF",
+			Field:    "title",
+			Operator: OperatorContains,
+			Value:    SliceOrValue[any]{"critical"},
+			MetadataFilter: MetadataFilter{
+				MetadataLabel:        "Vulnerability",
+				MetadataDirection:    "SOURCE",
+				MetadataRelationship: "INSTANCE_OF",
+			},
 		}
 
 		err := filter.Validate()
@@ -234,12 +240,14 @@ func TestFilter_ValidateMetadata(t *testing.T) {
 
 	t.Run("fails when metadata used on logical filter", func(t *testing.T) {
 		filter := Filter{
-			Field:                "group",
-			Operator:             OperatorOr,
-			Value:                SliceOrValue[any]{NewFilter("status", OperatorEqual, "active")},
-			MetadataLabel:        "Vulnerability",
-			MetadataDirection:    "target",
-			MetadataRelationship: "INSTANCE_OF",
+			Field:    "group",
+			Operator: OperatorOr,
+			Value:    SliceOrValue[any]{NewFilter("status", OperatorEqual, "active")},
+			MetadataFilter: MetadataFilter{
+				MetadataLabel:        "Vulnerability",
+				MetadataDirection:    "target",
+				MetadataRelationship: "INSTANCE_OF",
+			},
 		}
 
 		err := filter.Validate()
