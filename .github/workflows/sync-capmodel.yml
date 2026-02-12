@@ -1,0 +1,58 @@
+name: Sync Capability Models
+
+on:
+  workflow_run:
+    workflows: ["Schema and Client Generation"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Checkout tabularium
+        uses: actions/checkout@v4
+
+      - name: Checkout capability-sdk
+        uses: actions/checkout@v4
+        with:
+          repository: praetorian-inc/capability-sdk
+          token: ${{ secrets.WORKFLOW_PAT }}
+          path: capability-sdk
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Configure Git for Private Modules
+        env:
+          WORKFLOW_PAT: ${{ secrets.WORKFLOW_PAT }}
+        run: |
+          git config --global url."https://${WORKFLOW_PAT}@github.com/".insteadOf "https://github.com/"
+          echo "GOPRIVATE=github.com/praetorian-inc" >> $GITHUB_ENV
+
+      - name: Sync models
+        run: |
+          rm -f capability-sdk/pkg/capmodel/*_model.go
+          for f in pkg/capmodel/internal/models/*_model.go; do
+            sed 's/^package models$/package capmodel/' "$f" > "capability-sdk/pkg/capmodel/$(basename "$f")"
+          done
+
+      - name: Vet capability-sdk
+        working-directory: capability-sdk
+        run: go vet ./...
+
+      - name: Commit and push
+        working-directory: capability-sdk
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pkg/capmodel/
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: sync capability models from tabularium"
+            git push
+          else
+            echo "No changes to commit."
+          fi
