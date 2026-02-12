@@ -18,7 +18,7 @@ type Risk struct {
 	Username string `neo4j:"username" json:"username" desc:"Chariot username associated with the risk." example:"user@example.com"`
 	Key      string `neo4j:"key" json:"key" desc:"Unique key identifying the risk." example:"#risk#example.com#CVE-2023-12345"`
 	// Attributes
-	DNS        string `neo4j:"dns" json:"dns" desc:"Primary DNS or group associated with the risk." example:"example.com" capmodel:"Risk"`
+	DNS        string `neo4j:"dns" json:"dns" desc:"Primary DNS or group associated with the risk." example:"example.com"`
 	Name       string `neo4j:"name" json:"name" desc:"Name of the risk or vulnerability." example:"CVE-2023-12345" capmodel:"Risk"`
 	Source     string `neo4j:"source" json:"source" desc:"Source that identified the risk." example:"nessus" capmodel:"Risk"`
 	Status     string `neo4j:"status" json:"status" desc:"Current status of the risk (e.g., TH, OC, RM)." example:"TH" capmodel:"Risk"`
