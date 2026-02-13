@@ -184,15 +184,15 @@ func TestFilter_FloatHandling(t *testing.T) {
 }
 
 func TestFilter_ValidateMetadata(t *testing.T) {
-	t.Run("passes with complete metadata trio on leaf", func(t *testing.T) {
+	t.Run("passes with complete relationship filter trio on leaf", func(t *testing.T) {
 		filter := Filter{
 			Field:    "title",
 			Operator: OperatorContains,
 			Value:    SliceOrValue[any]{"critical"},
-			MetadataFilter: MetadataFilter{
-				MetadataLabel:        "Vulnerability",
-				MetadataDirection:    "target",
-				MetadataRelationship: "INSTANCE_OF",
+			RelationshipFilter: RelationshipFilter{
+				RelationshipNodeLabel: "Vulnerability",
+				RelationshipDirection: "target",
+				RelationshipLabel:     "INSTANCE_OF",
 			},
 		}
 
@@ -200,57 +200,57 @@ func TestFilter_ValidateMetadata(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("passes with no metadata", func(t *testing.T) {
+	t.Run("passes with no relationship filter", func(t *testing.T) {
 		filter := NewFilter("title", OperatorContains, "critical")
 
 		err := filter.Validate()
 		require.NoError(t, err)
 	})
 
-	t.Run("fails with partial metadata trio", func(t *testing.T) {
+	t.Run("fails with partial relationship filter trio", func(t *testing.T) {
 		filter := Filter{
 			Field:    "title",
 			Operator: OperatorContains,
 			Value:    SliceOrValue[any]{"critical"},
-			MetadataFilter: MetadataFilter{
-				MetadataLabel:     "Vulnerability",
-				MetadataDirection: "target",
+			RelationshipFilter: RelationshipFilter{
+				RelationshipNodeLabel: "Vulnerability",
+				RelationshipDirection: "target",
 			},
 		}
 
 		err := filter.Validate()
-		require.EqualError(t, err, "metadataLabel, metadataDirection, metadataRelationship must be provided together")
+		require.EqualError(t, err, "relationshipNodeLabel, relationshipDirection, relationshipLabel must be provided together")
 	})
 
-	t.Run("fails with invalid metadata direction", func(t *testing.T) {
+	t.Run("fails with invalid relationship filter direction", func(t *testing.T) {
 		filter := Filter{
 			Field:    "title",
 			Operator: OperatorContains,
 			Value:    SliceOrValue[any]{"critical"},
-			MetadataFilter: MetadataFilter{
-				MetadataLabel:        "Vulnerability",
-				MetadataDirection:    "SOURCE",
-				MetadataRelationship: "INSTANCE_OF",
+			RelationshipFilter: RelationshipFilter{
+				RelationshipNodeLabel: "Vulnerability",
+				RelationshipDirection: "SOURCE",
+				RelationshipLabel:     "INSTANCE_OF",
 			},
 		}
 
 		err := filter.Validate()
-		require.EqualError(t, err, "metadataDirection must be one of: source, target")
+		require.EqualError(t, err, "relationshipDirection must be one of: source, target")
 	})
 
-	t.Run("fails when metadata used on logical filter", func(t *testing.T) {
+	t.Run("fails when relationship filter used on logical filter", func(t *testing.T) {
 		filter := Filter{
 			Field:    "group",
 			Operator: OperatorOr,
 			Value:    SliceOrValue[any]{NewFilter("status", OperatorEqual, "active")},
-			MetadataFilter: MetadataFilter{
-				MetadataLabel:        "Vulnerability",
-				MetadataDirection:    "target",
-				MetadataRelationship: "INSTANCE_OF",
+			RelationshipFilter: RelationshipFilter{
+				RelationshipNodeLabel: "Vulnerability",
+				RelationshipDirection: "target",
+				RelationshipLabel:     "INSTANCE_OF",
 			},
 		}
 
 		err := filter.Validate()
-		require.EqualError(t, err, "metadata is not allowed on logical filters")
+		require.EqualError(t, err, "relationship filter is not allowed with logical filters")
 	})
 }

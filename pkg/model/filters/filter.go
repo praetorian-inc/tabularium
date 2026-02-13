@@ -12,13 +12,13 @@ type Filter struct {
 	Not             bool              `json:"not"`
 	ReverseOperands bool              `json:"reverseOperands"`
 	Alias           string            `json:"alias,omitempty"`
-	MetadataFilter
+	RelationshipFilter
 }
 
-type MetadataFilter struct {
-	MetadataLabel        string `json:"metadataLabel,omitempty"`
-	MetadataDirection    string `json:"metadataDirection,omitempty"`
-	MetadataRelationship string `json:"metadataRelationship,omitempty"`
+type RelationshipFilter struct {
+	RelationshipNodeLabel string `json:"relationshipNodeLabel,omitempty"`
+	RelationshipDirection string `json:"relationshipDirection,omitempty"`
+	RelationshipLabel     string `json:"relationshipRelationship,omitempty"`
 }
 
 func NewFilter(field, operator string, value any, opts ...Option) Filter {
@@ -98,19 +98,19 @@ func (f *Filter) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (f *Filter) HasMetadata() bool {
-	label, direction, relationship := f.metadataFieldsPresent()
+func (f *Filter) IsRelationshipFilter() bool {
+	label, direction, relationship := f.relationshipFieldsPresent()
 	return label && direction && relationship
 }
 
-func (f *Filter) metadataFieldsPresent() (label, direction, relationship bool) {
-	return f.MetadataLabel != "", f.MetadataDirection != "", f.MetadataRelationship != ""
+func (f *Filter) relationshipFieldsPresent() (label, direction, relationship bool) {
+	return f.RelationshipNodeLabel != "", f.RelationshipDirection != "", f.RelationshipLabel != ""
 }
 
 func (f *Filter) Validate() error {
 	if f.Operator == OperatorOr || f.Operator == OperatorAnd {
-		if f.HasMetadata() {
-			return fmt.Errorf("metadata is not allowed on logical filters")
+		if f.IsRelationshipFilter() {
+			return fmt.Errorf("relationship filter is not allowed with logical filters")
 		}
 		for _, value := range f.Value {
 			nested, ok := value.(Filter)
@@ -124,18 +124,18 @@ func (f *Filter) Validate() error {
 		return nil
 	}
 
-	label, direction, relationship := f.metadataFieldsPresent()
-	hasAnyMetadata := label || direction || relationship
-	if hasAnyMetadata && !f.HasMetadata() {
-		return fmt.Errorf("metadataLabel, metadataDirection, metadataRelationship must be provided together")
+	label, direction, relationship := f.relationshipFieldsPresent()
+	hasAnyRelationshipField := label || direction || relationship
+	if hasAnyRelationshipField && !f.IsRelationshipFilter() {
+		return fmt.Errorf("relationshipNodeLabel, relationshipDirection, relationshipLabel must be provided together")
 	}
 
-	if !hasAnyMetadata {
+	if !hasAnyRelationshipField {
 		return nil
 	}
 
-	if f.MetadataDirection != "source" && f.MetadataDirection != "target" {
-		return fmt.Errorf("metadataDirection must be one of: source, target")
+	if f.RelationshipDirection != "source" && f.RelationshipDirection != "target" {
+		return fmt.Errorf("relationshipDirection must be one of: source, target")
 	}
 
 	return nil
