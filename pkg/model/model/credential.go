@@ -28,6 +28,7 @@ const (
 	AWSCredential                     CredentialType = "aws"
 	GCloudCredential                  CredentialType = "gcloud"
 	AzureCredential                   CredentialType = "azure"
+	AzureDevOpsCredential             CredentialType = "azuredevops"         // Azure DevOps (Entra ID or PAT)
 	SSHKeyCredential                  CredentialType = "ssh-key"             // SSH private key
 	JSONCredential                    CredentialType = "json-credential"     // Generic JSON credential format
 	AegisConfigCredential             CredentialType = "aegis-config"        // Aegis config credential
