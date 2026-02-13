@@ -18,7 +18,7 @@ type Filter struct {
 type RelationshipFilter struct {
 	RelationshipNodeLabel string `json:"relationshipNodeLabel,omitempty"`
 	RelationshipDirection string `json:"relationshipDirection,omitempty"`
-	RelationshipLabel     string `json:"relationshipRelationship,omitempty"`
+	RelationshipLabel     string `json:"relationshipLabel,omitempty"`
 }
 
 func NewFilter(field, operator string, value any, opts ...Option) Filter {
