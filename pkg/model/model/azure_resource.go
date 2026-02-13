@@ -14,7 +14,7 @@ const (
 
 type AzureResource struct {
 	CloudResource
-	ResourceGroup string `neo4j:"resourceGroup" json:"resourceGroup"`
+	ResourceGroup string `neo4j:"resourceGroup" json:"resourceGroup" capmodel:"AzureResource"`
 }
 
 func init() {

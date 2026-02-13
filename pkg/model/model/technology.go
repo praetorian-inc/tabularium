@@ -23,8 +23,8 @@ type Technology struct {
 	// Attributes
 	Source string `neo4j:"-" json:"source,omitempty" desc:"Source that identified this technology." example:"wappalyzer"`
 	AliasCPE
-	CPE     string `neo4j:"cpe" json:"cpe" desc:"The full CPE string representation." example:"cpe:2.3:a:apache:http_server:2.4.50:*:*:*:*:*:*:*"`
-	Name    string `neo4j:"name" json:"name,omitempty" desc:"Optional common name for the technology." example:"Apache httpd"`
+	CPE     string `neo4j:"cpe" json:"cpe" desc:"The full CPE string representation." example:"cpe:2.3:a:apache:http_server:2.4.50:*:*:*:*:*:*:*" capmodel:"Technology"`
+	Name    string `neo4j:"name" json:"name,omitempty" desc:"Optional common name for the technology." example:"Apache httpd" capmodel:"Technology"`
 	TTL     int64  `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the technology record (Unix timestamp)." example:"1706353200"`
 	Comment string `neo4j:"-" json:"comment,omitempty" desc:"User-provided comment about the technology record." example:"Found on main web server"`
 	Created string `neo4j:"created" json:"created" desc:"Timestamp when the technology record was created (RFC3339)." example:"2023-10-27T10:00:00Z"`

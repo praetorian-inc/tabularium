@@ -19,9 +19,9 @@ type Risk struct {
 	Key      string `neo4j:"key" json:"key" desc:"Unique key identifying the risk." example:"#risk#example.com#CVE-2023-12345"`
 	// Attributes
 	DNS        string `neo4j:"dns" json:"dns" desc:"Primary DNS or group associated with the risk." example:"example.com"`
-	Name       string `neo4j:"name" json:"name" desc:"Name of the risk or vulnerability." example:"CVE-2023-12345"`
-	Source     string `neo4j:"source" json:"source" desc:"Source that identified the risk." example:"nessus"`
-	Status     string `neo4j:"status" json:"status" desc:"Current status of the risk (e.g., TH, OC, RM)." example:"TH"`
+	Name       string `neo4j:"name" json:"name" desc:"Name of the risk or vulnerability." example:"CVE-2023-12345" capmodel:"Risk"`
+	Source     string `neo4j:"source" json:"source" desc:"Source that identified the risk." example:"nessus" capmodel:"Risk"`
+	Status     string `neo4j:"status" json:"status" desc:"Current status of the risk (e.g., TH, OC, RM)." example:"TH" capmodel:"Risk"`
 	Priority   int    `neo4j:"priority" json:"priority" desc:"Calculated priority score based on severity." example:"10"`
 	Created    string `neo4j:"created" json:"created" desc:"Timestamp when the risk was first created (RFC3339)." example:"2023-10-27T10:00:00Z"`
 	Updated    string `neo4j:"updated" json:"updated" desc:"Timestamp when the risk was last updated (RFC3339)." example:"2023-10-27T11:00:00Z"`
@@ -29,7 +29,7 @@ type Risk struct {
 	TTL        int64  `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the risk record (Unix timestamp)." example:"1706353200"`
 	Comment    string `neo4j:"-" json:"comment,omitempty" desc:"User-provided comment about the risk." example:"Confirmed by manual check"`
 	PlextracID string `neo4j:"plextracid" json:"plextracid" desc:"ID of the risk in PlexTrac." example:"#clientID#reportId#findingId"`
-	Target     Target `neo4j:"-" json:"-"` // Internal use, not in schema
+	Target     Target `neo4j:"-" json:"-" capmodel:"Risk=target(Asset)"` // Internal use, not in schema
 	History
 	MLProperties
 	Tags
@@ -294,6 +294,9 @@ func (r *Risk) GetHooks() []registry.Hook {
 	return []registry.Hook{
 		{
 			Call: func() error {
+				if r.DNS == "" && r.Target != nil {
+					r.DNS = r.Target.Group()
+				}
 				r.formatName()
 				r.Key = fmt.Sprintf("#risk#%s#%s", r.DNS, r.Name)
 				r.Priority = riskPriority[r.Severity()]
