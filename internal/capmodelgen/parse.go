@@ -286,6 +286,9 @@ func resolveGoType(t reflect.Type) string {
 	case reflect.Ptr:
 		return "*" + resolveGoType(t.Elem())
 	case reflect.Slice:
+		if t.Elem().Kind() == reflect.Uint8 {
+			return "[]byte"
+		}
 		return "[]" + resolveGoType(t.Elem())
 	case reflect.Map:
 		return fmt.Sprintf("map[%s]%s", resolveGoType(t.Key()), resolveGoType(t.Elem()))
