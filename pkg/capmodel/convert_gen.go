@@ -23,6 +23,7 @@ func init() {
 	registry.Registry.MustRegisterConverter("Person", convertPerson)
 	registry.Registry.MustRegisterConverter("Port", convertPort)
 	registry.Registry.MustRegisterConverter("Preseed", convertPreseed)
+	registry.Registry.MustRegisterConverter("Repository", convertRepository)
 	registry.Registry.MustRegisterConverter("Risk", convertRisk)
 	registry.Registry.MustRegisterConverter("Technology", convertTechnology)
 	registry.Registry.MustRegisterConverter("WebApplication", convertWebApplication)
@@ -173,6 +174,14 @@ func convertPort(data []byte) (registry.Model, error) {
 
 func convertPreseed(data []byte) (registry.Model, error) {
 	var result model.Preseed
+	if err := registry.UnmarshalModel(data, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func convertRepository(data []byte) (registry.Model, error) {
+	var result model.Repository
 	if err := registry.UnmarshalModel(data, &result); err != nil {
 		return nil, err
 	}

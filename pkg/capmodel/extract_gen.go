@@ -23,6 +23,7 @@ func init() {
 	registry.Registry.MustRegisterExtractor("Person", extractPerson)
 	registry.Registry.MustRegisterExtractor("Port", extractPort)
 	registry.Registry.MustRegisterExtractor("Preseed", extractPreseed)
+	registry.Registry.MustRegisterExtractor("Repository", extractRepository)
 	registry.Registry.MustRegisterExtractor("Risk", extractRisk)
 	registry.Registry.MustRegisterExtractor("Technology", extractTechnology)
 	registry.Registry.MustRegisterExtractor("WebApplication", extractWebApplication)
@@ -431,6 +432,22 @@ func extractPreseed(m registry.Model) (any, error) {
 		Type:  src.Type,
 		Title: src.Title,
 		Value: src.Value,
+	}
+	return &result, nil
+}
+
+func extractRepository(m registry.Model) (any, error) {
+	src, ok := m.(*model.Repository)
+	if !ok {
+		return nil, fmt.Errorf("extractRepository: expected *model.Repository, got %T", m)
+	}
+	if e, ok := m.(registry.Extractable); ok {
+		e.PrepareForExtract()
+	}
+	result := models.Repository{
+		URL:  src.URL,
+		Org:  src.Org,
+		Name: src.Name,
 	}
 	return &result, nil
 }

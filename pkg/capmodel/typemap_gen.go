@@ -17,6 +17,7 @@ var ModelType = map[string]string{
 	"Person":         "Person",
 	"Port":           "Port",
 	"Preseed":        "Preseed",
+	"Repository":     "Repository",
 	"Risk":           "Risk",
 	"Technology":     "Technology",
 	"WebApplication": "WebApplication",
