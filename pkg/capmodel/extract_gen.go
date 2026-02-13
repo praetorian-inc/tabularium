@@ -34,6 +34,9 @@ func extractADObject(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractADObject: expected *model.ADObject, got %T", m)
 	}
+	if e, ok := m.(registry.Extractable); ok {
+		e.PrepareForExtract()
+	}
 	result := models.ADObject{
 		Label:                                   src.Label,
 		SecondaryLabels:                         src.SecondaryLabels,
@@ -188,6 +191,9 @@ func extractAWSResource(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractAWSResource: expected *model.AWSResource, got %T", m)
 	}
+	if e, ok := m.(registry.Extractable); ok {
+		e.PrepareForExtract()
+	}
 	result := models.AWSResource{
 		IPs:          src.IPs,
 		URLs:         src.URLs,
@@ -205,6 +211,9 @@ func extractAsset(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractAsset: expected *model.Asset, got %T", m)
 	}
+	if e, ok := m.(registry.Extractable); ok {
+		e.PrepareForExtract()
+	}
 	result := models.Asset{
 		DNS:  src.DNS,
 		Name: src.Name,
@@ -216,6 +225,9 @@ func extractAzureResource(m registry.Model) (any, error) {
 	src, ok := m.(*model.AzureResource)
 	if !ok {
 		return nil, fmt.Errorf("extractAzureResource: expected *model.AzureResource, got %T", m)
+	}
+	if e, ok := m.(registry.Extractable); ok {
+		e.PrepareForExtract()
 	}
 	result := models.AzureResource{
 		IPs:           src.IPs,
@@ -235,6 +247,9 @@ func extractDomain(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractDomain: expected *model.Asset, got %T", m)
 	}
+	if e, ok := m.(registry.Extractable); ok {
+		e.PrepareForExtract()
+	}
 	result := models.Domain{
 		Domain: src.DNS,
 	}
@@ -245,6 +260,9 @@ func extractFile(m registry.Model) (any, error) {
 	src, ok := m.(*model.File)
 	if !ok {
 		return nil, fmt.Errorf("extractFile: expected *model.File, got %T", m)
+	}
+	if e, ok := m.(registry.Extractable); ok {
+		e.PrepareForExtract()
 	}
 	result := models.File{
 		Name:  src.Name,
@@ -257,6 +275,9 @@ func extractGCPResource(m registry.Model) (any, error) {
 	src, ok := m.(*model.GCPResource)
 	if !ok {
 		return nil, fmt.Errorf("extractGCPResource: expected *model.GCPResource, got %T", m)
+	}
+	if e, ok := m.(registry.Extractable); ok {
+		e.PrepareForExtract()
 	}
 	result := models.GCPResource{
 		IPs:          src.IPs,
@@ -275,6 +296,9 @@ func extractIP(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractIP: expected *model.Asset, got %T", m)
 	}
+	if e, ok := m.(registry.Extractable); ok {
+		e.PrepareForExtract()
+	}
 	result := models.IP{
 		IP: src.DNS,
 	}
@@ -285,6 +309,9 @@ func extractOrganization(m registry.Model) (any, error) {
 	src, ok := m.(*model.Organization)
 	if !ok {
 		return nil, fmt.Errorf("extractOrganization: expected *model.Organization, got %T", m)
+	}
+	if e, ok := m.(registry.Extractable); ok {
+		e.PrepareForExtract()
 	}
 	result := models.Organization{
 		Name:                  src.Name,
@@ -336,6 +363,9 @@ func extractPerson(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractPerson: expected *model.Person, got %T", m)
 	}
+	if e, ok := m.(registry.Extractable); ok {
+		e.PrepareForExtract()
+	}
 	result := models.Person{
 		FirstName:        src.FirstName,
 		LastName:         src.LastName,
@@ -367,6 +397,9 @@ func extractPort(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractPort: expected *model.Port, got %T", m)
 	}
+	if e, ok := m.(registry.Extractable); ok {
+		e.PrepareForExtract()
+	}
 	result := models.Port{
 		Protocol: src.Protocol,
 		Port:     src.Port,
@@ -391,6 +424,9 @@ func extractPreseed(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractPreseed: expected *model.Preseed, got %T", m)
 	}
+	if e, ok := m.(registry.Extractable); ok {
+		e.PrepareForExtract()
+	}
 	result := models.Preseed{
 		Type:  src.Type,
 		Title: src.Title,
@@ -404,8 +440,10 @@ func extractRisk(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractRisk: expected *model.Risk, got %T", m)
 	}
+	if e, ok := m.(registry.Extractable); ok {
+		e.PrepareForExtract()
+	}
 	result := models.Risk{
-		DNS:    src.DNS,
 		Name:   src.Name,
 		Source: src.Source,
 		Status: src.Status,
@@ -429,6 +467,9 @@ func extractTechnology(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extractTechnology: expected *model.Technology, got %T", m)
 	}
+	if e, ok := m.(registry.Extractable); ok {
+		e.PrepareForExtract()
+	}
 	result := models.Technology{
 		CPE:  src.CPE,
 		Name: src.Name,
@@ -440,6 +481,9 @@ func extractWebApplication(m registry.Model) (any, error) {
 	src, ok := m.(*model.WebApplication)
 	if !ok {
 		return nil, fmt.Errorf("extractWebApplication: expected *model.WebApplication, got %T", m)
+	}
+	if e, ok := m.(registry.Extractable); ok {
+		e.PrepareForExtract()
 	}
 	result := models.WebApplication{
 		PrimaryURL: src.PrimaryURL,
@@ -453,6 +497,9 @@ func extractWebpage(m registry.Model) (any, error) {
 	src, ok := m.(*model.Webpage)
 	if !ok {
 		return nil, fmt.Errorf("extractWebpage: expected *model.Webpage, got %T", m)
+	}
+	if e, ok := m.(registry.Extractable); ok {
+		e.PrepareForExtract()
 	}
 	result := models.Webpage{
 		URL: src.URL,

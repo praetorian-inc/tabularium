@@ -3,7 +3,6 @@
 package models
 
 type Risk struct {
-	DNS    string `json:"dns"`
 	Name   string `json:"name"`
 	Source string `json:"source"`
 	Status string `json:"status"`

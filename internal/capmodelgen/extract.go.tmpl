@@ -21,6 +21,9 @@ func extract{{.Name}}(m registry.Model) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("extract{{.Name}}: expected *model.{{.SourceTypeName}}, got %T", m)
 	}
+	if e, ok := m.(registry.Extractable); ok {
+		e.PrepareForExtract()
+	}
 	result := models.{{.Name}}{
 {{- range .Fields}}
 {{- if .SourceGoType}}

@@ -120,6 +120,13 @@ func (p *Port) GetPartitionKey() string {
 	return p.Asset().Name
 }
 
+func (p *Port) PrepareForExtract() {
+	if p.Parent.Model == nil && p.Source != "" {
+		asset := p.Asset()
+		p.Parent = NewGraphModelWrapper(&asset)
+	}
+}
+
 func (p *Port) Defaulted() {
 	p.Status = Active
 	p.Visited = Now()
