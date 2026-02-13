@@ -184,6 +184,10 @@ func convertRisk(data []byte) (registry.Model, error) {
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return nil, err
 	}
+	if v, ok := raw["proof"]; ok {
+		delete(raw, "proof")
+		raw["sdkproof"] = v
+	}
 	parentRaw := raw["target"]
 	delete(raw, "target")
 	b, err := json.Marshal(raw)
