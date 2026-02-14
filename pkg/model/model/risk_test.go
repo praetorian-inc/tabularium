@@ -366,24 +366,14 @@ func TestRisk_MergePreservesCreated(t *testing.T) {
 
 func TestRisk_Visit_ShouldReopen(t *testing.T) {
 	existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", RemediatedHigh)
-	originalCreated := "2023-01-01T00:00:00Z"
-	existingRisk.Created = originalCreated
-	existingRisk.Visited = "2023-01-02T00:00:00Z"
-
 	incomingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", TriageHigh)
-	incomingRisk.Visited = "2023-12-31T23:59:59Z"
-
 	existingRisk.Visit(incomingRisk)
 	assert.Equal(t, OpenHigh, existingRisk.Status, "Risk should get re-opened")
 }
 
 func TestRisk_Visit_ShouldKeepRemediated(t *testing.T) {
 	existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", RemediatedInfo)
-	existingRisk.Visited = "2023-01-02T00:00:00Z"
-
 	incomingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", RemediatedInfo)
-	incomingRisk.Visited = "2023-01-03T00:00:00Z"
-
 	existingRisk.Visit(incomingRisk)
 	assert.Equal(t, RemediatedInfo, existingRisk.Status, "Status should remain RemediatedInfo when incoming is also Remediated")
 }
