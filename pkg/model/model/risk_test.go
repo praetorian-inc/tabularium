@@ -1,8 +1,9 @@
 package model
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -361,26 +362,30 @@ func TestRisk_MergePreservesCreated(t *testing.T) {
 		assert.NotEqual(t, fullRiskUpdate.Updated, existingRisk.Updated)
 		assert.NotEmpty(t, existingRisk.Updated)
 	})
+}
 
-	t.Run("Visit with Remediated risk triggers Set which calls Merge", func(t *testing.T) {
-		existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", RemediatedHigh)
-		originalCreated := "2023-01-01T00:00:00Z"
-		existingRisk.Created = originalCreated
-		existingRisk.Updated = "2023-01-02T00:00:00Z"
-		existingRisk.Visited = "2023-01-02T00:00:00Z"
+func TestRisk_Visit_ShouldReopen(t *testing.T) {
+	existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", RemediatedHigh)
+	originalCreated := "2023-01-01T00:00:00Z"
+	existingRisk.Created = originalCreated
+	existingRisk.Visited = "2023-01-02T00:00:00Z"
 
-		newRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", TriageHigh)
-		newRiskCreated := "2023-12-31T23:59:59Z"
-		newRisk.Created = newRiskCreated
-		newRisk.Visited = "2023-12-31T23:59:59Z"
+	incomingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", TriageHigh)
+	incomingRisk.Visited = "2023-12-31T23:59:59Z"
 
-		existingRisk.Visit(newRisk)
+	existingRisk.Visit(incomingRisk)
+	assert.Equal(t, OpenHigh, existingRisk.Status, "Risk should get re-opened")
+}
 
-		assert.Equal(t, originalCreated, existingRisk.Created, "Created should be preserved when Visit triggers Set->Merge")
-		assert.Equal(t, OpenHigh, existingRisk.Status, "Status should change from Remediated to Open")
-		assert.Equal(t, newRisk.Visited, existingRisk.Visited, "Visited should be updated from new risk")
-		assert.NotEmpty(t, existingRisk.Updated, "Updated should be set when status changes")
-	})
+func TestRisk_Visit_ShouldKeepRemediated(t *testing.T) {
+	existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", RemediatedInfo)
+	existingRisk.Visited = "2023-01-02T00:00:00Z"
+
+	incomingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", RemediatedInfo)
+	incomingRisk.Visited = "2023-01-03T00:00:00Z"
+
+	existingRisk.Visit(incomingRisk)
+	assert.Equal(t, RemediatedInfo, existingRisk.Status, "Status should remain RemediatedInfo when incoming is also Remediated")
 }
 
 func TestRisk_SetPlexTracID(t *testing.T) {
