@@ -30,7 +30,7 @@ type Risk struct {
 	Comment    string `neo4j:"-" json:"comment,omitempty" desc:"User-provided comment about the risk." example:"Confirmed by manual check"`
 	PlextracID string `neo4j:"plextracid" json:"plextracid" desc:"ID of the risk in PlexTrac." example:"#clientID#reportId#findingId"`
 	Target     Target `neo4j:"-" json:"-" capmodel:"Risk=target(Asset)"` // Internal use, not in schema
-	SDKProof   []byte `neo4j:"-" json:"-" capmodel:"Risk=proof"`       // Proof bytes; only used by capmodelgen to generate the SDK field
+	SDKProof   []byte `neo4j:"-" json:"-" capmodel:"Risk=proof"`         // Proof bytes; only used by capmodelgen to generate the SDK field
 	History
 	MLProperties
 	Tags
@@ -123,7 +123,7 @@ func (r *Risk) Visit(n Risk) {
 		r.TTL = n.TTL
 	}
 
-	if r.Is(Remediated) {
+	if r.Is(Remediated) && !n.Is(Remediated) {
 		r.Set(Open)
 	}
 

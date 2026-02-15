@@ -1,8 +1,9 @@
 package model
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -237,7 +238,7 @@ func TestRisk_TagsMerge(t *testing.T) {
 	})
 }
 
-func TestRisk_MergePreservesCreated(t *testing.T) {
+func TestRisk_MoreMergeBahaviors(t *testing.T) {
 	t.Run("Created is preserved when existing risk has Created and update has Created", func(t *testing.T) {
 		existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", TriageInfo)
 		originalCreated := "2023-01-01T00:00:00Z"
@@ -361,8 +362,10 @@ func TestRisk_MergePreservesCreated(t *testing.T) {
 		assert.NotEqual(t, fullRiskUpdate.Updated, existingRisk.Updated)
 		assert.NotEmpty(t, existingRisk.Updated)
 	})
+}
 
-	t.Run("Visit with Remediated risk triggers Set which calls Merge", func(t *testing.T) {
+func TestRisk_VisitRemediatedRisks(t *testing.T) {
+	t.Run("Triggers a re-open if incoming risk is not Remediated", func(t *testing.T) {
 		existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", RemediatedHigh)
 		originalCreated := "2023-01-01T00:00:00Z"
 		existingRisk.Created = originalCreated
@@ -380,6 +383,13 @@ func TestRisk_MergePreservesCreated(t *testing.T) {
 		assert.Equal(t, OpenHigh, existingRisk.Status, "Status should change from Remediated to Open")
 		assert.Equal(t, newRisk.Visited, existingRisk.Visited, "Visited should be updated from new risk")
 		assert.NotEmpty(t, existingRisk.Updated, "Updated should be set when status changes")
+	})
+
+	t.Run("Keeps remediated if incoming risk is also remediated", func(t *testing.T) {
+		existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", RemediatedInfo)
+		incomingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", RemediatedInfo)
+		existingRisk.Visit(incomingRisk)
+		assert.Equal(t, RemediatedInfo, existingRisk.Status, "Status should remain RemediatedInfo when incoming is also Remediated")
 	})
 }
 
