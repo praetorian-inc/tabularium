@@ -385,7 +385,7 @@ func TestRisk_VisitRemediatedRisks(t *testing.T) {
 		assert.NotEmpty(t, existingRisk.Updated, "Updated should be set when status changes")
 	})
 
-	t.Run("Does not trigger a re-open if incoming risk is also Remediated", func(t *testing.T) {
+	t.Run("Keeps remediated if incoming risk is also remediated", func(t *testing.T) {
 		existingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", RemediatedInfo)
 		incomingRisk := NewRisk(&Asset{DNS: "test", Name: "test"}, "test-vuln", RemediatedInfo)
 		existingRisk.Visit(incomingRisk)
