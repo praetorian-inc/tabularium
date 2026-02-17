@@ -4,10 +4,15 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/praetorian-inc/tabularium/pkg/model/attacksurface"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// compile-time checks
+var _ SurfaceClassifier = (*Repository)(nil)
+var _ CredentialClassifier = (*Repository)(nil)
 
 func TestRepository_NewRepository(t *testing.T) {
 	// full github URL
@@ -205,4 +210,34 @@ func TestRepository_Unmarshall(t *testing.T) {
 			assert.Equal(t, tt.valid, a.Model.Valid())
 		})
 	}
+}
+
+func TestRepository_AttackSurface(t *testing.T) {
+	repo := NewRepository("https://github.com/org/repo")
+	assert.Equal(t, attacksurface.SCM, repo.AttackSurface())
+}
+
+func TestRepository_DefaultCredentialType_GitHub(t *testing.T) {
+	repo := NewRepository("https://github.com/org/repo")
+	assert.Equal(t, GithubCredential, repo.DefaultCredentialType())
+}
+
+func TestRepository_DefaultCredentialType_GitLab(t *testing.T) {
+	repo := NewRepository("https://gitlab.com/org/repo")
+	assert.Equal(t, GitlabCredential, repo.DefaultCredentialType())
+}
+
+func TestRepository_DefaultCredentialType_Bitbucket(t *testing.T) {
+	repo := NewRepository("https://bitbucket.org/org/repo")
+	assert.Equal(t, BitbucketCredential, repo.DefaultCredentialType())
+}
+
+func TestRepository_DefaultCredentialType_AzureDevOps(t *testing.T) {
+	repo := NewRepository("https://dev.azure.com/org/project/_git/repo")
+	assert.Equal(t, AzureDevOpsCredential, repo.DefaultCredentialType())
+}
+
+func TestRepository_DefaultCredentialType_Unknown(t *testing.T) {
+	repo := NewRepository("https://hub.docker.com/r/org/repo")
+	assert.Equal(t, CredentialType(""), repo.DefaultCredentialType())
 }
