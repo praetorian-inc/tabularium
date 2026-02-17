@@ -169,6 +169,10 @@ func (a *AWSResource) isManagementAccount() bool {
 	// e.g., management account ARN: arn:aws:organizations::123456789012:account/o-b5qlad4a9o/123456789012
 	//   non-management account ARN: arn:aws:organizations::123456789012:account/o-b5qlad4a9o/098765432109
 	parts := strings.Split(a.Identifier(), ":")
+	if len(parts) < 5 {
+		return false
+	}
+
 	managementAccountID := parts[4]
 	isManagementAccount := strings.HasSuffix(a.Identifier(), "/"+managementAccountID)
 
