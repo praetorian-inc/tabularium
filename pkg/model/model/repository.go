@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/praetorian-inc/tabularium/pkg/model/attacksurface"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -14,9 +15,9 @@ func init() {
 
 type Repository struct {
 	BaseAsset
-	URL  string `neo4j:"url,omitempty" json:"url,omitempty" desc:"Repository URL." example:"https://github.com/praetorian-inc/tabularium"`
-	Org  string `neo4j:"org,omitempty" json:"org,omitempty" desc:"Organization name." example:"praetorian-inc"`
-	Name string `neo4j:"name,omitempty" json:"name,omitempty" desc:"Repository name." example:"praetorian-inc/tabularium"`
+	URL  string `neo4j:"url,omitempty" json:"url,omitempty" desc:"Repository URL." example:"https://github.com/praetorian-inc/tabularium" capmodel:"Repository"`
+	Org  string `neo4j:"org,omitempty" json:"org,omitempty" desc:"Organization name." example:"praetorian-inc" capmodel:"Repository"`
+	Name string `neo4j:"name,omitempty" json:"name,omitempty" desc:"Repository name." example:"praetorian-inc/tabularium" capmodel:"Repository"`
 }
 
 const (
@@ -50,6 +51,25 @@ func (r *Repository) IsClass(value string) bool {
 
 func (r *Repository) IsPrivate() bool {
 	return false
+}
+
+func (r *Repository) AttackSurface() attacksurface.Surface {
+	return attacksurface.SCM
+}
+
+func (r *Repository) DefaultCredentialType() CredentialType {
+	switch {
+	case strings.Contains(r.URL, "dev.azure.com"):
+		return AzureDevOpsCredential
+	case strings.Contains(r.URL, "github.com"):
+		return GithubCredential
+	case strings.Contains(r.URL, "gitlab.com"):
+		return GitlabCredential
+	case strings.Contains(r.URL, "bitbucket.org"):
+		return BitbucketCredential
+	default:
+		return ""
+	}
 }
 
 func (r *Repository) Attribute(name, value string) Attribute {
