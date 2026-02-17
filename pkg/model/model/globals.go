@@ -6,6 +6,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/praetorian-inc/tabularium/pkg/model/attacksurface"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -64,6 +65,20 @@ type HasSecret interface {
 // Models that don't implement this interface will fall back to using their Key for partitioning.
 type Partitioned interface {
 	GetPartitionKey() string
+}
+
+// SurfaceClassifier is an optional interface for target types that belong to a
+// specific attack surface. Types that do not implement this default to
+// attacksurface.External in capability metadata.
+type SurfaceClassifier interface {
+	AttackSurface() attacksurface.Surface
+}
+
+// CredentialClassifier is an optional interface for target types that require
+// a specific credential to scan. The runtime uses this to resolve the correct
+// credential from the broker before capability execution.
+type CredentialClassifier interface {
+	DefaultCredentialType() CredentialType
 }
 
 // TableModel is a noop interface that is used to make DynamoDB inserts type-safe
