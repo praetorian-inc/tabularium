@@ -529,3 +529,81 @@ func TestAWSResource_Visit(t *testing.T) {
 
 	assert.Equal(t, existing.OrgPolicyFilename, "other-file")
 }
+
+func TestAWSResource_IsManagementAccount(t *testing.T) {
+	tests := []struct {
+		name string
+		resource AWSResource
+		want bool
+	}{
+		{
+			name: "management account has matching account IDs",
+			resource: AWSResource{
+				CloudResource: CloudResource{
+					ResourceType: AWSOrganization,
+					Name:         "arn:aws:organizations::123456789012:account/o-b5qlad4a9o/123456789012",
+				},
+			},
+			want: true,
+		},
+		{
+			name: "non-management account has different account IDs",
+			resource: AWSResource{
+				CloudResource: CloudResource{
+					ResourceType: AWSOrganization,
+					Name:         "arn:aws:organizations::123456789012:account/o-b5qlad4a9o/098765432109",
+				},
+			},
+			want: false,
+		},
+		{
+			name: "non-account resource type returns false",
+			resource: AWSResource{
+				CloudResource: CloudResource{
+					ResourceType: AWSEC2Instance,
+					Name:         "arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0",
+				},
+			},
+			want: false,
+		},
+		{
+			name: "empty ARN does not panic",
+			resource: AWSResource{
+				CloudResource: CloudResource{
+					ResourceType: AWSOrganization,
+					Name:         "",
+				},
+			},
+			want: false,
+		},
+		{
+			name: "ARN with too few colons does not panic",
+			resource: AWSResource{
+				CloudResource: CloudResource{
+					ResourceType: AWSOrganization,
+					Name:         "arn:aws:organizations",
+				},
+			},
+			want: false,
+		},
+		{
+			name: "completely malformed ARN does not panic",
+			resource: AWSResource{
+				CloudResource: CloudResource{
+					ResourceType: AWSOrganization,
+					Name:         "not-an-arn-at-all",
+				},
+			},
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.NotPanics(t, func() {
+				got := tt.resource.isManagementAccount()
+				assert.Equal(t, tt.want, got)
+			})
+		})
+	}
+}

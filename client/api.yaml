@@ -1652,6 +1652,8 @@ components:
       properties:
         CloudResource:
           type: object
+        isManagementAccount:
+          type: boolean
         orgPolicy:
           items:
             type: integer
@@ -1660,6 +1662,7 @@ components:
           type: string
       required:
       - CloudResource
+      - isManagementAccount
       - orgPolicy
       - orgPolicyFilename
       type: object
