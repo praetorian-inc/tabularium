@@ -19,7 +19,7 @@ var (
 const PersonLabel = "Person"
 
 func (p *Person) GetDescription() string {
-	return "Represents person data enriched from Apollo.io People Enrichment API, including contact details, employment history, and social profiles."
+	return "Represents a person entity with identity information (contact details, employment history, social profiles) and breach intelligence data from DeHashed."
 }
 
 type Person struct {
@@ -70,6 +70,16 @@ type Person struct {
 	LastEnrichedAt   *string  `neo4j:"last_enriched_at,omitempty" json:"last_enriched_at,omitempty" desc:"Timestamp when data was last enriched from Apollo.io (RFC3339)." example:"2023-10-27T10:00:00Z"`
 	EnrichmentSource *string  `neo4j:"enrichment_source,omitempty" json:"enrichment_source,omitempty" desc:"Source of enrichment data." example:"apollo.io"`
 	DataQualityScore *float64 `neo4j:"data_quality_score,omitempty" json:"data_quality_score,omitempty" desc:"Data quality score from Apollo.io." example:"0.92"`
+
+	// Breach Intelligence Summary (populated by frumentarii capability)
+	BreachStatus     *string   `neo4j:"breach_status,omitempty" json:"breach_status,omitempty" desc:"Breach check result status (BREACHED, CLEAN, NOT_CHECKED)." example:"BREACHED"`
+	BreachCount      *int      `neo4j:"breach_count,omitempty" json:"breach_count,omitempty" desc:"Total number of breaches this person appears in." example:"3"`
+	PasswordExposed  *bool     `neo4j:"password_exposed,omitempty" json:"password_exposed,omitempty" desc:"Whether a password was found exposed in any breach." example:"true"`
+	MostRecentBreach *string   `neo4j:"most_recent_breach,omitempty" json:"most_recent_breach,omitempty" desc:"Date of the most recent breach (YYYY-MM-DD or RFC3339)." example:"2021-06-22"`
+	BreachSources    *[]string `neo4j:"breach_sources,omitempty" json:"breach_sources,omitempty" desc:"Sources checked for breach data." example:"[\"DeHashed\"]"`
+	LastBreachCheck  *string   `neo4j:"last_breach_check,omitempty" json:"last_breach_check,omitempty" desc:"Timestamp when breach check was last performed (RFC3339)." example:"2026-02-18T10:00:00Z"`
+	BreachRiskLevel  *string   `neo4j:"breach_risk_level,omitempty" json:"breach_risk_level,omitempty" desc:"Risk level based on breach data (CRITICAL, HIGH, MEDIUM, LOW, NONE)." example:"HIGH"`
+	BreachScore      *int      `neo4j:"breach_score,omitempty" json:"breach_score,omitempty" desc:"Numeric breach risk score (0-80)." example:"65"`
 
 	// Additional Professional Information
 	Seniority   *string   `neo4j:"seniority,omitempty" json:"seniority,omitempty" desc:"Seniority level." example:"Senior"`
