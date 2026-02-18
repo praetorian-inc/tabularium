@@ -55,7 +55,6 @@ const (
 	ExtrahopCredential              CredentialType = "extrahop"                // Extrahop API key
 	NessusCredential                CredentialType = "nessus"                  // Nessus API key
 	NS1Credential                   CredentialType = "ns1"                     // NS1 API key
-	OracleCredential                CredentialType = "oracle"                  // Oracle Cloud Infrastructure API signing key
 	BurpSuiteCredential             CredentialType = "portswigger"             // Customer BurpSuite API key
 	BurpSuiteInternalCredential     CredentialType = "burp-internal"           // Internal BurpSuite instance API creds
 	QualysCredential                CredentialType = "qualys"                  // Qualys credentials
