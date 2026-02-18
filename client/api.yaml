@@ -3308,6 +3308,34 @@ components:
       - BaseRelationship
       - relationshipType
       type: object
+    iam_aws_permission:
+      description: Represents an aggregated AWS IAM permission relationship between
+        a principal and a resource, containing all allowed actions.
+      properties:
+        BaseRelationship:
+          type: object
+        actions:
+          items:
+            type: string
+          type: array
+      required:
+      - BaseRelationship
+      - actions
+      type: object
+    iamawsrelationship:
+      description: Represents an aggregated AWS IAM permission relationship between
+        a principal and a resource, containing all allowed actions.
+      properties:
+        BaseRelationship:
+          type: object
+        actions:
+          items:
+            type: string
+          type: array
+      required:
+      - BaseRelationship
+      - actions
+      type: object
     iamrelationship:
       description: Represents the base structure for all graph relationships, containing
         source, target, and metadata.

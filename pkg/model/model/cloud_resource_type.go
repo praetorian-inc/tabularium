@@ -24,10 +24,12 @@ const (
 	AWSRole                CloudResourceType = "AWS::IAM::Role"
 	AWSUser                CloudResourceType = "AWS::IAM::User"
 	AWSGroup               CloudResourceType = "AWS::IAM::Group"
+	AWSManagedPolicy       CloudResourceType = "AWS::IAM::ManagedPolicy"
 	AWSGateway             CloudResourceType = "AWS::ApiGateway::RestApi"
 	AWSSNSTopic            CloudResourceType = "AWS::SNS::Topic"
 	AWSSQSQueue            CloudResourceType = "AWS::SQS::Queue"
 	AWSRDSInstance         CloudResourceType = "AWS::RDS::DBInstance"
+	AWSServicePrincipal    CloudResourceType = "AWS::IAM::ServicePrincipal"
 
 	// Azure
 	AzureVM                       CloudResourceType = "Microsoft.Compute/virtualMachines"
