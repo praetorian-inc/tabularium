@@ -19,6 +19,7 @@ type AgoraParameter struct {
 	Required    bool   `json:"required" desc:"Whether the parameter is required" example:"true"`
 	Type        string   `json:"type" desc:"The type of the parameter" example:"string"`
 	Options     []string `json:"options,omitempty" desc:"Suggested choices for enum-style parameters, used as UI hints" example:"[\"option_a\",\"option_b\"]"`
+	Value       string   `json:"value,omitempty" desc:"When used as a configuration override, the forced runtime value that always overwrites job config" example:"false"`
 	// internal
 	parser func(string) error
 }
@@ -30,6 +31,11 @@ func (a AgoraParameter) WithRequired() AgoraParameter {
 
 func (a AgoraParameter) WithDefault(defaultVal string) AgoraParameter {
 	a.Default = defaultVal
+	return a
+}
+
+func (a AgoraParameter) WithValue(val string) AgoraParameter {
+	a.Value = val
 	return a
 }
 
