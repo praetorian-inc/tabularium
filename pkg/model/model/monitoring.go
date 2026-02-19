@@ -24,9 +24,9 @@ const (
 )
 
 func init() {
-	registry.Registry.MustRegisterModel(&MonitoringSession{}, "monitoring_session")
-	registry.Registry.MustRegisterModel(&MonitoredTechnique{}, "monitored_technique")
-	registry.Registry.MustRegisterModel(&MonitorDetection{}, "monitor_detection")
+	registry.Registry.MustRegisterModel(&MonitoringSession{})
+	registry.Registry.MustRegisterModel(&MonitoredTechnique{})
+	registry.Registry.MustRegisterModel(&MonitorDetection{})
 	registry.Registry.MustRegisterModel(&HasTechnique{})
 	registry.Registry.MustRegisterModel(&HasDetection{})
 	MustRegisterLabel(MonitoringSessionLabel)
@@ -49,7 +49,7 @@ type MonitoringSession struct {
 	SessionID  string `neo4j:"session_id" json:"session_id"`
 	Name       string `neo4j:"name" json:"name"`
 	Status     string `neo4j:"status" json:"status"`
-	CreatedAt  string `neo4j:"created_at" json:"created_at"`
+	Created    string `neo4j:"created" json:"created"`
 	ExpiresAt  string `neo4j:"expires_at" json:"expires_at"`
 	ExecutedAt string `neo4j:"executed_at" json:"executed_at"`
 	LastRunAt  string          `neo4j:"last_run_at" json:"last_run_at"`
@@ -61,7 +61,7 @@ func NewMonitoringSession(sessionID, name string, filters []MonitorFilter, execu
 		SessionID:  sessionID,
 		Name:       name,
 		Status:     MonitorStatusActive,
-		CreatedAt:  Now(),
+		Created:    Now(),
 		ExpiresAt:  expiresAt,
 		ExecutedAt: executedAt,
 		Filters:    filters,
@@ -75,7 +75,7 @@ func (s *MonitoringSession) GetLabels() []string {
 	return []string{MonitoringSessionLabel}
 }
 func (s *MonitoringSession) Valid() bool {
-	return strings.HasPrefix(s.Key, "#monitoring_session#") && s.SessionID != ""
+	return strings.HasPrefix(s.Key, "#monitoringsession#") && s.SessionID != ""
 }
 func (s *MonitoringSession) SetUsername(u string) { s.Username = u }
 func (s *MonitoringSession) GetAgent() string     { return "" }
@@ -85,7 +85,7 @@ func (s *MonitoringSession) GetDescription() string {
 func (s *MonitoringSession) GetHooks() []registry.Hook {
 	return []registry.Hook{{
 		Call: func() error {
-			s.Key = fmt.Sprintf("#monitoring_session#%s", s.SessionID)
+			s.Key = fmt.Sprintf("#monitoringsession#%s", s.SessionID)
 			return nil
 		},
 	}}
@@ -115,7 +115,7 @@ func (t *MonitoredTechnique) GetLabels() []string {
 	return []string{MonitoredTechniqueLabel}
 }
 func (t *MonitoredTechnique) Valid() bool {
-	return strings.HasPrefix(t.Key, "#monitored_technique#") && t.TechniqueID != ""
+	return strings.HasPrefix(t.Key, "#monitoredtechnique#") && t.TechniqueID != ""
 }
 func (t *MonitoredTechnique) SetUsername(u string) { t.Username = u }
 func (t *MonitoredTechnique) GetAgent() string     { return "" }
@@ -125,7 +125,7 @@ func (t *MonitoredTechnique) GetDescription() string {
 func (t *MonitoredTechnique) GetHooks() []registry.Hook {
 	return []registry.Hook{{
 		Call: func() error {
-			t.Key = fmt.Sprintf("#monitored_technique#%s", t.TechniqueID)
+			t.Key = fmt.Sprintf("#monitoredtechnique#%s", t.TechniqueID)
 			return nil
 		},
 	}}
@@ -175,7 +175,7 @@ func (d *MonitorDetection) GetLabels() []string {
 	return []string{MonitorDetectionLabel}
 }
 func (d *MonitorDetection) Valid() bool {
-	return strings.HasPrefix(d.Key, "#monitor_detection#") && d.DetectionID != ""
+	return strings.HasPrefix(d.Key, "#monitordetection#") && d.DetectionID != ""
 }
 func (d *MonitorDetection) SetUsername(u string) { d.Username = u }
 func (d *MonitorDetection) GetAgent() string     { return "" }
@@ -185,7 +185,7 @@ func (d *MonitorDetection) GetDescription() string {
 func (d *MonitorDetection) GetHooks() []registry.Hook {
 	return []registry.Hook{{
 		Call: func() error {
-			d.Key = fmt.Sprintf("#monitor_detection#%s#%s#%s#%s",
+			d.Key = fmt.Sprintf("#monitordetection#%s#%s#%s#%s",
 				d.SessionID, d.TechniqueID, d.Source, d.DetectionID)
 			return nil
 		},
