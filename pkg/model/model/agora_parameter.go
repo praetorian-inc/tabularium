@@ -53,6 +53,13 @@ func (a AgoraParameter) Parse(s *string) error {
 		val = *s
 	}
 
+	// If no value was provided and no default is set, skip parsing for
+	// non-required parameters. This avoids type-parser errors (e.g.
+	// strconv.ParseBool("")) when a parameter is simply absent.
+	if s == nil && a.Default == "" {
+		return nil
+	}
+
 	err := a.parser(val)
 	if err != nil {
 		return fmt.Errorf("AgoraParameter %s encountered error parsing %s: %w", a.Name, val, err)
