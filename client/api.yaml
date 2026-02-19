@@ -1486,6 +1486,11 @@ components:
           description: The type of the parameter
           example: string
           type: string
+        value:
+          description: When used as a configuration override, the forced runtime value
+            that always overwrites job config
+          example: "false"
+          type: string
       required:
       - BaseModel
       - description
