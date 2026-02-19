@@ -163,12 +163,12 @@ func (w *WebApplication) IsPrivate() bool {
 }
 
 func (w *WebApplication) Merge(other Assetlike) {
-	w.BaseAsset.Merge(other)
+	MergeWithPromotionCheck(&w.BaseAsset, &w.LabelSettableEmbed, other)
 	otherApp, ok := other.(*WebApplication)
 	if !ok {
 		return
 	}
-	w.mergeDetails(otherApp)
+	w.mergeWebAppFields(otherApp)
 	for _, u := range otherApp.URLs {
 		if !slices.Contains(w.URLs, u) {
 			w.URLs = append(w.URLs, u)
@@ -182,14 +182,15 @@ func (w *WebApplication) Visit(other Assetlike) {
 	if !ok {
 		return
 	}
-	w.mergeDetails(otherApp)
+	if IsSeedPromotion(&w.BaseAsset, &otherApp.BaseAsset) {
+		ApplySeedLabels(&w.BaseAsset, &w.LabelSettableEmbed)
+	}
+	w.mergeWebAppFields(otherApp)
 }
 
-func (w *WebApplication) mergeDetails(otherApp *WebApplication) {
-	if w.Source != SeedSource && otherApp.Source == SeedSource {
-		w.promoteToSeed()
-	}
-
+// mergeWebAppFields handles WebApplication-specific field merging.
+// Promotion logic moved to MergeWithPromotionCheck / ApplySeedLabels.
+func (w *WebApplication) mergeWebAppFields(otherApp *WebApplication) {
 	if otherApp.Name != "" && (w.Name == w.PrimaryURL || otherApp.Name != otherApp.PrimaryURL) {
 		w.Name = otherApp.Name
 	}
@@ -205,11 +206,6 @@ func (w *WebApplication) mergeDetails(otherApp *WebApplication) {
 	if otherApp.ApiDefinitionContentPath != "" {
 		w.ApiDefinitionContentPath = otherApp.ApiDefinitionContentPath
 	}
-}
-
-func (w *WebApplication) promoteToSeed() {
-	w.PendingLabelAddition = SeedLabel
-	w.Source = SeedSource
 }
 
 func (w *WebApplication) Attribute(name, value string) Attribute {

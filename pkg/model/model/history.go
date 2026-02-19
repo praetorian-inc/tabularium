@@ -60,6 +60,16 @@ func (h *History) Update(from, to, by, comment string, other History) bool {
 	return false
 }
 
+// RecordPromotion appends a history record for an asset promotion (e.g. seed promotion).
+// The empty From field with a non-empty To signals a promotion event to the UI.
+func (h *History) RecordPromotion(by string, status string) {
+	h.History = append(h.History, HistoryRecord{
+		By:      by,
+		To:      status,
+		Updated: Now(),
+	})
+}
+
 func (h *History) AddAutoTriageEntry(recommendation string, logit *float32, model *string) {
 	h.History = append(h.History, HistoryRecord{
 		By:      "Praetorian AI",

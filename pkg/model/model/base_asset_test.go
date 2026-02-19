@@ -1009,3 +1009,23 @@ func TestPartitioned_InterfaceTypeAssertion(t *testing.T) {
 	// Test fallback behavior for types without Partitioned
 	// (this would be tested if we had a type that implements HasKey but not Partitioned)
 }
+
+func TestMergeFields(t *testing.T) {
+	base := &BaseAsset{
+		Status: Active,
+		Origin: "",
+		Tags:   Tags{Tags: []string{"existing"}},
+	}
+	other := &Asset{BaseAsset: BaseAsset{
+		Origin:   "whois",
+		Metadata: Metadata{ASNumber: "AS123"},
+		Tags:     Tags{Tags: []string{"new"}},
+	}}
+
+	historyBefore := len(base.History.History)
+	base.MergeFields(other)
+
+	assert.Equal(t, "whois", base.Origin)
+	assert.Equal(t, "AS123", base.Metadata.ASNumber)
+	assert.Equal(t, historyBefore, len(base.History.History), "MergeFields should not create history records")
+}

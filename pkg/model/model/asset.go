@@ -127,12 +127,7 @@ func (a *Asset) Merge(o Assetlike) {
 	if !ok {
 		return
 	}
-
-	if a.Source != SeedSource && other.Source == SeedSource {
-		a.promoteToSeed()
-	}
-
-	a.BaseAsset.Merge(other)
+	MergeWithPromotionCheck(&a.BaseAsset, &a.LabelSettableEmbed, other)
 }
 
 func (a *Asset) Visit(o Assetlike) {
@@ -140,19 +135,12 @@ func (a *Asset) Visit(o Assetlike) {
 	if !ok {
 		return
 	}
-
-	if a.Source != SeedSource && other.Source == SeedSource {
-		a.promoteToSeed()
+	if IsSeedPromotion(&a.BaseAsset, &other.BaseAsset) {
+		ApplySeedLabels(&a.BaseAsset, &a.LabelSettableEmbed)
 	}
-
 	a.BaseAsset.Visit(other)
 	// allow asset enrichments to control asset privateness
 	a.Private = other.Private
-}
-
-func (a *Asset) promoteToSeed() {
-	a.PendingLabelAddition = SeedLabel
-	a.Source = SeedSource
 }
 
 func (a *Asset) Spawn(dns, name string) Asset {

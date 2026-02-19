@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // Mock implementation for testing
@@ -116,4 +117,93 @@ func TestLabelSettableInterface(t *testing.T) {
 	assert.Equal(t, SeedLabel, model.GetPendingLabelAddition())
 	assert.Equal(t, "test-key", model.GetKey())
 	assert.True(t, model.Valid())
+}
+
+func TestIsSeedPromotion(t *testing.T) {
+	tests := []struct {
+		name     string
+		current  string
+		other    string
+		expected bool
+	}{
+		{"non-seed to seed", SelfSource, SeedSource, true},
+		{"seed to seed", SeedSource, SeedSource, false},
+		{"self to self", SelfSource, SelfSource, false},
+		{"seed to self", SeedSource, SelfSource, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			current := &BaseAsset{Source: tt.current}
+			other := &BaseAsset{Source: tt.other}
+			assert.Equal(t, tt.expected, IsSeedPromotion(current, other))
+		})
+	}
+}
+
+func TestApplySeedLabels(t *testing.T) {
+	base := &BaseAsset{Source: SelfSource}
+	ls := &LabelSettableEmbed{}
+
+	ApplySeedLabels(base, ls)
+
+	assert.Equal(t, SeedLabel, ls.PendingLabelAddition)
+	assert.Equal(t, SeedSource, base.Source)
+	assert.Empty(t, base.History.History, "ApplySeedLabels should NOT create history records")
+}
+
+func TestPromoteToSeed(t *testing.T) {
+	base := &BaseAsset{Source: SelfSource, Status: Active}
+	ls := &LabelSettableEmbed{}
+
+	PromoteToSeed(base, ls, Pending)
+
+	assert.Equal(t, SeedLabel, ls.PendingLabelAddition)
+	assert.Equal(t, SeedSource, base.Source)
+	require.Len(t, base.History.History, 1)
+	assert.Equal(t, "", base.History.History[0].From)
+	assert.Equal(t, Pending, base.History.History[0].To)
+}
+
+func TestMergeWithPromotionCheck_Promotion(t *testing.T) {
+	// Active to Pending promotion
+	base := &BaseAsset{Source: SelfSource, Status: Active}
+	ls := &LabelSettableEmbed{}
+	other := &Asset{BaseAsset: BaseAsset{Source: SeedSource, Status: Pending}}
+
+	MergeWithPromotionCheck(base, ls, other)
+
+	assert.Equal(t, SeedLabel, ls.PendingLabelAddition)
+	assert.Equal(t, SeedSource, base.Source)
+	assert.Equal(t, Pending, base.Status)
+	require.Len(t, base.History.History, 1)
+	assert.Equal(t, "", base.History.History[0].From)
+	assert.Equal(t, Pending, base.History.History[0].To)
+}
+
+func TestMergeWithPromotionCheck_PromotionSameStatus(t *testing.T) {
+	// Active to Active promotion (status preserved)
+	base := &BaseAsset{Source: SelfSource, Status: Active}
+	ls := &LabelSettableEmbed{}
+	other := &Asset{BaseAsset: BaseAsset{Source: SeedSource, Status: Active}}
+
+	MergeWithPromotionCheck(base, ls, other)
+
+	assert.Equal(t, SeedLabel, ls.PendingLabelAddition)
+	assert.Equal(t, SeedSource, base.Source)
+	assert.Equal(t, Active, base.Status)
+	require.Len(t, base.History.History, 1)
+	assert.Equal(t, "", base.History.History[0].From)
+	assert.Equal(t, Active, base.History.History[0].To)
+}
+
+func TestMergeWithPromotionCheck_NonPromotion(t *testing.T) {
+	base := &BaseAsset{Source: SelfSource, Status: Active, History: History{History: []HistoryRecord{}}}
+	ls := &LabelSettableEmbed{}
+	other := &Asset{BaseAsset: BaseAsset{Source: SelfSource}}
+
+	MergeWithPromotionCheck(base, ls, other)
+
+	assert.Equal(t, NO_PENDING_LABEL_ADDITION, ls.PendingLabelAddition)
+	assert.Equal(t, SelfSource, base.Source)
+	assert.Empty(t, base.History.History)
 }

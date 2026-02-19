@@ -258,3 +258,26 @@ func TestHistory_Update(t *testing.T) {
 		})
 	}
 }
+
+func TestHistory_RecordPromotion(t *testing.T) {
+	h := History{}
+	h.RecordPromotion("admin@praetorian.com", "A")
+
+	if len(h.History) != 1 {
+		t.Fatalf("RecordPromotion() history length = %d, want 1", len(h.History))
+	}
+
+	record := h.History[0]
+	if record.By != "admin@praetorian.com" {
+		t.Errorf("RecordPromotion() By = %q, want %q", record.By, "admin@praetorian.com")
+	}
+	if record.To != "A" {
+		t.Errorf("RecordPromotion() To = %q, want %q", record.To, "A")
+	}
+	if record.From != "" {
+		t.Errorf("RecordPromotion() From = %q, want empty", record.From)
+	}
+	if record.Updated == "" {
+		t.Errorf("RecordPromotion() Updated should not be empty")
+	}
+}

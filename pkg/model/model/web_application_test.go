@@ -359,6 +359,13 @@ func TestWebApplicationSeedPromotion(t *testing.T) {
 			expectedPromotion: SeedLabel,
 		},
 		{
+			name:              "Promotion from self to seed (Active to Active)",
+			existingSource:    SelfSource,
+			incomingSource:    SeedSource,
+			expectPromotion:   true,
+			expectedPromotion: SeedLabel,
+		},
+		{
 			name:              "No promotion - both self source",
 			existingSource:    SelfSource,
 			incomingSource:    SelfSource,
@@ -397,6 +404,10 @@ func TestWebApplicationSeedPromotion(t *testing.T) {
 					"Expected pending promotion to be set")
 				assert.True(t, required,
 					"PendingPromotion should return true")
+				assert.NotEmpty(t, existing.History.History, "Promotion should create history record")
+				lastRecord := existing.History.History[len(existing.History.History)-1]
+				assert.Equal(t, "", lastRecord.From, "Promotion history From should be empty")
+				assert.NotEmpty(t, lastRecord.To, "Promotion history To should not be empty")
 			} else {
 				pendingPromotion, required := PendingLabelAddition(&existing)
 				assert.Equal(t, tt.expectedPromotion, pendingPromotion,
