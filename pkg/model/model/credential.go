@@ -65,6 +65,8 @@ const (
 	WhoxyCredential                 CredentialType = "whoxy"                   // Whoxy API key
 	XpanseCredential                CredentialType = "xpanse"                  // Xpanse credentials
 	InteractSHCredential            CredentialType = "interactsh"
+	HIBPCredential                  CredentialType = "hibp"                               // HIBP (Have I Been Pwned) API key
+	DeHashedCredential              CredentialType = "dehashed"                           // DeHashed API key for breach searches
 	RedTeamGcpCredential            CredentialType = "red_team_gcp_service_account_key" // GCP service account key for Red Team deployments
 
 	LegacyCloudCredential CredentialType = "legacy-cloud" // Legacy cloud credentials (AWS, GCP, Azure)
