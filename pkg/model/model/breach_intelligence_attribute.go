@@ -70,7 +70,7 @@ func (b *BreachIntelligenceAttribute) GetLabels() []string {
 }
 
 func (b *BreachIntelligenceAttribute) Valid() bool {
-	return b.Key != "" && (b.AssetID != "" || b.PersonKey != "") && b.EntryID != nil && *b.EntryID != "" && b.BreachStatus != "" && b.RiskLevel != "" && b.CheckedAt != ""
+	return b.Key != "" && (b.AssetID != "" || b.PersonKey != "") && b.EntryID != nil && *b.EntryID != "" && b.DatabaseName != nil && *b.DatabaseName != "" && b.BreachStatus != "" && b.RiskLevel != "" && b.CheckedAt != ""
 }
 
 func (b *BreachIntelligenceAttribute) SetSource(source string) {
