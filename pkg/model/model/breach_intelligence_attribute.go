@@ -138,9 +138,12 @@ func (b *BreachIntelligenceAttribute) GetHooks() []registry.Hook {
 	}
 }
 
-// NewBreachIntelligenceAttribute creates a new breach intelligence attribute for an asset or person
-func NewBreachIntelligenceAttribute(parentKey string, breachStatus string, riskLevel string, parent GraphModel) BreachIntelligenceAttribute {
+// NewBreachIntelligenceAttribute creates a new breach intelligence attribute for an asset or person.
+// entryID and databaseName are required for correct Key computation and Valid() checks.
+func NewBreachIntelligenceAttribute(parentKey string, entryID string, databaseName string, breachStatus string, riskLevel string, parent GraphModel) BreachIntelligenceAttribute {
 	b := BreachIntelligenceAttribute{
+		EntryID:      &entryID,
+		DatabaseName: &databaseName,
 		BreachStatus: breachStatus,
 		RiskLevel:    riskLevel,
 		CheckedAt:    Now(),
