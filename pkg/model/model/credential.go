@@ -51,12 +51,14 @@ const (
 	InsightVMCredential             CredentialType = "insight-vm"              // InsightVM credentials
 	MicrosoftDefenderCredential     CredentialType = "microsoft-defender"      // Microsoft Defender credentials
 	CrowdStrikeSpotlightCredential  CredentialType = "crowdstrike-spotlight"   // CrowdStrike Spotlight credentials
+	CrowdStrikeShieldCredential     CredentialType = "crowdstrike-shield"      // CrowdStrike Falcon Shield OAuth2 credentials
 	ExtrahopCredential              CredentialType = "extrahop"                // Extrahop API key
 	NessusCredential                CredentialType = "nessus"                  // Nessus API key
 	NS1Credential                   CredentialType = "ns1"                     // NS1 API key
 	BurpSuiteCredential             CredentialType = "portswigger"             // Customer BurpSuite API key
 	BurpSuiteInternalCredential     CredentialType = "burp-internal"           // Internal BurpSuite instance API creds
 	QualysCredential                CredentialType = "qualys"                  // Qualys credentials
+	SailPointCredential             CredentialType = "sailpoint"               // SailPoint Identity Security Cloud PAT credentials
 	ShodanCredential                CredentialType = "shodan"                  // Shodan API key
 	TenableVMCredential             CredentialType = "tenable-vm"              // Tenable API key
 	WizCredential                   CredentialType = "wiz"                     // Wiz credentials

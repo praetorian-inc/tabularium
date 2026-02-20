@@ -109,6 +109,24 @@ func TestParseCapabilityParameters_WithParser(t *testing.T) {
 	require.Equal(t, "parsed:test", destinationStr)
 }
 
+func TestParseCapabilityParameters_OptionalBoolNoDefault(t *testing.T) {
+	destinationBool := false
+	destinationInt := 0
+
+	params := []AgoraParameter{
+		NewAgoraParameter("bool-param", "optional bool", &destinationBool),
+		NewAgoraParameter("int-param", "optional int", &destinationInt),
+	}
+
+	// Empty config: no values provided, no defaults set
+	config := map[string]string{}
+
+	err := ParseCapabilityParameters(params, config)
+	require.NoError(t, err)
+	require.Equal(t, false, destinationBool)
+	require.Equal(t, 0, destinationInt)
+}
+
 func TestParseCapabilityParameters_NoParameters(t *testing.T) {
 	params := []AgoraParameter{}
 

@@ -16,8 +16,9 @@ const (
 type AWSResource struct {
 	CloudResource
 
-	OrgPolicyFilename string `neo4j:"orgPolicyFilename" json:"orgPolicyFilename"`
-	OrgPolicy         []byte `neo4j:"-" json:"orgPolicy"`
+	OrgPolicyFilename   string `neo4j:"orgPolicyFilename" json:"orgPolicyFilename"`
+	OrgPolicy           []byte `neo4j:"-" json:"orgPolicy"`
+	IsManagementAccount bool   `neo4j:"isManagementAccount" json:"isManagementAccount"`
 }
 
 func init() {
@@ -65,6 +66,8 @@ func (a *AWSResource) GetHooks() []registry.Hook {
 				a.CloudResource.Labels = []string{AWSResourceLabel}
 				a.CloudResource.IPs = a.GetIPs()
 				a.CloudResource.URLs = a.GetURLs()
+
+				a.IsManagementAccount = a.isManagementAccount()
 				return nil
 			},
 		},
@@ -154,6 +157,26 @@ func (a *AWSResource) Merge(other Assetlike) {
 
 	a.CloudResource.Merge(&otherResource.CloudResource)
 	a.BaseAsset.Merge(otherResource)
+}
+
+func (a *AWSResource) isManagementAccount() bool {
+	if a.ResourceType != AWSOrganization {
+		return false
+	}
+
+	// management account IDs are listed in the middle of Organization ARNs, and the actual account's ID is listed at the end
+	// If they match, that means the actual account IS the management account
+	// e.g., management account ARN: arn:aws:organizations::123456789012:account/o-b5qlad4a9o/123456789012
+	//   non-management account ARN: arn:aws:organizations::123456789012:account/o-b5qlad4a9o/098765432109
+	parts := strings.Split(a.Identifier(), ":")
+	if len(parts) < 5 {
+		return false
+	}
+
+	managementAccountID := parts[4]
+	isManagementAccount := strings.HasSuffix(a.Identifier(), "/"+managementAccountID)
+
+	return isManagementAccount
 }
 
 func (a *AWSResource) GetIPs() []string {
