@@ -3,10 +3,11 @@ package model
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/praetorian-inc/tabularium/pkg/registry"
 	"maps"
 	"slices"
 	"strings"
+
+	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
 type Job struct {
@@ -40,13 +41,15 @@ type Job struct {
 	User                  string            `dynamodbav:"user,omitempty" json:"user,omitempty" desc:"User who initiated this job." example:"user@example.com"`
 	Partition             string            `dynamodbav:"partition,omitempty" json:"partition,omitempty" desc:"The partition of the job." example:"user@example.com##asset#test#0.0.0.0"`
 	// Trace context for telemetry (propagated to child jobs)
-	TraceID       string `dynamodbav:"trace_id,omitempty" json:"trace_id,omitempty" desc:"Root trace ID for this job chain."`
-	ParentSpanID  string `dynamodbav:"parent_span_id,omitempty" json:"parent_span_id,omitempty" desc:"Parent span ID from spawning job."`
-	CurrentSpanID string `dynamodbav:"-" json:"current_span_id,omitempty" desc:"Current execution span ID (not persisted to DynamoDB, but serialized through SQS for trace correlation)."`
-	Origin                TargetWrapper     `dynamodbav:"origin" json:"origin" desc:"The job that originally started this chain of jobs."`
-	Target                TargetWrapper     `dynamodbav:"target" json:"target" desc:"The primary target of the job."`
-	Parent                TargetWrapper     `dynamodbav:"parent" json:"parent,omitempty" desc:"Optional parent target from which this job was spawned."`
-	RateLimit             RateLimit         `dynamodbav:"-" json:"-"`
+	TraceID       string              `dynamodbav:"trace_id,omitempty" json:"trace_id,omitempty" desc:"Root trace ID for this job chain."`
+	ParentSpanID  string              `dynamodbav:"parent_span_id,omitempty" json:"parent_span_id,omitempty" desc:"Parent span ID from spawning job."`
+	CurrentSpanID string              `dynamodbav:"-" json:"current_span_id,omitempty" desc:"Current execution span ID (not persisted to DynamoDB, but serialized through SQS for trace correlation)."`
+	Context       []GraphModelWrapper `dynamodbav:"-" json:"context,omitempty"`
+
+	Origin    TargetWrapper `dynamodbav:"origin" json:"origin" desc:"The job that originally started this chain of jobs."`
+	Target    TargetWrapper `dynamodbav:"target" json:"target" desc:"The primary target of the job."`
+	Parent    TargetWrapper `dynamodbav:"parent" json:"parent,omitempty" desc:"Optional parent target from which this job was spawned."`
+	RateLimit RateLimit     `dynamodbav:"-" json:"-"`
 	// internal
 	Async  bool                  `dynamodbav:"-" json:"-"`
 	stream chan []registry.Model `dynamodbav:"-" json:"-"`
@@ -185,6 +188,27 @@ func (job *Job) Parameters() map[string]string {
 	maps.Copy(params, job.Secret)
 
 	return params
+}
+
+const maxContextBytes = 200 * 1024 // 200KB safety margin under 256KB SQS limit
+
+// AddContext appends supplementary GraphModel objects to the job's context.
+// Returns an error if the serialized context would exceed the SQS size limit.
+func (job *Job) AddContext(models ...GraphModel) error {
+	prev := len(job.Context)
+	for _, m := range models {
+		job.Context = append(job.Context, NewGraphModelWrapper(m))
+	}
+	data, err := json.Marshal(job.Context)
+	if err != nil {
+		job.Context = job.Context[:prev]
+		return fmt.Errorf("failed to marshal job context: %w", err)
+	}
+	if len(data) > maxContextBytes {
+		job.Context = job.Context[:prev]
+		return fmt.Errorf("job context exceeds %d bytes (%d)", maxContextBytes, len(data))
+	}
+	return nil
 }
 
 func (job *Job) Send(items ...registry.Model) {
