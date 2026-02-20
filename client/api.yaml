@@ -1401,6 +1401,10 @@ components:
           description: The task executor that can execute this capability
           example: JanusPlugin
           type: string
+        hasGlobalConfig:
+          description: Whether this capability uses global configuration
+          example: "true"
+          type: boolean
         integration:
           description: Whether or not this capability is an integration with an external
             service
