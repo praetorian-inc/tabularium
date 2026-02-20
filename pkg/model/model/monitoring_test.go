@@ -47,14 +47,23 @@ func TestMonitoredTechnique_GlobalKey(t *testing.T) {
 }
 
 func TestNewMonitorDetection(t *testing.T) {
-	d := NewMonitorDetection("sess-123", "T1003.001", "defender", "alert-456")
+	alert := &MonitorAlert{
+		ID:       "alert-456",
+		Title:    "Suspicious Process",
+		Hostname: "dc01",
+	}
+	d := NewMonitorDetection(alert, "sess-123", "T1003.001", "defender", "mitre")
 
 	assert.Equal(t, "#monitordetection#sess-123#T1003.001#defender#alert-456", d.Key)
+	assert.Equal(t, "alert-456", d.AlertID)
+	assert.Equal(t, "Suspicious Process", d.Title)
+	assert.Equal(t, "dc01", d.Hostname)
+	assert.Equal(t, "mitre", d.MatchMethod)
 	assert.True(t, d.Valid())
 	assert.Equal(t, []string{MonitorDetectionLabel}, d.GetLabels())
 }
 
-func TestMonitorDetection_InvalidWithoutDetectionID(t *testing.T) {
+func TestMonitorDetection_InvalidWithoutAlertID(t *testing.T) {
 	d := &MonitorDetection{
 		Key:       "#monitordetection#sess#tech#src#",
 		SessionID: "sess",

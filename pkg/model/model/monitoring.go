@@ -131,66 +131,73 @@ func (t *MonitoredTechnique) GetHooks() []registry.Hook {
 	}}
 }
 
+// --- MonitorAlert ---
+
+// MonitorAlert is a normalized EDR alert. Transient input to matching, not persisted as a graph node.
+type MonitorAlert struct {
+	ID              string   `json:"id"`
+	Title           string   `json:"title"`
+	Description     string   `json:"description"`
+	Severity        string   `json:"severity"`
+	DetectedAt      string   `json:"detected_at"`
+	Hostname        string   `json:"hostname"`
+	Hashes          []string `json:"hashes,omitempty"`
+	MitreTechniques []string `json:"mitre_techniques,omitempty"`
+	Evidence        string   `json:"evidence,omitempty"`
+	SourceURL       string   `json:"source_url,omitempty"`
+}
+
 // --- MonitorDetection ---
 
+// MonitorDetection is a graph node created when an alert matches a session technique.
 type MonitorDetection struct {
 	registry.BaseModel
 	Username string `neo4j:"username" json:"username"`
 	Key      string `neo4j:"key" json:"key"`
 
-	// Raw alert data — populated by monitor integration
-	DetectionID     string   `neo4j:"detection_id" json:"detection_id"`
-	Title           string   `neo4j:"title" json:"title"`
-	Description     string   `neo4j:"description" json:"description"`
-	Severity        string   `neo4j:"severity" json:"severity"`
-	DetectedAt      string   `neo4j:"detected_at" json:"detected_at"`
-	Hostname        string   `neo4j:"hostname" json:"hostname"`
-	MitreTechniques []string `neo4j:"mitre_techniques" json:"mitre_techniques"`
-	SHA1            string   `neo4j:"sha1" json:"sha1,omitempty"`
-	SHA256          string   `neo4j:"sha256" json:"sha256,omitempty"`
-	Evidence        string   `neo4j:"evidence" json:"evidence"`
-	SourceURL       string   `neo4j:"source_url" json:"source_url,omitempty"`
-
-	// Populated by matcher on match
+	// Match result
 	SessionID   string `neo4j:"session_id" json:"session_id"`
 	TechniqueID string `neo4j:"technique_id" json:"technique_id"`
-	Source      string `neo4j:"source" json:"source"`       // e.g. "defender", "crowdstrike"
-	MatchMethod string `neo4j:"match_method" json:"match_method"` // e.g. "mitre", "filehash", "llm"
-	Latency     string `neo4j:"latency" json:"latency"`           // duration string
-	LLMScore    int    `neo4j:"llm_score" json:"llm_score,omitempty"`     // 0-100 confidence (only for match_method="llm")
-	LLMReason   string `neo4j:"llm_reason" json:"llm_reason,omitempty"`   // 1-sentence explanation (only for match_method="llm")
+	Source      string `neo4j:"source" json:"source"`             // "defender", "extrahop"
+	MatchMethod string `neo4j:"match_method" json:"match_method"` // "mitre", "filehash", "llm"
+	Latency     string `neo4j:"latency" json:"latency"`
+	LLMScore    int    `neo4j:"llm_score" json:"llm_score,omitempty"`
+	LLMReason   string `neo4j:"llm_reason" json:"llm_reason,omitempty"`
+
+	// Alert snapshot (for display without re-fetching)
+	AlertID     string `neo4j:"alert_id" json:"alert_id"`
+	Title       string `neo4j:"title" json:"title"`
+	Description string `neo4j:"description" json:"description"`
+	Severity    string `neo4j:"severity" json:"severity"`
+	DetectedAt  string `neo4j:"detected_at" json:"detected_at"`
+	Hostname    string `neo4j:"hostname" json:"hostname"`
+	SourceURL   string `neo4j:"source_url" json:"source_url,omitempty"`
 }
 
-func NewMonitorDetection(sessionID, techniqueID, source, detectionID string) MonitorDetection {
+func NewMonitorDetection(alert *MonitorAlert, sessionID, techniqueID, source, method string) MonitorDetection {
 	d := MonitorDetection{
 		SessionID:   sessionID,
 		TechniqueID: techniqueID,
 		Source:      source,
-		DetectionID: detectionID,
+		MatchMethod: method,
+		AlertID:     alert.ID,
+		Title:       alert.Title,
+		Description: alert.Description,
+		Severity:    alert.Severity,
+		DetectedAt:  alert.DetectedAt,
+		Hostname:    alert.Hostname,
+		SourceURL:   alert.SourceURL,
 	}
 	registry.CallHooks(&d)
 	return d
 }
 
-// WithMatch clones the detection and sets session/technique/source/method fields.
-// Calls hooks to regenerate the Key.
-func (d *MonitorDetection) WithMatch(sessionID, techniqueID, source, method string) MonitorDetection {
-	det := *d
-	det.SessionID = sessionID
-	det.TechniqueID = techniqueID
-	det.Source = source
-	det.MatchMethod = method
-	det.Username = ""
-	registry.CallHooks(&det)
-	return det
-}
-
-func (d *MonitorDetection) GetKey() string   { return d.Key }
+func (d *MonitorDetection) GetKey() string { return d.Key }
 func (d *MonitorDetection) GetLabels() []string {
 	return []string{MonitorDetectionLabel}
 }
 func (d *MonitorDetection) Valid() bool {
-	return strings.HasPrefix(d.Key, "#monitordetection#") && d.DetectionID != ""
+	return strings.HasPrefix(d.Key, "#monitordetection#") && d.AlertID != ""
 }
 func (d *MonitorDetection) SetUsername(u string) { d.Username = u }
 func (d *MonitorDetection) GetAgent() string     { return "" }
@@ -201,7 +208,7 @@ func (d *MonitorDetection) GetHooks() []registry.Hook {
 	return []registry.Hook{{
 		Call: func() error {
 			d.Key = fmt.Sprintf("#monitordetection#%s#%s#%s#%s",
-				d.SessionID, d.TechniqueID, d.Source, d.DetectionID)
+				d.SessionID, d.TechniqueID, d.Source, d.AlertID)
 			return nil
 		},
 	}}
