@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -40,7 +41,7 @@ func init() {
 
 // MonitorFilter defines a matching rule for EDR alert correlation.
 type MonitorFilter struct {
-	Type  string `json:"type"`  // "hostname" | "filehash" | "mitre"
+	Type  string `json:"type"` // "hostname" | "filehash" | "mitre"
 	Value string `json:"value"`
 }
 
@@ -48,21 +49,22 @@ type MonitorFilter struct {
 
 type MonitoringSession struct {
 	registry.BaseModel
-	Username   string `neo4j:"username" json:"username"`
-	Key        string `neo4j:"key" json:"key"`
-	SessionID  string `neo4j:"session_id" json:"session_id"`
-	Name       string `neo4j:"name" json:"name"`
-	Status     string `neo4j:"status" json:"status"`
-	Created    string `neo4j:"created" json:"created"`
-	ExpiresAt  string `neo4j:"expires_at" json:"expires_at"`
-	ExecutedAt string `neo4j:"executed_at" json:"executed_at"`
+	Username   string          `neo4j:"username" json:"username"`
+	Key        string          `neo4j:"key" json:"key"`
+	SessionID  string          `neo4j:"session_id" json:"session_id"`
+	Name       string          `neo4j:"name" json:"name"`
+	Status     string          `neo4j:"status" json:"status"`
+	Created    string          `neo4j:"created" json:"created"`
+	ExpiresAt  string          `neo4j:"expires_at" json:"expires_at"`
+	ExecutedAt string          `neo4j:"executed_at" json:"executed_at"`
 	LastRunAt  string          `neo4j:"last_run_at" json:"last_run_at"`
 	Filters    []MonitorFilter `neo4j:"filters" json:"filters"`
 }
 
-func NewMonitoringSession(sessionID, name string, filters []MonitorFilter, executedAt, expiresAt string) MonitoringSession {
+func NewMonitoringSession(name string, filters []MonitorFilter, executedAt, expiresAt string) MonitoringSession {
+	id := uuid.New()
 	s := MonitoringSession{
-		SessionID:  sessionID,
+		SessionID:  id.String(),
 		Name:       name,
 		Status:     MonitorStatusActive,
 		Created:    Now(),
@@ -74,14 +76,14 @@ func NewMonitoringSession(sessionID, name string, filters []MonitorFilter, execu
 	return s
 }
 
-func (s *MonitoringSession) GetKey() string   { return s.Key }
+func (s *MonitoringSession) GetKey() string { return s.Key }
 func (s *MonitoringSession) GetLabels() []string {
 	return []string{MonitoringSessionLabel}
 }
 func (s *MonitoringSession) Valid() bool {
 	return strings.HasPrefix(s.Key, "#monitoringsession#") && s.SessionID != ""
 }
-func (s *MonitoringSession) Standalone()            {}
+func (s *MonitoringSession) Standalone()          {}
 func (s *MonitoringSession) SetUsername(u string) { s.Username = u }
 func (s *MonitoringSession) GetAgent() string     { return "" }
 func (s *MonitoringSession) GetDescription() string {
@@ -115,14 +117,14 @@ func NewMonitoredTechnique(techniqueID, name string) MonitoredTechnique {
 	return t
 }
 
-func (t *MonitoredTechnique) GetKey() string   { return t.Key }
+func (t *MonitoredTechnique) GetKey() string { return t.Key }
 func (t *MonitoredTechnique) GetLabels() []string {
 	return []string{MonitoredTechniqueLabel}
 }
 func (t *MonitoredTechnique) Valid() bool {
 	return strings.HasPrefix(t.Key, "#monitoredtechnique#") && t.TechniqueID != ""
 }
-func (t *MonitoredTechnique) Standalone()            {}
+func (t *MonitoredTechnique) Standalone()          {}
 func (t *MonitoredTechnique) SetUsername(u string) { t.Username = u }
 func (t *MonitoredTechnique) GetAgent() string     { return "" }
 func (t *MonitoredTechnique) GetDescription() string {
@@ -205,7 +207,7 @@ func (d *MonitorDetection) GetLabels() []string {
 func (d *MonitorDetection) Valid() bool {
 	return strings.HasPrefix(d.Key, "#monitordetection#") && d.AlertID != ""
 }
-func (d *MonitorDetection) Standalone()            {}
+func (d *MonitorDetection) Standalone()          {}
 func (d *MonitorDetection) SetUsername(u string) { d.Username = u }
 func (d *MonitorDetection) GetAgent() string     { return "" }
 func (d *MonitorDetection) GetDescription() string {

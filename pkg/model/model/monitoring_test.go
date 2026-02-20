@@ -8,10 +8,10 @@ import (
 
 func TestNewMonitoringSession(t *testing.T) {
 	filters := []MonitorFilter{{Type: "hostname", Value: "dc01.corp.local"}}
-	s := NewMonitoringSession("sess-123", "Test Session", filters, "2026-01-01T00:00:00Z", "2026-01-08T00:00:00Z")
+	s := NewMonitoringSession("Test Session", filters, "2026-01-01T00:00:00Z", "2026-01-08T00:00:00Z")
 
-	assert.Equal(t, "#monitoringsession#sess-123", s.Key)
-	assert.Equal(t, "sess-123", s.SessionID)
+	assert.NotEmpty(t, s.SessionID)
+	assert.Contains(t, s.Key, "#monitoringsession#"+s.SessionID)
 	assert.Equal(t, "Test Session", s.Name)
 	assert.Equal(t, MonitorStatusActive, s.Status)
 	assert.Equal(t, "2026-01-01T00:00:00Z", s.ExecutedAt)
@@ -47,7 +47,7 @@ func TestMonitoredTechnique_GlobalKey(t *testing.T) {
 }
 
 func TestNewMonitorDetection(t *testing.T) {
-	alert := &MonitorAlert{
+	alert := MonitorAlert{
 		ID:       "alert-456",
 		Title:    "Suspicious Process",
 		Hostname: "dc01",
