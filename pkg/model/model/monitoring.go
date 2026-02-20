@@ -155,8 +155,10 @@ type MonitorDetection struct {
 	SessionID   string `neo4j:"session_id" json:"session_id"`
 	TechniqueID string `neo4j:"technique_id" json:"technique_id"`
 	Source      string `neo4j:"source" json:"source"`       // e.g. "defender", "crowdstrike"
-	MatchMethod string `neo4j:"match_method" json:"match_method"` // e.g. "mitre", "filehash"
-	Latency     string `neo4j:"latency" json:"latency"`     // duration string
+	MatchMethod string `neo4j:"match_method" json:"match_method"` // e.g. "mitre", "filehash", "llm"
+	Latency     string `neo4j:"latency" json:"latency"`           // duration string
+	LLMScore    int    `neo4j:"llm_score" json:"llm_score,omitempty"`     // 0-100 confidence (only for match_method="llm")
+	LLMReason   string `neo4j:"llm_reason" json:"llm_reason,omitempty"`   // 1-sentence explanation (only for match_method="llm")
 }
 
 func NewMonitorDetection(sessionID, techniqueID, source, detectionID string) MonitorDetection {
@@ -168,6 +170,19 @@ func NewMonitorDetection(sessionID, techniqueID, source, detectionID string) Mon
 	}
 	registry.CallHooks(&d)
 	return d
+}
+
+// WithMatch clones the detection and sets session/technique/source/method fields.
+// Calls hooks to regenerate the Key.
+func (d *MonitorDetection) WithMatch(sessionID, techniqueID, source, method string) MonitorDetection {
+	det := *d
+	det.SessionID = sessionID
+	det.TechniqueID = techniqueID
+	det.Source = source
+	det.MatchMethod = method
+	det.Username = ""
+	registry.CallHooks(&det)
+	return det
 }
 
 func (d *MonitorDetection) GetKey() string   { return d.Key }
