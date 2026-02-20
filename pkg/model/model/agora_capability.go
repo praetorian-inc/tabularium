@@ -23,7 +23,6 @@ const (
 	CategoryDatabase
 	CategorySMB
 	CategoryCICD
-
 )
 
 // CategoryStrings maps category IDs to their string representations
@@ -38,7 +37,6 @@ var CategoryStrings = map[Category]string{
 	CategoryDatabase: "database",
 	CategorySMB:      "smb",
 	CategoryCICD:     "cicd",
-
 }
 
 // CategoryNames maps string names to category IDs (reverse lookup)
@@ -53,7 +51,6 @@ var CategoryNames = map[string]Category{
 	"database": CategoryDatabase,
 	"smb":      CategorySMB,
 	"cicd":     CategoryCICD,
-
 }
 
 // String returns the string representation of a category

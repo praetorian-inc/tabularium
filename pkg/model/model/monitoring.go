@@ -14,6 +14,10 @@ const (
 	MonitorStatusCancelled = "cancelled"
 )
 
+// MonitorCapabilityPrefix is the naming convention for monitoring capabilities.
+// Used by the cron to filter capability names and by each monitor_* capability's Name().
+const MonitorCapabilityPrefix = "monitor-"
+
 // Labels
 const (
 	MonitoringSessionLabel  = "MonitoringSession"
@@ -176,7 +180,7 @@ type MonitorDetection struct {
 	SourceURL   string `neo4j:"source_url" json:"source_url,omitempty"`
 }
 
-func NewMonitorDetection(alert *MonitorAlert, sessionID, techniqueID, source, method string) MonitorDetection {
+func NewMonitorDetection(alert MonitorAlert, sessionID, techniqueID, source, method string) MonitorDetection {
 	d := MonitorDetection{
 		SessionID:   sessionID,
 		TechniqueID: techniqueID,
