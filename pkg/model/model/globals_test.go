@@ -194,7 +194,7 @@ func TestHydratableModels(t *testing.T) {
 	t.Run("webpage dehydration and hydration flow", func(t *testing.T) {
 		// Webpages always will be hydratable regardless of if req/responses exist
 		webpage := NewWebpageFromString("https://example.com", nil)
-		assert.NotEqual(t, SKIP_HYDRATION, webpage.HydratableFilepath())
+		assert.NotEqual(t, NO_HYDRATION_FILEPATH, webpage.HydratableFilepath())
 
 		response := WebpageResponse{
 			StatusCode: 200,
@@ -235,7 +235,7 @@ func TestHydratableModels(t *testing.T) {
 	t.Run("web application hydration flow", func(t *testing.T) {
 		//Web Applications only hydrate if they are a Web Service (contain a API Definition)
 		webapp := NewWebApplication("https://example.com", "Example's Website")
-		assert.Equal(t, SKIP_HYDRATION, webapp.HydratableFilepath())
+		assert.Equal(t, NO_HYDRATION_FILEPATH, webapp.HydratableFilepath())
 
 		fileBased := FileBasedAPIDefinition{
 			Filename:         "api.json",
@@ -279,13 +279,13 @@ func TestHydratableModels(t *testing.T) {
 		resource, err := NewAWSResource(name, account, AWSS3Bucket, nil)
 		require.NoError(t, err)
 
-		assert.Equal(t, SKIP_HYDRATION, resource.HydratableFilepath())
+		assert.Equal(t, NO_HYDRATION_FILEPATH, resource.HydratableFilepath())
 
 		policyBytes := []byte(`{"Statement":[{"Action":"s3:*"}]}`)
 		err = resource.Hydrate(policyBytes)
 		require.NoError(t, err)
 
-		expectedPath := resource.OrgPolicyFilename
+		expectedPath := resource.OrgPolicyFilename()
 		assert.Equal(t, expectedPath, resource.HydratableFilepath())
 
 		file := resource.HydratedFile()
@@ -304,7 +304,7 @@ func TestHydratableModels(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, policyBytes, newInstance.OrgPolicy)
-		assert.Equal(t, newInstance.OrgPolicyFilename, newInstance.HydratableFilepath())
+		assert.Equal(t, newInstance.OrgPolicyFilename(), newInstance.HydratableFilepath())
 	})
 
 	t.Run("file hydration flow", func(t *testing.T) {

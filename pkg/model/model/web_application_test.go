@@ -449,7 +449,7 @@ func TestWebApplicationHydrationLifecycle(t *testing.T) {
 	assert.Equal(t, expectedPath, w.GetHydratableFilepath())
 
 	assert.False(t, w.IsWebService())
-	assert.Equal(t, SKIP_HYDRATION, w.HydratableFilepath())
+	assert.Equal(t, NO_HYDRATION_FILEPATH, w.HydratableFilepath())
 
 	w.BurpType = "webservice"
 	assert.True(t, w.IsWebService())
