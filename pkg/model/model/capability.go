@@ -53,6 +53,8 @@ type Capability interface {
 	Integration() bool
 	// LargeArtifact returns whether this capability should support downloading a large artifact output
 	LargeArtifact() bool
+	// Modules returns a list of modules that are required to execute this capability, if any are required
+	Modules() []string
 	Lifecycle
 }
 
