@@ -15,6 +15,8 @@ type Capability interface {
 	Description() string
 	// Surface returns the attack surface of the capability
 	Surface() attacksurface.Surface
+	// OriginOverride returns the capability's origin, if it should be different from the name of the capability
+	OriginOverride() string
 	// Parameters returns the parameters of the capability
 	Parameters() []AgoraParameter
 	// GetJob returns the capability's job
