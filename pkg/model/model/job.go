@@ -35,6 +35,7 @@ type Job struct {
 	AllowRepeat           bool              `dynamodbav:"allowRepeat" json:"allowRepeat" desc:"Indicates if repeating this job should be allowed. Used for manual jobs, or rescan jobs, that should not block other job executions." example:"false"`
 	Full                  bool              `dynamodbav:"-" json:"full,omitempty" desc:"Indicates if this is a full scan job." example:"false"`
 	Capabilities          []string          `dynamodbav:"-" json:"capabilities,omitempty" desc:"List of specific capabilities to run for this job." example:"[\"portscan\", \"nuclei\"]"`
+	Size                  TaskSize          `dynamodbav:"-" json:"size,omitempty" desc:"ECS task size for running this job."`
 	Queue                 string            `dynamodbav:"-" desc:"Target queue for the job." example:"standard"`
 	Conversation          string            `dynamodbav:"conversation,omitempty" json:"conversation,omitempty" desc:"UUID of the conversation that initiated this job." example:"550e8400-e29b-41d4-a716-446655440000"`
 	User                  string            `dynamodbav:"user,omitempty" json:"user,omitempty" desc:"User who initiated this job." example:"user@example.com"`

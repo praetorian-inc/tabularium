@@ -53,6 +53,8 @@ type Capability interface {
 	Integration() bool
 	// LargeArtifact returns whether this capability should support downloading a large artifact output
 	LargeArtifact() bool
+	// Size returns the ECS task size (CPU and memory) for running this capability
+	Size() TaskSize
 	Lifecycle
 }
 
