@@ -1,6 +1,8 @@
 package model
 
 import (
+	"sort"
+
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
@@ -37,6 +39,7 @@ func (r *IAMAWSRelationship) Visit(o GraphRelationship) {
 	}
 
 	r.Actions = mergeStringSlices(r.Actions, other.Actions)
+	sort.Strings(r.Actions)
 	r.BaseRelationship.Visit(other)
 }
 
