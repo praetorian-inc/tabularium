@@ -35,6 +35,7 @@ type Risk struct {
 	MLProperties
 	Tags
 	OriginationData
+	TicketData
 }
 
 func init() {
