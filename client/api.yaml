@@ -4659,6 +4659,8 @@ components:
           type: object
         Tags:
           type: object
+        TicketData:
+          type: object
         comment:
           description: User-provided comment about the risk.
           example: Confirmed by manual check
@@ -4718,6 +4720,7 @@ components:
       - MLProperties
       - OriginationData
       - Tags
+      - TicketData
       - created
       - dns
       - key
@@ -5116,6 +5119,46 @@ components:
       - aliases
       - categories
       - name
+      type: object
+    ticket:
+      description: Represents an ITSM ticket (Jira, Azure DevOps, Freshdesk, etc.)
+        associated with a security risk.
+      properties:
+        BaseModel:
+          type: object
+        id:
+          description: Ticket identifier in the external system.
+          example: PROJ-123
+          type: string
+        link:
+          description: URL to the ticket in the external system.
+          example: https://jira.example.com/browse/PROJ-123
+          type: string
+        provider:
+          description: ITSM provider name (e.g., jira, azuredevops, freshdesk).
+          example: jira
+          type: string
+        status:
+          description: Current status of the ticket.
+          example: In Progress
+          type: string
+      required:
+      - BaseModel
+      - id
+      - provider
+      type: object
+    ticketdata:
+      description: Container for ITSM tickets associated with a risk.
+      properties:
+        BaseModel:
+          type: object
+        tickets:
+          description: ITSM tickets associated with this risk.
+          items:
+            type: object
+          type: array
+      required:
+      - BaseModel
       type: object
     traceevent:
       description: Represents a telemetry event in a trace.
