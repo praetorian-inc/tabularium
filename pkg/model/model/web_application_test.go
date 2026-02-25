@@ -406,7 +406,7 @@ func TestWebApplicationSeedPromotion(t *testing.T) {
 					"PendingPromotion should return true")
 				assert.NotEmpty(t, existing.History.History, "Promotion should create history record")
 				lastRecord := existing.History.History[len(existing.History.History)-1]
-				assert.Equal(t, "", lastRecord.From, "Promotion history From should be empty")
+				assert.Equal(t, Active, lastRecord.From, "Promotion history From should be the existing status")
 				assert.NotEmpty(t, lastRecord.To, "Promotion history To should not be empty")
 			} else {
 				pendingPromotion, required := PendingLabelAddition(&existing)

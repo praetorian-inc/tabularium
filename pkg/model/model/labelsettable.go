@@ -41,11 +41,11 @@ func ApplySeedLabels(base *BaseAsset, ls *LabelSettableEmbed) {
 }
 
 // PromoteToSeed handles full seed promotion during Merge: sets labels, source,
-// and records a promotion history event. The empty From with non-empty To
-// signals a promotion event to the UI.
+// and records a promotion history event with the current status as From.
 func PromoteToSeed(base *BaseAsset, ls *LabelSettableEmbed, targetStatus string) {
+	currentStatus := base.Status
 	ApplySeedLabels(base, ls)
-	base.History.RecordPromotion("", targetStatus)
+	base.History.RecordPromotion(currentStatus, "", targetStatus)
 }
 
 // MergeWithPromotionCheck dispatches to the correct merge path for models

@@ -61,9 +61,11 @@ func (h *History) Update(from, to, by, comment string, other History) bool {
 }
 
 // RecordPromotion appends a history record for an asset promotion (e.g. seed promotion).
-// The empty From field with a non-empty To signals a promotion event to the UI.
-func (h *History) RecordPromotion(by string, status string) {
+// The from parameter records the status before promotion; for same-status promotions
+// (e.g. A→A for Praetorian users), from equals to, signaling a seed promotion event.
+func (h *History) RecordPromotion(from, by, status string) {
 	h.History = append(h.History, HistoryRecord{
+		From:    from,
 		By:      by,
 		To:      status,
 		Updated: Now(),
