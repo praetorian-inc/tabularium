@@ -4671,6 +4671,10 @@ components:
           description: Primary DNS or group associated with the risk.
           example: example.com
           type: string
+        guid:
+          description: Globally unique identifier for this risk instance (UUID v4).
+          example: 550e8400-e29b-41d4-a716-446655440000
+          type: string
         key:
           description: Unique key identifying the risk.
           example: '#risk#example.com#CVE-2023-12345'
@@ -4720,6 +4724,7 @@ components:
       - Tags
       - created
       - dns
+      - guid
       - key
       - name
       - plextracid
