@@ -4,6 +4,7 @@ package capmodel
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/praetorian-inc/tabularium/pkg/capmodel/internal/models"
 	"github.com/praetorian-inc/tabularium/pkg/model/model"
@@ -467,15 +468,15 @@ func extractRisk(m registry.Model) (any, error) {
 		Proof:  src.SDKProof,
 	}
 	if src.Target != nil {
-		p, err := registry.Registry.Extract("Asset", src.Target)
+		t := reflect.TypeOf(src.Target)
+		if t.Kind() == reflect.Ptr {
+			t = t.Elem()
+		}
+		p, err := registry.Registry.Extract(t.Name(), src.Target)
 		if err != nil {
 			return nil, err
 		}
-		typed, ok := p.(*models.Asset)
-		if !ok {
-			return nil, fmt.Errorf("extractRisk: parent is %T, not *models.Asset", p)
-		}
-		result.Target = *typed
+		result.Target = p
 	}
 	return &result, nil
 }
