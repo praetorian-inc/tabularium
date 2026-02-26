@@ -68,6 +68,37 @@ func TestRiskConvert(t *testing.T) {
 	assert.Equal(t, "#risk#example.com#CVE-2023-12345", result.Key)
 }
 
+func TestRiskConvertTargetName(t *testing.T) {
+	result := convert[*model.Risk](t, "Risk", models.Risk{
+		Name:       "CVE-2023-99999",
+		Status:     "TH",
+		Source:     "manual",
+		TargetName: "custom-target.example.com",
+	})
+	assert.Equal(t, "custom-target.example.com", result.DNS)
+	assert.Equal(t, "CVE-2023-99999", result.Name)
+	assert.Nil(t, result.Target)
+	assert.Equal(t, "#risk#custom-target.example.com#CVE-2023-99999", result.Key)
+}
+
+func TestRiskConvertPolymorphicType(t *testing.T) {
+	// Use _type discriminator to convert target as a Domain
+	data := []byte(`{
+		"name": "CVE-2023-55555",
+		"status": "TH",
+		"source": "scanner",
+		"target": {"_type": "Domain", "domain": "poly.example.com"}
+	}`)
+	m, err := registry.Registry.Convert("Risk", data)
+	require.NoError(t, err)
+	result := m.(*model.Risk)
+	assert.Equal(t, "poly.example.com", result.DNS)
+	assert.NotNil(t, result.Target)
+	target, ok := result.Target.(*model.Asset)
+	require.True(t, ok, "Domain converter produces *model.Asset, got %T", result.Target)
+	assert.Equal(t, "poly.example.com", target.DNS)
+}
+
 func TestPortConvert(t *testing.T) {
 	result := convert[*model.Port](t, "Port", models.Port{
 		Protocol: "tcp",
