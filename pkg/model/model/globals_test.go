@@ -3,6 +3,7 @@ package model
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -194,7 +195,7 @@ func TestHydratableModels(t *testing.T) {
 	t.Run("webpage dehydration and hydration flow", func(t *testing.T) {
 		// Webpages always will be hydratable regardless of if req/responses exist
 		webpage := NewWebpageFromString("https://example.com", nil)
-		assert.NotEqual(t, NO_HYDRATION_FILEPATH, webpage.HydratableFilepath())
+		assert.True(t, webpage.CanHydrate())
 
 		response := WebpageResponse{
 			StatusCode: 200,
@@ -210,15 +211,13 @@ func TestHydratableModels(t *testing.T) {
 		}
 		webpage.AddRequest(request)
 		assert.Empty(t, webpage.DetailsFilepath)
-		assert.Equal(t, webpage.DetailsFilePath(), webpage.HydratableFilepath())
 
-		file := webpage.HydratedFile()
-		assert.Equal(t, webpage.DetailsFilepath, file.Name)
-		assert.NotEmpty(t, file.Bytes)
+		files, dehydrated := webpage.Dehydrate()
+		assert.Equal(t, webpage.DetailsFilepath, files[0].Name)
+		assert.NotEmpty(t, files[0].Bytes)
 		assert.NotEmpty(t, webpage.Requests)
 		assert.Equal(t, webpage.Requests[0], request)
 
-		dehydrated := webpage.Dehydrate()
 		dehydratedWebpage, ok := dehydrated.(*Webpage)
 		assert.True(t, ok)
 		assert.Empty(t, dehydratedWebpage.Requests)
@@ -226,7 +225,14 @@ func TestHydratableModels(t *testing.T) {
 		newWebpageInstance := NewWebpageFromString("https://example.com", nil)
 		newWebpageInstance.DetailsFilepath = dehydratedWebpage.DetailsFilepath
 
-		err := newWebpageInstance.Hydrate(file.Bytes)
+		err := newWebpageInstance.Hydrate(func(path string) ([]byte, error) {
+			for _, f := range files {
+				if f.Name == path {
+					return f.Bytes, nil
+				}
+			}
+			return nil, fmt.Errorf("file not found: %s", path)
+		})
 		assert.NoError(t, err)
 		assert.NotEmpty(t, newWebpageInstance.Requests)
 		assert.Equal(t, newWebpageInstance.Requests[0], request)
@@ -235,7 +241,7 @@ func TestHydratableModels(t *testing.T) {
 	t.Run("web application hydration flow", func(t *testing.T) {
 		//Web Applications only hydrate if they are a Web Service (contain a API Definition)
 		webapp := NewWebApplication("https://example.com", "Example's Website")
-		assert.Equal(t, NO_HYDRATION_FILEPATH, webapp.HydratableFilepath())
+		assert.False(t, webapp.CanHydrate())
 
 		fileBased := FileBasedAPIDefinition{
 			Filename:         "api.json",
@@ -252,22 +258,28 @@ func TestHydratableModels(t *testing.T) {
 		}
 		webapp.ApiDefinitionContent = apiContent
 		webapp.BurpType = "webservice"
-		assert.Equal(t, webapp.GetHydratableFilepath(), webapp.HydratableFilepath())
+		assert.True(t, webapp.CanHydrate())
 		assert.Empty(t, webapp.ApiDefinitionContentPath)
 
-		file := webapp.HydratedFile()
-		assert.Equal(t, webapp.ApiDefinitionContentPath, file.Name)
-		assert.NotEmpty(t, file.Bytes)
+		files, dehydrated := webapp.Dehydrate()
+		assert.Equal(t, webapp.ApiDefinitionContentPath, files[0].Name)
+		assert.NotEmpty(t, files[0].Bytes)
 		assert.Equal(t, webapp.ApiDefinitionContent, apiContent)
 
-		dehydrated := webapp.Dehydrate()
 		dehydratedWebapp, ok := dehydrated.(*WebApplication)
 		assert.True(t, ok)
 		assert.Empty(t, dehydratedWebapp.WebApplicationDetails)
 
 		newInstance := NewWebApplication("https://example.com", "Example's Website")
-		newInstance.Hydrate(file.Bytes)
-		assert.Equal(t, newInstance.ApiDefinitionContentPath, file.Name)
+		newInstance.Hydrate(func(path string) ([]byte, error) {
+			for _, f := range files {
+				if f.Name == path {
+					return f.Bytes, nil
+				}
+			}
+			return nil, fmt.Errorf("file not found: %s", path)
+		})
+		assert.Equal(t, newInstance.ApiDefinitionContentPath, files[0].Name)
 		assert.NotEmpty(t, newInstance.ApiDefinitionContent)
 		assert.Equal(t, newInstance.ApiDefinitionContent, apiContent)
 	})
@@ -279,20 +291,18 @@ func TestHydratableModels(t *testing.T) {
 		resource, err := NewAWSResource(name, account, AWSS3Bucket, nil)
 		require.NoError(t, err)
 
-		assert.Equal(t, NO_HYDRATION_FILEPATH, resource.HydratableFilepath())
+		assert.False(t, resource.CanHydrate())
 
 		policyBytes := []byte(`{"Statement":[{"Action":"s3:*"}]}`)
-		err = resource.Hydrate(policyBytes)
-		require.NoError(t, err)
+		resource.SetOrgPolicy(policyBytes)
+
+		assert.True(t, resource.CanHydrate())
 
 		expectedPath := resource.OrgPolicyFilename()
-		assert.Equal(t, expectedPath, resource.HydratableFilepath())
+		files, dehydrated := resource.Dehydrate()
+		assert.Equal(t, expectedPath, files[0].Name)
+		assert.Equal(t, policyBytes, []byte(files[0].Bytes))
 
-		file := resource.HydratedFile()
-		assert.Equal(t, expectedPath, file.Name)
-		assert.Equal(t, policyBytes, []byte(file.Bytes))
-
-		dehydrated := resource.Dehydrate()
 		dehydratedResource, ok := dehydrated.(*AWSResource)
 		assert.True(t, ok)
 		assert.Nil(t, dehydratedResource.OrgPolicy)
@@ -300,28 +310,35 @@ func TestHydratableModels(t *testing.T) {
 		newInstance, err := NewAWSResource(name, account, AWSS3Bucket, nil)
 		require.NoError(t, err)
 
-		err = newInstance.Hydrate(file.Bytes)
+		err = newInstance.Hydrate(func(path string) ([]byte, error) {
+			for _, f := range files {
+				if f.Name == path {
+					return f.Bytes, nil
+				}
+			}
+			return nil, fmt.Errorf("file not found: %s", path)
+		})
 		require.NoError(t, err)
 
 		assert.Equal(t, policyBytes, newInstance.OrgPolicy)
-		assert.Equal(t, newInstance.OrgPolicyFilename(), newInstance.HydratableFilepath())
+		assert.True(t, newInstance.CanHydrate())
 	})
 
 	t.Run("file hydration flow", func(t *testing.T) {
 		file := NewFile("example.json")
 		file.Bytes = []byte(`{"key": "value"}`)
 
-		assert.Equal(t, file.Name, file.HydratableFilepath())
+		assert.True(t, file.CanHydrate())
 
-		hFile := file.HydratedFile()
-		assert.Equal(t, file.Name, hFile.Name)
-		assert.Equal(t, file.Bytes, hFile.Bytes)
-
-		dehydrated := file.Dehydrate()
+		files, dehydrated := file.Dehydrate()
+		assert.Equal(t, file.Name, files[0].Name)
+		assert.Equal(t, file.Bytes, files[0].Bytes)
 		assert.Nil(t, dehydrated)
 
 		newInstance := NewFile("example.json")
-		newInstance.Hydrate(file.Bytes)
+		newInstance.Hydrate(func(path string) ([]byte, error) {
+			return file.Bytes, nil
+		})
 		assert.Equal(t, newInstance.Name, file.Name)
 		assert.Equal(t, newInstance.Bytes, file.Bytes)
 	})
