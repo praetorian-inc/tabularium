@@ -95,39 +95,34 @@ func (c *AWSResource) GetOrgPolicy() []byte {
 	return c.OrgPolicy
 }
 
-func (c *AWSResource) HydratableFilepath() string {
-	if !c.HasOrgPolicy {
-		return NO_HYDRATION_FILEPATH
-	}
-
-	return c.OrgPolicyFilename()
+func (c *AWSResource) CanHydrate() bool {
+	return c.HasOrgPolicy
 }
 
-func (c *AWSResource) Hydrate(data []byte) error {
+func (c *AWSResource) Hydrate(getFile func(string) ([]byte, error)) error {
+	data, err := getFile(c.OrgPolicyFilename())
+	if err != nil {
+		return err
+	}
 	if data == nil {
 		return fmt.Errorf("no data")
 	}
-
 	c.SetOrgPolicy(data)
 	return nil
 }
 
-func (c *AWSResource) HydratedFile() File {
+func (c *AWSResource) Dehydrate() ([]File, Hydratable) {
 	if c.OrgPolicy == nil {
-		return File{}
+		dehydrated := *c
+		return nil, &dehydrated
 	}
 
 	file := NewFile(c.OrgPolicyFilename())
 	file.Bytes = c.OrgPolicy
 
-	return file
-}
-
-func (c *AWSResource) Dehydrate() Hydratable {
 	dehydrated := *c
-
 	dehydrated.OrgPolicy = nil
-	return &dehydrated
+	return []File{file}, &dehydrated
 }
 
 func (a *AWSResource) OrgPolicyFilename() string {
