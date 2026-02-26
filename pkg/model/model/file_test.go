@@ -58,16 +58,17 @@ func TestFile_HydrateAndDehydrate(t *testing.T) {
 		file := NewFile("/dir/test.txt")
 		require.Empty(t, file.Bytes)
 
-		filepath := file.HydratableFilepath()
-		assert.Equal(t, filepath, "/dir/test.txt")
+		assert.True(t, file.CanHydrate())
 
-		err := file.Hydrate([]byte("hello"))
+		err := file.Hydrate(func(path string) ([]byte, error) {
+			return []byte("hello"), nil
+		})
 		require.Nil(t, err)
+		assert.Equal(t, string(file.Bytes), "hello")
 
-		hydratedFile := file.HydratedFile()
-		assert.Equal(t, string(hydratedFile.Bytes), "hello")
-
-		dehydratedFile := file.Dehydrate()
-		assert.Nil(t, dehydratedFile)
+		files, dehydrated := file.Dehydrate()
+		assert.Equal(t, 1, len(files))
+		assert.Equal(t, string(files[0].Bytes), "hello")
+		assert.Nil(t, dehydrated)
 	})
 }

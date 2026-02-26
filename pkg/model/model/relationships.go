@@ -136,25 +136,24 @@ func (a HasVulnerability) Label() string {
 	return HasVulnerabilityLabel
 }
 
-func (hv *HasVulnerability) HydratableFilepath() string {
-	return hv.AttachmentPath
+func (hv *HasVulnerability) CanHydrate() bool {
+	return hv.AttachmentPath != ""
 }
 
-// A pointer to HasVulnerability since its a GraphRelationship
-func (hv *HasVulnerability) Hydrate(data []byte) error {
+func (hv *HasVulnerability) Hydrate(getFile func(string) ([]byte, error)) error {
+	data, err := getFile(hv.AttachmentPath)
+	if err != nil {
+		return err
+	}
 	hv.Base().Attachment = NewFile(hv.AttachmentPath)
 	hv.Base().Attachment.Bytes = data
 	return nil
 }
 
-func (hv *HasVulnerability) HydratedFile() File {
+func (hv *HasVulnerability) Dehydrate() ([]File, Hydratable) {
 	fileCopy := hv.Attachment
-	return fileCopy
-}
-
-func (hv *HasVulnerability) Dehydrate() Hydratable {
 	hv.Base().Attachment = File{}
-	return hv
+	return []File{fileCopy}, hv
 }
 
 // GetDescription returns a description for the InstanceOf relationship model.
