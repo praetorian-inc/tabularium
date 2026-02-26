@@ -4275,6 +4275,13 @@ class Risk(BaseModel):
             examples=['example.com'],
         ),
     ]
+    guid: Annotated[
+        str,
+        Field(
+            description='Globally unique identifier for this risk instance (UUID v4).',
+            examples=['550e8400-e29b-41d4-a716-446655440000'],
+        ),
+    ]
     key: Annotated[
         str,
         Field(
