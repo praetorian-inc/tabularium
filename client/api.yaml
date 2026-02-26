@@ -1661,19 +1661,19 @@ components:
       properties:
         CloudResource:
           type: object
+        hasOrgPolicy:
+          type: boolean
         isManagementAccount:
           type: boolean
         orgPolicy:
           items:
             type: integer
           type: array
-        orgPolicyFilename:
-          type: string
       required:
       - CloudResource
+      - hasOrgPolicy
       - isManagementAccount
       - orgPolicy
-      - orgPolicyFilename
       type: object
     azureresource:
       description: ' ()'
@@ -3317,6 +3317,34 @@ components:
       - BaseRelationship
       - relationshipType
       type: object
+    iam_aws_permission:
+      description: Represents an aggregated AWS IAM permission relationship between
+        a principal and a resource, containing all allowed actions.
+      properties:
+        BaseRelationship:
+          type: object
+        actions:
+          items:
+            type: string
+          type: array
+      required:
+      - BaseRelationship
+      - actions
+      type: object
+    iamawspermission:
+      description: Represents an aggregated AWS IAM permission relationship between
+        a principal and a resource, containing all allowed actions.
+      properties:
+        BaseRelationship:
+          type: object
+        actions:
+          items:
+            type: string
+          type: array
+      required:
+      - BaseRelationship
+      - actions
+      type: object
     iamrelationship:
       description: Represents the base structure for all graph relationships, containing
         source, target, and metadata.
@@ -4659,6 +4687,8 @@ components:
           type: object
         Tags:
           type: object
+        TicketData:
+          type: object
         comment:
           description: User-provided comment about the risk.
           example: Confirmed by manual check
@@ -4670,6 +4700,10 @@ components:
         dns:
           description: Primary DNS or group associated with the risk.
           example: example.com
+          type: string
+        guid:
+          description: Globally unique identifier for this risk instance (UUID v4).
+          example: 550e8400-e29b-41d4-a716-446655440000
           type: string
         key:
           description: Unique key identifying the risk.
@@ -4718,8 +4752,10 @@ components:
       - MLProperties
       - OriginationData
       - Tags
+      - TicketData
       - created
       - dns
+      - guid
       - key
       - name
       - plextracid

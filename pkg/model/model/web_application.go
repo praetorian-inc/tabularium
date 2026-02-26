@@ -222,7 +222,7 @@ func (w *WebApplication) GetHydratableFilepath() string {
 
 func (w *WebApplication) HydratableFilepath() string {
 	if !w.IsWebService() {
-		return SKIP_HYDRATION
+		return NO_HYDRATION_FILEPATH
 	}
 	return w.GetHydratableFilepath()
 }
