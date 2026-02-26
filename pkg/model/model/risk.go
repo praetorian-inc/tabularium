@@ -292,6 +292,7 @@ func (r *Risk) Defaulted() {
 	r.Updated = Now()
 	r.Visited = Now()
 	r.TTL = Future(30 * 24)
+	r.GUID = uuid.New().String()
 }
 
 func (r *Risk) GetHooks() []registry.Hook {
@@ -304,10 +305,6 @@ func (r *Risk) GetHooks() []registry.Hook {
 				r.formatName()
 				r.Key = fmt.Sprintf("#risk#%s#%s", r.DNS, r.Name)
 				r.Priority = riskPriority[r.Severity()]
-
-				if r.GUID == "" {
-					r.GUID = uuid.New().String()
-				}
 
 				return nil
 			},
