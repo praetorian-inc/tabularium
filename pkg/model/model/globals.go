@@ -121,7 +121,7 @@ type Hydratable interface {
 	Dehydrate() Hydratable
 }
 
-const SKIP_HYDRATION = ""
+const NO_HYDRATION_FILEPATH = ""
 
 type HydratableTarget interface {
 	Hydratable
