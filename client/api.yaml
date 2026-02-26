@@ -4659,6 +4659,8 @@ components:
           type: object
         Tags:
           type: object
+        TicketData:
+          type: object
         comment:
           description: User-provided comment about the risk.
           example: Confirmed by manual check
@@ -4718,6 +4720,7 @@ components:
       - MLProperties
       - OriginationData
       - Tags
+      - TicketData
       - created
       - dns
       - key
