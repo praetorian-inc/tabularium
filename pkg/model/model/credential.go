@@ -50,8 +50,7 @@ const (
 	GitlabCredential                CredentialType = "gitlab"                  // Gitlab API key
 	InsightVMCredential             CredentialType = "insight-vm"              // InsightVM credentials
 	MicrosoftDefenderCredential     CredentialType = "microsoft-defender"      // Microsoft Defender credentials
-	CrowdStrikeSpotlightCredential  CredentialType = "crowdstrike-spotlight"   // CrowdStrike Spotlight credentials
-	CrowdStrikeShieldCredential     CredentialType = "crowdstrike-shield"      // CrowdStrike Falcon Shield OAuth2 credentials
+	CrowdStrikeFalconCredential     CredentialType = "crowdstrike-falcon"      // CrowdStrike Falcon credentials
 	ExtrahopCredential              CredentialType = "extrahop"                // Extrahop API key
 	NessusCredential                CredentialType = "nessus"                  // Nessus API key
 	NS1Credential                   CredentialType = "ns1"                     // NS1 API key
