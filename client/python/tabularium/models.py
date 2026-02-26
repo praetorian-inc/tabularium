@@ -1270,6 +1270,13 @@ class Agoracapability(BaseModel):
             examples=['JanusPlugin'],
         ),
     ]
+    hasGlobalConfig: Annotated[
+        bool | None,
+        Field(
+            description='Whether this capability uses global configuration',
+            examples=['true'],
+        ),
+    ] = None
     integration: Annotated[
         bool,
         Field(
@@ -1354,6 +1361,13 @@ class Agoraparameter(BaseModel):
     type: Annotated[
         str, Field(description='The type of the parameter', examples=['string'])
     ]
+    value: Annotated[
+        str | None,
+        Field(
+            description='When used as a configuration override, the forced runtime value that always overwrites job config',
+            examples=['false'],
+        ),
+    ] = None
 
 
 class Allextendedrights(BaseModel):
@@ -4249,6 +4263,7 @@ class Risk(BaseModel):
     MLProperties: dict[str, Any]
     OriginationData: dict[str, Any]
     Tags: dict[str, Any]
+    TicketData: dict[str, Any]
     comment: Annotated[
         str | None,
         Field(
@@ -4268,6 +4283,13 @@ class Risk(BaseModel):
         Field(
             description='Primary DNS or group associated with the risk.',
             examples=['example.com'],
+        ),
+    ]
+    guid: Annotated[
+        str,
+        Field(
+            description='Globally unique identifier for this risk instance (UUID v4).',
+            examples=['550e8400-e29b-41d4-a716-446655440000'],
         ),
     ]
     key: Annotated[

@@ -1401,6 +1401,10 @@ components:
           description: The task executor that can execute this capability
           example: JanusPlugin
           type: string
+        hasGlobalConfig:
+          description: Whether this capability uses global configuration
+          example: "true"
+          type: boolean
         integration:
           description: Whether or not this capability is an integration with an external
             service
@@ -1485,6 +1489,11 @@ components:
         type:
           description: The type of the parameter
           example: string
+          type: string
+        value:
+          description: When used as a configuration override, the forced runtime value
+            that always overwrites job config
+          example: "false"
           type: string
       required:
       - BaseModel
@@ -4678,6 +4687,8 @@ components:
           type: object
         Tags:
           type: object
+        TicketData:
+          type: object
         comment:
           description: User-provided comment about the risk.
           example: Confirmed by manual check
@@ -4689,6 +4700,10 @@ components:
         dns:
           description: Primary DNS or group associated with the risk.
           example: example.com
+          type: string
+        guid:
+          description: Globally unique identifier for this risk instance (UUID v4).
+          example: 550e8400-e29b-41d4-a716-446655440000
           type: string
         key:
           description: Unique key identifying the risk.
@@ -4737,8 +4752,10 @@ components:
       - MLProperties
       - OriginationData
       - Tags
+      - TicketData
       - created
       - dns
+      - guid
       - key
       - name
       - plextracid

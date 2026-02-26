@@ -189,7 +189,8 @@ type AgoraCapability struct {
 	Integration   bool                  `json:"integration" desc:"Whether or not this capability is an integration with an external service" example:"true"`
 	Parameters    []AgoraParameter      `json:"parameters,omitempty" desc:"The parameters/options of the capability" example:"{\"input\": {\"ip\": \"1.2.3.4\"}, \"tcp\": true, \"udp\": false}"`
 	Async         bool                  `json:"async" desc:"Indicates if this is an asynchronous capability" example:"false"`
-	LargeArtifact bool                  `json:"largeArtifact,omitempty" desc:"If true, this capability generates large artifacts that can be stored and reviewed later" example:"false"`
+	LargeArtifact   bool                  `json:"largeArtifact,omitempty" desc:"If true, this capability generates large artifacts that can be stored and reviewed later" example:"false"`
+	HasGlobalConfig bool                  `json:"hasGlobalConfig,omitempty" desc:"Whether this capability uses global configuration" example:"true"`
 }
 
 func init() {
