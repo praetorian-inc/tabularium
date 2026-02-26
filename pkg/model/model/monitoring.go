@@ -8,25 +8,18 @@ import (
 	"github.com/praetorian-inc/tabularium/pkg/registry"
 )
 
-// Status constants for monitoring sessions
 const (
-	MonitorStatusActive    = "active"
-	MonitorStatusExpired   = "expired"
-	MonitorStatusCancelled = "cancelled"
-)
-
-// MonitorCapabilityPrefix is the naming convention for monitoring capabilities.
-// Used by the cron to filter capability names and by each monitor_* capability's Name().
-const MonitorCapabilityPrefix = "monitor-"
-
-// Labels
-const (
+	MonitorStatusActive     = "active"
+	MonitorStatusExpired    = "expired"
+	MonitorStatusCancelled  = "cancelled"
 	MonitoringSessionLabel  = "MonitoringSession"
 	MonitoredTechniqueLabel = "MonitoredTechnique"
 	MonitorDetectionLabel   = "MonitorDetection"
 	HasTechniqueLabel       = "HAS_TECHNIQUE"
 	HasDetectionLabel       = "HAS_DETECTION"
 )
+
+const MonitorCapabilityPrefix = "monitor-"
 
 func init() {
 	registry.Registry.MustRegisterModel(&MonitoringSession{})
@@ -44,8 +37,6 @@ type MonitorFilter struct {
 	Type  string `json:"type"` // "hostname" | "filehash" | "mitre"
 	Value string `json:"value"`
 }
-
-// --- MonitoringSession ---
 
 type MonitoringSession struct {
 	registry.BaseModel
@@ -98,8 +89,6 @@ func (s *MonitoringSession) GetHooks() []registry.Hook {
 	}}
 }
 
-// --- MonitoredTechnique ---
-
 type MonitoredTechnique struct {
 	registry.BaseModel
 	Username    string `neo4j:"username" json:"username"`
@@ -139,8 +128,6 @@ func (t *MonitoredTechnique) GetHooks() []registry.Hook {
 	}}
 }
 
-// --- MonitorAlert ---
-
 // MonitorAlert is a normalized EDR alert. Transient input to matching, not persisted as a graph node.
 type MonitorAlert struct {
 	ID              string   `json:"id"`
@@ -154,8 +141,6 @@ type MonitorAlert struct {
 	Evidence        string   `json:"evidence,omitempty"`
 	SourceURL       string   `json:"source_url,omitempty"`
 }
-
-// --- MonitorDetection ---
 
 // MonitorDetection is a graph node created when an alert matches a session technique.
 type MonitorDetection struct {
