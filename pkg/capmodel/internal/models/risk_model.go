@@ -2,10 +2,15 @@
 
 package models
 
+// Risk is the capmodel representation of a security finding. Target accepts
+// any capmodel type so the emitter can resolve the correct chariot model type
+// at runtime (Asset, Repository, etc.). TargetName optionally overrides the
+// DNS/group identifier derived from Target.
 type Risk struct {
-	Name   string `json:"name"`
-	Source string `json:"source"`
-	Status string `json:"status"`
-	Proof  []byte `json:"proof"`
-	Target Asset  `json:"target"`
+	Name       string `json:"name"`
+	Source     string `json:"source"`
+	Status     string `json:"status"`
+	Proof      []byte `json:"proof"`
+	Target     any    `json:"target,omitempty"`
+	TargetName string `json:"target_name,omitempty"`
 }
