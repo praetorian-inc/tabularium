@@ -11,7 +11,7 @@ func init() {
 }
 
 // IAMRelationship is the legacy per-action IAM relationship type.
-// Deprecated: Use IAMAWSRelationship which consolidates all actions into a single relationship.
+// Deprecated: Use IAMAWSPermission which consolidates all actions into a single relationship.
 type IAMRelationship struct {
 	*BaseRelationship
 	Permission string `neo4j:"permission" json:"permission"`

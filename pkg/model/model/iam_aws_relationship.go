@@ -9,31 +9,31 @@ import (
 const IAMAWSPermissionLabel = "IAM_AWS_PERMISSION"
 
 func init() {
-	registry.Registry.MustRegisterModel(&IAMAWSRelationship{}, IAMAWSPermissionLabel)
+	registry.Registry.MustRegisterModel(&IAMAWSPermission{}, IAMAWSPermissionLabel)
 }
 
-type IAMAWSRelationship struct {
+type IAMAWSPermission struct {
 	*BaseRelationship
 	Actions []string `neo4j:"actions" json:"actions"`
 }
 
-func NewIAMAWSRelationship(source, target GraphModel, actions []string) *IAMAWSRelationship {
-	return &IAMAWSRelationship{
+func NewIAMAWSRelationship(source, target GraphModel, actions []string) *IAMAWSPermission {
+	return &IAMAWSPermission{
 		BaseRelationship: NewBaseRelationship(source, target, IAMAWSPermissionLabel),
 		Actions:          actions,
 	}
 }
 
-func (r *IAMAWSRelationship) Label() string {
+func (r *IAMAWSPermission) Label() string {
 	return IAMAWSPermissionLabel
 }
 
-func (r *IAMAWSRelationship) GetDescription() string {
+func (r *IAMAWSPermission) GetDescription() string {
 	return "Represents an aggregated AWS IAM permission relationship between a principal and a resource, containing all allowed actions."
 }
 
-func (r *IAMAWSRelationship) Visit(o GraphRelationship) {
-	other, ok := o.(*IAMAWSRelationship)
+func (r *IAMAWSPermission) Visit(o GraphRelationship) {
+	other, ok := o.(*IAMAWSPermission)
 	if !ok {
 		return
 	}
