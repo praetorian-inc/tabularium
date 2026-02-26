@@ -190,24 +190,19 @@ func (job *Job) Parameters() map[string]string {
 	return params
 }
 
-const maxContextBytes = 200 * 1024 // 200KB safety margin under 256KB SQS limit
+const maxContextBytes = 200 * 1024
 
-// AddContext appends supplementary GraphModel objects to the job's context.
-// Returns an error if the serialized context would exceed the SQS size limit.
 func (job *Job) AddContext(models ...GraphModel) error {
-	prev := len(job.Context)
+	context := make([]GraphModelWrapper, len(job.Context)+len(models))
+	copy(context, job.Context)
 	for _, m := range models {
-		job.Context = append(job.Context, NewGraphModelWrapper(m))
+		context = append(context, NewGraphModelWrapper(m))
 	}
-	data, err := json.Marshal(job.Context)
-	if err != nil {
-		job.Context = job.Context[:prev]
-		return fmt.Errorf("failed to marshal job context: %w", err)
+	data, err := json.Marshal(context)
+	if err != nil || len(data) > maxContextBytes {
+		return fmt.Errorf("unable to add context: %w", err)
 	}
-	if len(data) > maxContextBytes {
-		job.Context = job.Context[:prev]
-		return fmt.Errorf("job context exceeds %d bytes (%d)", maxContextBytes, len(data))
-	}
+	job.Context = context
 	return nil
 }
 
