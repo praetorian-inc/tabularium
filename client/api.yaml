@@ -4659,6 +4659,8 @@ components:
           type: object
         Tags:
           type: object
+        TicketData:
+          type: object
         comment:
           description: User-provided comment about the risk.
           example: Confirmed by manual check
@@ -4670,6 +4672,10 @@ components:
         dns:
           description: Primary DNS or group associated with the risk.
           example: example.com
+          type: string
+        guid:
+          description: Globally unique identifier for this risk instance (UUID v4).
+          example: 550e8400-e29b-41d4-a716-446655440000
           type: string
         key:
           description: Unique key identifying the risk.
@@ -4718,8 +4724,10 @@ components:
       - MLProperties
       - OriginationData
       - Tags
+      - TicketData
       - created
       - dns
+      - guid
       - key
       - name
       - plextracid
