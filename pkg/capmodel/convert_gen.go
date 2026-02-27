@@ -148,7 +148,7 @@ func convertPort(data []byte) (registry.Model, error) {
 		return nil, err
 	}
 	var parentModel registry.Model
-	if parentRaw != nil {
+	if len(parentRaw) > 0 && string(parentRaw) != "null" {
 		parentModel, err = registry.Registry.Convert("Asset", parentRaw)
 		if err != nil {
 			return nil, err
@@ -193,6 +193,10 @@ func convertRisk(data []byte) (registry.Model, error) {
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return nil, err
 	}
+	if v, ok := raw["target_name"]; ok {
+		delete(raw, "target_name")
+		raw["dns"] = v
+	}
 	if v, ok := raw["proof"]; ok {
 		delete(raw, "proof")
 		raw["sdkproof"] = v
@@ -204,8 +208,20 @@ func convertRisk(data []byte) (registry.Model, error) {
 		return nil, err
 	}
 	var parentModel registry.Model
-	if parentRaw != nil {
-		parentModel, err = registry.Registry.Convert("Asset", parentRaw)
+	if len(parentRaw) > 0 && string(parentRaw) != "null" {
+		typeName := "Asset"
+		var parentObj map[string]json.RawMessage
+		if json.Unmarshal(parentRaw, &parentObj) == nil {
+			if typeRaw, ok := parentObj["_type"]; ok {
+				var t string
+				if json.Unmarshal(typeRaw, &t) == nil {
+					typeName = t
+				}
+				delete(parentObj, "_type")
+				parentRaw, _ = json.Marshal(parentObj)
+			}
+		}
+		parentModel, err = registry.Registry.Convert(typeName, parentRaw)
 		if err != nil {
 			return nil, err
 		}
@@ -256,7 +272,7 @@ func convertWebpage(data []byte) (registry.Model, error) {
 		return nil, err
 	}
 	var parentModel registry.Model
-	if parentRaw != nil {
+	if len(parentRaw) > 0 && string(parentRaw) != "null" {
 		parentModel, err = registry.Registry.Convert("WebApplication", parentRaw)
 		if err != nil {
 			return nil, err

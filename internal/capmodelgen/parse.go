@@ -75,6 +75,7 @@ type parentField struct {
 	JSONName        string
 	EmbedType       string
 	Wrap            bool
+	IsInterface     bool   // true when the source field type is an interface (polymorphic)
 	SourceGoType    string // Go type for the source field (e.g., "*WebApplication", "Target")
 }
 
@@ -148,6 +149,7 @@ func parseCapmodelTags(reg *registry.TypeRegistry) []typeSpec {
 						JSONName:        jsonName,
 						EmbedType:       embedType,
 						Wrap:            t == reflect.TypeFor[model.GraphModelWrapper](),
+						IsInterface:     t.Kind() == reflect.Interface,
 						SourceGoType:    resolveSourceGoType(sf.Type),
 					}
 					continue

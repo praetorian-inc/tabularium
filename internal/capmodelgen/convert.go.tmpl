@@ -47,8 +47,24 @@ func convert{{.Name}}(data []byte) (registry.Model, error) {
 	}
 {{- if .Parent}}
 	var parentModel registry.Model
-	if parentRaw != nil {
+	if len(parentRaw) > 0 && string(parentRaw) != "null" {
+{{- if .Parent.IsInterface}}
+		typeName := "{{.Parent.EmbedType}}"
+		var parentObj map[string]json.RawMessage
+		if json.Unmarshal(parentRaw, &parentObj) == nil {
+			if typeRaw, ok := parentObj["_type"]; ok {
+				var t string
+				if json.Unmarshal(typeRaw, &t) == nil {
+					typeName = t
+				}
+				delete(parentObj, "_type")
+				parentRaw, _ = json.Marshal(parentObj)
+			}
+		}
+		parentModel, err = registry.Registry.Convert(typeName, parentRaw)
+{{- else}}
 		parentModel, err = registry.Registry.Convert("{{.Parent.EmbedType}}", parentRaw)
+{{- end}}
 		if err != nil {
 			return nil, err
 		}

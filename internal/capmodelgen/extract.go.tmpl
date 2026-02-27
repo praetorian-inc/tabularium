@@ -4,6 +4,9 @@ package {{.Package}}
 
 import (
 	"fmt"
+{{- if hasInterfaceParent .TypeSpecs}}
+	"reflect"
+{{- end}}
 
 	"github.com/praetorian-inc/tabularium/pkg/model/model"
 	"github.com/praetorian-inc/tabularium/pkg/registry"
@@ -45,6 +48,19 @@ func extract{{.Name}}(m registry.Model) (any, error) {
 			return nil, fmt.Errorf("extract{{.Name}}: parent is %T, not *models.{{.Parent.EmbedType}}", p)
 		}
 		result.{{.Parent.GoFieldName}} = *typed
+	}
+{{- else if .Parent.IsInterface}}
+	if src.{{.Parent.SourceFieldName}} != nil {
+		targetModel, ok := src.{{.Parent.SourceFieldName}}.(registry.Model)
+		if !ok {
+			return nil, fmt.Errorf("extract{{.Name}}: target %T does not implement registry.Model", src.{{.Parent.SourceFieldName}})
+		}
+		typeName := reflect.TypeOf(targetModel).Elem().Name()
+		p, err := registry.Registry.Extract(typeName, targetModel)
+		if err != nil {
+			return nil, err
+		}
+		result.{{.Parent.GoFieldName}} = p
 	}
 {{- else}}
 	if src.{{.Parent.SourceFieldName}} != nil {
