@@ -220,14 +220,16 @@ func (w *WebApplication) GetHydratableFilepath() string {
 	return fmt.Sprintf("webapplication/%s/api-definition.json", RemoveReservedCharacters(w.PrimaryURL))
 }
 
-func (w *WebApplication) HydratableFilepath() string {
-	if !w.IsWebService() {
-		return NO_HYDRATION_FILEPATH
-	}
-	return w.GetHydratableFilepath()
+func (w *WebApplication) CanHydrate() bool {
+	return w.IsWebService()
 }
 
-func (w *WebApplication) Hydrate(data []byte) error {
+func (w *WebApplication) Hydrate(getFile func(string) ([]byte, error)) error {
+	data, err := getFile(w.GetHydratableFilepath())
+	if err != nil {
+		return err
+	}
+
 	if len(data) == 0 {
 		w.WebApplicationDetails = WebApplicationDetails{}
 		return nil
@@ -241,26 +243,21 @@ func (w *WebApplication) Hydrate(data []byte) error {
 	return nil
 }
 
-func (w *WebApplication) HydratedFile() File {
+func (w *WebApplication) Dehydrate() ([]File, Hydratable) {
 	bytes, err := json.Marshal(w.WebApplicationDetails.ApiDefinitionContent)
 	if err != nil {
 		slog.Error("failed to marshal WebApplicationDetails.ApiDefinitionContent", "error", err)
 		bytes = []byte("{}")
 	}
 
-	filename := w.HydratableFilepath()
+	filename := w.GetHydratableFilepath()
 	detailsFile := NewFile(filename)
 	detailsFile.Bytes = bytes
-
 	w.ApiDefinitionContentPath = filename
 
-	return detailsFile
-}
-
-func (w *WebApplication) Dehydrate() Hydratable {
 	dehydratedApp := *w
 	dehydratedApp.WebApplicationDetails = WebApplicationDetails{}
-	return &dehydratedApp
+	return []File{detailsFile}, &dehydratedApp
 }
 
 func (w *WebApplication) IsWebService() bool {

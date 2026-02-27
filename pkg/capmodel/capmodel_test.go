@@ -335,9 +335,7 @@ func TestRiskExtract(t *testing.T) {
 	src := model.NewRisk(&asset, "CVE-2023-12345", "TH")
 	result := extract[models.Risk](t, "Risk", &src)
 	assert.Equal(t, "CVE-2023-12345", result.Name)
-	target, ok := result.Target.(*models.Asset)
-	require.True(t, ok, "Target should be *models.Asset, got %T", result.Target)
-	assert.Equal(t, "example.com", target.DNS) // DNS from parent
+	assert.Equal(t, "example.com", result.Target.DNS) // DNS from parent
 }
 
 func TestWebpageExtract(t *testing.T) {

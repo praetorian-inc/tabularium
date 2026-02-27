@@ -122,13 +122,10 @@ type AgentSendable interface {
 
 type Hydratable interface {
 	registry.Model
-	Hydrate([]byte) error
-	HydratableFilepath() string
-	HydratedFile() File
-	Dehydrate() Hydratable
+	CanHydrate() bool
+	Hydrate(getFile func(string) ([]byte, error)) error
+	Dehydrate() ([]File, Hydratable)
 }
-
-const NO_HYDRATION_FILEPATH = ""
 
 type HydratableTarget interface {
 	Hydratable
