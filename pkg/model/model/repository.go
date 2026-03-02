@@ -77,6 +77,13 @@ func (r *Repository) Attribute(name, value string) Attribute {
 	return NewAttribute(name, value, r)
 }
 
+func (r *Repository) Visit(o Assetlike) {
+	r.BaseAsset.Visit(o)
+	if other, ok := o.(*Repository); ok && other.LastScannedCommit != "" {
+		r.LastScannedCommit = other.LastScannedCommit
+	}
+}
+
 func (r *Repository) WithStatus(status string) Target {
 	ret := *r
 	ret.Status = status
