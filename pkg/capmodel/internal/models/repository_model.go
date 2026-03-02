@@ -3,7 +3,8 @@
 package models
 
 type Repository struct {
-	URL  string `json:"url"`
-	Org  string `json:"org"`
-	Name string `json:"name"`
+	URL               string `json:"url"`
+	Org               string `json:"org"`
+	Name              string `json:"name"`
+	LastScannedCommit string `json:"lastScannedCommit"`
 }
