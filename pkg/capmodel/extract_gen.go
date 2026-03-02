@@ -449,7 +449,7 @@ func extractRepository(m registry.Model) (any, error) {
 		URL:               src.URL,
 		Org:               src.Org,
 		Name:              src.Name,
-		LastScannedCommit: src.LastScannedCommit,
+		LastScannedCommits: src.LastScannedCommits,
 	}
 	return &result, nil
 }

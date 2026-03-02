@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"maps"
 	"regexp"
 	"strings"
 
@@ -18,7 +19,7 @@ type Repository struct {
 	URL               string `neo4j:"url,omitempty" json:"url,omitempty" desc:"Repository URL." example:"https://github.com/praetorian-inc/tabularium" capmodel:"Repository"`
 	Org               string `neo4j:"org,omitempty" json:"org,omitempty" desc:"Organization name." example:"praetorian-inc" capmodel:"Repository"`
 	Name              string `neo4j:"name,omitempty" json:"name,omitempty" desc:"Repository name." example:"praetorian-inc/tabularium" capmodel:"Repository"`
-	LastScannedCommit string `neo4j:"lastScannedCommit,omitempty" json:"lastScannedCommit,omitempty" desc:"Last scanned commit SHA for differential scanning." capmodel:"Repository"`
+	LastScannedCommits map[string]string `neo4j:"lastScannedCommits,omitempty" json:"lastScannedCommits,omitempty" desc:"Per-capability last scanned commit SHAs for differential scanning." capmodel:"Repository"`
 }
 
 const (
@@ -79,8 +80,11 @@ func (r *Repository) Attribute(name, value string) Attribute {
 
 func (r *Repository) Visit(o Assetlike) {
 	r.BaseAsset.Visit(o)
-	if other, ok := o.(*Repository); ok && other.LastScannedCommit != "" {
-		r.LastScannedCommit = other.LastScannedCommit
+	if other, ok := o.(*Repository); ok && len(other.LastScannedCommits) > 0 {
+		if r.LastScannedCommits == nil {
+			r.LastScannedCommits = make(map[string]string)
+		}
+		maps.Copy(r.LastScannedCommits, other.LastScannedCommits)
 	}
 }
 

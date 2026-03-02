@@ -6,5 +6,5 @@ type Repository struct {
 	URL               string `json:"url"`
 	Org               string `json:"org"`
 	Name              string `json:"name"`
-	LastScannedCommit string `json:"lastScannedCommit"`
+	LastScannedCommits map[string]string `json:"lastScannedCommits"`
 }
