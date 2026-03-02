@@ -279,6 +279,25 @@ var RiskSeverity = map[string]string{
 	"E": "Exposure",
 }
 
+// RiskStatus maps backend status codes to display labels for the legacy vulnerability status system.
+var RiskStatus = map[string]string{
+	"O": "Open",
+	"R": "Closed",
+	"I": "Accepted Risk",
+	"D": "Rejected",
+	"T": "Pending Triage",
+}
+
+// RiskStatusNew maps backend status codes to display labels for the new vulnerability status system.
+// This uses updated terminology aligned with the customer-facing UI.
+var RiskStatusNew = map[string]string{
+	"O": "Demonstrated",
+	"R": "Resolved",
+	"I": "Accepted",
+	"D": "Rejected",
+	"T": "Detected",
+}
+
 func Now() string {
 	return time.Now().UTC().Format(time.RFC3339)
 }
