@@ -98,6 +98,13 @@ type GraphModel interface {
 	Valid() bool
 }
 
+// Standalone marks a GraphModel that manages its own relationships.
+// Models implementing this interface will NOT get an automatic DISCOVERED
+// relationship from the parent context during result processing.
+type Standalone interface {
+	Standalone()
+}
+
 type GraphRelationship interface {
 	registry.Model
 	Label() string

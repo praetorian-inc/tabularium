@@ -3152,6 +3152,14 @@ components:
       required:
       - BaseRelationship
       type: object
+    hasdetection:
+      description: Links a monitored technique to a detection from an EDR.
+      properties:
+        BaseRelationship:
+          type: object
+      required:
+      - BaseRelationship
+      type: object
     hasport:
       description: Represents the relationship indicating an asset has an open port.
       properties:
@@ -3193,6 +3201,14 @@ components:
       required:
       - BaseRelationship
       - relationshipType
+      type: object
+    hastechnique:
+      description: Links a monitoring session to a technique being tested.
+      properties:
+        BaseRelationship:
+          type: object
+      required:
+      - BaseRelationship
       type: object
     hastechnology:
       description: Represents the relationship indicating an asset uses or runs a
@@ -3430,6 +3446,10 @@ components:
           description: Configuration parameters for the job capability.
           example: '{"test": "cve-1111-2222"}'
           type: object
+        context:
+          items:
+            type: object
+          type: array
         conversation:
           description: UUID of the conversation that initiated this job.
           example: 550e8400-e29b-41d4-a716-446655440000
@@ -3921,6 +3941,119 @@ components:
           type: boolean
       required:
       - BaseModel
+      type: object
+    monitordetection:
+      description: A detection event from an EDR matched to a monitored technique.
+      properties:
+        BaseModel:
+          type: object
+        alert_id:
+          type: string
+        description:
+          type: string
+        detected_at:
+          type: string
+        hostname:
+          type: string
+        key:
+          type: string
+        latency:
+          type: string
+        llm_reason:
+          type: string
+        llm_score:
+          type: integer
+        match_method:
+          type: string
+        session_id:
+          type: string
+        severity:
+          type: string
+        source:
+          type: string
+        source_url:
+          type: string
+        technique_id:
+          type: string
+        title:
+          type: string
+        username:
+          type: string
+      required:
+      - BaseModel
+      - alert_id
+      - description
+      - detected_at
+      - hostname
+      - key
+      - latency
+      - match_method
+      - session_id
+      - severity
+      - source
+      - technique_id
+      - title
+      - username
+      type: object
+    monitoredtechnique:
+      description: A MITRE ATT&CK technique being monitored for detection.
+      properties:
+        BaseModel:
+          type: object
+        key:
+          type: string
+        name:
+          type: string
+        technique_id:
+          type: string
+        username:
+          type: string
+      required:
+      - BaseModel
+      - key
+      - name
+      - technique_id
+      - username
+      type: object
+    monitoringsession:
+      description: A breach and attack validation monitoring session.
+      properties:
+        BaseModel:
+          type: object
+        created:
+          type: string
+        executed_at:
+          type: string
+        expires_at:
+          type: string
+        filters:
+          items:
+            type: object
+          type: array
+        key:
+          type: string
+        last_run_at:
+          type: string
+        name:
+          type: string
+        session_id:
+          type: string
+        status:
+          type: string
+        username:
+          type: string
+      required:
+      - BaseModel
+      - created
+      - executed_at
+      - expires_at
+      - filters
+      - key
+      - last_run_at
+      - name
+      - session_id
+      - status
+      - username
       type: object
     noinput:
       description: Sentinel target for capabilities that require no input target.
