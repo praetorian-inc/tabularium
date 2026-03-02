@@ -4639,6 +4639,9 @@ components:
       properties:
         BaseAsset:
           type: object
+        lastScannedCommits:
+          description: Per-capability last scanned commit SHAs for differential scanning.
+          type: object
         name:
           description: Repository name.
           example: praetorian-inc/tabularium

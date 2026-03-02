@@ -446,9 +446,9 @@ func extractRepository(m registry.Model) (any, error) {
 		e.PrepareForExtract()
 	}
 	result := models.Repository{
-		URL:               src.URL,
-		Org:               src.Org,
-		Name:              src.Name,
+		URL:                src.URL,
+		Org:                src.Org,
+		Name:               src.Name,
 		LastScannedCommits: src.LastScannedCommits,
 	}
 	return &result, nil
