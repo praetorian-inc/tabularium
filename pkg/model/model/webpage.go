@@ -247,15 +247,19 @@ func (w *Webpage) Merge(other Webpage) {
 	w.MergeRequests(other.Requests...)
 }
 
-func (w *Webpage) HydratableFilepath() string {
-	return w.DetailsFilePath()
+func (w *Webpage) CanHydrate() bool {
+	return true
 }
 
-func (w *Webpage) Hydrate(data []byte) error {
+func (w *Webpage) Hydrate(getFile func(string) ([]byte, error)) error {
+	data, err := getFile(w.DetailsFilePath())
+	if err != nil {
+		return err
+	}
 	return json.Unmarshal(data, &w)
 }
 
-func (w *Webpage) HydratedFile() File {
+func (w *Webpage) Dehydrate() ([]File, Hydratable) {
 	if len(w.WebpageDetails.Requests) > DefaultMaxRequestsPerWebpage {
 		w.WebpageDetails.Requests = w.WebpageDetails.Requests[:DefaultMaxRequestsPerWebpage]
 	}
@@ -263,13 +267,9 @@ func (w *Webpage) HydratedFile() File {
 	detailsFile := w.GetDetailsFile(w.WebpageDetails)
 	w.DetailsFilepath = detailsFile.Name
 
-	return detailsFile
-}
-
-func (w *Webpage) Dehydrate() Hydratable {
 	dehydratedWebpage := *w
 	dehydratedWebpage.WebpageDetails = WebpageDetails{}
-	return &dehydratedWebpage
+	return []File{detailsFile}, &dehydratedWebpage
 }
 
 func (w *Webpage) Defaulted() {

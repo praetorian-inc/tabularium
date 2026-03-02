@@ -3,9 +3,10 @@
 package models
 
 type Risk struct {
-	Name   string `json:"name"`
-	Source string `json:"source"`
-	Status string `json:"status"`
-	Proof  []byte `json:"proof"`
-	Target Asset  `json:"target"`
+	TargetName string `json:"target_name"`
+	Name       string `json:"name"`
+	Source     string `json:"source"`
+	Status     string `json:"status"`
+	Proof      []byte `json:"proof"`
+	Target     any    `json:"target"`
 }

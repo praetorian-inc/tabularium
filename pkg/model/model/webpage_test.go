@@ -485,15 +485,18 @@ func TestWebpageHydrationAndDehydration(t *testing.T) {
 		expectedDetails := createTestWebpageDetails("0")
 		webpage.WebpageDetails = expectedDetails
 
-		detailsFile := webpage.HydratedFile()
-		dehydratedWebpage := webpage.Dehydrate()
-		detailsPath := webpage.HydratableFilepath()
+		files, dehydrated := webpage.Dehydrate()
+		detailsFile := files[0]
+		detailsPath := detailsFile.Name
 
 		assert.True(t, strings.HasPrefix(detailsPath, "webpage/example.com/443/"+RemoveReservedCharacters(testBaseURL+testPath)+"/details"))
 
-		err := dehydratedWebpage.Hydrate(detailsFile.Bytes)
+		dehydratedWebpage := dehydrated.(*Webpage)
+		err := dehydratedWebpage.Hydrate(func(path string) ([]byte, error) {
+			return detailsFile.Bytes, nil
+		})
 		assert.NoError(t, err)
-		assert.Equal(t, expectedDetails, dehydratedWebpage.(*Webpage).WebpageDetails)
+		assert.Equal(t, expectedDetails, dehydratedWebpage.WebpageDetails)
 
 		var fileDetails WebpageDetails
 		err = json.Unmarshal(detailsFile.Bytes, &fileDetails)
@@ -528,8 +531,8 @@ func TestWebpageHydrationAndDehydration(t *testing.T) {
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				webpage := tc.setupFunc()
-				file := webpage.HydratedFile()
-				dehydrated := webpage.Dehydrate()
+				files, dehydrated := webpage.Dehydrate()
+				file := files[0]
 
 				assert.NotEmpty(t, file.Bytes)
 				assert.Equal(t, 0, len(dehydrated.(*Webpage).Requests))

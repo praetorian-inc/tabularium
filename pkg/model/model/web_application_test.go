@@ -460,11 +460,11 @@ func TestWebApplicationHydrationLifecycle(t *testing.T) {
 	assert.Equal(t, expectedPath, w.GetHydratableFilepath())
 
 	assert.False(t, w.IsWebService())
-	assert.Equal(t, SKIP_HYDRATION, w.HydratableFilepath())
+	assert.False(t, w.CanHydrate())
 
 	w.BurpType = "webservice"
 	assert.True(t, w.IsWebService())
-	assert.Equal(t, expectedPath, w.HydratableFilepath())
+	assert.True(t, w.CanHydrate())
 
 	originalContent := APIDefinitionResult{
 		PrimaryURL: w.PrimaryURL,
@@ -477,7 +477,8 @@ func TestWebApplicationHydrationLifecycle(t *testing.T) {
 
 	w.WebApplicationDetails.ApiDefinitionContent = originalContent
 
-	file := w.HydratedFile()
+	files, dehydrated := w.Dehydrate()
+	file := files[0]
 	assert.Equal(t, expectedPath, file.Name)
 	assert.Equal(t, expectedPath, w.ApiDefinitionContentPath)
 
@@ -485,7 +486,6 @@ func TestWebApplicationHydrationLifecycle(t *testing.T) {
 	require.NoError(t, json.Unmarshal(file.Bytes, &parsed))
 	assert.Equal(t, originalContent, parsed)
 
-	dehydrated := w.Dehydrate()
 	dehydratedApp, ok := dehydrated.(*WebApplication)
 	require.True(t, ok)
 	assert.Equal(t, expectedPath, dehydratedApp.ApiDefinitionContentPath)
@@ -493,14 +493,16 @@ func TestWebApplicationHydrationLifecycle(t *testing.T) {
 
 	rehydrated := NewWebApplication(primaryURL, "Rehydrated")
 	rehydrated.ApiDefinitionContentPath = dehydratedApp.ApiDefinitionContentPath
-	require.NoError(t, rehydrated.Hydrate(file.Bytes))
+	require.NoError(t, rehydrated.Hydrate(func(path string) ([]byte, error) {
+		return file.Bytes, nil
+	}))
 	assert.Equal(t, originalContent, rehydrated.WebApplicationDetails.ApiDefinitionContent)
 }
 
 func TestWebApplicationGobEncodeDecode(t *testing.T) {
 	original := NewWebApplication("https://gob.example.com", "Gob Example")
 	original.URLs = []string{"https://gob.example.com/api"}
-	original.ApiDefinitionContentPath = original.HydratableFilepath()
+	original.ApiDefinitionContentPath = original.GetHydratableFilepath()
 	original.WebApplicationDetails.ApiDefinitionContent = APIDefinitionResult{PrimaryURL: original.PrimaryURL}
 
 	data, err := original.GobEncode()

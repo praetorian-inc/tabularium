@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"reflect"
 	"testing"
 )
@@ -833,79 +834,16 @@ func TestAWSResource_OriginationDataIntegration(t *testing.T) {
 	})
 }
 
-/*
-============================================================================
-COMPREHENSIVE SUMMARY: CloudResource System Issues Fixed
-============================================================================
+func TestCloudResource_VisitFields(t *testing.T) {
+	original, err := NewAWSResource("arn:aws:ec2:us-east-1:123456789012:instance/i-abcdef1234567890", "123456789012", AWSEC2Instance, nil)
+	require.NoError(t, err)
 
-This file documents critical fixes applied to the CloudResource system and
-all implementations (AWSResource, AzureResource, GCPResource).
+	updated, err := NewAWSResource("arn:aws:ec2:us-east-1:123456789012:instance/i-abcdef1234567890", "123456789012", AWSEC2Instance, nil)
+	require.NoError(t, err)
 
-ISSUE 1: TTL Update Logic Bug
-─────────────────────────────
-❌ PROBLEM: Backwards TTL update logic in Visit() methods
-   - Old logic: if (currentTTL != 0) { currentTTL = otherTTL }
-   - Result: Resources with uninitialized TTL (0) could NEVER be updated
-   - Impact: TTL initialization was completely broken
+	updated.DisplayName = "new-name"
 
-✅ SOLUTION: Fixed TTL update logic in all implementations
-   - New logic: if (otherTTL != 0) { currentTTL = otherTTL }
-   - Result: TTL initialization and updates both work correctly
-   - Files fixed: aws_resource.go, azure_resource.go, gcp_resource.go
+	original.Visit(&updated)
 
-ISSUE 2: Nil Properties Panic
-─────────────────────────────
-❌ PROBLEM: maps.Copy() panics when Properties field is nil
-   - Occurs when Defaulted() is bypassed or resources created improperly
-   - Result: Runtime panics in Merge() and Visit() methods
-   - Impact: System instability when handling edge cases
-
-✅ SOLUTION: Added nil checks before maps.Copy() calls
-   - Check if destination Properties is nil → initialize with make()
-   - Check if source Properties is nil → skip copy operation
-   - Files fixed: aws_resource.go, azure_resource.go, gcp_resource.go
-
-ISSUE 3: AWS Service Extraction Bug (AWSResource.NewAsset)
-─────────────────────────────────────────────────────────
-❌ PROBLEM: Incorrect AWS service extraction from ARN
-   - Old logic: service = parts[1] (extracted partition "aws")
-   - Result: All AWS services showed as "aws" instead of actual service
-   - Impact: Incorrect service identification in Asset metadata
-
-✅ SOLUTION: Fixed ARN parsing to extract actual service
-   - New logic: service = parts[2] (extracts "lambda", "s3", "ec2", etc.)
-   - Result: Accurate service identification for all AWS resources
-   - File fixed: aws_resource.go
-
-ISSUE 4: Invalid Asset Creation (AWSResource.NewAsset)
-─────────────────────────────────────────────────────
-❌ PROBLEM: Invalid Asset creation for resources without DNS/IP
-   - Old logic: NewAsset("", "") → Key: "#asset##" (invalid)
-   - Result: Asset validation failures for Lambda, S3, IAM, etc.
-   - Impact: Non-EC2 resources couldn't create valid Assets
-
-✅ SOLUTION: Added fallback identifier using ARN
-   - When DNS is empty, use ARN as identifier for both DNS and Name
-   - Result: Valid Asset keys like "#asset#arn#arn" instead of "#asset##"
-   - File fixed: aws_resource.go
-
-TESTING COVERAGE
-────────────────
-✅ 69+ comprehensive test cases covering all scenarios
-✅ TTL update logic verification for all cloud providers
-✅ Nil properties panic prevention for all cloud providers
-✅ AWS service extraction validation
-✅ Asset creation validation for all resource types
-✅ Edge case handling (malformed ARNs, empty values, etc.)
-
-IMPACT ASSESSMENT
-─────────────────
-🔒 SECURITY: Prevents runtime panics that could be exploited
-⚡ RELIABILITY: Fixes TTL initialization preventing resource expiration issues
-📊 ACCURACY: Correct AWS service identification for monitoring/billing
-🛡️ ROBUSTNESS: Handles edge cases gracefully without system failures
-
-All fixes maintain backward compatibility while resolving critical issues
-that affected system stability and data accuracy.
-============================================================================
-*/
+	require.Equal(t, "new-name", original.DisplayName)
+}

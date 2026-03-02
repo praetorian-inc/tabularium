@@ -495,24 +495,25 @@ func TestAWSResource_HydrateDehydrate(t *testing.T) {
 	resource, err := NewAWSResource("arn:aws:organizations::992382775570:account/o-a6zw2rb1jz/992382775570", "992382775570", AWSAccount, nil)
 	require.NoError(t, err)
 
-	gotFilepath := resource.HydratableFilepath()
-	assert.Equal(t, gotFilepath, "")
+	assert.False(t, resource.CanHydrate())
 
-	err = resource.Hydrate([]byte(`{"dummy": "test policy"}`))
-	require.NoError(t, err)
+	resource.SetOrgPolicy([]byte(`{"dummy": "test policy"}`))
+	assert.True(t, resource.CanHydrate())
 
-	gotFilepath = resource.HydratableFilepath()
-	expectedFilepath := "awsresource/992382775570/arn_aws_organizations__992382775570_account_o-a6zw2rb1jz_992382775570/org-policies.json"
-	assert.Equal(t, expectedFilepath, gotFilepath)
+	expectedFilepath := "awsresource/992382775570/org-policies.json"
 
+	files, _ := resource.Dehydrate()
+	gotFile := files[0]
 	expectedFile := NewFile(expectedFilepath)
 	expectedFile.Bytes = []byte(`{"dummy": "test policy"}`)
-	gotFile := resource.HydratedFile()
 	assert.Equal(t, expectedFile.Key, gotFile.Key)
 	assert.Equal(t, expectedFile.Name, gotFile.Name)
 	assert.Equal(t, expectedFile.Bytes, gotFile.Bytes)
 
-	dehydrated, ok := resource.Dehydrate().(*AWSResource)
+	// Re-set org policy since previous Dehydrate() consumed it
+	resource.SetOrgPolicy([]byte(`{"dummy": "test policy"}`))
+	_, dehydratedH := resource.Dehydrate()
+	dehydrated, ok := dehydratedH.(*AWSResource)
 	require.True(t, ok, "object is not *AWSResource: %T", resource)
 	assert.Nil(t, dehydrated.OrgPolicy)
 }
@@ -522,19 +523,19 @@ func TestAWSResource_Visit(t *testing.T) {
 	require.NoError(t, err)
 
 	other, err := NewAWSResource("arn:aws:organizations::992382775570:account/o-a6zw2rb1jz/992382775570", "992382775570", AWSAccount, nil)
-	other.OrgPolicyFilename = "other-file"
+	other.HasOrgPolicy = true
 	require.NoError(t, err)
 
 	existing.Merge(&other)
 
-	assert.Equal(t, existing.OrgPolicyFilename, "other-file")
+	assert.Equal(t, existing.OrgPolicyFilename(), "awsresource/992382775570/org-policies.json")
 }
 
 func TestAWSResource_IsManagementAccount(t *testing.T) {
 	tests := []struct {
-		name string
+		name     string
 		resource AWSResource
-		want bool
+		want     bool
 	}{
 		{
 			name: "management account has matching account IDs",
