@@ -913,3 +913,56 @@ func TestJob_SourceAndStatusConsistency(t *testing.T) {
 		assert.False(t, job.Is(Queued), "Is(Queued) should return false")
 	})
 }
+
+func TestJob_SendOnClosedChannel(t *testing.T) {
+	t.Run("Send does not panic when channel is closed", func(t *testing.T) {
+		asset := NewAsset("test.example.com", "100.100.100.100")
+		job := NewJob("test-capability", &asset)
+		job.Open()
+
+		// Close the stream first
+		job.Close()
+
+		// Attempt to send on closed channel should not panic
+		assert.NotPanics(t, func() {
+			job.Send(&asset)
+		}, "Send should not panic on closed channel")
+	})
+
+	t.Run("Send works normally when channel is open", func(t *testing.T) {
+		asset := NewAsset("test.example.com", "100.100.100.100")
+		job := NewJob("test-capability", &asset)
+		job.Open()
+
+		// Start a goroutine to receive from the stream
+		done := make(chan bool)
+		go func() {
+			items := <-job.Stream()
+			assert.Len(t, items, 1)
+			assert.Equal(t, asset.Key, items[0].GetKey())
+			done <- true
+		}()
+
+		// Send should work normally
+		job.Send(&asset)
+
+		// Wait for receiver to complete
+		<-done
+		job.Close()
+	})
+
+	t.Run("Multiple sends on closed channel do not panic", func(t *testing.T) {
+		asset := NewAsset("test.example.com", "100.100.100.100")
+		risk := NewRisk(&asset, "test-risk", TriageHigh)
+		job := NewJob("test-capability", &asset)
+		job.Open()
+		job.Close()
+
+		// Multiple sends should all be safely swallowed
+		assert.NotPanics(t, func() {
+			job.Send(&asset)
+			job.Send(&risk)
+			job.Send(&asset, &risk)
+		}, "Multiple sends on closed channel should not panic")
+	})
+}

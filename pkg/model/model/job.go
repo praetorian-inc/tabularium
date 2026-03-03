@@ -188,6 +188,16 @@ func (job *Job) Parameters() map[string]string {
 }
 
 func (job *Job) Send(items ...registry.Model) {
+	// Protect against sending on closed channel during job cancellation/timeout.
+	// When a job is terminated, the stream may be closed while async goroutines
+	// (e.g., janus-framework children) are still sending results. This is expected
+	// behavior - the results are discarded since the job is being terminated.
+	defer func() {
+		if r := recover(); r != nil {
+			// Silently swallow panic from send on closed channel.
+			// The job is being cancelled, these results don't matter.
+		}
+	}()
 	job.stream <- items
 }
 
