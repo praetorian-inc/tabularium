@@ -41,16 +41,18 @@ func ApplySeedLabels(base *BaseAsset, ls *LabelSettableEmbed) {
 }
 
 // PromoteToSeed handles full seed promotion during Merge: sets labels, source,
-// and records a promotion history event with the current status as From.
-func PromoteToSeed(base *BaseAsset, ls *LabelSettableEmbed, targetStatus string) {
-	currentStatus := base.Status
+// and records a promotion history event. From is empty to signal a new promotion
+// to the UI; by identifies the promoting user.
+func PromoteToSeed(base *BaseAsset, ls *LabelSettableEmbed, targetStatus, by string) {
 	ApplySeedLabels(base, ls)
-	base.History.RecordPromotion(currentStatus, "", targetStatus)
+	base.History.RecordPromotion("", by, targetStatus)
 }
 
 // MergeWithPromotionCheck dispatches to the correct merge path for models
 // embedding both BaseAsset and LabelSettableEmbed. Seed promotions use
 // PromoteToSeed + MergeFields; standard updates use BaseAsset.Merge.
+// The promoting user is read from other's Origin field, which the service
+// layer sets to the user's name before calling Merge.
 func MergeWithPromotionCheck(base *BaseAsset, ls *LabelSettableEmbed, other Assetlike) {
 	otherBase := other.GetBase()
 	if IsSeedPromotion(base, otherBase) {
@@ -58,7 +60,7 @@ func MergeWithPromotionCheck(base *BaseAsset, ls *LabelSettableEmbed, other Asse
 		if targetStatus == "" {
 			targetStatus = base.Status
 		}
-		PromoteToSeed(base, ls, targetStatus)
+		PromoteToSeed(base, ls, targetStatus, otherBase.Origin)
 		if targetStatus != base.Status {
 			base.Status = targetStatus
 		}

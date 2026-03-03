@@ -155,20 +155,21 @@ func TestPromoteToSeed(t *testing.T) {
 	base := &BaseAsset{Source: SelfSource, Status: Active}
 	ls := &LabelSettableEmbed{}
 
-	PromoteToSeed(base, ls, Pending)
+	PromoteToSeed(base, ls, Pending, "test-user")
 
 	assert.Equal(t, SeedLabel, ls.PendingLabelAddition)
 	assert.Equal(t, SeedSource, base.Source)
 	require.Len(t, base.History.History, 1)
-	assert.Equal(t, Active, base.History.History[0].From, "From should capture current status before promotion")
+	assert.Empty(t, base.History.History[0].From, "From should be empty to signal promotion to UI")
 	assert.Equal(t, Pending, base.History.History[0].To)
+	assert.Equal(t, "test-user", base.History.History[0].By)
 }
 
 func TestMergeWithPromotionCheck_Promotion(t *testing.T) {
 	// Active to Pending promotion
 	base := &BaseAsset{Source: SelfSource, Status: Active}
 	ls := &LabelSettableEmbed{}
-	other := &Asset{BaseAsset: BaseAsset{Source: SeedSource, Status: Pending}}
+	other := &Asset{BaseAsset: BaseAsset{Source: SeedSource, Status: Pending, Origin: "test-user"}}
 
 	MergeWithPromotionCheck(base, ls, other)
 
@@ -176,15 +177,16 @@ func TestMergeWithPromotionCheck_Promotion(t *testing.T) {
 	assert.Equal(t, SeedSource, base.Source)
 	assert.Equal(t, Pending, base.Status)
 	require.Len(t, base.History.History, 1)
-	assert.Equal(t, Active, base.History.History[0].From, "From should capture status before promotion")
+	assert.Empty(t, base.History.History[0].From, "From should be empty to signal promotion to UI")
 	assert.Equal(t, Pending, base.History.History[0].To)
+	assert.Equal(t, "test-user", base.History.History[0].By)
 }
 
 func TestMergeWithPromotionCheck_PromotionSameStatus(t *testing.T) {
 	// Active to Active promotion (status preserved)
 	base := &BaseAsset{Source: SelfSource, Status: Active}
 	ls := &LabelSettableEmbed{}
-	other := &Asset{BaseAsset: BaseAsset{Source: SeedSource, Status: Active}}
+	other := &Asset{BaseAsset: BaseAsset{Source: SeedSource, Status: Active, Origin: "admin@praetorian.com"}}
 
 	MergeWithPromotionCheck(base, ls, other)
 
@@ -192,8 +194,9 @@ func TestMergeWithPromotionCheck_PromotionSameStatus(t *testing.T) {
 	assert.Equal(t, SeedSource, base.Source)
 	assert.Equal(t, Active, base.Status)
 	require.Len(t, base.History.History, 1)
-	assert.Equal(t, Active, base.History.History[0].From, "From should capture status before promotion")
+	assert.Empty(t, base.History.History[0].From, "From should be empty to signal promotion to UI")
 	assert.Equal(t, Active, base.History.History[0].To)
+	assert.Equal(t, "admin@praetorian.com", base.History.History[0].By)
 }
 
 func TestMergeWithPromotionCheck_NonPromotion(t *testing.T) {
@@ -208,36 +211,29 @@ func TestMergeWithPromotionCheck_NonPromotion(t *testing.T) {
 	assert.Empty(t, base.History.History)
 }
 
-func TestRecordPromotion_IncludesFrom(t *testing.T) {
+func TestRecordPromotion_EmptyFrom(t *testing.T) {
 	h := History{}
-	h.RecordPromotion("A", "", "P")
+	h.RecordPromotion("", "test-user", "P")
 
 	require.Len(t, h.History, 1)
-	assert.Equal(t, "A", h.History[0].From)
+	assert.Empty(t, h.History[0].From, "From should be empty for new promotions")
 	assert.Equal(t, "P", h.History[0].To)
+	assert.Equal(t, "test-user", h.History[0].By)
 	assert.NotEmpty(t, h.History[0].Updated)
 }
 
-func TestRecordPromotion_SameStatus(t *testing.T) {
-	h := History{}
-	h.RecordPromotion("A", "", "A")
-
-	require.Len(t, h.History, 1)
-	assert.Equal(t, "A", h.History[0].From)
-	assert.Equal(t, "A", h.History[0].To)
-}
-
-func TestPromoteToSeed_CapturesCurrentStatus(t *testing.T) {
+func TestPromoteToSeed_SetsCorrectByAndEmptyFrom(t *testing.T) {
 	base := &BaseAsset{}
 	base.Status = "A"
 	base.Source = "self"
 	ls := &LabelSettableEmbed{}
 
-	PromoteToSeed(base, ls, "P")
+	PromoteToSeed(base, ls, "P", "admin@praetorian.com")
 
 	require.Len(t, base.History.History, 1)
-	assert.Equal(t, "A", base.History.History[0].From, "From should capture status before promotion")
+	assert.Empty(t, base.History.History[0].From, "From should be empty to signal promotion to UI")
 	assert.Equal(t, "P", base.History.History[0].To)
+	assert.Equal(t, "admin@praetorian.com", base.History.History[0].By)
 	assert.Equal(t, SeedLabel, ls.PendingLabelAddition)
 	assert.Equal(t, SeedSource, base.Source)
 }
@@ -253,12 +249,14 @@ func TestMergeWithPromotionCheck_NonPraetorian_AP(t *testing.T) {
 	other := &Asset{}
 	other.Status = "P"
 	other.Source = SeedSource
+	other.Origin = "external@customer.com"
 
 	MergeWithPromotionCheck(base, ls, other)
 
 	require.Len(t, base.History.History, 1)
-	assert.Equal(t, "A", base.History.History[0].From)
+	assert.Empty(t, base.History.History[0].From, "From should be empty to signal promotion to UI")
 	assert.Equal(t, "P", base.History.History[0].To)
+	assert.Equal(t, "external@customer.com", base.History.History[0].By)
 	assert.Equal(t, "P", base.Status, "Status should change to P")
 	assert.Equal(t, SeedSource, base.Source)
 	assert.Equal(t, SeedLabel, ls.PendingLabelAddition)
@@ -275,12 +273,14 @@ func TestMergeWithPromotionCheck_Praetorian_AA(t *testing.T) {
 	other := &Asset{}
 	other.Status = "" // empty status from updateStatusIfNotSet
 	other.Source = SeedSource
+	other.Origin = "admin@praetorian.com"
 
 	MergeWithPromotionCheck(base, ls, other)
 
 	require.Len(t, base.History.History, 1)
-	assert.Equal(t, "A", base.History.History[0].From, "From should be A")
+	assert.Empty(t, base.History.History[0].From, "From should be empty to signal promotion to UI")
 	assert.Equal(t, "A", base.History.History[0].To, "To should be A (falls back to base status)")
+	assert.Equal(t, "admin@praetorian.com", base.History.History[0].By)
 	assert.Equal(t, "A", base.Status, "Status should stay A")
 	assert.Equal(t, SeedSource, base.Source)
 	assert.Equal(t, SeedLabel, ls.PendingLabelAddition)
