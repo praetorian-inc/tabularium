@@ -53,6 +53,10 @@ type Capability interface {
 	Integration() bool
 	// LargeArtifact returns whether this capability should support downloading a large artifact output
 	LargeArtifact() bool
+	// Tier returns which worker tier should process this capability's jobs (e.g., "standard", "heavy")
+	Tier() string
+	// Privileged returns whether this capability is restricted to Praetorian users
+	Privileged() bool
 	Lifecycle
 }
 

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"maps"
 	"reflect"
 	"strings"
 	"time"
@@ -28,6 +29,7 @@ type BaseAsset struct {
 	MLProperties
 	Metadata
 	Tags
+	LastScanState map[string]string `neo4j:"lastScanState,omitempty" json:"lastScanState,omitempty" desc:"Per-capability last-scanned markers for differential processing." capmodel:"Repository"`
 }
 
 func init() {
@@ -135,6 +137,13 @@ func (a *BaseAsset) Visit(o Assetlike) {
 	a.Secret = other.Secret
 	a.Metadata.Visit(other.Metadata)
 	a.Tags.Visit(other.Tags)
+
+	if len(other.LastScanState) > 0 {
+		if a.LastScanState == nil {
+			a.LastScanState = make(map[string]string)
+		}
+		maps.Copy(a.LastScanState, other.LastScanState)
+	}
 }
 
 func (a *BaseAsset) System() bool {

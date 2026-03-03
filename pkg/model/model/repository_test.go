@@ -241,3 +241,4 @@ func TestRepository_DefaultCredentialType_Unknown(t *testing.T) {
 	repo := NewRepository("https://hub.docker.com/r/org/repo")
 	assert.Equal(t, CredentialType(""), repo.DefaultCredentialType())
 }
+
