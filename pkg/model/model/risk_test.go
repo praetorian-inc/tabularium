@@ -551,3 +551,40 @@ func TestRisk_VisitSeverityUpdateWhenExistingRiskInTriage(t *testing.T) {
 		assert.Equal(t, "TM", existingRisk.Status, "Status should remain TriageMedium")
 	})
 }
+
+func TestRisk_PrettyStatus(t *testing.T) {
+	tests := []struct {
+		name     string
+		status   string
+		mode     string
+		expected string
+	}{
+		// Legacy mode — all 5 status codes
+		{name: "legacy_opened", status: "O", mode: "legacy", expected: "Open"},
+		{name: "legacy_remediated", status: "R", mode: "legacy", expected: "Closed"},
+		{name: "legacy_accepted", status: "I", mode: "legacy", expected: "Accepted Risk"},
+		{name: "legacy_deleted", status: "D", mode: "legacy", expected: "Rejected"},
+		{name: "legacy_triaged", status: "T", mode: "legacy", expected: "Pending Triage"},
+		// New/default mode — all 5 status codes
+		{name: "new_opened", status: "O", mode: "new", expected: "Demonstrated"},
+		{name: "new_remediated", status: "R", mode: "new", expected: "Resolved"},
+		{name: "new_accepted", status: "I", mode: "new", expected: "Accepted"},
+		{name: "new_deleted", status: "D", mode: "new", expected: "Rejected"},
+		{name: "new_triaged", status: "T", mode: "new", expected: "Detected"},
+		// Default (empty mode) should behave like new mode
+		{name: "default_mode_empty", status: "O", mode: "", expected: "Demonstrated"},
+		// Edge case: unknown mode should default to new labels
+		{name: "unknown_mode", status: "O", mode: "unknown", expected: "Demonstrated"},
+		// Edge case: empty status
+		{name: "empty_status_new", status: "", mode: "new", expected: ""},
+		{name: "empty_status_legacy", status: "", mode: "legacy", expected: ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := Risk{Status: tt.status}
+			result := r.PrettyStatus(tt.mode)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
