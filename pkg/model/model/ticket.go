@@ -9,6 +9,7 @@ type Ticket struct {
 	Status     string `json:"status,omitempty" neo4j:"status,omitempty" desc:"Current status of the ticket." example:"In Progress"`
 	Assignee   string `json:"assignee,omitempty" neo4j:"assignee,omitempty" desc:"Display name of the person assigned to the ticket." example:"John Doe"`
 	Resolution string `json:"resolution,omitempty" neo4j:"resolution,omitempty" desc:"Resolution of the ticket when closed." example:"Fixed"`
+	Account    string `json:"account,omitempty" neo4j:"account,omitempty" desc:"Account key that created/manages this ticket." example:"#account#user@example.com#jira#https://jira.example.com"`
 }
 
 // TicketData is embedded in Risk to store associated tickets.
