@@ -24,6 +24,10 @@ type BaseAsset struct {
 	Identifier string  `neo4j:"identifier" json:"identifier" desc:"Unique identifier for the asset." example:"name"`
 	Group      string  `neo4j:"group" json:"group" desc:"Group of the asset." example:"dns"`
 	Class      string  `neo4j:"class" json:"class" desc:"Classification of the asset type." example:"repository"`
+	// Risk scoring (server-computed)
+	RiskScore    int    `neo4j:"risk_score,omitempty" json:"riskScore,omitempty" desc:"Computed risk score (0-100) reflecting overall attack surface severity." example:"75"`
+	RiskSeverity string `neo4j:"risk_severity,omitempty" json:"riskSeverity,omitempty" desc:"Risk severity tier derived from score: C(ritical), H(igh), M(edium), L(ow), I(nfo)." example:"H"`
+	RiskScoredAt string `neo4j:"risk_scored_at,omitempty" json:"riskScoredAt,omitempty" desc:"Timestamp when the risk score was last computed (RFC3339)." example:"2024-01-15T10:30:00Z"`
 	History
 	MLProperties
 	Metadata
