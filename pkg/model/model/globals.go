@@ -98,6 +98,13 @@ type GraphModel interface {
 	Valid() bool
 }
 
+// Standalone marks a GraphModel that manages its own relationships.
+// Models implementing this interface will NOT get an automatic DISCOVERED
+// relationship from the parent context during result processing.
+type Standalone interface {
+	Standalone()
+}
+
 type GraphRelationship interface {
 	registry.Model
 	Label() string
@@ -270,6 +277,25 @@ var RiskSeverity = map[string]string{
 	"H": "High",
 	"C": "Critical",
 	"E": "Exposure",
+}
+
+// RiskStatus maps backend status codes to display labels for the legacy vulnerability status system.
+var RiskStatus = map[string]string{
+	"O": "Open",
+	"R": "Closed",
+	"I": "Accepted Risk",
+	"D": "Rejected",
+	"T": "Pending Triage",
+}
+
+// RiskStatusNew maps backend status codes to display labels for the new vulnerability status system.
+// This uses updated terminology aligned with the customer-facing UI.
+var RiskStatusNew = map[string]string{
+	"O": "Demonstrated",
+	"R": "Resolved",
+	"I": "Accepted",
+	"D": "Rejected",
+	"T": "Detected",
 }
 
 func Now() string {

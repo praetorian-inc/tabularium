@@ -213,6 +213,19 @@ func (r *Risk) State() string {
 	return string(r.Status[0])
 }
 
+// PrettyStatus returns the human-readable label for this risk's status
+// based on the current vulnerability status mode.
+// mode == "legacy" uses legacy labels (Open, Closed, Pending Triage).
+// Any other value (including empty string) uses new labels (Demonstrated, Resolved, Detected),
+// matching the frontend's DEFAULT_MODE = 'new'.
+func (r *Risk) PrettyStatus(mode string) string {
+	state := r.State()
+	if mode == "legacy" {
+		return RiskStatus[state]
+	}
+	return RiskStatusNew[state]
+}
+
 func (r *Risk) Attribute(name, value string) Attribute {
 	return NewAttribute(name, value, r)
 }
