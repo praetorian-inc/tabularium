@@ -309,6 +309,7 @@ func TestHydratableModels(t *testing.T) {
 
 		newInstance, err := NewAWSResource(name, account, AWSS3Bucket, nil)
 		require.NoError(t, err)
+		newInstance.HasOrgPolicy = true
 
 		err = newInstance.Hydrate(func(path string) ([]byte, error) {
 			for _, f := range files {

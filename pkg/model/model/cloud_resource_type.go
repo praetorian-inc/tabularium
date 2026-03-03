@@ -25,6 +25,7 @@ const (
 	AWSUser                CloudResourceType = "AWS::IAM::User"
 	AWSGroup               CloudResourceType = "AWS::IAM::Group"
 	AWSManagedPolicy       CloudResourceType = "AWS::IAM::ManagedPolicy"
+	AWSInstanceProfile     CloudResourceType = "AWS::IAM::InstanceProfile"
 	AWSGateway             CloudResourceType = "AWS::ApiGateway::RestApi"
 	AWSSNSTopic            CloudResourceType = "AWS::SNS::Topic"
 	AWSSQSQueue            CloudResourceType = "AWS::SQS::Queue"

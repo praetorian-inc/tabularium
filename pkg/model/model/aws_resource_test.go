@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"fmt"
 	"slices"
 	"testing"
@@ -491,6 +492,107 @@ func TestAWSResource_Defaulted(t *testing.T) {
 	})
 }
 
+func TestAWSResource_InlinePoliciesFieldExists(t *testing.T) {
+	resource, err := NewAWSResource(
+		"arn:aws:iam::123456789012:role/test-role",
+		"123456789012",
+		AWSRole,
+		nil,
+	)
+	require.NoError(t, err)
+
+	assert.Nil(t, resource.InlinePolicies)
+	assert.False(t, resource.HasInlinePolicies)
+}
+
+func TestAWSResource_InlinePoliciesFilename(t *testing.T) {
+	resource, err := NewAWSResource(
+		"arn:aws:iam::123456789012:role/test-role",
+		"123456789012",
+		AWSRole,
+		nil,
+	)
+	require.NoError(t, err)
+
+	filename := resource.InlinePoliciesFilename()
+	assert.Contains(t, filename, "awsresource/123456789012/inline-policies/")
+	assert.Contains(t, filename, ".json")
+}
+
+func TestAWSResource_SetInlinePolicies(t *testing.T) {
+	resource, err := NewAWSResource(
+		"arn:aws:iam::123456789012:role/test-role",
+		"123456789012",
+		AWSRole,
+		nil,
+	)
+	require.NoError(t, err)
+
+	policies := []IAMPolicy{
+		{PolicyName: "TestPolicy", PolicyDocument: json.RawMessage(`{"Version":"2012-10-17"}`)},
+	}
+	resource.SetInlinePolicies(policies)
+
+	assert.Equal(t, policies, resource.InlinePolicies)
+	assert.True(t, resource.HasInlinePolicies)
+
+	// Setting empty slice clears the flag
+	resource.SetInlinePolicies(nil)
+	assert.Nil(t, resource.InlinePolicies)
+	assert.False(t, resource.HasInlinePolicies)
+}
+
+func TestAWSResource_DehydrateInlinePolicies(t *testing.T) {
+	resource, err := NewAWSResource(
+		"arn:aws:iam::123456789012:role/test-role",
+		"123456789012",
+		AWSRole,
+		nil,
+	)
+	require.NoError(t, err)
+
+	policies := []IAMPolicy{
+		{PolicyName: "MyPolicy", PolicyDocument: json.RawMessage(`{"Version":"2012-10-17","Statement":[]}`)},
+	}
+	resource.SetInlinePolicies(policies)
+
+	files, dehydratedH := resource.Dehydrate()
+	dehydrated := dehydratedH.(*AWSResource)
+
+	require.Len(t, files, 1)
+	assert.Equal(t, resource.InlinePoliciesFilename(), files[0].Name)
+
+	expectedBytes, _ := json.Marshal(policies)
+	assert.Equal(t, string(expectedBytes), string(files[0].Bytes))
+
+	assert.Nil(t, dehydrated.InlinePolicies)
+	assert.True(t, dehydrated.HasInlinePolicies)
+}
+
+func TestAWSResource_DehydrateBothOrgPolicyAndInlinePolicies(t *testing.T) {
+	resource, err := NewAWSResource(
+		"arn:aws:organizations::123456789012:account/o-abc/123456789012",
+		"123456789012",
+		AWSAccount,
+		nil,
+	)
+	require.NoError(t, err)
+
+	resource.SetOrgPolicy([]byte(`{"orgPolicy": true}`))
+	resource.SetInlinePolicies([]IAMPolicy{
+		{PolicyName: "P1", PolicyDocument: json.RawMessage(`{}`)},
+	})
+
+	files, dehydratedH := resource.Dehydrate()
+	dehydrated := dehydratedH.(*AWSResource)
+
+	assert.Len(t, files, 2)
+	assert.Nil(t, dehydrated.OrgPolicy)
+	assert.Nil(t, dehydrated.InlinePolicies)
+	assert.True(t, dehydrated.HasOrgPolicy)
+	assert.True(t, dehydrated.HasInlinePolicies)
+}
+
 func TestAWSResource_HydrateDehydrate(t *testing.T) {
 	resource, err := NewAWSResource("arn:aws:organizations::992382775570:account/o-a6zw2rb1jz/992382775570", "992382775570", AWSAccount, nil)
 	require.NoError(t, err)
@@ -529,6 +631,464 @@ func TestAWSResource_Visit(t *testing.T) {
 	existing.Merge(&other)
 
 	assert.Equal(t, existing.OrgPolicyFilename(), "awsresource/992382775570/org-policies.json")
+}
+
+func TestAWSResource_HydrateInlinePolicies(t *testing.T) {
+	resource, err := NewAWSResource(
+		"arn:aws:iam::123456789012:role/test-role",
+		"123456789012",
+		AWSRole,
+		nil,
+	)
+	require.NoError(t, err)
+
+	policies := []IAMPolicy{
+		{PolicyName: "MyPolicy", PolicyDocument: json.RawMessage(`{"Version":"2012-10-17"}`)},
+	}
+	resource.SetInlinePolicies(policies)
+
+	files, dehydratedH := resource.Dehydrate()
+	dehydrated := dehydratedH.(*AWSResource)
+
+	require.Len(t, files, 1)
+	assert.True(t, dehydrated.HasInlinePolicies)
+	assert.True(t, dehydrated.CanHydrate())
+	assert.Nil(t, dehydrated.InlinePolicies)
+
+	fileMap := map[string][]byte{}
+	for _, f := range files {
+		fileMap[f.Name] = f.Bytes
+	}
+
+	err = dehydrated.Hydrate(func(name string) ([]byte, error) {
+		data, ok := fileMap[name]
+		if !ok {
+			return nil, fmt.Errorf("file not found: %s", name)
+		}
+		return data, nil
+	})
+	require.NoError(t, err)
+
+	require.Len(t, dehydrated.InlinePolicies, 1)
+	assert.Equal(t, "MyPolicy", dehydrated.InlinePolicies[0].PolicyName)
+	assert.JSONEq(t, `{"Version":"2012-10-17"}`, string(dehydrated.InlinePolicies[0].PolicyDocument))
+}
+
+func TestAWSResource_CanHydrateInlinePolicies(t *testing.T) {
+	resource, err := NewAWSResource(
+		"arn:aws:iam::123456789012:role/test-role",
+		"123456789012",
+		AWSRole,
+		nil,
+	)
+	require.NoError(t, err)
+
+	assert.False(t, resource.CanHydrate())
+
+	resource.HasInlinePolicies = true
+	assert.True(t, resource.CanHydrate())
+}
+
+func TestAWSResource_VisitMergeInlinePolicies(t *testing.T) {
+	existing, err := NewAWSResource(
+		"arn:aws:iam::123456789012:role/test-role",
+		"123456789012",
+		AWSRole,
+		nil,
+	)
+	require.NoError(t, err)
+
+	other, err := NewAWSResource(
+		"arn:aws:iam::123456789012:role/test-role",
+		"123456789012",
+		AWSRole,
+		nil,
+	)
+	require.NoError(t, err)
+	other.HasInlinePolicies = true
+
+	assert.False(t, existing.HasInlinePolicies)
+	existing.Merge(&other)
+	assert.True(t, existing.HasInlinePolicies)
+
+	existing2, _ := NewAWSResource(
+		"arn:aws:iam::123456789012:role/test-role",
+		"123456789012",
+		AWSRole,
+		nil,
+	)
+	assert.False(t, existing2.HasInlinePolicies)
+	existing2.Visit(&other)
+	assert.True(t, existing2.HasInlinePolicies)
+}
+
+func TestAWSResource_TrustRelationshipFieldExists(t *testing.T) {
+	resource, err := NewAWSResource(
+		"arn:aws:iam::123456789012:role/test-role",
+		"123456789012",
+		AWSRole,
+		nil,
+	)
+	require.NoError(t, err)
+
+	assert.Nil(t, resource.TrustRelationship)
+	assert.False(t, resource.HasTrustRelationship)
+}
+
+func TestAWSResource_SetTrustRelationship(t *testing.T) {
+	resource, err := NewAWSResource(
+		"arn:aws:iam::123456789012:role/test-role",
+		"123456789012",
+		AWSRole,
+		nil,
+	)
+	require.NoError(t, err)
+
+	doc := json.RawMessage(`{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"ec2.amazonaws.com"},"Action":"sts:AssumeRole"}]}`)
+	resource.SetTrustRelationship(doc)
+
+	assert.Equal(t, doc, resource.TrustRelationship)
+	assert.True(t, resource.HasTrustRelationship)
+
+	// Setting nil clears the flag
+	resource.SetTrustRelationship(nil)
+	assert.Nil(t, resource.TrustRelationship)
+	assert.False(t, resource.HasTrustRelationship)
+}
+
+func TestAWSResource_TrustRelationshipFilename(t *testing.T) {
+	resource, err := NewAWSResource(
+		"arn:aws:iam::123456789012:role/test-role",
+		"123456789012",
+		AWSRole,
+		nil,
+	)
+	require.NoError(t, err)
+
+	filename := resource.TrustRelationshipFilename()
+	assert.Contains(t, filename, "awsresource/123456789012/trust-relationship/")
+	assert.Contains(t, filename, ".json")
+}
+
+func TestAWSResource_DehydrateTrustRelationship(t *testing.T) {
+	resource, err := NewAWSResource(
+		"arn:aws:iam::123456789012:role/test-role",
+		"123456789012",
+		AWSRole,
+		nil,
+	)
+	require.NoError(t, err)
+
+	doc := json.RawMessage(`{"Version":"2012-10-17","Statement":[]}`)
+	resource.SetTrustRelationship(doc)
+
+	files, dehydratedH := resource.Dehydrate()
+	dehydrated := dehydratedH.(*AWSResource)
+
+	require.Len(t, files, 1)
+	assert.Equal(t, resource.TrustRelationshipFilename(), files[0].Name)
+	assert.Equal(t, string(doc), string(files[0].Bytes))
+
+	assert.Nil(t, dehydrated.TrustRelationship)
+	assert.True(t, dehydrated.HasTrustRelationship)
+}
+
+func TestAWSResource_HydrateTrustRelationship(t *testing.T) {
+	resource, err := NewAWSResource(
+		"arn:aws:iam::123456789012:role/test-role",
+		"123456789012",
+		AWSRole,
+		nil,
+	)
+	require.NoError(t, err)
+
+	doc := json.RawMessage(`{"Version":"2012-10-17","Statement":[]}`)
+	resource.SetTrustRelationship(doc)
+
+	files, dehydratedH := resource.Dehydrate()
+	dehydrated := dehydratedH.(*AWSResource)
+
+	fileMap := map[string][]byte{}
+	for _, f := range files {
+		fileMap[f.Name] = f.Bytes
+	}
+
+	err = dehydrated.Hydrate(func(name string) ([]byte, error) {
+		data, ok := fileMap[name]
+		if !ok {
+			return nil, fmt.Errorf("file not found: %s", name)
+		}
+		return data, nil
+	})
+	require.NoError(t, err)
+
+	assert.JSONEq(t, `{"Version":"2012-10-17","Statement":[]}`, string(dehydrated.TrustRelationship))
+}
+
+func TestAWSResource_CanHydrateTrustRelationship(t *testing.T) {
+	resource, err := NewAWSResource(
+		"arn:aws:iam::123456789012:role/test-role",
+		"123456789012",
+		AWSRole,
+		nil,
+	)
+	require.NoError(t, err)
+
+	assert.False(t, resource.CanHydrate())
+
+	resource.HasTrustRelationship = true
+	assert.True(t, resource.CanHydrate())
+}
+
+func TestAWSResource_VisitMergeTrustRelationship(t *testing.T) {
+	existing, err := NewAWSResource(
+		"arn:aws:iam::123456789012:role/test-role",
+		"123456789012",
+		AWSRole,
+		nil,
+	)
+	require.NoError(t, err)
+
+	other, err := NewAWSResource(
+		"arn:aws:iam::123456789012:role/test-role",
+		"123456789012",
+		AWSRole,
+		nil,
+	)
+	require.NoError(t, err)
+	other.HasTrustRelationship = true
+
+	assert.False(t, existing.HasTrustRelationship)
+	existing.Merge(&other)
+	assert.True(t, existing.HasTrustRelationship)
+
+	existing2, _ := NewAWSResource(
+		"arn:aws:iam::123456789012:role/test-role",
+		"123456789012",
+		AWSRole,
+		nil,
+	)
+	assert.False(t, existing2.HasTrustRelationship)
+	existing2.Visit(&other)
+	assert.True(t, existing2.HasTrustRelationship)
+}
+
+func TestAWSResource_PolicyVersionsFieldExists(t *testing.T) {
+	resource, err := NewAWSResource(
+		"arn:aws:iam::123456789012:policy/my-policy",
+		"123456789012",
+		AWSManagedPolicy,
+		nil,
+	)
+	require.NoError(t, err)
+
+	assert.Nil(t, resource.PolicyVersions)
+	assert.False(t, resource.HasPolicyVersions)
+}
+
+func TestAWSResource_SetPolicyVersions(t *testing.T) {
+	resource, err := NewAWSResource(
+		"arn:aws:iam::123456789012:policy/my-policy",
+		"123456789012",
+		AWSManagedPolicy,
+		nil,
+	)
+	require.NoError(t, err)
+
+	versions := []IAMPolicyVersion{
+		{
+			VersionId:        "v1",
+			IsDefaultVersion: true,
+			CreateDate:       "2024-01-01T00:00:00Z",
+			Document:         json.RawMessage(`{"Version":"2012-10-17","Statement":[]}`),
+		},
+	}
+	resource.SetPolicyVersions(versions)
+
+	assert.Equal(t, versions, resource.PolicyVersions)
+	assert.True(t, resource.HasPolicyVersions)
+
+	// Setting nil clears the flag
+	resource.SetPolicyVersions(nil)
+	assert.Nil(t, resource.PolicyVersions)
+	assert.False(t, resource.HasPolicyVersions)
+}
+
+func TestAWSResource_PolicyVersionsFilename(t *testing.T) {
+	resource, err := NewAWSResource(
+		"arn:aws:iam::123456789012:policy/my-policy",
+		"123456789012",
+		AWSManagedPolicy,
+		nil,
+	)
+	require.NoError(t, err)
+
+	filename := resource.PolicyVersionsFilename()
+	assert.Contains(t, filename, "awsresource/123456789012/policy-versions/")
+	assert.Contains(t, filename, ".json")
+}
+
+func TestAWSResource_DehydratePolicyVersions(t *testing.T) {
+	resource, err := NewAWSResource(
+		"arn:aws:iam::123456789012:policy/my-policy",
+		"123456789012",
+		AWSManagedPolicy,
+		nil,
+	)
+	require.NoError(t, err)
+
+	versions := []IAMPolicyVersion{
+		{
+			VersionId:        "v1",
+			IsDefaultVersion: true,
+			CreateDate:       "2024-01-01T00:00:00Z",
+			Document:         json.RawMessage(`{"Version":"2012-10-17"}`),
+		},
+	}
+	resource.SetPolicyVersions(versions)
+
+	files, dehydratedH := resource.Dehydrate()
+	dehydrated := dehydratedH.(*AWSResource)
+
+	require.Len(t, files, 1)
+	assert.Equal(t, resource.PolicyVersionsFilename(), files[0].Name)
+
+	expectedBytes, _ := json.Marshal(versions)
+	assert.Equal(t, string(expectedBytes), string(files[0].Bytes))
+
+	assert.Nil(t, dehydrated.PolicyVersions)
+	assert.True(t, dehydrated.HasPolicyVersions)
+}
+
+func TestAWSResource_HydratePolicyVersions(t *testing.T) {
+	resource, err := NewAWSResource(
+		"arn:aws:iam::123456789012:policy/my-policy",
+		"123456789012",
+		AWSManagedPolicy,
+		nil,
+	)
+	require.NoError(t, err)
+
+	versions := []IAMPolicyVersion{
+		{
+			VersionId:        "v1",
+			IsDefaultVersion: true,
+			CreateDate:       "2024-01-01T00:00:00Z",
+			Document:         json.RawMessage(`{"Version":"2012-10-17"}`),
+		},
+		{
+			VersionId:        "v2",
+			IsDefaultVersion: false,
+			CreateDate:       "2024-06-01T00:00:00Z",
+			Document:         json.RawMessage(`{"Version":"2012-10-17","Statement":[{"Effect":"Allow"}]}`),
+		},
+	}
+	resource.SetPolicyVersions(versions)
+
+	files, dehydratedH := resource.Dehydrate()
+	dehydrated := dehydratedH.(*AWSResource)
+
+	fileMap := map[string][]byte{}
+	for _, f := range files {
+		fileMap[f.Name] = f.Bytes
+	}
+
+	err = dehydrated.Hydrate(func(name string) ([]byte, error) {
+		data, ok := fileMap[name]
+		if !ok {
+			return nil, fmt.Errorf("file not found: %s", name)
+		}
+		return data, nil
+	})
+	require.NoError(t, err)
+
+	require.Len(t, dehydrated.PolicyVersions, 2)
+	assert.Equal(t, "v1", dehydrated.PolicyVersions[0].VersionId)
+	assert.True(t, dehydrated.PolicyVersions[0].IsDefaultVersion)
+	assert.Equal(t, "2024-01-01T00:00:00Z", dehydrated.PolicyVersions[0].CreateDate)
+	assert.JSONEq(t, `{"Version":"2012-10-17"}`, string(dehydrated.PolicyVersions[0].Document))
+	assert.Equal(t, "v2", dehydrated.PolicyVersions[1].VersionId)
+	assert.False(t, dehydrated.PolicyVersions[1].IsDefaultVersion)
+}
+
+func TestAWSResource_CanHydratePolicyVersions(t *testing.T) {
+	resource, err := NewAWSResource(
+		"arn:aws:iam::123456789012:policy/my-policy",
+		"123456789012",
+		AWSManagedPolicy,
+		nil,
+	)
+	require.NoError(t, err)
+
+	assert.False(t, resource.CanHydrate())
+
+	resource.HasPolicyVersions = true
+	assert.True(t, resource.CanHydrate())
+}
+
+func TestAWSResource_VisitMergePolicyVersions(t *testing.T) {
+	existing, err := NewAWSResource(
+		"arn:aws:iam::123456789012:policy/my-policy",
+		"123456789012",
+		AWSManagedPolicy,
+		nil,
+	)
+	require.NoError(t, err)
+
+	other, err := NewAWSResource(
+		"arn:aws:iam::123456789012:policy/my-policy",
+		"123456789012",
+		AWSManagedPolicy,
+		nil,
+	)
+	require.NoError(t, err)
+	other.HasPolicyVersions = true
+
+	assert.False(t, existing.HasPolicyVersions)
+	existing.Merge(&other)
+	assert.True(t, existing.HasPolicyVersions)
+
+	existing2, _ := NewAWSResource(
+		"arn:aws:iam::123456789012:policy/my-policy",
+		"123456789012",
+		AWSManagedPolicy,
+		nil,
+	)
+	assert.False(t, existing2.HasPolicyVersions)
+	existing2.Visit(&other)
+	assert.True(t, existing2.HasPolicyVersions)
+}
+
+func TestAWSResource_DehydrateAllHydratableFields(t *testing.T) {
+	resource, err := NewAWSResource(
+		"arn:aws:iam::123456789012:role/test-role",
+		"123456789012",
+		AWSRole,
+		nil,
+	)
+	require.NoError(t, err)
+
+	resource.SetOrgPolicy([]byte(`{"orgPolicy": true}`))
+	resource.SetInlinePolicies([]IAMPolicy{
+		{PolicyName: "P1", PolicyDocument: json.RawMessage(`{}`)},
+	})
+	resource.SetTrustRelationship(json.RawMessage(`{"Version":"2012-10-17"}`))
+	resource.SetPolicyVersions([]IAMPolicyVersion{
+		{VersionId: "v1", IsDefaultVersion: true, CreateDate: "2024-01-01T00:00:00Z", Document: json.RawMessage(`{}`)},
+	})
+
+	files, dehydratedH := resource.Dehydrate()
+	dehydrated := dehydratedH.(*AWSResource)
+
+	assert.Len(t, files, 4)
+	assert.Nil(t, dehydrated.OrgPolicy)
+	assert.Nil(t, dehydrated.InlinePolicies)
+	assert.Nil(t, dehydrated.TrustRelationship)
+	assert.Nil(t, dehydrated.PolicyVersions)
+	assert.True(t, dehydrated.HasOrgPolicy)
+	assert.True(t, dehydrated.HasInlinePolicies)
+	assert.True(t, dehydrated.HasTrustRelationship)
+	assert.True(t, dehydrated.HasPolicyVersions)
 }
 
 func TestAWSResource_IsManagementAccount(t *testing.T) {
