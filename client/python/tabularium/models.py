@@ -4282,6 +4282,12 @@ class Remoteinteractivelogonright(BaseModel):
 
 class Repository(BaseModel):
     BaseAsset: dict[str, Any]
+    lastScannedCommits: Annotated[
+        dict[str, Any] | None,
+        Field(
+            description='Per-capability last scanned commit SHAs for differential scanning.'
+        ),
+    ] = None
     name: Annotated[
         str | None,
         Field(description='Repository name.', examples=['praetorian-inc/tabularium']),
