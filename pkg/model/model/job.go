@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"maps"
 	"slices"
 	"strings"
@@ -207,6 +208,11 @@ func (job *Job) AddContext(models ...GraphModel) error {
 }
 
 func (job *Job) Send(items ...registry.Model) {
+	defer func() {
+		if r := recover(); r != nil {
+			slog.Error("panic in Job.Send", "error", r)
+		}
+	}()
 	job.stream <- items
 }
 
