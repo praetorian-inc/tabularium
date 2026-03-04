@@ -842,6 +842,80 @@ func TestMetadata_VisitOrigin(t *testing.T) {
 	}
 }
 
+func TestBaseAsset_Visit_MergesLastScanState(t *testing.T) {
+	base := BaseAsset{
+		Status: Active,
+		LastScanState: map[string]string{
+			"constantine": "aaa",
+			"trufflehog":  "bbb",
+		},
+	}
+
+	other := &Asset{BaseAsset: BaseAsset{
+		LastScanState: map[string]string{
+			"constantine": "ccc",
+		},
+	}}
+
+	base.Visit(other)
+
+	assert.Equal(t, "ccc", base.LastScanState["constantine"])
+	assert.Equal(t, "bbb", base.LastScanState["trufflehog"])
+}
+
+func TestBaseAsset_Visit_NilOtherLastScanState(t *testing.T) {
+	base := BaseAsset{
+		LastScanState: map[string]string{
+			"constantine": "aaa",
+		},
+	}
+
+	other := &Asset{BaseAsset: BaseAsset{}}
+
+	base.Visit(other)
+
+	assert.Equal(t, map[string]string{"constantine": "aaa"}, base.LastScanState)
+}
+
+func TestBaseAsset_Visit_EmptyOtherLastScanState(t *testing.T) {
+	base := BaseAsset{
+		LastScanState: map[string]string{
+			"constantine": "aaa",
+		},
+	}
+
+	other := &Asset{BaseAsset: BaseAsset{
+		LastScanState: map[string]string{},
+	}}
+
+	base.Visit(other)
+
+	assert.Equal(t, map[string]string{"constantine": "aaa"}, base.LastScanState)
+}
+
+func TestBaseAsset_Visit_NilReceiverLastScanState(t *testing.T) {
+	base := BaseAsset{}
+
+	other := &Asset{BaseAsset: BaseAsset{
+		LastScanState: map[string]string{
+			"constantine": "aaa",
+		},
+	}}
+
+	base.Visit(other)
+
+	assert.Equal(t, map[string]string{"constantine": "aaa"}, base.LastScanState)
+}
+
+func TestBaseAsset_Visit_BothNilLastScanState(t *testing.T) {
+	base := BaseAsset{}
+	other := &Asset{BaseAsset: BaseAsset{}}
+
+	base.Visit(other)
+
+	assert.Nil(t, base.LastScanState)
+}
+
 func TestBaseAsset_GetPartitionKey(t *testing.T) {
 	tests := []struct {
 		name      string
