@@ -18,7 +18,6 @@ type Repository struct {
 	URL  string `neo4j:"url,omitempty" json:"url,omitempty" desc:"Repository URL." example:"https://github.com/praetorian-inc/tabularium" capmodel:"Repository"`
 	Org  string `neo4j:"org,omitempty" json:"org,omitempty" desc:"Organization name." example:"praetorian-inc" capmodel:"Repository"`
 	Name string `neo4j:"name,omitempty" json:"name,omitempty" desc:"Repository name." example:"praetorian-inc/tabularium" capmodel:"Repository"`
-	CPE  string `neo4j:"cpe,omitempty" json:"cpe,omitempty" desc:"CPE string of the technology this repository was researched for." example:"cpe:2.3:a:apache:httpd:2.4.50:*:*:*:*:*:*:*"`
 }
 
 const (
