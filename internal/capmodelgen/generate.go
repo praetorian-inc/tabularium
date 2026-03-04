@@ -48,6 +48,14 @@ var funcMap = template.FuncMap{
 		}
 		return false
 	},
+	"hasInterfaceParent": func(specs []typeSpec) bool {
+		for _, ts := range specs {
+			if ts.Parent != nil && ts.Parent.IsInterface {
+				return true
+			}
+		}
+		return false
+	},
 }
 
 // templateData is the data passed to convert_gen.go and extract_gen.go templates.
@@ -161,4 +169,4 @@ var typemapTmpl = template.Must(template.New("typemap").Parse(typemapTmplStr))
 //go:embed extract.go.tmpl
 var extractTmplStr string
 
-var extractTmpl = template.Must(template.New("extract").Parse(extractTmplStr))
+var extractTmpl = template.Must(template.New("extract").Funcs(funcMap).Parse(extractTmplStr))

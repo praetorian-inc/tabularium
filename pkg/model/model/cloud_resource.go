@@ -116,9 +116,9 @@ func (c *CloudResource) GetSecret() string {
 }
 
 func (c *CloudResource) Merge(other *CloudResource) {
-	c.Status = other.Status
-	c.Visited = other.Visited
 	c.TTL = other.TTL
+
+	c.updateFields(other)
 
 	if c.Properties == nil {
 		c.Properties = make(map[string]any)
@@ -133,12 +133,11 @@ func (c *CloudResource) Merge(other *CloudResource) {
 }
 
 func (c *CloudResource) Visit(other *CloudResource) {
-	c.Visited = other.Visited
-	c.Status = other.Status
-
 	if other.TTL != 0 {
 		c.TTL = other.TTL
 	}
+
+	c.updateFields(other)
 
 	if c.Properties == nil {
 		c.Properties = make(map[string]any)
@@ -147,4 +146,13 @@ func (c *CloudResource) Visit(other *CloudResource) {
 		maps.Copy(c.Properties, other.Properties)
 	}
 	c.OriginationData.Visit(other.OriginationData)
+}
+
+func (c *CloudResource) updateFields(other *CloudResource) {
+	c.Status = other.Status
+	c.Visited = other.Visited
+
+	if other.DisplayName != "" {
+		c.DisplayName = other.DisplayName
+	}
 }

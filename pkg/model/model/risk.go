@@ -20,7 +20,7 @@ type Risk struct {
 	Username string `neo4j:"username" json:"username" desc:"Chariot username associated with the risk." example:"user@example.com"`
 	Key      string `neo4j:"key" json:"key" desc:"Unique key identifying the risk." example:"#risk#example.com#CVE-2023-12345"`
 	// Attributes
-	DNS        string `neo4j:"dns" json:"dns" desc:"Primary DNS or group associated with the risk." example:"example.com"`
+	DNS        string `neo4j:"dns" json:"dns" desc:"Primary DNS or group associated with the risk." example:"example.com" capmodel:"Risk=target_name"`
 	Name       string `neo4j:"name" json:"name" desc:"Name of the risk or vulnerability." example:"CVE-2023-12345" capmodel:"Risk"`
 	Source     string `neo4j:"source" json:"source" desc:"Source that identified the risk." example:"nessus" capmodel:"Risk"`
 	Status     string `neo4j:"status" json:"status" desc:"Current status of the risk (e.g., TH, OC, RM)." example:"TH" capmodel:"Risk"`
@@ -211,6 +211,19 @@ func (r *Risk) State() string {
 		return ""
 	}
 	return string(r.Status[0])
+}
+
+// PrettyStatus returns the human-readable label for this risk's status
+// based on the current vulnerability status mode.
+// mode == "legacy" uses legacy labels (Open, Closed, Pending Triage).
+// Any other value (including empty string) uses new labels (Demonstrated, Resolved, Detected),
+// matching the frontend's DEFAULT_MODE = 'new'.
+func (r *Risk) PrettyStatus(mode string) string {
+	state := r.State()
+	if mode == "legacy" {
+		return RiskStatus[state]
+	}
+	return RiskStatusNew[state]
 }
 
 func (r *Risk) Attribute(name, value string) Attribute {

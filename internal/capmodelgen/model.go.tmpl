@@ -7,6 +7,10 @@ type {{.Name}} struct {
 	{{.GoFieldName}} {{.GoType}} `json:"{{.JSONName}}"`
 {{- end}}
 {{- if .Parent}}
+{{- if .Parent.IsInterface}}
+	{{.Parent.GoFieldName}} any `json:"{{.Parent.JSONName}}"`
+{{- else}}
 	{{.Parent.GoFieldName}} {{.Parent.EmbedType}} `json:"{{.Parent.JSONName}}"`
+{{- end}}
 {{- end}}
 }
