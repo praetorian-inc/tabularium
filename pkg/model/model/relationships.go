@@ -35,6 +35,7 @@ func init() {
 	registry.Registry.MustRegisterModel(&HasCredential{})
 	registry.Registry.MustRegisterModel(&HasWebpage{})
 	registry.Registry.MustRegisterModel(&ScannedBy{})
+	registry.Registry.MustRegisterModel(&HasRepository{})
 }
 
 func (br *BaseRelationship) GetKey() string {
@@ -308,4 +309,24 @@ func (s ScannedBy) Label() string {
 // GetDescription returns a description for the ScannedBy relationship model.
 func (s *ScannedBy) GetDescription() string {
 	return "Represents the relationship indicating an asset was discovered/scanned by an Aegis agent, enabling network reachability tracking."
+}
+
+const HasRepositoryLabel = "HAS_REPOSITORY"
+
+type HasRepository struct {
+	*BaseRelationship
+}
+
+func NewHasRepository(source, target GraphModel) GraphRelationship {
+	return &HasRepository{
+		BaseRelationship: NewBaseRelationship(source, target, HasRepositoryLabel),
+	}
+}
+
+func (hr HasRepository) Label() string {
+	return HasRepositoryLabel
+}
+
+func (hr *HasRepository) GetDescription() string {
+	return "Represents the relationship indicating a technology has an associated source code repository for OSINT research."
 }
