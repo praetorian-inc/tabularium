@@ -2698,6 +2698,10 @@ class Hasport(BaseModel):
     BaseRelationship: dict[str, Any]
 
 
+class Hasrepository(BaseModel):
+    BaseRelationship: dict[str, Any]
+
+
 class Hassession(BaseModel):
     BaseRelationship: dict[str, Any]
     enforced: Annotated[
@@ -4288,6 +4292,13 @@ class Repository(BaseModel):
     ] = None
     org: Annotated[
         str | None, Field(description='Organization name.', examples=['praetorian-inc'])
+    ] = None
+    public: Annotated[
+        bool | None,
+        Field(
+            description='Whether the repository is publicly accessible.',
+            examples=['true'],
+        ),
     ] = None
     url: Annotated[
         str | None,
