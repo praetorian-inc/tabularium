@@ -450,6 +450,7 @@ func extractRepository(m registry.Model) (any, error) {
 		URL:           src.URL,
 		Org:           src.Org,
 		Name:          src.Name,
+		Public:        src.Public,
 	}
 	return &result, nil
 }

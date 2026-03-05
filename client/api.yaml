@@ -3168,6 +3168,15 @@ components:
       required:
       - BaseRelationship
       type: object
+    hasrepository:
+      description: Represents the relationship indicating a technology has an associated
+        source code repository for OSINT research.
+      properties:
+        BaseRelationship:
+          type: object
+      required:
+      - BaseRelationship
+      type: object
     hassession:
       description: Represents an Active Directory relationship between two AD objects,
         supporting all BloodHound relationship types.
@@ -4780,6 +4789,10 @@ components:
           description: Organization name.
           example: praetorian-inc
           type: string
+        public:
+          description: Whether the repository is publicly accessible.
+          example: "true"
+          type: boolean
         url:
           description: Repository URL.
           example: https://github.com/praetorian-inc/tabularium
