@@ -33,6 +33,25 @@ func TestAgoraParameter(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, destinationBool)
 
+	destinationFloat := 0.0
+	ap = NewAgoraParameter("test", "test", &destinationFloat)
+	require.Equal(t, "float", ap.Type)
+	inputFloat := "1.5"
+	err = ap.Parse(&inputFloat)
+	require.NoError(t, err)
+	require.Equal(t, 1.5, destinationFloat)
+
+	// float should also handle integer strings
+	inputFloatInt := "10"
+	err = ap.Parse(&inputFloatInt)
+	require.NoError(t, err)
+	require.Equal(t, 10.0, destinationFloat)
+
+	// float should reject non-numeric strings
+	inputFloatBad := "not-a-number"
+	err = ap.Parse(&inputFloatBad)
+	require.Error(t, err)
+
 	unsupportedType := struct{}{}
 	ap = NewAgoraParameter("test", "test", &unsupportedType)
 	inputUnsupported := "test"

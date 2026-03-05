@@ -74,6 +74,8 @@ func getTypeAndParser(destination any) (string, func(string) error) {
 		return wrap(d, parseString, "string")
 	case *int:
 		return wrap(d, parseInt, "int")
+	case *float64:
+		return wrap(d, parseFloat, "float")
 	case *bool:
 		return wrap(d, parseBool, "bool")
 	}
@@ -101,6 +103,12 @@ func parseString(s string, destination *string) error {
 func parseInt(s string, destination *int) error {
 	i, err := strconv.Atoi(s)
 	*destination = i
+	return err
+}
+
+func parseFloat(s string, destination *float64) error {
+	f, err := strconv.ParseFloat(s, 64)
+	*destination = f
 	return err
 }
 
