@@ -7,4 +7,5 @@ type Repository struct {
 	URL           string            `json:"url"`
 	Org           string            `json:"org"`
 	Name          string            `json:"name"`
+	Public        bool              `json:"public"`
 }
