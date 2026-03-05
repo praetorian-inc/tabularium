@@ -31,7 +31,7 @@ type Risk struct {
 	TTL        int64  `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the risk record (Unix timestamp)." example:"1706353200"`
 	Comment    string `neo4j:"-" json:"comment,omitempty" desc:"User-provided comment about the risk." example:"Confirmed by manual check"`
 	PlextracID string `neo4j:"plextracid" json:"plextracid" desc:"ID of the risk in PlexTrac." example:"#clientID#reportId#findingId"`
-	GUID       string `neo4j:"guid" json:"guid" desc:"Globally unique identifier for this risk instance (UUID v4)." example:"550e8400-e29b-41d4-a716-446655440000"`
+	GUID       string `neo4j:"guid,omitempty" json:"guid" desc:"Globally unique identifier for this risk instance (UUID v4)." example:"550e8400-e29b-41d4-a716-446655440000"`
 	Target     Target `neo4j:"-" json:"-" capmodel:"Risk=target(Asset)"` // Internal use, not in schema
 	SDKProof   []byte `neo4j:"-" json:"-" capmodel:"Risk=proof"`         // Proof bytes; only used by capmodelgen to generate the SDK field
 	History
