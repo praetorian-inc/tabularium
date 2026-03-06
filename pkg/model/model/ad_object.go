@@ -128,7 +128,6 @@ func (ad *ADObject) Visit(o Assetlike) {
 	ad.ADProperties.Visit(other.ADProperties)
 
 	ad.BaseAsset.Visit(other)
-	ad.TTL = 0
 }
 
 func (d *ADObject) SeedModels() []Seedable {
@@ -153,7 +152,6 @@ func (ad *ADObject) WithStatus(status string) Target {
 
 func (ad *ADObject) Defaulted() {
 	ad.BaseAsset.Defaulted()
-	ad.TTL = 0
 }
 
 func (ad *ADObject) GetHooks() []registry.Hook {
@@ -172,8 +170,6 @@ func (ad *ADObject) GetHooks() []registry.Hook {
 				if strings.HasPrefix(ad.ObjectID, "S-") {
 					ad.SID = ad.ObjectID
 				}
-
-				ad.TTL = 0
 
 				ad.tagIfTierZero()
 				return nil

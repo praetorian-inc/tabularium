@@ -325,7 +325,7 @@ func TestADObject_Visit(t *testing.T) {
 			},
 		},
 		{
-			name: "nonzero TTL set back to 0",
+			name: "nonzero TTL preserved during visit",
 			existing: ADObject{
 				Domain:   "example.local",
 				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
@@ -344,7 +344,7 @@ func TestADObject_Visit(t *testing.T) {
 				Domain:   "example.local",
 				ObjectID: "S-1-5-21-123456789-123456789-123456789-1001",
 				BaseAsset: BaseAsset{
-					TTL: 0,
+					TTL: 10,
 				},
 			},
 		},
@@ -370,7 +370,7 @@ func TestADObject_Visit(t *testing.T) {
 			assert.Equal(t, tt.expected.SAMAccountName, ad.SAMAccountName, "SAMAccountName should match expected")
 			assert.Equal(t, tt.expected.DisplayName, ad.DisplayName, "DisplayName should match expected")
 			assert.Equal(t, tt.expected.Description, ad.Description, "Description should match expected")
-			assert.Equal(t, int64(0), ad.TTL, "TTL should be 0")
+			assert.Equal(t, tt.expected.TTL, ad.TTL, "TTL should match expected")
 		})
 	}
 }
@@ -800,5 +800,5 @@ func TestADObject_TierZeroTagging(t *testing.T) {
 func TestDefaultedADObject(t *testing.T) {
 	object := ADObject{}
 	object.Defaulted()
-	assert.Zero(t, object.TTL, "TTL should be zero for defaulted AD object")
+	assert.NotZero(t, object.TTL, "TTL should be non-zero for defaulted AD object")
 }
