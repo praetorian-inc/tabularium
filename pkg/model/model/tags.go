@@ -8,7 +8,7 @@ type Taggable interface {
 }
 
 type Tags struct {
-	Tags []string `json:"tags,omitempty" neo4j:"tags"`
+	Tags []string `json:"tags,omitempty" neo4j:"tags,omitempty"`
 }
 
 func (t *Tags) Merge(other Tags) {
