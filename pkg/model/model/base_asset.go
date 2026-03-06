@@ -134,7 +134,9 @@ func (a *BaseAsset) Visit(o Assetlike) {
 		a.Origin = other.Origin
 	}
 
-	a.Secret = other.Secret
+	if other.Secret != nil && *other.Secret != "" {
+		a.Secret = other.Secret
+	}
 	a.Metadata.Visit(other.Metadata)
 	a.Tags.Visit(other.Tags)
 
