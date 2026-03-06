@@ -1425,6 +1425,10 @@ components:
           items:
             type: object
           type: array
+        readiness:
+          description: The maturity level of this integration
+          example: GENERAL_AVAILABILITY
+          type: string
         runs_on:
           description: The platform this capability runs on. Use Platform enum constants
             like PlatformWindows, PlatformLinux, PlatformAny, etc. Access string values
