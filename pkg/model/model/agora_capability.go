@@ -187,6 +187,7 @@ type AgoraCapability struct {
 	Executor      string                `json:"executor" desc:"The task executor that can execute this capability" example:"JanusPlugin"`
 	Surface       attacksurface.Surface `json:"surface" desc:"The attack surface of the capability" example:"internal"`
 	Integration   bool                  `json:"integration" desc:"Whether or not this capability is an integration with an external service" example:"true"`
+	Readiness     string                `json:"readiness,omitempty" desc:"The maturity level of this integration" example:"GENERAL_AVAILABILITY"`
 	Parameters    []AgoraParameter      `json:"parameters,omitempty" desc:"The parameters/options of the capability" example:"{\"input\": {\"ip\": \"1.2.3.4\"}, \"tcp\": true, \"udp\": false}"`
 	Async         bool                  `json:"async" desc:"Indicates if this is an asynchronous capability" example:"false"`
 	LargeArtifact   bool                  `json:"largeArtifact,omitempty" desc:"If true, this capability generates large artifacts that can be stored and reviewed later" example:"false"`

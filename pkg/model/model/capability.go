@@ -51,6 +51,8 @@ type Capability interface {
 	CheckAffiliation(Asset) (bool, error)
 	// Integration returns whether this capability is an integration
 	Integration() bool
+	// Readiness returns the maturity level of this integration
+	Readiness() string
 	// LargeArtifact returns whether this capability should support downloading a large artifact output
 	LargeArtifact() bool
 	// Tier returns which worker tier should process this capability's jobs (e.g., "standard", "heavy")
