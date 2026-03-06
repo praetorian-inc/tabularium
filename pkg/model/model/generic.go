@@ -17,7 +17,7 @@ type Generic struct {
 
 const GenericLabel = "Generic"
 
-var genericKey = regexp.MustCompile(`^#generic(#[^#]+){2,}$`)
+var genericKey = regexp.MustCompile(`^#generic#[^#]+#[^#]+$`)
 
 func init() {
 	MustRegisterLabel(GenericLabel)

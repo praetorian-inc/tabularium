@@ -178,9 +178,10 @@ func TestGeneric_ArbitraryStrings(t *testing.T) {
 
 func TestGeneric_Unmarshall(t *testing.T) {
 	tests := []struct {
-		name  string
-		data  string
-		valid bool
+		name    string
+		data    string
+		valid   bool
+		wantErr bool
 	}{
 		{
 			name:  "valid generic with dns and name",
@@ -193,9 +194,10 @@ func TestGeneric_Unmarshall(t *testing.T) {
 			valid: true,
 		},
 		{
-			name:  "invalid generic - empty dns and name",
-			data:  `{"type": "generic"}`,
-			valid: false,
+			name:    "invalid generic - empty dns and name",
+			data:    `{"type": "generic"}`,
+			valid:   false,
+			wantErr: true,
 		},
 	}
 
@@ -205,7 +207,12 @@ func TestGeneric_Unmarshall(t *testing.T) {
 			err := json.Unmarshal([]byte(tt.data), &a)
 			require.NoError(t, err)
 
-			registry.CallHooks(a.Model)
+			err = registry.CallHooks(a.Model)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
 			assert.Equal(t, tt.valid, a.Model.Valid())
 		})
 	}
