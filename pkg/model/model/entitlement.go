@@ -19,13 +19,9 @@ const (
 	EntitlementManageAccounts Entitlement = "manage_accounts"
 	// EntitlementManageSettings allows settings, configurations, flags, keys, tokens.
 	EntitlementManageSettings Entitlement = "manage_settings"
-	// EntitlementManageIntegrations allows integration validation, configuration, broker.
+	// EntitlementManageIntegrations allows integration validation, configuration, broker, cloud init, jira.
 	EntitlementManageIntegrations Entitlement = "manage_integrations"
-	// EntitlementManageAgents allows aegis management, cloud initialization.
-	EntitlementManageAgents Entitlement = "manage_agents"
-	// EntitlementManageRedteam allows red team deployments, domain parking, payloads.
-	EntitlementManageRedteam Entitlement = "manage_redteam"
-	// EntitlementPraetorian gates all Praetorian-only endpoints.
+	// EntitlementPraetorian gates all Praetorian-only endpoints including red team.
 	// This entitlement is NOT assigned to any role statically.
 	// It is dynamically granted to Praetorian users who are also admins.
 	EntitlementPraetorian Entitlement = "praetorian"
@@ -41,8 +37,6 @@ var allEntitlements = []Entitlement{
 	EntitlementManageAccounts,
 	EntitlementManageSettings,
 	EntitlementManageIntegrations,
-	EntitlementManageAgents,
-	EntitlementManageRedteam,
 	EntitlementPraetorian,
 }
 
@@ -70,8 +64,6 @@ var roleEntitlements = map[Role][]Entitlement{
 		EntitlementManageAccounts,
 		EntitlementManageSettings,
 		EntitlementManageIntegrations,
-		EntitlementManageAgents,
-		EntitlementManageRedteam,
 	},
 }
 

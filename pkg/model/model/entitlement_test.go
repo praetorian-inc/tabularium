@@ -17,8 +17,6 @@ func TestEntitlement_Valid(t *testing.T) {
 		{EntitlementManageAccounts, true},
 		{EntitlementManageSettings, true},
 		{EntitlementManageIntegrations, true},
-		{EntitlementManageAgents, true},
-		{EntitlementManageRedteam, true},
 		{EntitlementPraetorian, true},
 		{Entitlement("bogus"), false},
 		{Entitlement(""), false},
@@ -37,7 +35,7 @@ func TestEntitlementsForRole(t *testing.T) {
 	}{
 		{RoleReadOnly, 1},
 		{RoleAnalyst, 5},
-		{RoleAdmin, 10},
+		{RoleAdmin, 8},
 		{Role("bogus"), 0},
 	}
 	for _, tt := range tests {
@@ -80,8 +78,6 @@ func TestRoleHasEntitlement(t *testing.T) {
 		{RoleAdmin, EntitlementManageAccounts, true},
 		{RoleAdmin, EntitlementManageSettings, true},
 		{RoleAdmin, EntitlementManageIntegrations, true},
-		{RoleAdmin, EntitlementManageAgents, true},
-		{RoleAdmin, EntitlementManageRedteam, true},
 		{RoleAdmin, EntitlementPraetorian, false},
 		// Unknown role
 		{Role("bogus"), EntitlementRead, false},
@@ -95,8 +91,8 @@ func TestRoleHasEntitlement(t *testing.T) {
 
 func TestAllEntitlements(t *testing.T) {
 	all := AllEntitlements()
-	if len(all) != 11 {
-		t.Errorf("AllEntitlements() returned %d, want 11", len(all))
+	if len(all) != 9 {
+		t.Errorf("AllEntitlements() returned %d, want 9", len(all))
 	}
 
 	// Verify it's a copy (modifying shouldn't affect the original)
