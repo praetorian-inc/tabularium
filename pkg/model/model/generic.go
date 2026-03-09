@@ -100,19 +100,19 @@ func (g *Generic) GetHooks() []registry.Hook {
 		useGroupAndIdentifier(g, &g.DNS, &g.Name),
 		{
 			Call: func() error {
-				if g.DNS == "" {
+				if g.Group() == "" {
 					return fmt.Errorf("generic asset requires non-empty dns")
 				}
-				if g.Name == "" {
+				if g.Identifier() == "" {
 					return fmt.Errorf("generic asset requires non-empty name")
 				}
-				if strings.Contains(g.DNS, "#") {
+				if strings.Contains(g.Group(), "#") {
 					return fmt.Errorf("generic asset dns must not contain '#'")
 				}
-				if strings.Contains(g.Name, "#") {
+				if strings.Contains(g.Identifier(), "#") {
 					return fmt.Errorf("generic asset name must not contain '#'")
 				}
-				g.Key = fmt.Sprintf("#generic#%s#%s", g.DNS, g.Name)
+				g.Key = fmt.Sprintf("#generic#%s#%s", g.Group(), g.Identifier())
 				g.Class = g.GetClass()
 				return nil
 			},
