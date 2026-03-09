@@ -4852,11 +4852,6 @@ components:
           description: Timestamp when the risk was first created (RFC3339).
           example: "2023-10-27T10:00:00Z"
           type: string
-        displayName:
-          description: Human-readable display name for the risk. Falls back to Name
-            if empty.
-          example: SQL Injection
-          type: string
         dns:
           description: Primary DNS or group associated with the risk.
           example: example.com
@@ -4888,6 +4883,10 @@ components:
         status:
           description: Current status of the risk (e.g., TH, OC, RM).
           example: TH
+          type: string
+        title:
+          description: Human-readable title for the risk. Falls back to Name if empty.
+          example: SQL Injection
           type: string
         ttl:
           description: Time-to-live for the risk record (Unix timestamp).
