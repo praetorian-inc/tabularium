@@ -11,8 +11,6 @@ import (
 type Generic struct {
 	BaseAsset
 	LabelSettableEmbed
-	DNS  string `neo4j:"dns" json:"dns" desc:"The group identifier for this generic asset." example:"my-custom-group"`
-	Name string `neo4j:"name" json:"name" desc:"The identifier for this generic asset." example:"my-custom-identifier"`
 }
 
 const GenericLabel = "Generic"
@@ -45,7 +43,7 @@ func (g *Generic) Valid() bool {
 }
 
 func (g *Generic) GetPartitionKey() string {
-	return g.Name
+	return g.BaseAsset.Identifier
 }
 
 func (g *Generic) Merge(o Assetlike) {
@@ -74,11 +72,11 @@ func (g *Generic) WithStatus(status string) Target {
 }
 
 func (g *Generic) Group() string {
-	return g.DNS
+	return g.BaseAsset.Group
 }
 
 func (g *Generic) Identifier() string {
-	return g.Name
+	return g.BaseAsset.Identifier
 }
 
 func (g *Generic) SetSource(source string) {
@@ -97,35 +95,32 @@ func (g *Generic) GetDescription() string {
 
 func (g *Generic) GetHooks() []registry.Hook {
 	return []registry.Hook{
-		useGroupAndIdentifier(g, &g.DNS, &g.Name),
 		{
 			Call: func() error {
 				if g.Group() == "" {
-					return fmt.Errorf("generic asset requires non-empty dns")
+					return fmt.Errorf("generic asset requires non-empty group")
 				}
 				if g.Identifier() == "" {
-					return fmt.Errorf("generic asset requires non-empty name")
+					return fmt.Errorf("generic asset requires non-empty identifier")
 				}
 				if strings.Contains(g.Group(), "#") {
-					return fmt.Errorf("generic asset dns must not contain '#'")
+					return fmt.Errorf("generic asset group must not contain '#'")
 				}
 				if strings.Contains(g.Identifier(), "#") {
-					return fmt.Errorf("generic asset name must not contain '#'")
+					return fmt.Errorf("generic asset identifier must not contain '#'")
 				}
 				g.Key = fmt.Sprintf("#generic#%s#%s", g.Group(), g.Identifier())
 				g.Class = g.GetClass()
 				return nil
 			},
 		},
-		setGroupAndIdentifier(g, &g.DNS, &g.Name),
 	}
 }
 
-func NewGeneric(dns, name string) Generic {
-	g := Generic{
-		DNS:  dns,
-		Name: name,
-	}
+func NewGeneric(group, identifier string) Generic {
+	g := Generic{}
+	g.BaseAsset.Group = group
+	g.BaseAsset.Identifier = identifier
 
 	g.Defaulted()
 	registry.CallHooks(&g)

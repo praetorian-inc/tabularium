@@ -3006,19 +3006,9 @@ components:
           type: object
         LabelSettableEmbed:
           type: object
-        dns:
-          description: The group identifier for this generic asset.
-          example: my-custom-group
-          type: string
-        name:
-          description: The identifier for this generic asset.
-          example: my-custom-identifier
-          type: string
       required:
       - BaseAsset
       - LabelSettableEmbed
-      - dns
-      - name
       type: object
     genericall:
       description: Represents an Active Directory relationship between two AD objects,

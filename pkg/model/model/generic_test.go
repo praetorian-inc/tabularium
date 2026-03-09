@@ -105,36 +105,36 @@ func TestGeneric_Hooks(t *testing.T) {
 		assert.True(t, g.Valid())
 	})
 
-	t.Run("rejects empty DNS", func(t *testing.T) {
-		g := Generic{Name: "my-name"}
+	t.Run("rejects empty group", func(t *testing.T) {
+		g := Generic{BaseAsset: BaseAsset{Identifier: "my-name"}}
 		g.Defaulted()
 		err := registry.CallHooks(&g)
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "generic asset requires non-empty dns")
+		assert.Contains(t, err.Error(), "generic asset requires non-empty group")
 	})
 
-	t.Run("rejects empty Name", func(t *testing.T) {
-		g := Generic{DNS: "my-group"}
+	t.Run("rejects empty identifier", func(t *testing.T) {
+		g := Generic{BaseAsset: BaseAsset{Group: "my-group"}}
 		g.Defaulted()
 		err := registry.CallHooks(&g)
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "generic asset requires non-empty name")
+		assert.Contains(t, err.Error(), "generic asset requires non-empty identifier")
 	})
 
-	t.Run("rejects DNS containing hash", func(t *testing.T) {
-		g := Generic{DNS: "my#group", Name: "my-name"}
+	t.Run("rejects group containing hash", func(t *testing.T) {
+		g := Generic{BaseAsset: BaseAsset{Group: "my#group", Identifier: "my-name"}}
 		g.Defaulted()
 		err := registry.CallHooks(&g)
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "generic asset dns must not contain '#'")
+		assert.Contains(t, err.Error(), "generic asset group must not contain '#'")
 	})
 
-	t.Run("rejects Name containing hash", func(t *testing.T) {
-		g := Generic{DNS: "my-group", Name: "my#name"}
+	t.Run("rejects identifier containing hash", func(t *testing.T) {
+		g := Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my#name"}}
 		g.Defaulted()
 		err := registry.CallHooks(&g)
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "generic asset name must not contain '#'")
+		assert.Contains(t, err.Error(), "generic asset identifier must not contain '#'")
 	})
 }
 
@@ -170,8 +170,8 @@ func TestGeneric_ArbitraryStrings(t *testing.T) {
 			g := NewGeneric(tt.dns, tt.assetName)
 			assert.True(t, g.Valid(), "expected valid generic asset")
 			assert.Equal(t, tt.expectedKey, g.Key)
-			assert.Equal(t, tt.dns, g.DNS)
-			assert.Equal(t, tt.assetName, g.Name)
+			assert.Equal(t, tt.dns, g.Group())
+			assert.Equal(t, tt.assetName, g.Identifier())
 		})
 	}
 }
@@ -183,11 +183,6 @@ func TestGeneric_Unmarshall(t *testing.T) {
 		valid   bool
 		wantErr bool
 	}{
-		{
-			name:  "valid generic with dns and name",
-			data:  `{"type": "generic", "dns": "my-group", "name": "my-id"}`,
-			valid: true,
-		},
 		{
 			name:  "valid generic with group and identifier",
 			data:  `{"type": "generic", "group": "my-group", "identifier": "my-id"}`,
@@ -227,15 +222,15 @@ func TestGeneric_Merge(t *testing.T) {
 	}{
 		{
 			name:     "basic merge",
-			existing: Generic{DNS: "my-group", Name: "my-name"},
-			update:   Generic{DNS: "my-group", Name: "my-name"},
-			expected: Generic{DNS: "my-group", Name: "my-name"},
+			existing: Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name"}},
+			update:   Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name"}},
+			expected: Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name"}},
 		},
 		{
 			name:     "promote to seed",
-			existing: Generic{DNS: "my-group", Name: "my-name"},
-			update:   Generic{DNS: "my-group", Name: "my-name", BaseAsset: BaseAsset{Source: SeedSource}},
-			expected: Generic{DNS: "my-group", Name: "my-name", BaseAsset: BaseAsset{Source: SeedSource}},
+			existing: Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name"}},
+			update:   Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name", Source: SeedSource}},
+			expected: Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name", Source: SeedSource}},
 		},
 	}
 
@@ -260,21 +255,21 @@ func TestGeneric_Visit(t *testing.T) {
 	}{
 		{
 			name:     "basic visit",
-			existing: Generic{DNS: "my-group", Name: "my-name"},
-			update:   Generic{DNS: "my-group", Name: "my-name"},
-			expected: Generic{DNS: "my-group", Name: "my-name"},
+			existing: Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name"}},
+			update:   Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name"}},
+			expected: Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name"}},
 		},
 		{
 			name:     "promote to seed",
-			existing: Generic{DNS: "my-group", Name: "my-name"},
-			update:   Generic{DNS: "my-group", Name: "my-name", BaseAsset: BaseAsset{Source: SeedSource}},
-			expected: Generic{DNS: "my-group", Name: "my-name", BaseAsset: BaseAsset{Source: SeedSource}},
+			existing: Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name"}},
+			update:   Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name", Source: SeedSource}},
+			expected: Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name", Source: SeedSource}},
 		},
 		{
 			name:     "visit propagates tags",
-			existing: Generic{DNS: "my-group", Name: "my-name", BaseAsset: BaseAsset{Tags: Tags{Tags: []string{"production"}}}},
-			update:   Generic{DNS: "my-group", Name: "my-name", BaseAsset: BaseAsset{Tags: Tags{Tags: []string{"critical"}}}},
-			expected: Generic{DNS: "my-group", Name: "my-name", BaseAsset: BaseAsset{Tags: Tags{Tags: []string{"production", "critical"}}}},
+			existing: Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name", Tags: Tags{Tags: []string{"production"}}}},
+			update:   Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name", Tags: Tags{Tags: []string{"critical"}}}},
+			expected: Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name", Tags: Tags{Tags: []string{"production", "critical"}}}},
 		},
 	}
 
@@ -292,8 +287,8 @@ func TestGeneric_Visit(t *testing.T) {
 }
 
 func TestGeneric_GroupAndIdentifier(t *testing.T) {
-	g := NewGeneric("my-dns", "my-name")
-	assert.Equal(t, "my-dns", g.Group())
+	g := NewGeneric("my-group", "my-name")
+	assert.Equal(t, "my-group", g.Group())
 	assert.Equal(t, "my-name", g.Identifier())
 	assert.Equal(t, "my-name", g.GetPartitionKey())
 }

@@ -2589,20 +2589,6 @@ class Gcpresource(BaseModel):
 class Generic(BaseModel):
     BaseAsset: dict[str, Any]
     LabelSettableEmbed: dict[str, Any]
-    dns: Annotated[
-        str,
-        Field(
-            description='The group identifier for this generic asset.',
-            examples=['my-custom-group'],
-        ),
-    ]
-    name: Annotated[
-        str,
-        Field(
-            description='The identifier for this generic asset.',
-            examples=['my-custom-identifier'],
-        ),
-    ]
 
 
 class Genericall(BaseModel):
