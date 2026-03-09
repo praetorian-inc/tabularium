@@ -22,7 +22,7 @@ type Risk struct {
 	// Attributes
 	DNS         string `neo4j:"dns" json:"dns" desc:"Primary DNS or group associated with the risk." example:"example.com" capmodel:"Risk=target_name"`
 	Name        string `neo4j:"name" json:"name" desc:"Name of the risk or vulnerability." example:"CVE-2023-12345" capmodel:"Risk"`
-	DisplayName string `neo4j:"displayName,omitempty" json:"displayName,omitempty" desc:"Human-readable display name for the risk. Falls back to Name if empty." example:"SQL Injection"`
+	Title string `neo4j:"title,omitempty" json:"title,omitempty" desc:"Human-readable title for the risk. Falls back to Name if empty." example:"SQL Injection"`
 	Source      string `neo4j:"source" json:"source" desc:"Source that identified the risk." example:"nessus" capmodel:"Risk"`
 	Status     string `neo4j:"status" json:"status" desc:"Current status of the risk (e.g., TH, OC, RM)." example:"TH" capmodel:"Risk"`
 	Priority   int    `neo4j:"priority" json:"priority" desc:"Calculated priority score based on severity." example:"10"`
@@ -118,8 +118,8 @@ func (r *Risk) Merge(update Risk) {
 		r.ProofSufficient = update.ProofSufficient
 	}
 	r.Tags.Merge(update.Tags)
-	if update.DisplayName != "" {
-		r.DisplayName = update.DisplayName
+	if update.Title != "" {
+		r.Title = update.Title
 	}
 	r.OriginationData.Merge(update.OriginationData)
 }
@@ -320,12 +320,12 @@ func (r *Risk) GetHooks() []registry.Hook {
 				if r.DNS == "" && r.Target != nil {
 					r.DNS = r.Target.Group()
 				}
-				if r.DisplayName == "" && r.Name != "" {
-					r.DisplayName = r.Name
+				if r.Title == "" && r.Name != "" {
+					r.Title = r.Name
 				}
 				r.formatName()
-				if CVERegex.MatchString(r.DisplayName) {
-					r.DisplayName = strings.ToUpper(r.DisplayName)
+				if CVERegex.MatchString(r.Title) {
+					r.Title = strings.ToUpper(r.Title)
 				}
 				r.Key = fmt.Sprintf("#risk#%s#%s", r.DNS, r.Name)
 				r.Priority = riskPriority[r.Severity()]
