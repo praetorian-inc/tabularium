@@ -2588,7 +2588,6 @@ class Gcpresource(BaseModel):
 
 class Generic(BaseModel):
     BaseAsset: dict[str, Any]
-    LabelSettableEmbed: dict[str, Any]
 
 
 class Genericall(BaseModel):

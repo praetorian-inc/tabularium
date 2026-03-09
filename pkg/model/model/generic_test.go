@@ -226,12 +226,6 @@ func TestGeneric_Merge(t *testing.T) {
 			update:   Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name"}},
 			expected: Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name"}},
 		},
-		{
-			name:     "promote to seed",
-			existing: Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name"}},
-			update:   Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name", Source: SeedSource}},
-			expected: Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name", Source: SeedSource}},
-		},
 	}
 
 	for _, tt := range tests {
@@ -258,12 +252,6 @@ func TestGeneric_Visit(t *testing.T) {
 			existing: Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name"}},
 			update:   Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name"}},
 			expected: Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name"}},
-		},
-		{
-			name:     "promote to seed",
-			existing: Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name"}},
-			update:   Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name", Source: SeedSource}},
-			expected: Generic{BaseAsset: BaseAsset{Group: "my-group", Identifier: "my-name", Source: SeedSource}},
 		},
 		{
 			name:     "visit propagates tags",
@@ -307,24 +295,6 @@ func TestGeneric_GetLabels(t *testing.T) {
 		assert.Contains(t, labels, TTLLabel)
 		assert.NotContains(t, labels, SeedLabel)
 	})
-
-	t.Run("seed labels", func(t *testing.T) {
-		g := NewGenericSeed("my-name")
-		labels := g.GetLabels()
-		assert.Contains(t, labels, GenericLabel)
-		assert.Contains(t, labels, AssetLabel)
-		assert.Contains(t, labels, TTLLabel)
-		assert.Contains(t, labels, SeedLabel)
-	})
-}
-
-func TestGeneric_SeedModels(t *testing.T) {
-	g := NewGenericSeed("my-name")
-	seedModels := g.SeedModels()
-
-	assert.Equal(t, 1, len(seedModels))
-	assert.Equal(t, &g, seedModels[0])
-	assert.Contains(t, g.GetLabels(), SeedLabel)
 }
 
 func TestGeneric_WithStatus(t *testing.T) {

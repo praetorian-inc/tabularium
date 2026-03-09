@@ -3004,11 +3004,8 @@ components:
       properties:
         BaseAsset:
           type: object
-        LabelSettableEmbed:
-          type: object
       required:
       - BaseAsset
-      - LabelSettableEmbed
       type: object
     genericall:
       description: Represents an Active Directory relationship between two AD objects,

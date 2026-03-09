@@ -10,7 +10,6 @@ import (
 
 type Generic struct {
 	BaseAsset
-	LabelSettableEmbed
 }
 
 const GenericLabel = "Generic"
@@ -23,11 +22,7 @@ func init() {
 }
 
 func (g *Generic) GetLabels() []string {
-	labels := []string{GenericLabel, AssetLabel, TTLLabel}
-	if g.Source == SeedSource {
-		labels = append(labels, SeedLabel)
-	}
-	return labels
+	return []string{GenericLabel, AssetLabel, TTLLabel}
 }
 
 func (g *Generic) GetClass() string {
@@ -51,16 +46,13 @@ func (g *Generic) Merge(o Assetlike) {
 	if !ok {
 		return
 	}
-	MergeWithPromotionCheck(&g.BaseAsset, &g.LabelSettableEmbed, other)
+	g.BaseAsset.Merge(other)
 }
 
 func (g *Generic) Visit(o Assetlike) {
 	other, ok := o.(*Generic)
 	if !ok {
 		return
-	}
-	if IsSeedPromotion(&g.BaseAsset, &other.BaseAsset) {
-		ApplySeedLabels(&g.BaseAsset, &g.LabelSettableEmbed)
 	}
 	g.BaseAsset.Visit(other)
 }
@@ -82,11 +74,6 @@ func (g *Generic) Identifier() string {
 func (g *Generic) SetSource(source string) {
 	g.BaseAsset.SetSource(source)
 	g.Class = g.GetClass()
-}
-
-func (g *Generic) SeedModels() []Seedable {
-	copy := *g
-	return []Seedable{&copy}
 }
 
 func (g *Generic) GetDescription() string {
@@ -128,10 +115,3 @@ func NewGeneric(group, identifier string) Generic {
 	return g
 }
 
-func NewGenericSeed(name string) Generic {
-	g := NewGeneric(name, name)
-	g.Source = SeedSource
-	g.Status = Pending
-	g.TTL = 0
-	return g
-}
