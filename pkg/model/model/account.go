@@ -27,10 +27,10 @@ type Account struct {
 	Role     Role              `dynamodbav:"role,omitempty" json:"role,omitempty" desc:"Role for this account membership." example:"admin"`
 }
 
-// EffectiveRole returns the account's role, defaulting to Admin for backward compatibility.
+// EffectiveRole returns the account's role, defaulting to ReadOnly for safety.
 func (a *Account) EffectiveRole() Role {
 	if a.Role == "" {
-		return RoleAdmin
+		return RoleReadOnly
 	}
 	return a.Role
 }

@@ -62,7 +62,7 @@ func TestEffectiveRole(t *testing.T) {
 		role Role
 		want Role
 	}{
-		{"empty defaults to admin", "", RoleAdmin},
+		{"empty defaults to readonly", "", RoleReadOnly},
 		{"admin stays admin", RoleAdmin, RoleAdmin},
 		{"analyst stays analyst", RoleAnalyst, RoleAnalyst},
 		{"readonly stays readonly", RoleReadOnly, RoleReadOnly},
@@ -97,7 +97,7 @@ func TestRoleForAccount(t *testing.T) {
 			want:        RoleAnalyst,
 		},
 		{
-			name: "empty role defaults to admin",
+			name: "empty role defaults to readonly",
 			user: User{
 				Name:       "user@example.com",
 				HomeTenant: "user@example.com",
@@ -106,7 +106,7 @@ func TestRoleForAccount(t *testing.T) {
 				},
 			},
 			accountName: "customer@example.com",
-			want:        RoleAdmin,
+			want:        RoleReadOnly,
 		},
 		{
 			name: "unknown account returns readonly",
