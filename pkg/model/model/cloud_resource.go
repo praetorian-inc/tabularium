@@ -149,9 +149,6 @@ func (c *CloudResource) Visit(other *CloudResource) {
 }
 
 func (c *CloudResource) updateFields(other *CloudResource) {
-	c.Status = other.Status
-	c.Visited = other.Visited
-
 	if other.DisplayName != "" {
 		c.DisplayName = other.DisplayName
 	}
