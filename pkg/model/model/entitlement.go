@@ -7,8 +7,14 @@ type Entitlement string
 const (
 	// EntitlementRead allows reading data: exports, files, recovery codes, auth, etc.
 	EntitlementRead Entitlement = "read"
-	// EntitlementWriteAssets allows creating/modifying assets, seeds, risks, jobs, etc.
+	// EntitlementWriteAssets allows creating/modifying assets, seeds, risks, etc.
 	EntitlementWriteAssets Entitlement = "write_assets"
+	// EntitlementWriteJobs allows capability scheduling and job execution.
+	EntitlementWriteJobs Entitlement = "write_jobs"
+	// EntitlementWriteFiles allows uploading, deleting, and managing files.
+	EntitlementWriteFiles Entitlement = "write_files"
+	// EntitlementConversationAI allows access to conversation AI endpoints.
+	EntitlementConversationAI Entitlement = "conversation_ai"
 	// EntitlementManageAccounts allows account CRUD, purge, user management.
 	EntitlementManageAccounts Entitlement = "manage_accounts"
 	// EntitlementManageSettings allows settings, configurations, flags, keys, tokens.
@@ -19,27 +25,31 @@ const (
 	EntitlementManageAgents Entitlement = "manage_agents"
 	// EntitlementManageRedteam allows red team deployments, domain parking, payloads.
 	EntitlementManageRedteam Entitlement = "manage_redteam"
-	// EntitlementManageOSINT allows OSINT operations.
-	EntitlementManageOSINT Entitlement = "manage_osint"
-	// EntitlementManageModels allows AI model management, functions, templates.
-	EntitlementManageModels Entitlement = "manage_models"
+	// EntitlementPraetorian gates all Praetorian-only endpoints.
+	// This entitlement is NOT assigned to any role statically.
+	// It is dynamically granted to Praetorian users who are also admins.
+	EntitlementPraetorian Entitlement = "praetorian"
 )
 
 // allEntitlements is the complete list of built-in entitlements.
 var allEntitlements = []Entitlement{
 	EntitlementRead,
 	EntitlementWriteAssets,
+	EntitlementWriteJobs,
+	EntitlementWriteFiles,
+	EntitlementConversationAI,
 	EntitlementManageAccounts,
 	EntitlementManageSettings,
 	EntitlementManageIntegrations,
 	EntitlementManageAgents,
 	EntitlementManageRedteam,
-	EntitlementManageOSINT,
-	EntitlementManageModels,
+	EntitlementPraetorian,
 }
 
 // roleEntitlements maps each built-in role to its entitlements.
-// Admin has all entitlements. Analyst has read + write. ReadOnly has read only.
+// Admin has all entitlements except praetorian (which is granted dynamically).
+// Analyst has read + write_assets + write_jobs + write_files + conversation_ai.
+// ReadOnly has read only.
 var roleEntitlements = map[Role][]Entitlement{
 	RoleReadOnly: {
 		EntitlementRead,
@@ -47,8 +57,22 @@ var roleEntitlements = map[Role][]Entitlement{
 	RoleAnalyst: {
 		EntitlementRead,
 		EntitlementWriteAssets,
+		EntitlementWriteJobs,
+		EntitlementWriteFiles,
+		EntitlementConversationAI,
 	},
-	RoleAdmin: allEntitlements,
+	RoleAdmin: {
+		EntitlementRead,
+		EntitlementWriteAssets,
+		EntitlementWriteJobs,
+		EntitlementWriteFiles,
+		EntitlementConversationAI,
+		EntitlementManageAccounts,
+		EntitlementManageSettings,
+		EntitlementManageIntegrations,
+		EntitlementManageAgents,
+		EntitlementManageRedteam,
+	},
 }
 
 // Valid returns true if e is a recognized built-in entitlement.
