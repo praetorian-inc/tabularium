@@ -588,3 +588,41 @@ func TestRisk_PrettyStatus(t *testing.T) {
 		})
 	}
 }
+
+func TestRisk_DisplayName(t *testing.T) {
+	t.Run("auto-populated from Name before slugification", func(t *testing.T) {
+		target := NewAsset("example.com", "example.com")
+		risk := NewRisk(&target, "SQL Injection", TriageInfo)
+
+		assert.Equal(t, "sql-injection", risk.Name, "Name should be slugified")
+		assert.Equal(t, "SQL Injection", risk.DisplayName, "DisplayName should preserve original name")
+	})
+
+	t.Run("uppercased for CVE names", func(t *testing.T) {
+		target := NewAsset("example.com", "example.com")
+		risk := NewRisk(&target, "cve-2023-12345", TriageInfo)
+
+		assert.Equal(t, "CVE-2023-12345", risk.Name, "Name should be uppercased for CVE")
+		assert.Equal(t, "CVE-2023-12345", risk.DisplayName, "DisplayName should be uppercased for CVE")
+	})
+
+	t.Run("preserved during Merge when update has empty DisplayName", func(t *testing.T) {
+		target := NewAsset("example.com", "example.com")
+		risk := NewRisk(&target, "SQL Injection", TriageInfo)
+
+		update := Risk{Status: OpenHigh}
+		risk.Merge(update)
+
+		assert.Equal(t, "SQL Injection", risk.DisplayName, "DisplayName should be preserved when update has empty DisplayName")
+	})
+
+	t.Run("updated during Merge when update has non-empty DisplayName", func(t *testing.T) {
+		target := NewAsset("example.com", "example.com")
+		risk := NewRisk(&target, "SQL Injection", TriageInfo)
+
+		update := Risk{Status: OpenHigh, DisplayName: "SQL Injection (Critical)"}
+		risk.Merge(update)
+
+		assert.Equal(t, "SQL Injection (Critical)", risk.DisplayName, "DisplayName should be updated when update has non-empty DisplayName")
+	})
+}
