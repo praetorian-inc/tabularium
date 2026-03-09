@@ -8,6 +8,12 @@ type User struct {
 	Name       string
 	HomeTenant string // the home tenant of the user
 	Accounts   []Account
+
+	// RoleCeiling is the maximum effective role this session can have.
+	// Set by API key role constraints or SSO provider role claims/defaults.
+	// Empty means no ceiling (unconstrained). When set, EffectiveRole
+	// returns min(accountRole, RoleCeiling).
+	RoleCeiling Role
 }
 
 func (u *User) Linked(username string) bool {
