@@ -4395,6 +4395,13 @@ class Risk(BaseModel):
             examples=['TH'],
         ),
     ]
+    title: Annotated[
+        str | None,
+        Field(
+            description='Human-readable title for the risk. Falls back to Name if empty.',
+            examples=['SQL Injection'],
+        ),
+    ] = None
     ttl: Annotated[
         int,
         Field(

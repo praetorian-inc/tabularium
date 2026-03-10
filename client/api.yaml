@@ -4884,6 +4884,10 @@ components:
           description: Current status of the risk (e.g., TH, OC, RM).
           example: TH
           type: string
+        title:
+          description: Human-readable title for the risk. Falls back to Name if empty.
+          example: SQL Injection
+          type: string
         ttl:
           description: Time-to-live for the risk record (Unix timestamp).
           example: "1706353200"
