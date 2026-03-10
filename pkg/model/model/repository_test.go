@@ -255,7 +255,6 @@ func TestRepository_NewRepository_StripsCredentials(t *testing.T) {
 	assert.Equal(t, "repo", repo.Name)
 	assert.True(t, repo.Valid())
 
-	// masked credentials (some scanners use ***** as placeholder)
 	repo = NewRepository("https://*****@dev.azure.com/GladiatorArena/Colosseum%20Project/_git/Colosseum%20Project")
 	assert.Equal(t, "https://dev.azure.com/GladiatorArena/Colosseum%20Project/_git/Colosseum%20Project", repo.URL)
 	assert.Equal(t, "GladiatorArena", repo.Org)
