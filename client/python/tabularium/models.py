@@ -68,6 +68,10 @@ class Account(BaseModel):
             examples=['chariot.customer@example.com'],
         ),
     ]
+    role: Annotated[
+        str | None,
+        Field(description='Role for this account membership.', examples=['admin']),
+    ] = None
     secret: Annotated[
         dict[str, Any] | None,
         Field(
@@ -3155,6 +3159,10 @@ class Key(BaseModel):
         ),
     ]
     name: Annotated[str, Field(description='Name of this key', examples=['user'])]
+    role: Annotated[
+        str | None,
+        Field(description='Role constraint for this API key.', examples=['analyst']),
+    ] = None
     secret: str
     status: str
     username: Annotated[

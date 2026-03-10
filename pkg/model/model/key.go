@@ -26,6 +26,7 @@ type Key struct {
 	Status   string `dynamodbav:"status" json:"status"`
 	Secret   string `dynamodbav:"-" json:"secret"`
 	Expires  string `dynamodbav:"expires" json:"expires" desc:"Optional expiration timestamp in RFC3339 format" example:"2024-12-31T23:59:59Z"`
+	Role     Role   `dynamodbav:"role,omitempty" json:"role,omitempty" desc:"Role constraint for this API key." example:"analyst"`
 }
 
 func (k *Key) GetDescription() string {
