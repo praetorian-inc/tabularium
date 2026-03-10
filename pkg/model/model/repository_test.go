@@ -242,3 +242,26 @@ func TestRepository_DefaultCredentialType_Unknown(t *testing.T) {
 	assert.Equal(t, CredentialType(""), repo.DefaultCredentialType())
 }
 
+func TestRepository_NewRepository_StripsCredentials(t *testing.T) {
+	// Azure DevOps URLs from Checkmarx often include embedded credentials
+	repo := NewRepository("https://user@dev.azure.com/myorg/myproject/_git/myrepo")
+	assert.Equal(t, "https://dev.azure.com/myorg/myproject/_git/myrepo", repo.URL)
+	assert.Equal(t, "myorg", repo.Org)
+	assert.Equal(t, "myrepo", repo.Name)
+	assert.True(t, repo.Valid())
+
+	// user:pass style
+	repo = NewRepository("https://user:pass@github.com/org/repo")
+	assert.Equal(t, "https://github.com/org/repo", repo.URL)
+	assert.Equal(t, "org", repo.Org)
+	assert.Equal(t, "repo", repo.Name)
+	assert.True(t, repo.Valid())
+
+	// masked credentials (Checkmarx uses ***** as placeholder)
+	repo = NewRepository("https://*****@dev.azure.com/ExyteCorporateIT/CICD%20Test%20Project/_git/CICD%20Test%20Project")
+	assert.Equal(t, "https://dev.azure.com/ExyteCorporateIT/CICD%20Test%20Project/_git/CICD%20Test%20Project", repo.URL)
+	assert.Equal(t, "ExyteCorporateIT", repo.Org)
+	assert.Equal(t, "CICD%20Test%20Project", repo.Name)
+	assert.True(t, repo.Valid())
+}
+
