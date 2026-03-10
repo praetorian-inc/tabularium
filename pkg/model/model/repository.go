@@ -25,7 +25,7 @@ const (
 )
 
 var (
-	repository    = regexp.MustCompile(`^(https://)?(github\.com|gitlab\.com|bitbucket\.(com|org)|hub\.docker\.com|dev\.azure\.com)/([^/]+)/(([^/]+/)*[^/]+)$`)
+	repository    = regexp.MustCompile(`^(https://)?(github\.com|gitlab\.com|bitbucket\.(com|org)|hub\.docker\.com|dev\.azure\.com|circleci\.com)/([^/]+)/(([^/]+/)*[^/]+)$`)
 	repositoryKey = regexp.MustCompile(`^#repository(#[^#]+){2,}$`)
 )
 
@@ -67,6 +67,8 @@ func (r *Repository) DefaultCredentialType() CredentialType {
 		return GitlabCredential
 	case strings.Contains(r.URL, "bitbucket.org"):
 		return BitbucketCredential
+	case strings.Contains(r.URL, "circleci.com"):
+		return CircleCICredential
 	default:
 		return ""
 	}
