@@ -69,6 +69,7 @@ const (
 	JFrogCredential                 CredentialType = "jfrog"                            // JFrog access token or API key
 	CircleCICredential              CredentialType = "circleci"                         // CircleCI API token
 	ConstantineCredential           CredentialType = "constantine"                      // Constantine composite credential (agent + SCM)
+	SnykCodeCredential		CredentialType = "snyk_code"
 
 	LegacyCloudCredential CredentialType = "legacy-cloud" // Legacy cloud credentials (AWS, GCP, Azure)
 

@@ -15,9 +15,10 @@ func init() {
 
 type Repository struct {
 	BaseAsset
-	URL  string `neo4j:"url,omitempty" json:"url,omitempty" desc:"Repository URL." example:"https://github.com/praetorian-inc/tabularium" capmodel:"Repository"`
-	Org  string `neo4j:"org,omitempty" json:"org,omitempty" desc:"Organization name." example:"praetorian-inc" capmodel:"Repository"`
-	Name string `neo4j:"name,omitempty" json:"name,omitempty" desc:"Repository name." example:"praetorian-inc/tabularium" capmodel:"Repository"`
+	URL    string `neo4j:"url,omitempty" json:"url,omitempty" desc:"Repository URL." example:"https://github.com/praetorian-inc/tabularium" capmodel:"Repository"`
+	Org    string `neo4j:"org,omitempty" json:"org,omitempty" desc:"Organization name." example:"praetorian-inc" capmodel:"Repository"`
+	Name   string `neo4j:"name,omitempty" json:"name,omitempty" desc:"Repository name." example:"praetorian-inc/tabularium" capmodel:"Repository"`
+	Public bool   `neo4j:"public,omitempty" json:"public,omitempty" desc:"Whether the repository is publicly accessible." example:"true" capmodel:"Repository"`
 }
 
 const (
@@ -58,6 +59,11 @@ func (r *Repository) AttackSurface() attacksurface.Surface {
 }
 
 func (r *Repository) DefaultCredentialType() CredentialType {
+	// Public repositories don't require credentials
+	if r.Public {
+		return ""
+	}
+
 	switch {
 	case strings.Contains(r.URL, "dev.azure.com"):
 		return AzureDevOpsCredential

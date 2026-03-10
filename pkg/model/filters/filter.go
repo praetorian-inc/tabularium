@@ -157,4 +157,5 @@ const (
 	OperatorIsNotNull          = "IS NOT NULL"
 	OperatorIsNull             = "IS NULL"
 	OperatorAnyStartsWith      = "ANY_STARTS_WITH"
+	OperatorAnyIn              = "ANY_IN"
 )

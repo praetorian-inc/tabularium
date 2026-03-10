@@ -69,6 +69,10 @@ components:
           description: The owner of the account.
           example: chariot.customer@example.com
           type: string
+        role:
+          description: Role for this account membership.
+          example: admin
+          type: string
         secret:
           description: Secret configuration map associated with the account.
           example: '{"service_principal_token": "103713408v0871v"}'
@@ -2998,6 +3002,15 @@ components:
       required:
       - CloudResource
       type: object
+    generic:
+      description: Represents a generic discoverable entity with arbitrary group and
+        identifier strings.
+      properties:
+        BaseAsset:
+          type: object
+      required:
+      - BaseAsset
+      type: object
     genericall:
       description: Represents an Active Directory relationship between two AD objects,
         supporting all BloodHound relationship types.
@@ -3162,6 +3175,15 @@ components:
       type: object
     hasport:
       description: Represents the relationship indicating an asset has an open port.
+      properties:
+        BaseRelationship:
+          type: object
+      required:
+      - BaseRelationship
+      type: object
+    hasrepository:
+      description: Represents the relationship indicating a technology has an associated
+        source code repository for OSINT research.
       properties:
         BaseRelationship:
           type: object
@@ -3643,6 +3665,10 @@ components:
         name:
           description: Name of this key
           example: user
+          type: string
+        role:
+          description: Role constraint for this API key.
+          example: analyst
           type: string
         secret:
           type: string
@@ -4780,6 +4806,10 @@ components:
           description: Organization name.
           example: praetorian-inc
           type: string
+        public:
+          description: Whether the repository is publicly accessible.
+          example: "true"
+          type: boolean
         url:
           description: Repository URL.
           example: https://github.com/praetorian-inc/tabularium
@@ -4861,6 +4891,10 @@ components:
         status:
           description: Current status of the risk (e.g., TH, OC, RM).
           example: TH
+          type: string
+        title:
+          description: Human-readable title for the risk. Falls back to Name if empty.
+          example: SQL Injection
           type: string
         ttl:
           description: Time-to-live for the risk record (Unix timestamp).
