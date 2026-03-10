@@ -47,6 +47,8 @@ type Capability interface {
 	Static() *bool
 	// BypassFrozen returns whether this capability should run even if the account is frozen, or nil if the default behavior is desired
 	BypassFrozen() *bool
+	// BypassSchedule returns whether this capability should run regardless of the account's scan schedule, or nil if the default behavior is desired
+	BypassSchedule() *bool
 	// CheckAffiliation checks if the supplied asset is currently enumerated within the integrated account
 	CheckAffiliation(Asset) (bool, error)
 	// Integration returns whether this capability is an integration
