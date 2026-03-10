@@ -65,6 +65,8 @@ const (
 	XpanseCredential                CredentialType = "xpanse"                  // Xpanse credentials
 	InteractSHCredential            CredentialType = "interactsh"
 	RedTeamGcpCredential            CredentialType = "red_team_gcp_service_account_key" // GCP service account key for Red Team deployments
+	ConstantineCredential           CredentialType = "constantine"                      // Constantine composite credential (agent + SCM)
+	SnykCodeCredential		CredentialType = "snyk_code"
 
 	LegacyCloudCredential CredentialType = "legacy-cloud" // Legacy cloud credentials (AWS, GCP, Azure)
 

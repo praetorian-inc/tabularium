@@ -3,7 +3,9 @@
 package models
 
 type Repository struct {
-	URL  string `json:"url"`
-	Org  string `json:"org"`
-	Name string `json:"name"`
+	LastScanState map[string]string `json:"lastScanState"`
+	URL           string            `json:"url"`
+	Org           string            `json:"org"`
+	Name          string            `json:"name"`
+	Public        bool              `json:"public"`
 }

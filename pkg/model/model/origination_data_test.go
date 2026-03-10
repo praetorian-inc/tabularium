@@ -24,6 +24,8 @@ func TestOriginationData_Merge(t *testing.T) {
 				Capability:    []string{"amazon", "portscan"},
 				AttackSurface: []string{"internal", "external"},
 				Origins:       []string{"amazon", "ipv4"},
+				IsInternal:    true, // Derived from AttackSurface
+				IsExternal:    true, // Derived from AttackSurface
 			},
 		},
 		{
@@ -42,6 +44,7 @@ func TestOriginationData_Merge(t *testing.T) {
 				Capability:    []string{"amazon", "portscan"},
 				AttackSurface: []string{"external"},
 				Origins:       []string{"amazon", "ipv4"},
+				IsExternal:    true, // Derived from AttackSurface
 			},
 		},
 		{
@@ -60,6 +63,7 @@ func TestOriginationData_Merge(t *testing.T) {
 				Capability:    []string{"dns"},
 				AttackSurface: []string{"internal"},
 				Origins:       []string{"dns"},
+				IsInternal:    true, // Derived from AttackSurface (re-derived even though fields unchanged)
 			},
 		},
 	}
@@ -93,6 +97,8 @@ func TestOriginationData_Visit(t *testing.T) {
 				Capability:    []string{"amazon", "portscan"},
 				AttackSurface: []string{"external", "internal"},
 				Origins:       []string{"amazon", "ipv4"},
+				IsInternal:    true, // Derived from AttackSurface
+				IsExternal:    true, // Derived from AttackSurface
 			},
 		},
 		{
@@ -111,6 +117,8 @@ func TestOriginationData_Visit(t *testing.T) {
 				Capability:    []string{"amazon", "dns", "portscan"},
 				AttackSurface: []string{"external", "internal"},
 				Origins:       []string{"amazon", "dns", "ipv4"},
+				IsInternal:    true, // Derived from AttackSurface (union contains both)
+				IsExternal:    true, // Derived from AttackSurface (union contains both)
 			},
 		},
 		{
@@ -129,6 +137,8 @@ func TestOriginationData_Visit(t *testing.T) {
 				Capability:    []string{"amazon", "portscan"},
 				AttackSurface: []string{"external", "internal"},
 				Origins:       []string{"amazon", "dns", "ipv4"},
+				IsInternal:    true, // Derived from AttackSurface (union contains both)
+				IsExternal:    true, // Derived from AttackSurface (union contains both)
 			},
 		},
 	}

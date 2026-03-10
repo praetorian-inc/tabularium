@@ -1,6 +1,7 @@
 package model
 
 import (
+	"maps"
 	"reflect"
 	"strings"
 	"time"
@@ -32,6 +33,7 @@ type BaseAsset struct {
 	MLProperties
 	Metadata
 	Tags
+	LastScanState map[string]string `neo4j:"lastScanState,omitempty" json:"lastScanState,omitempty" desc:"Per-capability last-scanned markers for differential processing." capmodel:"Repository"`
 }
 
 func init() {
@@ -99,9 +101,17 @@ func (a *BaseAsset) Merge(u Assetlike) {
 	if a.History.Update(a.Status, update.Status, update.Source, update.Comment, update.History) {
 		a.Status = update.Status
 	}
+	a.MergeFields(u)
+}
+
+// MergeFields merges metadata, tags, origin, and TTL without touching
+// history or status. Used when the caller handles history separately
+// (e.g., seed promotions via MergeWithPromotionCheck).
+func (a *BaseAsset) MergeFields(u Assetlike) {
 	if !a.IsStatus(Active) {
 		a.TTL = 0
 	}
+	update := u.GetBase()
 	if a.Origin == "" {
 		a.Origin = update.Origin
 	}
@@ -128,9 +138,18 @@ func (a *BaseAsset) Visit(o Assetlike) {
 		a.Origin = other.Origin
 	}
 
-	a.Secret = other.Secret
+	if other.Secret != nil && *other.Secret != "" {
+		a.Secret = other.Secret
+	}
 	a.Metadata.Visit(other.Metadata)
 	a.Tags.Visit(other.Tags)
+
+	if len(other.LastScanState) > 0 {
+		if a.LastScanState == nil {
+			a.LastScanState = make(map[string]string)
+		}
+		maps.Copy(a.LastScanState, other.LastScanState)
+	}
 }
 
 func (a *BaseAsset) System() bool {

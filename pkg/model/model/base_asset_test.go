@@ -842,6 +842,80 @@ func TestMetadata_VisitOrigin(t *testing.T) {
 	}
 }
 
+func TestBaseAsset_Visit_MergesLastScanState(t *testing.T) {
+	base := BaseAsset{
+		Status: Active,
+		LastScanState: map[string]string{
+			"constantine": "aaa",
+			"trufflehog":  "bbb",
+		},
+	}
+
+	other := &Asset{BaseAsset: BaseAsset{
+		LastScanState: map[string]string{
+			"constantine": "ccc",
+		},
+	}}
+
+	base.Visit(other)
+
+	assert.Equal(t, "ccc", base.LastScanState["constantine"])
+	assert.Equal(t, "bbb", base.LastScanState["trufflehog"])
+}
+
+func TestBaseAsset_Visit_NilOtherLastScanState(t *testing.T) {
+	base := BaseAsset{
+		LastScanState: map[string]string{
+			"constantine": "aaa",
+		},
+	}
+
+	other := &Asset{BaseAsset: BaseAsset{}}
+
+	base.Visit(other)
+
+	assert.Equal(t, map[string]string{"constantine": "aaa"}, base.LastScanState)
+}
+
+func TestBaseAsset_Visit_EmptyOtherLastScanState(t *testing.T) {
+	base := BaseAsset{
+		LastScanState: map[string]string{
+			"constantine": "aaa",
+		},
+	}
+
+	other := &Asset{BaseAsset: BaseAsset{
+		LastScanState: map[string]string{},
+	}}
+
+	base.Visit(other)
+
+	assert.Equal(t, map[string]string{"constantine": "aaa"}, base.LastScanState)
+}
+
+func TestBaseAsset_Visit_NilReceiverLastScanState(t *testing.T) {
+	base := BaseAsset{}
+
+	other := &Asset{BaseAsset: BaseAsset{
+		LastScanState: map[string]string{
+			"constantine": "aaa",
+		},
+	}}
+
+	base.Visit(other)
+
+	assert.Equal(t, map[string]string{"constantine": "aaa"}, base.LastScanState)
+}
+
+func TestBaseAsset_Visit_BothNilLastScanState(t *testing.T) {
+	base := BaseAsset{}
+	other := &Asset{BaseAsset: BaseAsset{}}
+
+	base.Visit(other)
+
+	assert.Nil(t, base.LastScanState)
+}
+
 func TestBaseAsset_GetPartitionKey(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -1008,4 +1082,24 @@ func TestPartitioned_InterfaceTypeAssertion(t *testing.T) {
 
 	// Test fallback behavior for types without Partitioned
 	// (this would be tested if we had a type that implements HasKey but not Partitioned)
+}
+
+func TestMergeFields(t *testing.T) {
+	base := &BaseAsset{
+		Status: Active,
+		Origin: "",
+		Tags:   Tags{Tags: []string{"existing"}},
+	}
+	other := &Asset{BaseAsset: BaseAsset{
+		Origin:   "whois",
+		Metadata: Metadata{ASNumber: "AS123"},
+		Tags:     Tags{Tags: []string{"new"}},
+	}}
+
+	historyBefore := len(base.History.History)
+	base.MergeFields(other)
+
+	assert.Equal(t, "whois", base.Origin)
+	assert.Equal(t, "AS123", base.Metadata.ASNumber)
+	assert.Equal(t, historyBefore, len(base.History.History), "MergeFields should not create history records")
 }
