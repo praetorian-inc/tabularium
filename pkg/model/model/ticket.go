@@ -10,6 +10,7 @@ type Ticket struct {
 	Assignee   string `json:"assignee,omitempty" neo4j:"assignee,omitempty" desc:"Display name of the person assigned to the ticket." example:"John Doe"`
 	Resolution string `json:"resolution,omitempty" neo4j:"resolution,omitempty" desc:"Resolution of the ticket when closed." example:"Fixed"`
 	Account    string `json:"account,omitempty" neo4j:"account,omitempty" desc:"Account key that created/manages this ticket." example:"#account#user@example.com#jira#https://jira.example.com"`
+	Labels     string `json:"labels,omitempty" neo4j:"labels,omitempty" desc:"Comma-separated labels synced from the external ticket." example:"security,critical"`
 }
 
 // TicketData is embedded in Risk to store associated tickets.
