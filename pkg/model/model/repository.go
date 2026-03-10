@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -121,6 +122,11 @@ func (r *Repository) formatURL() error {
 		repoURL = "https://" + repoURL
 	}
 	repoURL = strings.TrimSuffix(repoURL, "/")
+
+	if u, err := url.Parse(repoURL); err == nil && u.User != nil {
+		u.User = nil
+		repoURL = u.String()
+	}
 
 	if !repository.MatchString(repoURL) {
 		return fmt.Errorf("invalid repository URL: %s", repoURL)
