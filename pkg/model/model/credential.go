@@ -70,6 +70,7 @@ const (
 	CircleCICredential              CredentialType = "circleci"                         // CircleCI API token
 	ConstantineCredential           CredentialType = "constantine"                      // Constantine composite credential (agent + SCM)
 	SnykCodeCredential		CredentialType = "snyk_code"
+	HackerOneCredential             CredentialType = "hackerone"  // HackerOne Hacker API credentials (username + API token)
 
 	LegacyCloudCredential CredentialType = "legacy-cloud" // Legacy cloud credentials (AWS, GCP, Azure)
 
