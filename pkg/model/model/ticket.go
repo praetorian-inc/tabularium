@@ -6,7 +6,11 @@ type Ticket struct {
 	Provider string `json:"provider" neo4j:"provider" desc:"ITSM provider name (e.g., jira, azuredevops, freshdesk)." example:"jira"`
 	ID       string `json:"id" neo4j:"id" desc:"Ticket identifier in the external system." example:"PROJ-123"`
 	Link     string `json:"link,omitempty" neo4j:"link,omitempty" desc:"URL to the ticket in the external system." example:"https://jira.example.com/browse/PROJ-123"`
-	Status   string `json:"status,omitempty" neo4j:"status,omitempty" desc:"Current status of the ticket." example:"In Progress"`
+	Status     string `json:"status,omitempty" neo4j:"status,omitempty" desc:"Current status of the ticket." example:"In Progress"`
+	Assignee   string `json:"assignee,omitempty" neo4j:"assignee,omitempty" desc:"Display name of the person assigned to the ticket." example:"John Doe"`
+	Resolution string `json:"resolution,omitempty" neo4j:"resolution,omitempty" desc:"Resolution of the ticket when closed." example:"Fixed"`
+	Account    string `json:"account,omitempty" neo4j:"account,omitempty" desc:"Account key that created/manages this ticket." example:"#account#user@example.com#jira#https://jira.example.com"`
+	Labels     string `json:"labels,omitempty" neo4j:"labels,omitempty" desc:"Comma-separated labels synced from the external ticket." example:"security,critical"`
 }
 
 // TicketData is embedded in Risk to store associated tickets.
