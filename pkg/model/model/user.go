@@ -15,8 +15,9 @@ type User struct {
 	// returns min(accountRole, RoleCeiling).
 	RoleCeiling Role
 
-	// Auth method (populated during authentication from JWT claims)
-	AuthType  ChariotAccessType
+	// Auth method (e.g. SSO, API key, username/password)
+	AccessType ChariotAccessType
+	// SSO domain (e.g. "customer-domain.com")
 	SSODomain string
 }
 
