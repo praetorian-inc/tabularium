@@ -14,6 +14,10 @@ type User struct {
 	// Empty means no ceiling (unconstrained). When set, EffectiveRole
 	// returns min(accountRole, RoleCeiling).
 	RoleCeiling Role
+
+	// Auth method (populated during authentication from JWT claims)
+	AuthType  ChariotAccessType
+	SSODomain string
 }
 
 func (u *User) Linked(username string) bool {
