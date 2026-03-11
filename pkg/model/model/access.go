@@ -31,6 +31,7 @@ type Access struct {
 	Name    string            `dynamodbav:"name,omitempty" json:"name,omitempty"`
 	Email   string            `dynamodbav:"email,omitempty" json:"email,omitempty"`
 	Updated string            `dynamodbav:"updated" json:"updated"`
+	Role    string            `dynamodbav:"role" json:"role"`
 }
 
 func (a *Access) GetDescription() string {
