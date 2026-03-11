@@ -8,6 +8,12 @@ type User struct {
 	Name       string
 	HomeTenant string // the home tenant of the user
 	Accounts   []Account
+
+	// RoleCeiling is the maximum effective role this session can have.
+	// Set by API key role constraints or SSO provider role claims/defaults.
+	// Empty means no ceiling (unconstrained). When set, EffectiveRole
+	// returns min(accountRole, RoleCeiling).
+	RoleCeiling Role
 }
 
 func (u *User) Linked(username string) bool {
@@ -29,6 +35,21 @@ func (u *User) Domain() string {
 
 func (u *User) Praetorian() bool {
 	return strings.HasSuffix(u.Name, "@praetorian.com")
+}
+
+// RoleForAccount returns the user's effective role for the given account.
+// It uses HomeTenant (critical for SSO users whose Name is the access key, not email).
+func (u *User) RoleForAccount(accountName string) Role {
+	tenant := u.HomeTenant
+	if tenant == "" {
+		tenant = u.Name
+	}
+	for _, account := range u.Accounts {
+		if account.Name == accountName && account.Member == tenant {
+			return account.EffectiveRole()
+		}
+	}
+	return RoleReadOnly // safest default for unknown
 }
 
 func NewUser(username string, accounts []Account) User {

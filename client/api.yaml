@@ -69,6 +69,10 @@ components:
           description: The owner of the account.
           example: chariot.customer@example.com
           type: string
+        role:
+          description: Role for this account membership.
+          example: admin
+          type: string
         secret:
           description: Secret configuration map associated with the account.
           example: '{"service_principal_token": "103713408v0871v"}'
@@ -3662,6 +3666,10 @@ components:
           description: Name of this key
           example: user
           type: string
+        role:
+          description: Role constraint for this API key.
+          example: analyst
+          type: string
         secret:
           type: string
         status:
@@ -4883,6 +4891,10 @@ components:
         status:
           description: Current status of the risk (e.g., TH, OC, RM).
           example: TH
+          type: string
+        title:
+          description: Human-readable title for the risk. Falls back to Name if empty.
+          example: SQL Injection
           type: string
         ttl:
           description: Time-to-live for the risk record (Unix timestamp).
