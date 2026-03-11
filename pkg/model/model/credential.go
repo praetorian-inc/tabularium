@@ -65,6 +65,9 @@ const (
 	XpanseCredential                CredentialType = "xpanse"                  // Xpanse credentials
 	InteractSHCredential            CredentialType = "interactsh"
 	RedTeamGcpCredential            CredentialType = "red_team_gcp_service_account_key" // GCP service account key for Red Team deployments
+	JenkinsCredential               CredentialType = "jenkins"                          // Jenkins API token
+	JFrogCredential                 CredentialType = "jfrog"                            // JFrog access token or API key
+	CircleCICredential              CredentialType = "circleci"                         // CircleCI API token
 	ConstantineCredential           CredentialType = "constantine"                      // Constantine composite credential (agent + SCM)
 	SnykCodeCredential		CredentialType = "snyk_code"
 
