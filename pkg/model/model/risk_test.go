@@ -393,6 +393,54 @@ func TestRisk_VisitRemediatedRisks(t *testing.T) {
 	})
 }
 
+func TestRiskProofPath(t *testing.T) {
+	tests := []struct {
+		name     string
+		risk     Risk
+		wantPath string
+	}{
+		{
+			name: "default path when dns matches target group",
+			risk: NewRiskWithDNS(func() *Asset {
+				a := NewAsset("example.com", "example.com")
+				return &a
+			}(), "secret-leak", "example.com", TriageInfo),
+			wantPath: "proofs/example.com/secret-leak",
+		},
+		{
+			name: "dedup path appends sanitized target group",
+			risk: NewRiskWithDNS(func() *Asset {
+				a := NewAsset("prod/app.example.com", "prod/app.example.com")
+				return &a
+			}(), "secret-leak", "finding-123", TriageInfo),
+			wantPath: "proofs/finding-123/secret-leak/prod_app.example.com",
+		},
+		{
+			name: "nil target uses default path",
+			risk: NewRiskWithDNS(nil, "secret-leak", "finding-123", TriageInfo),
+			wantPath: "proofs/finding-123/secret-leak",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.risk.Proof(nil).Name
+			assert.Equal(t, tt.wantPath, got)
+		})
+	}
+}
+
+func TestRiskProof_SetsBytesAndPath(t *testing.T) {
+	target := NewAsset("prod/app.example.com", "prod/app.example.com")
+	risk := NewRiskWithDNS(&target, "secret-leak", "finding-123", TriageInfo)
+	proofBytes := []byte(`{"proof":"value"}`)
+
+	proofFile := risk.Proof(proofBytes)
+
+	assert.Equal(t, "proofs/finding-123/secret-leak/prod_app.example.com", proofFile.Name)
+	assert.Equal(t, string(proofBytes), string(proofFile.Bytes))
+}
+
 func TestRisk_SetPlexTracID(t *testing.T) {
 	asset := NewAsset("example.com", "example.com")
 	risk := NewRisk(&asset, "test-risk", TriageInfo)

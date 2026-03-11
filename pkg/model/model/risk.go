@@ -164,8 +164,24 @@ func (r *Risk) setStatus(status string) {
 	r.Priority = riskPriority[r.Severity()]
 }
 
+func (r *Risk) proofPath() string {
+	path := fmt.Sprintf("proofs/%s/%s", r.DNS, r.Name)
+
+	if r.Target == nil {
+		return path
+	}
+
+	usesDedupPath := r.DNS != r.Target.Group()
+	if !usesDedupPath {
+		return path
+	}
+
+	targetID := RemoveReservedCharacters(r.Target.Group())
+	return fmt.Sprintf("%s/%s", path, targetID)
+}
+
 func (r *Risk) Proof(bits []byte) File {
-	file := NewFile(fmt.Sprintf("proofs/%s/%s", r.DNS, r.Name))
+	file := NewFile(r.proofPath())
 	file.Bytes = bits
 	return file
 }
