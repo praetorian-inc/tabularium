@@ -24,6 +24,15 @@ type Account struct {
 	TTL      int64             `dynamodbav:"ttl" json:"ttl" desc:"Time-to-live for the account record (Unix timestamp)." example:"1706353200"`
 	Secret   map[string]string `dynamodbav:"-" json:"secret,omitempty" desc:"Secret configuration map associated with the account." example:"{\"service_principal_token\": \"103713408v0871v\"}"`
 	Settings json.RawMessage   `dynamodbav:"settings,omitempty" json:"settings,omitempty" desc:"Raw JSON message containing specific settings." example:"{\"notifications\": true}"`
+	Role     Role              `dynamodbav:"role,omitempty" json:"role,omitempty" desc:"Role for this account membership." example:"admin"`
+}
+
+// EffectiveRole returns the account's role, defaulting to ReadOnly for safety.
+func (a *Account) EffectiveRole() Role {
+	if a.Role == "" {
+		return RoleReadOnly
+	}
+	return a.Role
 }
 
 // GetDescription returns a description for the Account model.

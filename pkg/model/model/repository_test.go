@@ -242,3 +242,40 @@ func TestRepository_DefaultCredentialType_Unknown(t *testing.T) {
 	assert.Equal(t, CredentialType(""), repo.DefaultCredentialType())
 }
 
+func TestRepository_NewRepository_CircleCI(t *testing.T) {
+	repo := NewRepository("https://circleci.com/praetorian-inc/chariot")
+	assert.Equal(t, "https://circleci.com/praetorian-inc/chariot", repo.URL)
+	assert.Equal(t, "praetorian-inc", repo.Org)
+	assert.Equal(t, "chariot", repo.Name)
+}
+
+func TestRepository_DefaultCredentialType_CircleCI(t *testing.T) {
+	repo := NewRepository("https://circleci.com/praetorian-inc/chariot")
+	assert.Equal(t, CircleCICredential, repo.DefaultCredentialType())
+}
+
+func TestRepository_DefaultCredentialType_JenkinsSelfHosted(t *testing.T) {
+	repo := Repository{URL: "https://jenkins.internal.corp.com/job/my-pipeline"}
+	assert.Equal(t, CredentialType(""), repo.DefaultCredentialType(),
+		"Jenkins is self-hosted; credential type must be set explicitly")
+}
+
+func TestRepository_NewRepository_StripsCredentials(t *testing.T) {
+	repo := NewRepository("https://user@dev.azure.com/myorg/myproject/_git/myrepo")
+	assert.Equal(t, "https://dev.azure.com/myorg/myproject/_git/myrepo", repo.URL)
+	assert.Equal(t, "myorg", repo.Org)
+	assert.Equal(t, "myrepo", repo.Name)
+	assert.True(t, repo.Valid())
+
+	repo = NewRepository("https://user:pass@github.com/org/repo")
+	assert.Equal(t, "https://github.com/org/repo", repo.URL)
+	assert.Equal(t, "org", repo.Org)
+	assert.Equal(t, "repo", repo.Name)
+	assert.True(t, repo.Valid())
+
+	repo = NewRepository("https://*****@dev.azure.com/GladiatorArena/Colosseum%20Project/_git/Colosseum%20Project")
+	assert.Equal(t, "https://dev.azure.com/GladiatorArena/Colosseum%20Project/_git/Colosseum%20Project", repo.URL)
+	assert.Equal(t, "GladiatorArena", repo.Org)
+	assert.Equal(t, "Colosseum%20Project", repo.Name)
+	assert.True(t, repo.Valid())
+}
