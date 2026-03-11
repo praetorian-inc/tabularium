@@ -420,6 +420,42 @@ func TestRiskProofPath(t *testing.T) {
 			risk: NewRiskWithDNS(nil, "secret-leak", "finding-123", TriageInfo),
 			wantPath: "proofs/finding-123/secret-leak",
 		},
+		{
+			name: "tier 1: explicit ProofUniquenessID overrides default path",
+			risk: func() Risk {
+				r := NewRiskWithDNS(func() *Asset {
+					a := NewAsset("example.com", "example.com")
+					return &a
+				}(), "cve-2024-1234", "example.com", TriageInfo)
+				r.ProofUniquenessID = "8080"
+				return r
+			}(),
+			wantPath: "proofs/example.com/CVE-2024-1234/8080",
+		},
+		{
+			name: "tier 1: ProofUniquenessID with reserved chars gets sanitized",
+			risk: func() Risk {
+				r := NewRiskWithDNS(func() *Asset {
+					a := NewAsset("example.com", "example.com")
+					return &a
+				}(), "cve-2024-1234", "finding-123", TriageInfo)
+				r.ProofUniquenessID = "arn:aws:s3:::bucket-1"
+				return r
+			}(),
+			wantPath: "proofs/finding-123/CVE-2024-1234/arn_aws_s3___bucket-1",
+		},
+		{
+			name: "tier 1: ProofUniquenessID takes precedence over tier 2",
+			risk: func() Risk {
+				r := NewRiskWithDNS(func() *Asset {
+					a := NewAsset("my-repo.example.com", "my-repo.example.com")
+					return &a
+				}(), "secret-leak", "finding-456", TriageInfo)
+				r.ProofUniquenessID = "explicit-id"
+				return r
+			}(),
+			wantPath: "proofs/finding-456/secret-leak/explicit-id",
+		},
 	}
 
 	for _, tt := range tests {
