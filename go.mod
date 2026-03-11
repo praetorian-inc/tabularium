@@ -10,8 +10,8 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/knqyf263/go-cpe v0.0.0-20230627041855-cb0794d06872
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/net v0.48.0
-	golang.org/x/text v0.32.0
+	golang.org/x/net v0.49.0
+	golang.org/x/text v0.34.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
