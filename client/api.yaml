@@ -30,6 +30,8 @@ components:
           type: string
         name:
           type: string
+        role:
+          type: string
         sub:
           description: The Cognito sub of this user
           type: string
@@ -46,6 +48,7 @@ components:
       required:
       - BaseModel
       - key
+      - role
       - sub
       - type
       - updated
