@@ -298,7 +298,7 @@ type ADProperties struct {
 	EnrollmentAgentRestrictionsCollected    bool     `neo4j:"enrollmentagentrestrictionscollected" json:"enrollmentagentrestrictionscollected,omitempty" desc:"Whether enrollment agent restrictions data has been collected" example:"true" capmodel:"ADObject"`
 	IsUserSpecifiesSanEnabled               bool     `neo4j:"isuserspecifiessanenabled" json:"isuserspecifiessanenabled,omitempty" desc:"Whether users can specify Subject Alternative Name in certificate requests" example:"false" capmodel:"ADObject"`
 	IsUserSpecifiesSanEnabledCollected      bool     `neo4j:"isuserspecifiessanenabledcollected" json:"isuserspecifiessanenabledcollected,omitempty" desc:"Whether SAN enablement data has been collected" example:"true" capmodel:"ADObject"`
-	RoleSeparationEnabled                   string   `neo4j:"roleseparationenabled" json:"roleseparationenabled,omitempty" desc:"Whether CA role separation is enforced" example:"true" capmodel:"ADObject"`
+	RoleSeparationEnabled                   bool     `neo4j:"roleseparationenabled" json:"roleseparationenabled,omitempty" desc:"Whether CA role separation is enforced" example:"true" capmodel:"ADObject"`
 	RoleSeparationEnabledCollected          bool     `neo4j:"roleseparationenabledcollected" json:"roleseparationenabledcollected,omitempty" desc:"Whether role separation data has been collected" example:"true" capmodel:"ADObject"`
 	HasBasicConstraints                     bool     `neo4j:"hasbasicconstraints" json:"hasbasicconstraints,omitempty" desc:"Whether certificate has basic constraints extension" example:"true" capmodel:"ADObject"`
 	BasicConstraintPathLength               int      `neo4j:"basicconstraintpathlength" json:"basicconstraintpathlength,omitempty" desc:"Maximum number of CA certificates in certification path" example:"2" capmodel:"ADObject"`
@@ -309,18 +309,18 @@ type ADProperties struct {
 	DomainSID                               string   `neo4j:"domainsid" json:"domainsid,omitempty" desc:"Security identifier of the domain" example:"S-1-5-21-3623811015-3361044348-30300820" capmodel:"ADObject"`
 	Sensitive                               bool     `neo4j:"sensitive" json:"sensitive,omitempty" desc:"Account is marked as sensitive and cannot be delegated" example:"true" capmodel:"ADObject"`
 	BlocksInheritance                       bool     `neo4j:"blocksinheritance" json:"blocksinheritance,omitempty" desc:"Whether GPO inheritance is blocked at this container" example:"false" capmodel:"ADObject"`
-	IsACL                                   string   `neo4j:"isacl" json:"isacl,omitempty" desc:"Whether ACL data is available for this object" example:"true" capmodel:"ADObject"`
+	IsACL                                   bool     `neo4j:"isacl" json:"isacl,omitempty" desc:"Whether ACL data is available for this object" example:"true" capmodel:"ADObject"`
 	IsACLProtected                          bool     `neo4j:"isaclprotected" json:"isaclprotected,omitempty" desc:"Whether ACL inheritance is disabled" example:"false" capmodel:"ADObject"`
 	InheritanceHash                         string   `neo4j:"inheritancehash" json:"inheritancehash,omitempty" desc:"Hash of the inheritance chain for GPO processing" example:"A1B2C3D4E5F6" capmodel:"ADObject"`
 	InheritanceHashes                       []string `neo4j:"inheritancehashes" json:"inheritancehashes,omitempty" desc:"Collection of inheritance hashes for the object" example:"[\"A1B2C3D4E5F6\", \"F6E5D4C3B2A1\"]" capmodel:"ADObject"`
-	Enforced                                string   `neo4j:"enforced" json:"enforced,omitempty" desc:"Whether GPO link is enforced (no override)" example:"true" capmodel:"ADObject"`
+	Enforced                                bool     `neo4j:"enforced" json:"enforced,omitempty" desc:"Whether GPO link is enforced (no override)" example:"true" capmodel:"ADObject"`
 	Department                              string   `neo4j:"department" json:"department,omitempty" desc:"Department the user belongs to" example:"Information Technology" capmodel:"ADObject"`
 	HasCrossCertificatePair                 bool     `neo4j:"hascrosscertificatepair" json:"hascrosscertificatepair,omitempty" desc:"Whether object has cross-certificate pairs" example:"false" capmodel:"ADObject"`
 	HasSPN                                  bool     `neo4j:"hasspn" json:"hasspn,omitempty" desc:"Whether object has Service Principal Names registered" example:"true" capmodel:"ADObject"`
 	UnconstrainedDelegation                 bool     `neo4j:"unconstraineddelegation" json:"unconstraineddelegation,omitempty" desc:"Account is trusted for unconstrained Kerberos delegation" example:"false" capmodel:"ADObject"`
 	LastLogon                               int64    `neo4j:"lastlogon" json:"lastlogon,omitempty" desc:"Last logon time in Windows NT time format" example:"132514789200000000" capmodel:"ADObject"`
 	LastLogonTimestamp                      int64    `neo4j:"lastlogontimestamp" json:"lastlogontimestamp,omitempty" desc:"Replicated last logon timestamp" example:"132514789200000000" capmodel:"ADObject"`
-	IsPrimaryGroup                          string   `neo4j:"isprimarygroup" json:"isprimarygroup,omitempty" desc:"Whether this is the primary group for any users" example:"true" capmodel:"ADObject"`
+	IsPrimaryGroup                          bool     `neo4j:"isprimarygroup" json:"isprimarygroup,omitempty" desc:"Whether this is the primary group for any users" example:"true" capmodel:"ADObject"`
 	HasLAPS                                 bool     `neo4j:"haslaps" json:"haslaps,omitempty" desc:"Whether Local Administrator Password Solution is enabled" example:"true" capmodel:"ADObject"`
 	DontRequirePreAuth                      bool     `neo4j:"dontreqpreauth" json:"dontreqpreauth,omitempty" desc:"Kerberos pre-authentication is not required" example:"false" capmodel:"ADObject"`
 	LogonType                               string   `neo4j:"logontype" json:"logontype,omitempty" desc:"Type of logon allowed for the account" example:"Interactive" capmodel:"ADObject"`
@@ -329,7 +329,7 @@ type ADProperties struct {
 	PasswordNotRequired                     bool     `neo4j:"passwordnotreqd" json:"passwordnotreqd,omitempty" desc:"No password is required for the account" example:"false" capmodel:"ADObject"`
 	FunctionalLevel                         string   `neo4j:"functionallevel" json:"functionallevel,omitempty" desc:"Domain or forest functional level" example:"2016" capmodel:"ADObject"`
 	TrustType                               string   `neo4j:"trusttype" json:"trusttype,omitempty" desc:"Type of AD trust relationship" example:"ParentChild" capmodel:"ADObject"`
-	SpoofSIDHistoryBlocked                  string   `neo4j:"spoofsidhistoryblocked" json:"spoofsidhistoryblocked,omitempty" desc:"Whether SID history spoofing is blocked" example:"true" capmodel:"ADObject"`
+	SpoofSIDHistoryBlocked                  bool     `neo4j:"spoofsidhistoryblocked" json:"spoofsidhistoryblocked,omitempty" desc:"Whether SID history spoofing is blocked" example:"true" capmodel:"ADObject"`
 	TrustedToAuth                           bool     `neo4j:"trustedtoauth" json:"trustedtoauth,omitempty" desc:"Account is trusted for constrained delegation with protocol transition" example:"false" capmodel:"ADObject"`
 	SAMAccountName                          string   `neo4j:"samaccountname" json:"samaccountname,omitempty" desc:"Pre-Windows 2000 logon name" example:"jsmith" capmodel:"ADObject"`
 	CertificateMappingMethodsRaw            int      `neo4j:"certificatemappingmethodsraw" json:"certificatemappingmethodsraw,omitempty" desc:"Raw certificate mapping methods value" example:"0x1F" capmodel:"ADObject"`
@@ -414,12 +414,12 @@ type ADProperties struct {
 	NTLMMinServerSec                        int      `neo4j:"ntlmminserversec" json:"ntlmminserversec,omitempty" desc:"Minimum security level for NTLM SSP server" example:"537395200" capmodel:"ADObject"`
 	NTLMMinClientSec                        int      `neo4j:"ntlmminclientsec" json:"ntlmminclientsec,omitempty" desc:"Minimum security level for NTLM SSP client" example:"537395200" capmodel:"ADObject"`
 	LMCompatibilityLevel                    string   `neo4j:"lmcompatibilitylevel" json:"lmcompatibilitylevel,omitempty" desc:"LAN Manager authentication compatibility level" example:"5" capmodel:"ADObject"`
-	UseMachineID                            string   `neo4j:"usemachineid" json:"usemachineid,omitempty" desc:"Whether to use machine identity for authentication" example:"true" capmodel:"ADObject"`
+	UseMachineID                            bool     `neo4j:"usemachineid" json:"usemachineid,omitempty" desc:"Whether to use machine identity for authentication" example:"true" capmodel:"ADObject"`
 	ClientAllowedNTLMServers                string   `neo4j:"clientallowedntlmservers" json:"clientallowedntlmservers,omitempty" desc:"List of servers allowed to use NTLM authentication" example:"*.contoso.local" capmodel:"ADObject"`
-	Transitive                              string   `neo4j:"transitive" json:"transitive,omitempty" desc:"Whether trust relationship is transitive" example:"true" capmodel:"ADObject"`
+	Transitive                              bool     `neo4j:"transitive" json:"transitive,omitempty" desc:"Whether trust relationship is transitive" example:"true" capmodel:"ADObject"`
 	GroupScope                              string   `neo4j:"groupscope" json:"groupscope,omitempty" desc:"Scope of the AD group" example:"Global" capmodel:"ADObject"`
 	NetBIOS                                 string   `neo4j:"netbios" json:"netbios,omitempty" desc:"NetBIOS name of the domain" example:"CONTOSO" capmodel:"ADObject"`
-	AdminSDHolderProtected                  string   `neo4j:"adminsdholderprotected" json:"adminsdholderprotected,omitempty" desc:"Whether object is protected by AdminSDHolder process" example:"true" capmodel:"ADObject"`
+	AdminSDHolderProtected                  bool     `neo4j:"adminsdholderprotected" json:"adminsdholderprotected,omitempty" desc:"Whether object is protected by AdminSDHolder process" example:"true" capmodel:"ADObject"`
 	ServicePrincipalNames                   []string `neo4j:"serviceprincipalnames" json:"serviceprincipalnames,omitempty" desc:"The service principal name(s) associated with this account" example:"WSMAN/database" capmodel:"ADObject"`
 	OperatingSystem                         string   `neo4j:"operatingsystem" json:"operatingsystem,omitempty" desc:"The operating system associated with this computer" example:"Windows Server 2019 SE" capmodel:"ADObject"`
 }
