@@ -4887,6 +4887,8 @@ components:
           description: Calculated priority score based on severity.
           example: "10"
           type: integer
+        proofUniquenessID:
+          type: string
         source:
           description: Source that identified the risk.
           example: nessus
@@ -4930,6 +4932,7 @@ components:
       - name
       - plextracid
       - priority
+      - proofUniquenessID
       - source
       - status
       - ttl

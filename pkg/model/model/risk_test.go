@@ -393,6 +393,90 @@ func TestRisk_VisitRemediatedRisks(t *testing.T) {
 	})
 }
 
+func TestRiskProofPath(t *testing.T) {
+	tests := []struct {
+		name     string
+		risk     Risk
+		wantPath string
+	}{
+		{
+			name: "default path when dns matches target group",
+			risk: NewRiskWithDNS(func() *Asset {
+				a := NewAsset("example.com", "example.com")
+				return &a
+			}(), "secret-leak", "example.com", TriageInfo),
+			wantPath: "proofs/example.com/secret-leak",
+		},
+		{
+			name: "dedup path appends sanitized target group",
+			risk: NewRiskWithDNS(func() *Asset {
+				a := NewAsset("prod/app.example.com", "prod/app.example.com")
+				return &a
+			}(), "secret-leak", "finding-123", TriageInfo),
+			wantPath: "proofs/finding-123/secret-leak/prod_app.example.com",
+		},
+		{
+			name: "nil target uses default path",
+			risk: NewRiskWithDNS(nil, "secret-leak", "finding-123", TriageInfo),
+			wantPath: "proofs/finding-123/secret-leak",
+		},
+		{
+			name: "tier 1: explicit ProofUniquenessID overrides default path",
+			risk: func() Risk {
+				r := NewRiskWithDNS(func() *Asset {
+					a := NewAsset("example.com", "example.com")
+					return &a
+				}(), "cve-2024-1234", "example.com", TriageInfo)
+				r.ProofUniquenessID = "8080"
+				return r
+			}(),
+			wantPath: "proofs/example.com/CVE-2024-1234/8080",
+		},
+		{
+			name: "tier 1: ProofUniquenessID with reserved chars gets sanitized",
+			risk: func() Risk {
+				r := NewRiskWithDNS(func() *Asset {
+					a := NewAsset("example.com", "example.com")
+					return &a
+				}(), "cve-2024-1234", "finding-123", TriageInfo)
+				r.ProofUniquenessID = "arn:aws:s3:::bucket-1"
+				return r
+			}(),
+			wantPath: "proofs/finding-123/CVE-2024-1234/arn_aws_s3___bucket-1",
+		},
+		{
+			name: "tier 1: ProofUniquenessID takes precedence over tier 2",
+			risk: func() Risk {
+				r := NewRiskWithDNS(func() *Asset {
+					a := NewAsset("my-repo.example.com", "my-repo.example.com")
+					return &a
+				}(), "secret-leak", "finding-456", TriageInfo)
+				r.ProofUniquenessID = "explicit-id"
+				return r
+			}(),
+			wantPath: "proofs/finding-456/secret-leak/explicit-id",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.risk.Proof(nil).Name
+			assert.Equal(t, tt.wantPath, got)
+		})
+	}
+}
+
+func TestRiskProof_SetsBytesAndPath(t *testing.T) {
+	target := NewAsset("prod/app.example.com", "prod/app.example.com")
+	risk := NewRiskWithDNS(&target, "secret-leak", "finding-123", TriageInfo)
+	proofBytes := []byte(`{"proof":"value"}`)
+
+	proofFile := risk.Proof(proofBytes)
+
+	assert.Equal(t, "proofs/finding-123/secret-leak/prod_app.example.com", proofFile.Name)
+	assert.Equal(t, string(proofBytes), string(proofFile.Bytes))
+}
+
 func TestRisk_SetPlexTracID(t *testing.T) {
 	asset := NewAsset("example.com", "example.com")
 	risk := NewRisk(&asset, "test-risk", TriageInfo)

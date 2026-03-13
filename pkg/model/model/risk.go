@@ -20,21 +20,22 @@ type Risk struct {
 	Username string `neo4j:"username" json:"username" desc:"Chariot username associated with the risk." example:"user@example.com"`
 	Key      string `neo4j:"key" json:"key" desc:"Unique key identifying the risk." example:"#risk#example.com#CVE-2023-12345"`
 	// Attributes
-	DNS         string `neo4j:"dns" json:"dns" desc:"Primary DNS or group associated with the risk." example:"example.com" capmodel:"Risk=target_name"`
-	Name        string `neo4j:"name" json:"name" desc:"Name of the risk or vulnerability." example:"CVE-2023-12345" capmodel:"Risk"`
-	Title string `neo4j:"title,omitempty" json:"title,omitempty" desc:"Human-readable title for the risk. Falls back to Name if empty." example:"SQL Injection"`
-	Source      string `neo4j:"source" json:"source" desc:"Source that identified the risk." example:"nessus" capmodel:"Risk"`
-	Status     string `neo4j:"status" json:"status" desc:"Current status of the risk (e.g., TH, OC, RM)." example:"TH" capmodel:"Risk"`
-	Priority   int    `neo4j:"priority" json:"priority" desc:"Calculated priority score based on severity." example:"10"`
-	Created    string `neo4j:"created" json:"created" desc:"Timestamp when the risk was first created (RFC3339)." example:"2023-10-27T10:00:00Z"`
-	Updated    string `neo4j:"updated" json:"updated" desc:"Timestamp when the risk was last updated (RFC3339)." example:"2023-10-27T11:00:00Z"`
-	Visited    string `neo4j:"visited" json:"visited" desc:"Timestamp when the risk was last visited or confirmed (RFC3339)." example:"2023-10-27T11:00:00Z"`
-	TTL        int64  `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the risk record (Unix timestamp)." example:"1706353200"`
-	Comment    string `neo4j:"-" json:"comment,omitempty" desc:"User-provided comment about the risk." example:"Confirmed by manual check"`
-	PlextracID string `neo4j:"plextracid" json:"plextracid" desc:"ID of the risk in PlexTrac." example:"#clientID#reportId#findingId"`
-	GUID       string `neo4j:"guid,omitempty" json:"guid" desc:"Globally unique identifier for this risk instance (UUID v4)." example:"550e8400-e29b-41d4-a716-446655440000"`
-	Target     Target `neo4j:"-" json:"-" capmodel:"Risk=target(Asset)"` // Internal use, not in schema
-	SDKProof   []byte `neo4j:"-" json:"-" capmodel:"Risk=proof"`         // Proof bytes; only used by capmodelgen to generate the SDK field
+	DNS               string `neo4j:"dns" json:"dns" desc:"Primary DNS or group associated with the risk." example:"example.com" capmodel:"Risk=target_name"`
+	Name              string `neo4j:"name" json:"name" desc:"Name of the risk or vulnerability." example:"CVE-2023-12345" capmodel:"Risk"`
+	Title             string `neo4j:"title,omitempty" json:"title,omitempty" desc:"Human-readable title for the risk. Falls back to Name if empty." example:"SQL Injection"`
+	Source            string `neo4j:"source" json:"source" desc:"Source that identified the risk." example:"nessus" capmodel:"Risk"`
+	Status            string `neo4j:"status" json:"status" desc:"Current status of the risk (e.g., TH, OC, RM)." example:"TH" capmodel:"Risk"`
+	Priority          int    `neo4j:"priority" json:"priority" desc:"Calculated priority score based on severity." example:"10"`
+	Created           string `neo4j:"created" json:"created" desc:"Timestamp when the risk was first created (RFC3339)." example:"2023-10-27T10:00:00Z"`
+	Updated           string `neo4j:"updated" json:"updated" desc:"Timestamp when the risk was last updated (RFC3339)." example:"2023-10-27T11:00:00Z"`
+	Visited           string `neo4j:"visited" json:"visited" desc:"Timestamp when the risk was last visited or confirmed (RFC3339)." example:"2023-10-27T11:00:00Z"`
+	TTL               int64  `neo4j:"ttl" json:"ttl" desc:"Time-to-live for the risk record (Unix timestamp)." example:"1706353200"`
+	Comment           string `neo4j:"-" json:"comment,omitempty" desc:"User-provided comment about the risk." example:"Confirmed by manual check"`
+	PlextracID        string `neo4j:"plextracid" json:"plextracid" desc:"ID of the risk in PlexTrac." example:"#clientID#reportId#findingId"`
+	GUID              string `neo4j:"guid,omitempty" json:"guid" desc:"Globally unique identifier for this risk instance (UUID v4)." example:"550e8400-e29b-41d4-a716-446655440000"`
+	Target            Target `neo4j:"-" json:"-" capmodel:"Risk=target(Asset)"` // Internal use, not in schema
+	ProofUniquenessID string `neo4j:"-" json:"proofUniquenessID"`               // Explicit dedup ID for proof path (Tier 1)
+	SDKProof          []byte `neo4j:"-" json:"-" capmodel:"Risk=proof"`         // Proof bytes; only used by capmodelgen to generate the SDK field
 	History
 	MLProperties
 	Tags
@@ -164,8 +165,23 @@ func (r *Risk) setStatus(status string) {
 	r.Priority = riskPriority[r.Severity()]
 }
 
+func (r *Risk) proofPath() string {
+	path := fmt.Sprintf("proofs/%s/%s", r.DNS, r.Name)
+
+	if r.ProofUniquenessID != "" {
+		return fmt.Sprintf("%s/%s", path, RemoveReservedCharacters(r.ProofUniquenessID))
+	}
+
+	if r.Target != nil && r.DNS != r.Target.Group() {
+		targetID := RemoveReservedCharacters(r.Target.Group())
+		return fmt.Sprintf("%s/%s", path, targetID)
+	}
+
+	return path
+}
+
 func (r *Risk) Proof(bits []byte) File {
-	file := NewFile(fmt.Sprintf("proofs/%s/%s", r.DNS, r.Name))
+	file := NewFile(r.proofPath())
 	file.Bytes = bits
 	return file
 }
