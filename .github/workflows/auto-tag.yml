@@ -19,77 +19,17 @@ jobs:
       - name: Get latest tag and increment version
         id: version
         run: |
-          # Get current branch name
-          CURRENT_BRANCH="${{ github.ref_name }}"
-          echo "Current branch: $CURRENT_BRANCH"
+          # Get latest v1.0.X tag on main
+          LATEST_TAG=$(git tag -l "v1.0.*" --merged "origin/main" --sort=-version:refname | grep -E '^v1\.0\.[0-9]+$' | head -n1)
           
-          # Sanitize branch name for tag usage (replace invalid characters)
-          SANITIZED_BRANCH=$(echo "$CURRENT_BRANCH" | sed 's/[^a-zA-Z0-9._-]/-/g')
-          echo "Sanitized branch name: $SANITIZED_BRANCH"
-          
-          # Determine tag format based on branch
-          if [ "$CURRENT_BRANCH" = "main" ]; then
-            echo "On main branch - using v1.0.X format"
-            # Get latest v1.0.X tag (without suffix)
-            LATEST_TAG=$(git tag -l "v1.0.*" --merged "origin/main" --sort=-version:refname | grep -E '^v1\.0\.[0-9]+$' | head -n1)
-            
-            if [ -z "$LATEST_TAG" ]; then
-              echo "No v1.0.X tag found on main, starting with v1.0.1"
-              NEW_VERSION="v1.0.1"
-            else
-              echo "Latest tag found: $LATEST_TAG"
-              # Extract the patch version number and increment it
-              PATCH_VERSION=$(echo "$LATEST_TAG" | sed 's/v1\.0\.\([0-9]*\)/\1/')
-              NEW_PATCH=$((PATCH_VERSION + 1))
-              NEW_VERSION="v1.0.$NEW_PATCH"
-            fi
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No v1.0.X tag found on main, starting with v1.0.1"
+            NEW_VERSION="v1.0.1"
           else
-            echo "On non-main branch - using v1.0.X-pre-N-$SANITIZED_BRANCH format"
-            # Always get the latest v1.0.X tag from main branch as base version
-            LATEST_MAIN_TAG=$(git tag -l "v1.0.*" --merged "origin/main" --sort=-version:refname | grep -E '^v1\.0\.[0-9]+$' | head -n1)
-            
-            # Get latest pre-release tag for this specific branch to find the highest pre-release counter
-            LATEST_PRE_TAG=$(git tag -l "v1.0.*-pre-*-$SANITIZED_BRANCH" --merged "origin/$CURRENT_BRANCH" --sort=-version:refname | head -n1)
-            
-            if [ -z "$LATEST_MAIN_TAG" ]; then
-              echo "No v1.0.X tag found on main, using base version v1.0.0"
-              BASE_VERSION="v1.0.0"
-            else
-              echo "Latest main tag found: $LATEST_MAIN_TAG (using as current base version)"
-              BASE_VERSION="$LATEST_MAIN_TAG"
-            fi
-            
-            if [ -z "$LATEST_PRE_TAG" ]; then
-              echo "No pre-release tag found for this branch, starting with pre-0"
-              PRE_COUNTER=0
-            else
-              echo "Latest pre-release tag found: $LATEST_PRE_TAG"
-         
-              # Extract the base version from the existing pre-release tag
-              EXISTING_BASE=$(echo "$LATEST_PRE_TAG" | sed 's/-pre-.*$//')
-              echo "Existing base version in branch tag: $EXISTING_BASE"
-              echo "Current main base version: $BASE_VERSION"
-              
-              if [ "$EXISTING_BASE" = "$BASE_VERSION" ]; then
-                # Same base version - increment the pre-release counter
-                PRE_COUNTER=$(echo "$LATEST_PRE_TAG" | sed 's/.*-pre-\([0-9]*\)-.*/\1/')
-                if [[ ! "$PRE_COUNTER" =~ ^[0-9]+$ ]]; then
-                  echo "Could not parse pre-release counter, defaulting to 0"
-                  PRE_COUNTER=0
-                else
-                  echo "Base version unchanged, incrementing pre-release counter from $PRE_COUNTER"
-                  PRE_COUNTER=$((PRE_COUNTER + 1))
-                fi
-              else
-                # Different base version - reset counter to 0 (main version advanced)
-                echo "Base version changed from $EXISTING_BASE to $BASE_VERSION - resetting pre-release counter to 0"
-                PRE_COUNTER=0
-              fi
-            fi
-            
-            # Remove the 'v' prefix from base version for construction
-            BASE_VERSION_CLEAN=$(echo "$BASE_VERSION" | sed 's/^v//')
-            NEW_VERSION="v${BASE_VERSION_CLEAN}-pre-${PRE_COUNTER}-${SANITIZED_BRANCH}"
+            echo "Latest tag found: $LATEST_TAG"
+            PATCH_VERSION=$(echo "$LATEST_TAG" | sed 's/v1\.0\.\([0-9]*\)/\1/')
+            NEW_PATCH=$((PATCH_VERSION + 1))
+            NEW_VERSION="v1.0.$NEW_PATCH"
           fi
           
           echo "New version will be: $NEW_VERSION"
