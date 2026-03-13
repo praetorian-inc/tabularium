@@ -250,28 +250,33 @@ func (r *Risk) Attribute(name, value string) Attribute {
 	return NewAttribute(name, value, r)
 }
 
-// InheritAttackSurface copies attack surface flags from the risk's target entity.
+// InheritAttackSurface copies attack surface flags from a target entity.
+// If an explicit target is provided, it is used; otherwise the risk's own Target is used.
 // For assets (and other Assetlikes), it copies directly from the entity's OriginationData.
 // For ports, it traverses to the parent asset.
 // For webpages, it traverses to the parent web application.
-func (r *Risk) InheritAttackSurface() {
-	if r.Target == nil {
+func (r *Risk) InheritAttackSurface(targets ...Target) {
+	t := r.Target
+	if len(targets) > 0 {
+		t = targets[0]
+	}
+	if t == nil {
 		return
 	}
 
-	switch t := r.Target.(type) {
+	switch v := t.(type) {
 	case *Port:
-		if t.Parent.Model != nil {
-			if al, ok := t.Parent.Model.(Assetlike); ok {
+		if v.Parent.Model != nil {
+			if al, ok := v.Parent.Model.(Assetlike); ok {
 				r.AttackSurface = al.GetMetadata().AttackSurface
 			}
 		}
 	case *Webpage:
-		if t.Parent != nil {
-			r.AttackSurface = t.Parent.GetMetadata().AttackSurface
+		if v.Parent != nil {
+			r.AttackSurface = v.Parent.GetMetadata().AttackSurface
 		}
 	case Assetlike:
-		r.AttackSurface = t.GetMetadata().AttackSurface
+		r.AttackSurface = v.GetMetadata().AttackSurface
 	}
 
 	DeriveAttackSurfaceFlags(&r.OriginationData)

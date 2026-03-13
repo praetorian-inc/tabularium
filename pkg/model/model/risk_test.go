@@ -829,3 +829,38 @@ func TestRisk_InheritAttackSurface_WebpageWithNilParent(t *testing.T) {
 	assert.False(t, risk.IsExternal)
 	assert.False(t, risk.IsApplication)
 }
+
+func TestRisk_InheritAttackSurface_ExplicitPortTarget(t *testing.T) {
+	asset := NewAsset("example.com", "example.com")
+	asset.AttackSurface = []string{"external"}
+	DeriveAttackSurfaceFlags(&asset.OriginationData)
+
+	port := NewPort("tcp", 443, &asset)
+
+	// Risk target is a minimal asset (no OriginationData), but we pass the port explicitly
+	minimalAsset := NewAsset("example.com", "example.com")
+	risk := NewRisk(&minimalAsset, "exposure-https", TriageHigh)
+	risk.InheritAttackSurface(&port)
+
+	assert.Equal(t, []string{"external"}, risk.AttackSurface)
+	assert.True(t, risk.IsExternal)
+	assert.False(t, risk.IsInternal)
+}
+
+func TestRisk_InheritAttackSurface_ExplicitTargetOverridesRiskTarget(t *testing.T) {
+	internalAsset := NewAsset("internal.example.com", "10.0.0.1")
+	internalAsset.AttackSurface = []string{"internal"}
+	DeriveAttackSurfaceFlags(&internalAsset.OriginationData)
+
+	externalAsset := NewAsset("example.com", "example.com")
+	externalAsset.AttackSurface = []string{"external"}
+	DeriveAttackSurfaceFlags(&externalAsset.OriginationData)
+
+	// Risk target is the internal asset, but we pass the external asset explicitly
+	risk := NewRisk(&internalAsset, "test-vuln", TriageHigh)
+	risk.InheritAttackSurface(&externalAsset)
+
+	assert.Equal(t, []string{"external"}, risk.AttackSurface)
+	assert.True(t, risk.IsExternal)
+	assert.False(t, risk.IsInternal)
+}
