@@ -47,6 +47,10 @@ type WebApplication struct {
 	Name       string   `neo4j:"name" json:"name" dynamodbav:"name" desc:"Name of the web application" example:"Example App" capmodel:"WebApplication"`
 	BurpMetadata
 
+	// Web auth metadata
+	SSOIdentified bool          `neo4j:"sso_identified" json:"sso_identified" dynamodbav:"sso_identified" desc:"Whether SSO has been identified and configured for this web application"`
+	WebAuthStatus WebAuthStatus `neo4j:"web_auth_status" json:"web_auth_status,omitempty" dynamodbav:"web_auth_status" desc:"Status of web auth credential validation (active/failed/validating)"`
+
 	// S3-stored details (not saved to Neo4j/DynamoDB)
 	WebApplicationDetails `neo4j:"-" json:"-" dynamodbav:"-"`
 }
