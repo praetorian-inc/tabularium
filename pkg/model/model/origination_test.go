@@ -89,6 +89,20 @@ func TestDeriveAttackSurfaceFlags_Idempotent(t *testing.T) {
 	assert.True(t, base.IsCloud, "IsCloud should be true after derivation")
 }
 
+func TestDeriveAttackSurfaceFlags_Repository(t *testing.T) {
+	base := &OriginationData{
+		AttackSurface: []string{"repository"},
+	}
+
+	DeriveAttackSurfaceFlags(base)
+
+	assert.False(t, base.IsExternal, "IsExternal should be false")
+	assert.False(t, base.IsInternal, "IsInternal should be false")
+	assert.False(t, base.IsCloud, "IsCloud should be false")
+	assert.False(t, base.IsApplication, "IsApplication should be false")
+	assert.True(t, base.IsRepository, "IsRepository should be true")
+}
+
 // BLOCKER 1 TEST: Verify false values are explicit (not omitted)
 func TestDeriveAttackSurfaceFlags_FalseValuesExplicit(t *testing.T) {
 	data := &OriginationData{AttackSurface: []string{"internal"}}
@@ -99,6 +113,7 @@ func TestDeriveAttackSurfaceFlags_FalseValuesExplicit(t *testing.T) {
 	assert.False(t, data.IsExternal, "IsExternal must be explicitly false, not omitted")
 	assert.False(t, data.IsCloud, "IsCloud must be explicitly false, not omitted")
 	assert.False(t, data.IsApplication, "IsApplication must be explicitly false, not omitted")
+	assert.False(t, data.IsRepository, "IsRepository must be explicitly false, not omitted")
 }
 
 // BLOCKER 2 TEST 1: Merge() auto-derives flags after merge
