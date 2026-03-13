@@ -3,7 +3,7 @@ name: Auto Tag
 on:
   push:
     branches:
-      - '**'  # Run on all branches
+      - 'main'
 
 jobs:
   auto-tag:
