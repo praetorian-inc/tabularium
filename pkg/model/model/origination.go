@@ -13,6 +13,7 @@ type OriginationData struct {
 	IsInternal    bool     `neo4j:"isInternal" json:"isInternal" desc:"Boolean flag indicating if asset is internal"`
 	IsCloud       bool     `neo4j:"isCloud" json:"isCloud" desc:"Boolean flag indicating if asset is cloud"`
 	IsApplication bool     `neo4j:"isApplication" json:"isApplication" desc:"Boolean flag indicating if asset is application"`
+	IsRepository  bool     `neo4j:"isRepository" json:"isRepository" desc:"Boolean flag indicating if asset is repository"`
 }
 
 func (o *OriginationData) Merge(other OriginationData) {
@@ -60,6 +61,7 @@ func DeriveAttackSurfaceFlags(base *OriginationData) {
 	base.IsInternal = false
 	base.IsCloud = false
 	base.IsApplication = false
+	base.IsRepository = false
 
 	for _, s := range base.AttackSurface {
 		switch s {
@@ -72,6 +74,8 @@ func DeriveAttackSurfaceFlags(base *OriginationData) {
 		case "application":
 			base.IsExternal = true // application also means external
 			base.IsApplication = true
+		case "repository":
+			base.IsRepository = true
 		}
 	}
 }

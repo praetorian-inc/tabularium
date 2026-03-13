@@ -17,6 +17,7 @@ func TestDeriveAttackSurfaceFlags_External(t *testing.T) {
 	assert.False(t, base.IsInternal, "IsInternal should be false")
 	assert.False(t, base.IsCloud, "IsCloud should be false")
 	assert.False(t, base.IsApplication, "IsApplication should be false")
+	assert.False(t, base.IsRepository, "IsRepository should be false")
 }
 
 func TestDeriveAttackSurfaceFlags_Internal(t *testing.T) {
@@ -30,6 +31,7 @@ func TestDeriveAttackSurfaceFlags_Internal(t *testing.T) {
 	assert.True(t, base.IsInternal, "IsInternal should be true")
 	assert.False(t, base.IsCloud, "IsCloud should be false")
 	assert.False(t, base.IsApplication, "IsApplication should be false")
+	assert.False(t, base.IsRepository, "IsRepository should be false")
 }
 
 func TestDeriveAttackSurfaceFlags_Application(t *testing.T) {
@@ -43,6 +45,7 @@ func TestDeriveAttackSurfaceFlags_Application(t *testing.T) {
 	assert.False(t, base.IsInternal, "IsInternal should be false")
 	assert.False(t, base.IsCloud, "IsCloud should be false")
 	assert.True(t, base.IsApplication, "IsApplication should be true")
+	assert.False(t, base.IsRepository, "IsRepository should be false")
 }
 
 func TestDeriveAttackSurfaceFlags_Multiple(t *testing.T) {
@@ -56,6 +59,7 @@ func TestDeriveAttackSurfaceFlags_Multiple(t *testing.T) {
 	assert.False(t, base.IsInternal, "IsInternal should be false")
 	assert.True(t, base.IsCloud, "IsCloud should be true")
 	assert.False(t, base.IsApplication, "IsApplication should be false")
+	assert.False(t, base.IsRepository, "IsRepository should be false")
 }
 
 func TestDeriveAttackSurfaceFlags_Empty(t *testing.T) {
@@ -69,6 +73,7 @@ func TestDeriveAttackSurfaceFlags_Empty(t *testing.T) {
 	assert.False(t, base.IsInternal, "IsInternal should be false")
 	assert.False(t, base.IsCloud, "IsCloud should be false")
 	assert.False(t, base.IsApplication, "IsApplication should be false")
+	assert.False(t, base.IsRepository, "IsRepository should be false")
 }
 
 func TestDeriveAttackSurfaceFlags_Idempotent(t *testing.T) {
