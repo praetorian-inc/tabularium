@@ -71,6 +71,11 @@ const (
 	ConstantineCredential           CredentialType = "constantine"                      // Constantine composite credential (agent + SCM)
 	SnykCodeCredential		CredentialType = "snyk_code"
 
+	// Web Authentication Types
+	WebIdPCredential    CredentialType = "web-idp"    // Org-level IdP service account (Okta, Entra ID, etc.)
+	WebLoginCredential  CredentialType = "web-login"  // Per-app login credentials (username/password + optional TOTP)
+	WebStaticCredential CredentialType = "web-static" // Per-app static/dynamic token or API key
+
 	LegacyCloudCredential CredentialType = "legacy-cloud" // Legacy cloud credentials (AWS, GCP, Azure)
 
 	// Credential Formats for capabilities to use (and advertise)

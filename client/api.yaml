@@ -5536,18 +5536,26 @@ components:
           description: The primary/canonical URL of the web application
           example: https://app.example.com
           type: string
+        sso_identified:
+          description: Whether SSO has been identified and configured for this web
+            application
+          type: boolean
         urls:
           description: Additional URLs associated with this web application
           example: '["https://api.example.com", "https://admin.example.com"]'
           items:
             type: string
           type: array
+        web_auth_status:
+          description: Status of web auth credential validation (active/failed/validating)
+          type: string
       required:
       - BaseAsset
       - BurpMetadata
       - LabelSettableEmbed
       - name
       - primary_url
+      - sso_identified
       - urls
       type: object
     webpage:
