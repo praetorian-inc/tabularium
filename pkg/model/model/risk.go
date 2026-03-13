@@ -234,6 +234,33 @@ func (r *Risk) Attribute(name, value string) Attribute {
 	return NewAttribute(name, value, r)
 }
 
+// InheritAttackSurface copies attack surface flags from the risk's target entity.
+// For assets (and other Assetlikes), it copies directly from the entity's OriginationData.
+// For ports, it traverses to the parent asset.
+// For webpages, it traverses to the parent web application.
+func (r *Risk) InheritAttackSurface() {
+	if r.Target == nil {
+		return
+	}
+
+	switch t := r.Target.(type) {
+	case *Port:
+		if t.Parent.Model != nil {
+			if al, ok := t.Parent.Model.(Assetlike); ok {
+				r.AttackSurface = al.GetMetadata().AttackSurface
+			}
+		}
+	case *Webpage:
+		if t.Parent != nil {
+			r.AttackSurface = t.Parent.GetMetadata().AttackSurface
+		}
+	case Assetlike:
+		r.AttackSurface = t.GetMetadata().AttackSurface
+	}
+
+	DeriveAttackSurfaceFlags(&r.OriginationData)
+}
+
 func (r *Risk) PendingAsset() (Asset, bool) {
 	// For use solely in VM Integrations in case we are not importing assets
 	switch t := r.Target.(type) {

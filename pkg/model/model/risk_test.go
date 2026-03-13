@@ -626,3 +626,122 @@ func TestRisk_Title(t *testing.T) {
 		assert.Equal(t, "SQL Injection (Critical)", risk.Title, "Title should be updated when update has non-empty Title")
 	})
 }
+
+func TestRisk_InheritAttackSurface_FromAsset(t *testing.T) {
+	asset := NewAsset("example.com", "example.com")
+	asset.AttackSurface = []string{"external"}
+	DeriveAttackSurfaceFlags(&asset.OriginationData)
+
+	risk := NewRisk(&asset, "test-vuln", TriageHigh)
+	risk.InheritAttackSurface()
+
+	assert.Equal(t, []string{"external"}, risk.AttackSurface)
+	assert.True(t, risk.IsExternal)
+	assert.False(t, risk.IsInternal)
+	assert.False(t, risk.IsCloud)
+	assert.False(t, risk.IsApplication)
+	assert.False(t, risk.IsRepository)
+}
+
+func TestRisk_InheritAttackSurface_FromAssetMultipleSurfaces(t *testing.T) {
+	asset := NewAsset("example.com", "example.com")
+	asset.AttackSurface = []string{"external", "cloud"}
+	DeriveAttackSurfaceFlags(&asset.OriginationData)
+
+	risk := NewRisk(&asset, "test-vuln", TriageHigh)
+	risk.InheritAttackSurface()
+
+	assert.ElementsMatch(t, []string{"external", "cloud"}, risk.AttackSurface)
+	assert.True(t, risk.IsExternal)
+	assert.True(t, risk.IsCloud)
+	assert.False(t, risk.IsInternal)
+}
+
+func TestRisk_InheritAttackSurface_FromPort(t *testing.T) {
+	asset := NewAsset("example.com", "example.com")
+	asset.AttackSurface = []string{"internal"}
+	DeriveAttackSurfaceFlags(&asset.OriginationData)
+
+	port := NewPort("tcp", 443, &asset)
+	risk := NewRisk(&port, "test-vuln", TriageHigh)
+	risk.InheritAttackSurface()
+
+	assert.Equal(t, []string{"internal"}, risk.AttackSurface)
+	assert.True(t, risk.IsInternal)
+	assert.False(t, risk.IsExternal)
+}
+
+func TestRisk_InheritAttackSurface_FromWebpage(t *testing.T) {
+	webapp := NewWebApplication("https://app.example.com", "Example App")
+	webapp.AttackSurface = []string{"application"}
+	DeriveAttackSurfaceFlags(&webapp.OriginationData)
+
+	webpage := NewWebpageFromString("https://app.example.com/login", &webapp)
+	risk := NewRisk(&webpage, "test-vuln", TriageHigh)
+	risk.InheritAttackSurface()
+
+	assert.Equal(t, []string{"application"}, risk.AttackSurface)
+	assert.True(t, risk.IsApplication)
+	assert.True(t, risk.IsExternal) // application implies external
+}
+
+func TestRisk_InheritAttackSurface_FromRepository(t *testing.T) {
+	asset := NewAsset("github.com", "org/repo")
+	asset.AttackSurface = []string{"repository"}
+	DeriveAttackSurfaceFlags(&asset.OriginationData)
+
+	risk := NewRisk(&asset, "secret-leak", TriageHigh)
+	risk.InheritAttackSurface()
+
+	assert.Equal(t, []string{"repository"}, risk.AttackSurface)
+	assert.True(t, risk.IsRepository)
+	assert.False(t, risk.IsExternal)
+}
+
+func TestRisk_InheritAttackSurface_NilTarget(t *testing.T) {
+	risk := Risk{
+		Target: nil,
+	}
+	risk.InheritAttackSurface()
+
+	assert.False(t, risk.IsExternal)
+	assert.False(t, risk.IsInternal)
+	assert.False(t, risk.IsCloud)
+	assert.False(t, risk.IsApplication)
+	assert.False(t, risk.IsRepository)
+}
+
+func TestRisk_InheritAttackSurface_AssetNoAttackSurface(t *testing.T) {
+	asset := NewAsset("example.com", "example.com")
+	// No attack surface set
+
+	risk := NewRisk(&asset, "test-vuln", TriageHigh)
+	risk.InheritAttackSurface()
+
+	assert.Empty(t, risk.AttackSurface)
+	assert.False(t, risk.IsExternal)
+	assert.False(t, risk.IsInternal)
+}
+
+func TestRisk_InheritAttackSurface_PortWithNilParent(t *testing.T) {
+	port := Port{
+		Protocol: "tcp",
+		Port:     80,
+	}
+
+	risk := NewRisk(&port, "test-vuln", TriageHigh)
+	risk.InheritAttackSurface()
+
+	assert.False(t, risk.IsExternal)
+	assert.False(t, risk.IsInternal)
+}
+
+func TestRisk_InheritAttackSurface_WebpageWithNilParent(t *testing.T) {
+	webpage := NewWebpageFromString("https://example.com", nil)
+
+	risk := NewRisk(&webpage, "test-vuln", TriageHigh)
+	risk.InheritAttackSurface()
+
+	assert.False(t, risk.IsExternal)
+	assert.False(t, risk.IsApplication)
+}
