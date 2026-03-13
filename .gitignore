@@ -33,3 +33,7 @@ vendor/
 .swarm/
 *.db
 
+# pi-config
+.pi
+.pi-config/*
+!.pi-config/configs
